@@ -1,20 +1,28 @@
-import { useQuery } from '@tanstack/react-query';
-import { tr } from './i18n/tr';
-import { getHealth } from './lib/api';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HomePage } from './app/home-page';
+import { InvitationAcceptPage } from './app/invitation-accept-page';
+import { LoginPage } from './app/login-page';
+import { ProtectedRoute } from './app/protected-route';
+import { RegisterPage } from './app/register-page';
 
 function App() {
-  const { data, isPending, isError } = useQuery({
-    queryKey: ['health'],
-    queryFn: getHealth,
-  });
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-white text-slate-900 dark:bg-slate-900 dark:text-white">
-      <h1 className="text-3xl font-semibold">{tr.common.appName}</h1>
-      {isPending && <p className="text-slate-500">{tr.health.checking}</p>}
-      {isError && <p className="text-red-500">{tr.health.error}</p>}
-      {data && <p className="text-green-600">{tr.health.ok}</p>}
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/invite/:token" element={<InvitationAcceptPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

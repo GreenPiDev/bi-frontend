@@ -1,10 +1,81 @@
 @import 'tailwindcss';
 
 :root {
-  color-scheme: light dark;
+  --color-bg: #f5f6fa;
+  --color-surface: #ffffff;
+  --color-bg-elevated: #f9fafb;
+  --color-bg-muted: #f4f4f5;
+  --color-border: #dde1e7;
+  --color-text: #1f2430;
+  --color-muted: #6b7280;
+  --color-primary: #2563eb;
+  --color-primary-dark: #1d4ed8;
+  --color-danger: #dc2626;
+  --color-danger-dark: #b91c1c;
+  --color-success: #16a34a;
+  --color-success-dark: #15803d;
+  --color-brand: #0f766e;
+  --color-brand-dark: #0d5f58;
+  --nav-height: 64px;
+  --sidebar-width-collapsed: 64px;
+  --sidebar-width-expanded: 240px;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #12151c;
+  --color-surface: #1a1e28;
+  --color-bg-elevated: #20242f;
+  --color-bg-muted: #232733;
+  --color-border: #2c3140;
+  --color-text: #e8eaf0;
+  --color-muted: #9aa1b0;
+  --color-primary: #3b82f6;
+  --color-primary-dark: #60a5fa;
+  --color-danger: #f87171;
+  --color-danger-dark: #ef4444;
+  --color-success: #4ade80;
+  --color-success-dark: #22c55e;
+  --color-brand: #2dd4bf;
+  --color-brand-dark: #5eead4;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-app-bg: var(--color-bg);
+  --color-app-surface: var(--color-surface);
+  --color-app-bg-elevated: var(--color-bg-elevated);
+  --color-app-bg-muted: var(--color-bg-muted);
+  --color-app-border: var(--color-border);
+  --color-app-text: var(--color-text);
+  --color-app-muted: var(--color-muted);
+  --color-app-primary: var(--color-primary);
+  --color-app-primary-dark: var(--color-primary-dark);
+  --color-app-danger: var(--color-danger);
+  --color-app-danger-dark: var(--color-danger-dark);
+  --color-app-success: var(--color-success);
+  --color-app-success-dark: var(--color-success-dark);
+  --color-app-brand: var(--color-brand);
+  --color-app-brand-dark: var(--color-brand-dark);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Plus Jakarta Sans',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+#root {
+  min-height: 100vh;
 }
