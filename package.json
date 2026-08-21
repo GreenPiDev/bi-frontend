@@ -15,7 +15,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@pusula-bi/shared": "file:../bi-shared",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.101.4",
     "clsx": "^2.1.1",

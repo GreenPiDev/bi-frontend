@@ -30,7 +30,8 @@ src/
 └─ lib/             # API istemcisi, yardimcilar
 ```
 
-## `@pusula-bi/shared` bagimliligi
+## Zod semalari
 
-Ortak Zod semalari `bi-shared/` paketinden `file:` protokolu ile tuketilir
-(bkz. `docs/VARSAYIMLAR.md` V2).
+Bu repo kendi Zod semalarini tutar, `bi-backend` ile paylasilan bir paket yoktur
+(bkz. `docs/VARSAYIMLAR.md` V2 — revize). Form/istek validasyonlari ilgili `features/` altinda
+tanimlanir.
