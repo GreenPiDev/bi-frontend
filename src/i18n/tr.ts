@@ -55,4 +55,17 @@ export const tr = {
       settings: 'Ayarlar',
     },
   },
+  platformAdmin: {
+    title: 'Kiracı Modül Yönetimi',
+    subtitle: 'Kiracıların hangi modüllere erişebildiğini buradan yönetin.',
+    tenantColumn: 'Şirket',
+    planColumn: 'Plan',
+    createdAtColumn: 'Kayıt Tarihi',
+    modulesColumn: 'Modüller',
+    alwaysOnBadge: 'Her zaman açık',
+    loading: 'Kiracılar yükleniyor...',
+    empty: 'Henüz kayıtlı kiracı yok.',
+    forbidden: 'Bu sayfayı görüntüleme yetkiniz yok.',
+    updateError: 'Modül güncellenemedi.',
+  },
 } as const;

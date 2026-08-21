@@ -8,6 +8,7 @@ export interface SafeUser {
   email: string;
   name: string;
   role: UserRole;
+  isPlatformAdmin: boolean;
 }
 
 export class ApiError extends Error {
@@ -118,5 +119,39 @@ export function acceptInvitation(
   return request(`/invitations/${token}/accept`, {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+}
+
+export interface TenantSummary {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+  createdAt: string;
+}
+
+export interface TenantModuleStatus {
+  key: string;
+  label: string;
+  alwaysOn: boolean;
+  enabled: boolean;
+}
+
+export function getPlatformTenants(): Promise<TenantSummary[]> {
+  return request('/platform-admin/tenants');
+}
+
+export function getPlatformTenantModules(tenantId: string): Promise<TenantModuleStatus[]> {
+  return request(`/platform-admin/tenants/${tenantId}/modules`);
+}
+
+export function setPlatformTenantModule(
+  tenantId: string,
+  moduleKey: string,
+  enabled: boolean,
+): Promise<TenantModuleStatus[]> {
+  return request(`/platform-admin/tenants/${tenantId}/modules/${moduleKey}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ enabled }),
   });
 }
