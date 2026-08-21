@@ -2,19 +2,22 @@ import { LayoutDashboard, LogOut, Settings, Table2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { tr } from '../i18n/tr';
 
 const navItems = [
-  { label: tr.shell.nav.dashboards, icon: LayoutDashboard },
-  { label: tr.shell.nav.datasets, icon: Table2 },
-  { label: tr.shell.nav.settings, icon: Settings },
+  { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/' },
+  { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
+  { label: tr.shell.nav.settings, icon: Settings, path: undefined },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-app-bg">
@@ -46,19 +49,30 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       >
         <ul className="flex flex-col py-3">
-          {navItems.map(({ label, icon: Icon }) => (
-            <li key={label}>
-              <button
-                type="button"
-                className="flex h-12 w-full items-center gap-3 whitespace-nowrap text-app-muted hover:bg-app-bg hover:text-app-text"
-              >
-                <span className="inline-flex w-16 shrink-0 items-center justify-center">
-                  <Icon size={20} />
-                </span>
-                <span className="text-sm font-semibold">{label}</span>
-              </button>
-            </li>
-          ))}
+          {navItems.map(({ label, icon: Icon, path }) => {
+            const isActive =
+              path !== undefined &&
+              location.pathname.startsWith(path) &&
+              (path !== '/' || location.pathname === '/');
+            return (
+              <li key={label}>
+                <button
+                  type="button"
+                  disabled={path === undefined}
+                  onClick={() => path && navigate(path)}
+                  className={clsx(
+                    'flex h-12 w-full items-center gap-3 whitespace-nowrap hover:bg-app-bg hover:text-app-text disabled:cursor-not-allowed disabled:opacity-50',
+                    isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted',
+                  )}
+                >
+                  <span className="inline-flex w-16 shrink-0 items-center justify-center">
+                    <Icon size={20} />
+                  </span>
+                  <span className="text-sm font-semibold">{label}</span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

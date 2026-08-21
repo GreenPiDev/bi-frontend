@@ -30,11 +30,12 @@ interface ApiErrorBody {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const isFormData = init?.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...init?.headers,
     },
   });
@@ -153,5 +154,92 @@ export function setPlatformTenantModule(
   return request(`/platform-admin/tenants/${tenantId}/modules/${moduleKey}`, {
     method: 'PATCH',
     body: JSON.stringify({ enabled }),
+  });
+}
+
+export type DataSourceStatus = 'PENDING' | 'PROCESSING' | 'READY' | 'FAILED';
+
+export interface DataSourceStatusView {
+  id: string;
+  status: DataSourceStatus;
+  errorMessage: string | null;
+  datasetId: string | null;
+}
+
+export function uploadDatasource(file: File, name?: string): Promise<{ id: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (name) {
+    formData.append('name', name);
+  }
+  return request('/datasources/upload', { method: 'POST', body: formData });
+}
+
+export function getDatasourceStatus(id: string): Promise<DataSourceStatusView> {
+  return request(`/datasources/${id}/status`);
+}
+
+export interface DatasetSummary {
+  id: string;
+  name: string;
+  rowCount: number;
+  lastIngestedAt: string | null;
+  createdAt: string;
+}
+
+export type DatasetFieldType = 'STRING' | 'NUMBER' | 'DATE' | 'BOOLEAN';
+export type DatasetFieldRole = 'DIMENSION' | 'MEASURE' | 'DATE';
+
+export interface DatasetField {
+  id: string;
+  datasetId: string;
+  sourceName: string;
+  name: string;
+  label: string;
+  type: DatasetFieldType;
+  role: DatasetFieldRole;
+  format: string | null;
+  isVisible: boolean;
+  ordinal: number;
+}
+
+export interface DatasetWithFields extends DatasetSummary {
+  fields: DatasetField[];
+}
+
+export interface PreviewResult {
+  columns: string[];
+  rows: unknown[][];
+}
+
+export interface UpdateDatasetFieldInput {
+  id: string;
+  name?: string;
+  label?: string;
+  type?: DatasetFieldType;
+  role?: DatasetFieldRole;
+  format?: string | null;
+  isVisible?: boolean;
+}
+
+export function listDatasets(): Promise<DatasetSummary[]> {
+  return request('/datasets');
+}
+
+export function getDataset(id: string): Promise<DatasetWithFields> {
+  return request(`/datasets/${id}`);
+}
+
+export function previewDataset(id: string): Promise<PreviewResult> {
+  return request(`/datasets/${id}/preview`, { method: 'POST' });
+}
+
+export function updateDatasetFields(
+  id: string,
+  fields: UpdateDatasetFieldInput[],
+): Promise<DatasetWithFields> {
+  return request(`/datasets/${id}/fields`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fields }),
   });
 }
