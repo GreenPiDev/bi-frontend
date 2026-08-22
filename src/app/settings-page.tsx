@@ -1,5 +1,6 @@
 import { AppShell } from './app-shell';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
+import { ReportsSection } from '../features/reports/reports-section';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -22,6 +23,7 @@ const entityLabels: Record<string, string> = {
   Dataset: 'Veri Kümesi',
   DataSource: 'Veri Kaynağı',
   User: 'Kullanıcı',
+  ScheduledReport: 'Zamanlanmış Rapor',
   Invitation: 'Davet',
 };
 
@@ -32,6 +34,8 @@ export function SettingsPage() {
     <AppShell>
       <h1 className="text-xl font-bold text-app-text">{tr.settings.title}</h1>
       <p className="text-sm text-app-muted">{tr.settings.subtitle}</p>
+
+      <ReportsSection />
 
       <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
         <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.audit.title}</h2>

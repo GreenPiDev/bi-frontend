@@ -473,3 +473,41 @@ export function exportWidgetCsv(widgetId: string): Promise<Blob> {
 export function exportDashboardPdf(dashboardId: string): Promise<Blob> {
   return requestBlob(`/exports/dashboard/${dashboardId}/pdf`);
 }
+
+export interface ScheduledReport {
+  id: string;
+  dashboardId: string;
+  cron: string;
+  recipients: string[];
+  isActive: boolean;
+  lastRunAt: string | null;
+}
+
+export interface CreateReportInput {
+  dashboardId: string;
+  cron: string;
+  recipients: string[];
+  isActive?: boolean;
+}
+
+export interface UpdateReportInput {
+  cron?: string;
+  recipients?: string[];
+  isActive?: boolean;
+}
+
+export function listReports(): Promise<ScheduledReport[]> {
+  return request('/reports');
+}
+
+export function createReport(input: CreateReportInput): Promise<ScheduledReport> {
+  return request('/reports', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateReport(id: string, input: UpdateReportInput): Promise<ScheduledReport> {
+  return request(`/reports/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteReport(id: string): Promise<void> {
+  return request(`/reports/${id}`, { method: 'DELETE' });
+}
