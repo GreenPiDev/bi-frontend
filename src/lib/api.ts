@@ -179,6 +179,17 @@ export function getDatasourceStatus(id: string): Promise<DataSourceStatusView> {
   return request(`/datasources/${id}/status`);
 }
 
+export function seedDemoDataset(): Promise<{ id: string }> {
+  return request('/onboarding/demo-dataset', { method: 'POST' });
+}
+
+export function createStarterDashboard(datasetId: string): Promise<{ id: string }> {
+  return request('/onboarding/dashboard', {
+    method: 'POST',
+    body: JSON.stringify({ datasetId }),
+  });
+}
+
 export interface DatasetSummary {
   id: string;
   name: string;

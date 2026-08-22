@@ -21,7 +21,7 @@ export function RegisterPage() {
 
   const onSubmit = handleSubmit((values) => {
     registerMutation.mutate(values, {
-      onSuccess: () => navigate('/', { replace: true }),
+      onSuccess: () => navigate('/onboarding', { replace: true }),
     });
   });
 

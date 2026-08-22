@@ -10,6 +10,7 @@ import { DatasetsListPage } from './app/datasets-list-page';
 import { EditorRoute } from './app/editor-route';
 import { InvitationAcceptPage } from './app/invitation-accept-page';
 import { LoginPage } from './app/login-page';
+import { OnboardingPage } from './app/onboarding-page';
 import { PlatformAdminPage } from './app/platform-admin-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { ProtectedRoute } from './app/protected-route';
@@ -32,6 +33,14 @@ function App() {
           }
         />
         <Route path="/" element={<Navigate to="/dashboards" replace />} />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute>
+              <OnboardingPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboards"
           element={
