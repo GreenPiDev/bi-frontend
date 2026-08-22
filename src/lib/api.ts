@@ -243,3 +243,183 @@ export function updateDatasetFields(
     body: JSON.stringify({ fields }),
   });
 }
+
+export type AggregationType = 'sum' | 'avg' | 'min' | 'max' | 'count' | 'count_distinct';
+export type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'year';
+export type FilterOperator =
+  | 'eq'
+  | 'neq'
+  | 'in'
+  | 'nin'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'between'
+  | 'contains'
+  | 'is_null'
+  | 'is_not_null';
+
+export interface MeasureSpec {
+  field: string;
+  agg: AggregationType;
+  alias: string;
+}
+
+export interface DimensionSpec {
+  field: string;
+  granularity?: Granularity;
+}
+
+export interface FilterSpec {
+  field: string;
+  op: FilterOperator;
+  value?: unknown;
+}
+
+export interface OrderBySpec {
+  field: string;
+  dir: 'asc' | 'desc';
+}
+
+export interface QuerySpec {
+  datasetId: string;
+  measures: MeasureSpec[];
+  dimensions: DimensionSpec[];
+  filters: FilterSpec[];
+  orderBy: OrderBySpec[];
+  limit?: number;
+}
+
+export interface QueryColumn {
+  name: string;
+  type: DatasetFieldType;
+  label: string;
+}
+
+export interface QueryResult {
+  columns: QueryColumn[];
+  rows: unknown[][];
+  rowCount: number;
+  executionMs: number;
+  truncated: boolean;
+}
+
+export function runQuery(spec: QuerySpec): Promise<QueryResult> {
+  return request('/query', { method: 'POST', body: JSON.stringify(spec) });
+}
+
+export type WidgetType = 'kpi' | 'line' | 'bar' | 'bar_horizontal' | 'pie' | 'table';
+
+export interface WidgetPosition {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface Widget {
+  id: string;
+  dashboardId: string;
+  type: WidgetType;
+  title: string;
+  querySpec: QuerySpec;
+  vizOptions: Record<string, unknown>;
+  position: WidgetPosition;
+  createdAt: string;
+}
+
+export interface LayoutItem {
+  widgetId: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+export interface DashboardSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  layout: LayoutItem[];
+  filters: unknown[];
+  createdById: string;
+  createdAt: string;
+}
+
+export interface DashboardWithWidgets extends DashboardSummary {
+  widgets: Widget[];
+}
+
+export interface CreateDashboardInput {
+  name: string;
+  description?: string;
+}
+
+export interface UpdateDashboardInput {
+  name?: string;
+  description?: string | null;
+  layout?: LayoutItem[];
+  filters?: unknown[];
+}
+
+export interface CreateWidgetInput {
+  type: WidgetType;
+  title: string;
+  querySpec: QuerySpec;
+  vizOptions?: Record<string, unknown>;
+  position: WidgetPosition;
+}
+
+export interface UpdateWidgetInput {
+  type?: WidgetType;
+  title?: string;
+  querySpec?: QuerySpec;
+  vizOptions?: Record<string, unknown>;
+  position?: WidgetPosition;
+}
+
+export function listDashboards(): Promise<DashboardSummary[]> {
+  return request('/dashboards');
+}
+
+export function getDashboard(id: string): Promise<DashboardWithWidgets> {
+  return request(`/dashboards/${id}`);
+}
+
+export function createDashboard(input: CreateDashboardInput): Promise<DashboardSummary> {
+  return request('/dashboards', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateDashboard(
+  id: string,
+  input: UpdateDashboardInput,
+): Promise<DashboardWithWidgets> {
+  return request(`/dashboards/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteDashboard(id: string): Promise<void> {
+  return request(`/dashboards/${id}`, { method: 'DELETE' });
+}
+
+export function createWidget(dashboardId: string, input: CreateWidgetInput): Promise<Widget> {
+  return request(`/dashboards/${dashboardId}/widgets`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateWidget(
+  dashboardId: string,
+  widgetId: string,
+  input: UpdateWidgetInput,
+): Promise<Widget> {
+  return request(`/dashboards/${dashboardId}/widgets/${widgetId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteWidget(dashboardId: string, widgetId: string): Promise<void> {
+  return request(`/dashboards/${dashboardId}/widgets/${widgetId}`, { method: 'DELETE' });
+}

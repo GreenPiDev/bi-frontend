@@ -7,7 +7,7 @@ import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { tr } from '../i18n/tr';
 
 const navItems = [
-  { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/' },
+  { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
   { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
   { label: tr.shell.nav.settings, icon: Settings, path: undefined },
 ];
@@ -50,10 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <ul className="flex flex-col py-3">
           {navItems.map(({ label, icon: Icon, path }) => {
-            const isActive =
-              path !== undefined &&
-              location.pathname.startsWith(path) &&
-              (path !== '/' || location.pathname === '/');
+            const isActive = path !== undefined && location.pathname.startsWith(path);
             return (
               <li key={label}>
                 <button
