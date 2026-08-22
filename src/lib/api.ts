@@ -427,3 +427,19 @@ export function updateWidget(
 export function deleteWidget(dashboardId: string, widgetId: string): Promise<void> {
   return request(`/dashboards/${dashboardId}/widgets/${widgetId}`, { method: 'DELETE' });
 }
+
+export interface AuditLogEntry {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  meta: unknown;
+  createdAt: string;
+}
+
+export function listAuditLogs(): Promise<AuditLogEntry[]> {
+  return request('/audit-logs');
+}

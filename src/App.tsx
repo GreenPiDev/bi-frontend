@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AdminRoute } from './app/admin-route';
 import { DashboardEditPage } from './app/dashboard-edit-page';
 import { DashboardViewPage } from './app/dashboard-view-page';
 import { DashboardsListPage } from './app/dashboards-list-page';
@@ -13,6 +14,7 @@ import { PlatformAdminPage } from './app/platform-admin-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { ProtectedRoute } from './app/protected-route';
 import { RegisterPage } from './app/register-page';
+import { SettingsPage } from './app/settings-page';
 
 function App() {
   return (
@@ -85,6 +87,16 @@ function App() {
           element={
             <ProtectedRoute>
               <DatasetDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <AdminRoute>
+                <SettingsPage />
+              </AdminRoute>
             </ProtectedRoute>
           }
         />

@@ -212,6 +212,20 @@ export const tr = {
       empty: 'Bu seçim için satır bulunamadı.',
     },
   },
+  settings: {
+    title: 'Ayarlar',
+    subtitle: 'Şirketinizin denetim kaydını buradan görüntüleyin.',
+    audit: {
+      title: 'Denetim Kaydı',
+      subtitle: 'Kim, ne zaman, ne yaptı.',
+      loading: 'Kayıtlar yükleniyor...',
+      empty: 'Henüz bir işlem kaydedilmedi.',
+      userColumn: 'Kullanıcı',
+      actionColumn: 'İşlem',
+      entityColumn: 'Öğe',
+      dateColumn: 'Tarih',
+    },
+  },
   platformAdmin: {
     title: 'Kiracı Modül Yönetimi',
     subtitle: 'Kiracıların hangi modüllere erişebildiğini buradan yönetin.',

@@ -6,18 +6,19 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { tr } from '../i18n/tr';
 
-const navItems = [
-  { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
-  { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
-  { label: tr.shell.nav.settings, icon: Settings, path: undefined },
-];
-
 export function AppShell({ children }: { children: ReactNode }) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isAdmin = meQuery.data?.role === 'OWNER' || meQuery.data?.role === 'ADMIN';
+  const navItems = [
+    { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
+    { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
+    { label: tr.shell.nav.settings, icon: Settings, path: isAdmin ? '/settings' : undefined },
+  ];
 
   return (
     <div className="min-h-screen bg-app-bg">
