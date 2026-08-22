@@ -1,7 +1,12 @@
-import type { Widget } from '../../../lib/api';
+import type { FilterSpec, Widget } from '../../../lib/api';
 import { ApiError } from '../../../lib/api';
 import { useWidgetQuery } from '../use-widget-query';
 import { tr } from '../../../i18n/tr';
+import {
+  buildDrillDownFilters,
+  mergeDashboardFilters,
+  type DashboardFilter,
+} from '../dashboard-filters';
 import { BarChartWidget } from './bar-chart-widget';
 import { HorizontalBarChartWidget } from './horizontal-bar-chart-widget';
 import { KpiCard } from './kpi-card';
@@ -9,9 +14,30 @@ import { LineChartWidget } from './line-chart-widget';
 import { PieChartWidget } from './pie-chart-widget';
 import { TableWidget } from './table-widget';
 
-export function WidgetRenderer({ widget }: { widget: Widget }) {
-  const queryResult = useWidgetQuery(widget.querySpec);
+const CHART_TYPES = new Set(['line', 'bar', 'bar_horizontal', 'pie']);
+
+interface WidgetRendererProps {
+  widget: Widget;
+  dashboardFilters?: DashboardFilter[];
+  onDrillDown?: (datasetId: string, filters: FilterSpec[]) => void;
+}
+
+export function WidgetRenderer({ widget, dashboardFilters, onDrillDown }: WidgetRendererProps) {
+  const querySpec = dashboardFilters
+    ? mergeDashboardFilters(widget.querySpec, dashboardFilters)
+    : widget.querySpec;
+  const queryResult = useWidgetQuery(querySpec);
   const dimensionCount = widget.querySpec.dimensions.length;
+
+  const onPointClick =
+    onDrillDown && CHART_TYPES.has(widget.type) && dimensionCount > 0
+      ? (dataIndex: number) => {
+          const row = queryResult.data?.rows[dataIndex];
+          if (!row) return;
+          const drillFilters = buildDrillDownFilters(widget.querySpec, row);
+          onDrillDown(widget.querySpec.datasetId, [...querySpec.filters, ...drillFilters]);
+        }
+      : undefined;
 
   if (queryResult.isPending) {
     return (
@@ -53,13 +79,37 @@ export function WidgetRenderer({ widget }: { widget: Widget }) {
     case 'kpi':
       return <KpiCard result={result} format={widget.vizOptions.format as string | undefined} />;
     case 'line':
-      return <LineChartWidget result={result} dimensionCount={dimensionCount} />;
+      return (
+        <LineChartWidget
+          result={result}
+          dimensionCount={dimensionCount}
+          onPointClick={onPointClick}
+        />
+      );
     case 'bar':
-      return <BarChartWidget result={result} dimensionCount={dimensionCount} />;
+      return (
+        <BarChartWidget
+          result={result}
+          dimensionCount={dimensionCount}
+          onPointClick={onPointClick}
+        />
+      );
     case 'bar_horizontal':
-      return <HorizontalBarChartWidget result={result} dimensionCount={dimensionCount} />;
+      return (
+        <HorizontalBarChartWidget
+          result={result}
+          dimensionCount={dimensionCount}
+          onPointClick={onPointClick}
+        />
+      );
     case 'pie':
-      return <PieChartWidget result={result} dimensionCount={dimensionCount} />;
+      return (
+        <PieChartWidget
+          result={result}
+          dimensionCount={dimensionCount}
+          onPointClick={onPointClick}
+        />
+      );
     case 'table':
       return <TableWidget result={result} />;
     default:

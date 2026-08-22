@@ -309,6 +309,10 @@ export function runQuery(spec: QuerySpec): Promise<QueryResult> {
   return request('/query', { method: 'POST', body: JSON.stringify(spec) });
 }
 
+export function queryRows(spec: QuerySpec): Promise<QueryResult> {
+  return request('/query/rows', { method: 'POST', body: JSON.stringify(spec) });
+}
+
 export type WidgetType = 'kpi' | 'line' | 'bar' | 'bar_horizontal' | 'pie' | 'table';
 
 export interface WidgetPosition {

@@ -25,13 +25,16 @@ function makeWidget(overrides: Partial<Widget> = {}): Widget {
   };
 }
 
-function renderWidget(widget: Widget) {
+function renderWidget(
+  widget: Widget,
+  props: Partial<Omit<Parameters<typeof WidgetRenderer>[0], 'widget'>> = {},
+) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={queryClient}>
-      <WidgetRenderer widget={widget} />
+      <WidgetRenderer widget={widget} {...props} />
     </QueryClientProvider>,
   );
 }
@@ -74,5 +77,63 @@ describe('WidgetRenderer', () => {
     });
     renderWidget(makeWidget());
     expect(await screen.findByText('4.200')).toBeInTheDocument();
+  });
+
+  it('dashboardFilters ayni veri kumesini hedefliyorsa sorguya eklenir', async () => {
+    const runQuery = vi.spyOn(api, 'runQuery').mockResolvedValue({
+      columns: [{ name: 'toplam', type: 'NUMBER', label: 'Toplam' }],
+      rows: [[100]],
+      rowCount: 1,
+      executionMs: 1,
+      truncated: false,
+    });
+    renderWidget(makeWidget(), {
+      dashboardFilters: [
+        {
+          id: 'f1',
+          datasetId: 'ds-1',
+          datasetName: 'Satışlar',
+          field: 'sehir',
+          fieldLabel: 'Şehir',
+          fieldType: 'STRING',
+          op: 'eq',
+          value: 'İstanbul',
+          valueLabel: 'İstanbul',
+        },
+      ],
+    });
+    await screen.findByText('100');
+    expect(runQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: [{ field: 'sehir', op: 'eq', value: 'İstanbul' }],
+      }),
+    );
+  });
+
+  it('farkli veri kumesini hedefleyen dashboardFilters sorguya eklenmez', async () => {
+    const runQuery = vi.spyOn(api, 'runQuery').mockResolvedValue({
+      columns: [{ name: 'toplam', type: 'NUMBER', label: 'Toplam' }],
+      rows: [[100]],
+      rowCount: 1,
+      executionMs: 1,
+      truncated: false,
+    });
+    renderWidget(makeWidget(), {
+      dashboardFilters: [
+        {
+          id: 'f1',
+          datasetId: 'ds-other',
+          datasetName: 'Başka',
+          field: 'urun',
+          fieldLabel: 'Ürün',
+          fieldType: 'STRING',
+          op: 'eq',
+          value: 'X',
+          valueLabel: 'X',
+        },
+      ],
+    });
+    await screen.findByText('100');
+    expect(runQuery).toHaveBeenCalledWith(expect.objectContaining({ filters: [] }));
   });
 });

@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { GridLayout, useContainerWidth } from 'react-grid-layout';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { useMeQuery } from '../features/auth/use-auth';
+import { DashboardFilterBar } from '../features/dashboards/dashboard-filter-bar';
+import type { DashboardFilter } from '../features/dashboards/dashboard-filters';
 import { useDashboardQuery } from '../features/dashboards/use-dashboards';
+import { DrillDownModal } from '../features/dashboards/widgets/drill-down-modal';
 import { WidgetRenderer } from '../features/dashboards/widgets/widget-renderer';
 import { WidgetTile } from '../features/dashboards/widgets/widget-tile';
+import type { FilterSpec } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 export function DashboardViewPage() {
@@ -14,6 +19,8 @@ export function DashboardViewPage() {
   const dashboardQuery = useDashboardQuery(id);
   const meQuery = useMeQuery();
   const { width, containerRef, mounted } = useContainerWidth();
+  const [filters, setFilters] = useState<DashboardFilter[]>([]);
+  const [drillDown, setDrillDown] = useState<{ datasetId: string; filters: FilterSpec[] }>();
 
   const canEdit = meQuery.data && meQuery.data.role !== 'VIEWER';
   const widgets = dashboardQuery.data?.widgets ?? [];
@@ -21,6 +28,7 @@ export function DashboardViewPage() {
   const layout = (dashboardQuery.data?.layout ?? [])
     .filter((item) => widgetsById.has(item.widgetId))
     .map((item) => ({ i: item.widgetId, x: item.x, y: item.y, w: item.w, h: item.h }));
+  const datasetIds = [...new Set(widgets.map((widget) => widget.querySpec.datasetId))];
 
   return (
     <AppShell>
@@ -49,7 +57,13 @@ export function DashboardViewPage() {
         </div>
       )}
 
-      <div ref={containerRef} className="mt-6">
+      {widgets.length > 0 && (
+        <div className="mt-6">
+          <DashboardFilterBar datasetIds={datasetIds} filters={filters} onChange={setFilters} />
+        </div>
+      )}
+
+      <div ref={containerRef} className="mt-2">
         {mounted && widgets.length > 0 && (
           <GridLayout
             width={width}
@@ -64,7 +78,13 @@ export function DashboardViewPage() {
               return (
                 <div key={item.i}>
                   <WidgetTile title={widget.title}>
-                    <WidgetRenderer widget={widget} />
+                    <WidgetRenderer
+                      widget={widget}
+                      dashboardFilters={filters}
+                      onDrillDown={(datasetId, drillFilters) =>
+                        setDrillDown({ datasetId, filters: drillFilters })
+                      }
+                    />
                   </WidgetTile>
                 </div>
               );
@@ -72,6 +92,14 @@ export function DashboardViewPage() {
           </GridLayout>
         )}
       </div>
+
+      {drillDown && (
+        <DrillDownModal
+          datasetId={drillDown.datasetId}
+          filters={drillDown.filters}
+          onClose={() => setDrillDown(undefined)}
+        />
+      )}
     </AppShell>
   );
 }
