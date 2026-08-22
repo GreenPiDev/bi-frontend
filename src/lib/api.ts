@@ -511,3 +511,43 @@ export function updateReport(id: string, input: UpdateReportInput): Promise<Sche
 export function deleteReport(id: string): Promise<void> {
   return request(`/reports/${id}`, { method: 'DELETE' });
 }
+
+export type AlertOperator = 'lt' | 'lte' | 'gt' | 'gte';
+
+export interface Alert {
+  id: string;
+  widgetId: string;
+  operator: AlertOperator;
+  threshold: number;
+  recipients: string[];
+  lastTriggeredAt: string | null;
+}
+
+export interface CreateAlertInput {
+  widgetId: string;
+  operator: AlertOperator;
+  threshold: number;
+  recipients: string[];
+}
+
+export interface UpdateAlertInput {
+  operator?: AlertOperator;
+  threshold?: number;
+  recipients?: string[];
+}
+
+export function listAlerts(): Promise<Alert[]> {
+  return request('/alerts');
+}
+
+export function createAlert(input: CreateAlertInput): Promise<Alert> {
+  return request('/alerts', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateAlert(id: string, input: UpdateAlertInput): Promise<Alert> {
+  return request(`/alerts/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteAlert(id: string): Promise<void> {
+  return request(`/alerts/${id}`, { method: 'DELETE' });
+}

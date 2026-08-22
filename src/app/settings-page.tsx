@@ -1,4 +1,5 @@
 import { AppShell } from './app-shell';
+import { AlertsSection } from '../features/alerts/alerts-section';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
 import { ReportsSection } from '../features/reports/reports-section';
 import { tr } from '../i18n/tr';
@@ -24,6 +25,7 @@ const entityLabels: Record<string, string> = {
   DataSource: 'Veri Kaynağı',
   User: 'Kullanıcı',
   ScheduledReport: 'Zamanlanmış Rapor',
+  Alert: 'Alarm',
   Invitation: 'Davet',
 };
 
@@ -36,6 +38,7 @@ export function SettingsPage() {
       <p className="text-sm text-app-muted">{tr.settings.subtitle}</p>
 
       <ReportsSection />
+      <AlertsSection />
 
       <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
         <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.audit.title}</h2>
