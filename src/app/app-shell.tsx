@@ -7,7 +7,15 @@ import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { tr } from '../i18n/tr';
 
-export function AppShell({ children }: { children: ReactNode }) {
+interface AppShellProps {
+  children: ReactNode;
+  /** PDF export'unun Playwright ile render ettigi sade rapor gorunumu (bkz.
+   * dashboard-pdf.service.ts): sadece logo + verilen icerik kalir, navigasyon/
+   * kullanici aksiyonlari/chatbot widget'i render edilmez. */
+  print?: boolean;
+}
+
+export function AppShell({ children, print = false }: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,6 +32,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       ? [{ label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' }]
       : []),
   ];
+
+  if (print) {
+    return (
+      <div className="min-h-screen bg-app-bg">
+        <header className="flex h-16 items-center border-b border-app-border bg-app-surface px-5">
+          <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
+        </header>
+        <main>
+          <div className="p-6 md:p-8">{children}</div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-app-bg">

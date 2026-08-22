@@ -1,7 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
+import { clsx } from 'clsx';
 import { useState } from 'react';
 import { GridLayout, useContainerWidth } from 'react-grid-layout';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -19,6 +20,8 @@ import { tr } from '../i18n/tr';
 export function DashboardViewPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isPrintMode = searchParams.get('print') === '1';
   const dashboardQuery = useDashboardQuery(id);
   const meQuery = useMeQuery();
   const { width, containerRef, mounted } = useContainerWidth();
@@ -38,41 +41,45 @@ export function DashboardViewPage() {
   const datasetIds = [...new Set(widgets.map((widget) => widget.querySpec.datasetId))];
 
   return (
-    <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/dashboards')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.dashboards.viewer.backToList}
-      </button>
+    <AppShell print={isPrintMode}>
+      {!isPrintMode && (
+        <button
+          type="button"
+          onClick={() => navigate('/dashboards')}
+          className="text-sm font-semibold text-app-muted hover:text-app-text"
+        >
+          {'←'} {tr.dashboards.viewer.backToList}
+        </button>
+      )}
 
-      <div className="mt-4 flex items-start justify-between gap-4">
+      <div className={clsx('flex items-start justify-between gap-4', !isPrintMode && 'mt-4')}>
         {dashboardQuery.data && (
           <h1 className="text-xl font-bold text-app-text">{dashboardQuery.data.name}</h1>
         )}
-        <div className="flex items-center gap-3">
-          {widgets.length > 0 && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => exportPdfMutation.mutate()}
-              disabled={exportPdfMutation.isPending}
-            >
-              {exportPdfMutation.isPending
-                ? tr.dashboards.viewer.exportPdfBusy
-                : tr.dashboards.viewer.exportPdf}
-            </Button>
-          )}
-          {canEdit && (
-            <Button type="button" onClick={() => navigate(`/dashboards/${id}/edit`)}>
-              {tr.dashboards.viewer.editButton}
-            </Button>
-          )}
-        </div>
+        {!isPrintMode && (
+          <div className="flex items-center gap-3">
+            {widgets.length > 0 && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => exportPdfMutation.mutate()}
+                disabled={exportPdfMutation.isPending}
+              >
+                {exportPdfMutation.isPending
+                  ? tr.dashboards.viewer.exportPdfBusy
+                  : tr.dashboards.viewer.exportPdf}
+              </Button>
+            )}
+            {canEdit && (
+              <Button type="button" onClick={() => navigate(`/dashboards/${id}/edit`)}>
+                {tr.dashboards.viewer.editButton}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      {exportPdfMutation.error && (
+      {!isPrintMode && exportPdfMutation.error && (
         <p className="mt-2 text-sm text-app-danger">
           {exportPdfMutation.error instanceof ApiError
             ? exportPdfMutation.error.message
@@ -86,7 +93,7 @@ export function DashboardViewPage() {
         </div>
       )}
 
-      {widgets.length > 0 && (
+      {!isPrintMode && widgets.length > 0 && (
         <div className="mt-6">
           <DashboardFilterBar datasetIds={datasetIds} filters={filters} onChange={setFilters} />
         </div>
