@@ -148,6 +148,7 @@ export const tr = {
       addWidget: 'Widget ekle',
       widgetTitleLabel: 'Widget başlığı',
       widgetTypeLabel: 'Görselleştirme türü',
+      currencyFormatLabel: 'Para birimi olarak göster (₺)',
       save: 'Kaydet',
       saving: 'Kaydediliyor...',
       saveSuccess: 'Değişiklikler kaydedildi.',

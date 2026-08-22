@@ -1,9 +1,12 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { DashboardEditPage } from './app/dashboard-edit-page';
+import { DashboardViewPage } from './app/dashboard-view-page';
 import { DashboardsListPage } from './app/dashboards-list-page';
 import { DatasetDetailPage } from './app/dataset-detail-page';
 import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
 import { DatasetsListPage } from './app/datasets-list-page';
+import { EditorRoute } from './app/editor-route';
 import { InvitationAcceptPage } from './app/invitation-accept-page';
 import { LoginPage } from './app/login-page';
 import { PlatformAdminPage } from './app/platform-admin-page';
@@ -32,6 +35,24 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardsListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboards/:id"
+          element={
+            <ProtectedRoute>
+              <DashboardViewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboards/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditorRoute>
+                <DashboardEditPage />
+              </EditorRoute>
             </ProtectedRoute>
           }
         />
