@@ -10,6 +10,7 @@ import {
   updateWidget,
   type CreateDashboardInput,
   type CreateWidgetInput,
+  type DashboardWithWidgets,
   type UpdateDashboardInput,
   type UpdateWidgetInput,
 } from '../../lib/api';
@@ -66,8 +67,13 @@ export function useCreateWidgetMutation(dashboardId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CreateWidgetInput) => createWidget(dashboardId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['dashboards', dashboardId] });
+    onSuccess: (widget) => {
+      // Senkron cache guncellemesi: grid layout state'i (dashboard-edit-page.tsx) ile
+      // widget listesi ayni render turunda gormeli, yoksa react-grid-layout yeni ogeyi
+      // 1x1 varsayilan boyutta render ediyor (baseLayout/children senkronizasyon yarisi).
+      queryClient.setQueryData<DashboardWithWidgets>(['dashboards', dashboardId], (prev) =>
+        prev ? { ...prev, widgets: [...prev.widgets, widget] } : prev,
+      );
     },
   });
 }
@@ -77,8 +83,12 @@ export function useUpdateWidgetMutation(dashboardId: string) {
   return useMutation({
     mutationFn: ({ widgetId, input }: { widgetId: string; input: UpdateWidgetInput }) =>
       updateWidget(dashboardId, widgetId, input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['dashboards', dashboardId] });
+    onSuccess: (widget) => {
+      queryClient.setQueryData<DashboardWithWidgets>(['dashboards', dashboardId], (prev) =>
+        prev
+          ? { ...prev, widgets: prev.widgets.map((w) => (w.id === widget.id ? widget : w)) }
+          : prev,
+      );
     },
   });
 }
@@ -87,8 +97,10 @@ export function useDeleteWidgetMutation(dashboardId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (widgetId: string) => deleteWidget(dashboardId, widgetId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['dashboards', dashboardId] });
+    onSuccess: (_data, widgetId) => {
+      queryClient.setQueryData<DashboardWithWidgets>(['dashboards', dashboardId], (prev) =>
+        prev ? { ...prev, widgets: prev.widgets.filter((w) => w.id !== widgetId) } : prev,
+      );
     },
   });
 }
