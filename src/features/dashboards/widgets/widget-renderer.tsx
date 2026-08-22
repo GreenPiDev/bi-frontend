@@ -83,6 +83,7 @@ export function WidgetRenderer({ widget, dashboardFilters, onDrillDown }: Widget
         <LineChartWidget
           result={result}
           dimensionCount={dimensionCount}
+          title={widget.title}
           onPointClick={onPointClick}
         />
       );
@@ -91,6 +92,7 @@ export function WidgetRenderer({ widget, dashboardFilters, onDrillDown }: Widget
         <BarChartWidget
           result={result}
           dimensionCount={dimensionCount}
+          title={widget.title}
           onPointClick={onPointClick}
         />
       );
@@ -99,6 +101,7 @@ export function WidgetRenderer({ widget, dashboardFilters, onDrillDown }: Widget
         <HorizontalBarChartWidget
           result={result}
           dimensionCount={dimensionCount}
+          title={widget.title}
           onPointClick={onPointClick}
         />
       );
@@ -107,6 +110,7 @@ export function WidgetRenderer({ widget, dashboardFilters, onDrillDown }: Widget
         <PieChartWidget
           result={result}
           dimensionCount={dimensionCount}
+          title={widget.title}
           onPointClick={onPointClick}
         />
       );

@@ -135,6 +135,9 @@ export const tr = {
       backToList: 'Panolara dön',
       editButton: 'Düzenle',
       empty: 'Bu pano henüz boş. Düzenleme moduna geçip widget ekleyebilirsin.',
+      exportPdf: 'PDF indir',
+      exportPdfBusy: 'PDF hazırlanıyor...',
+      exportPdfError: 'PDF oluşturulamadı.',
     },
     editor: {
       backToView: 'Görüntülemeye dön',
@@ -173,6 +176,9 @@ export const tr = {
       retry: 'Tekrar dene',
       empty: 'Bu ölçüt için veri yok.',
       drillHint: 'Detayları görmek için bir noktaya tıkla',
+      exportPng: 'PNG indir',
+      exportCsv: 'CSV indir',
+      exportError: 'Dışa aktarılamadı.',
     },
     filters: {
       title: 'Filtreler',

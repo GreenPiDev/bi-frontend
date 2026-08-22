@@ -443,3 +443,33 @@ export interface AuditLogEntry {
 export function listAuditLogs(): Promise<AuditLogEntry[]> {
   return request('/audit-logs');
 }
+
+async function requestBlob(path: string): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    let body: ApiErrorBody | undefined;
+    try {
+      body = (await response.json()) as ApiErrorBody;
+    } catch {
+      body = undefined;
+    }
+    throw new ApiError(
+      body?.error.code ?? 'UNKNOWN_ERROR',
+      body?.error.message ?? 'Beklenmeyen bir hata olustu.',
+      response.status,
+      body?.error.details,
+    );
+  }
+  return response.blob();
+}
+
+export function exportWidgetCsv(widgetId: string): Promise<Blob> {
+  return requestBlob(`/exports/widget/${widgetId}?format=csv`);
+}
+
+export function exportDashboardPdf(dashboardId: string): Promise<Blob> {
+  return requestBlob(`/exports/dashboard/${dashboardId}/pdf`);
+}

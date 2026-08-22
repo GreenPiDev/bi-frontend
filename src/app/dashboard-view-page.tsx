@@ -1,3 +1,4 @@
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { GridLayout, useContainerWidth } from 'react-grid-layout';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -8,9 +9,11 @@ import { DashboardFilterBar } from '../features/dashboards/dashboard-filter-bar'
 import type { DashboardFilter } from '../features/dashboards/dashboard-filters';
 import { useDashboardQuery } from '../features/dashboards/use-dashboards';
 import { DrillDownModal } from '../features/dashboards/widgets/drill-down-modal';
+import { WidgetCsvExportButton } from '../features/dashboards/widgets/widget-csv-export-button';
 import { WidgetRenderer } from '../features/dashboards/widgets/widget-renderer';
 import { WidgetTile } from '../features/dashboards/widgets/widget-tile';
-import type { FilterSpec } from '../lib/api';
+import { ApiError, exportDashboardPdf, type FilterSpec } from '../lib/api';
+import { downloadBlob } from '../lib/download';
 import { tr } from '../i18n/tr';
 
 export function DashboardViewPage() {
@@ -21,6 +24,10 @@ export function DashboardViewPage() {
   const { width, containerRef, mounted } = useContainerWidth();
   const [filters, setFilters] = useState<DashboardFilter[]>([]);
   const [drillDown, setDrillDown] = useState<{ datasetId: string; filters: FilterSpec[] }>();
+  const exportPdfMutation = useMutation({
+    mutationFn: () => exportDashboardPdf(id),
+    onSuccess: (blob) => downloadBlob(blob, `${dashboardQuery.data?.name ?? 'pano'}.pdf`),
+  });
 
   const canEdit = meQuery.data && meQuery.data.role !== 'VIEWER';
   const widgets = dashboardQuery.data?.widgets ?? [];
@@ -44,12 +51,34 @@ export function DashboardViewPage() {
         {dashboardQuery.data && (
           <h1 className="text-xl font-bold text-app-text">{dashboardQuery.data.name}</h1>
         )}
-        {canEdit && (
-          <Button type="button" onClick={() => navigate(`/dashboards/${id}/edit`)}>
-            {tr.dashboards.viewer.editButton}
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {widgets.length > 0 && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => exportPdfMutation.mutate()}
+              disabled={exportPdfMutation.isPending}
+            >
+              {exportPdfMutation.isPending
+                ? tr.dashboards.viewer.exportPdfBusy
+                : tr.dashboards.viewer.exportPdf}
+            </Button>
+          )}
+          {canEdit && (
+            <Button type="button" onClick={() => navigate(`/dashboards/${id}/edit`)}>
+              {tr.dashboards.viewer.editButton}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {exportPdfMutation.error && (
+        <p className="mt-2 text-sm text-app-danger">
+          {exportPdfMutation.error instanceof ApiError
+            ? exportPdfMutation.error.message
+            : tr.dashboards.viewer.exportPdfError}
+        </p>
+      )}
 
       {dashboardQuery.data && widgets.length === 0 && (
         <div className="mt-6 rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
@@ -77,7 +106,10 @@ export function DashboardViewPage() {
               if (!widget) return null;
               return (
                 <div key={item.i}>
-                  <WidgetTile title={widget.title}>
+                  <WidgetTile
+                    title={widget.title}
+                    actions={<WidgetCsvExportButton widgetId={widget.id} title={widget.title} />}
+                  >
                     <WidgetRenderer
                       widget={widget}
                       dashboardFilters={filters}

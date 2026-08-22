@@ -1,27 +1,24 @@
-import ReactECharts from 'echarts-for-react';
 import type { QueryResult } from '../../../lib/api';
+import { ChartWithExport } from './chart-with-export';
 import { getChartTheme } from './chart-theme';
 import { buildPieOption } from './query-result-to-echarts-option';
 
 export function PieChartWidget({
   result,
   dimensionCount,
+  title,
   onPointClick,
 }: {
   result: QueryResult;
   dimensionCount: number;
+  title: string;
   onPointClick?: (dataIndex: number) => void;
 }) {
   return (
-    <ReactECharts
+    <ChartWithExport
       option={buildPieOption(result, dimensionCount, getChartTheme())}
-      style={{ height: '100%', width: '100%' }}
-      notMerge
-      onEvents={
-        onPointClick
-          ? { click: (params: { dataIndex: number }) => onPointClick(params.dataIndex) }
-          : undefined
-      }
+      fileName={title}
+      onEvents={onPointClick ? { click: (params) => onPointClick(params.dataIndex) } : undefined}
     />
   );
 }
