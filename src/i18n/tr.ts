@@ -107,6 +107,14 @@ export const tr = {
       submitting: 'Yükleniyor...',
       fileRequired: 'Lütfen bir dosya seçin.',
       back: 'Veri kümelerine dön',
+      sampleTitle: 'Elinde dosya yok mu? Örnek veriyle dene',
+      sampleSubtitle:
+        'Sistemi denemek için hazırladığımız iki farklı örnek dosyayı indirip buradan yükleyebilirsin.',
+      sampleCsvLabel: 'Perakende Satış (CSV)',
+      sampleCsvDescription: '8 sütun · virgüllü ondalık, gg.AA.yyyy tarih',
+      sampleXlsxLabel: 'Depo Stok Takibi (Excel)',
+      sampleXlsxDescription: '7 sütun · noktalı ondalık, yyyy-AA-gg tarih',
+      sampleDownload: 'İndir',
     },
     processing: {
       title: 'Dosyanız işleniyor',

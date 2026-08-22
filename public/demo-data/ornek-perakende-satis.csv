@@ -1,0 +1,21 @@
+Müşteri Adı,Şehir,Ürün,Adet,Birim Fiyat,Toplam Tutar,Satış Tarihi,İade mi
+Ahmet Yılmaz,İstanbul,Kahve Makinesi,2,"1.234,50","2.469,00",01.01.2026,Hayır
+Ayşe Şahin,Ankara,Blender,1,"899,90","899,90",03.01.2026,Hayır
+Mehmet Öztürk,İzmir,Tost Makinesi,3,"349,00","1.047,00",05.01.2026,Evet
+Fatma Çelik,Bursa,Su Isıtıcı,5,"199,99","999,95",10.01.2026,Hayır
+Can Aydın,İstanbul,Kahve Makinesi,1,"1.234,50","1.234,50",12.01.2026,Hayır
+Zeynep Kara,Antalya,Mikser,4,"459,00","1.836,00",14.01.2026,Hayır
+Emre Demir,Ankara,Blender,2,"899,90","1.799,80",18.01.2026,Evet
+Elif Aksoy,İzmir,Ütü,1,"599,00","599,00",20.01.2026,Hayır
+Burak Şen,İstanbul,Süpürge,1,"2.499,00","2.499,00",22.01.2026,Hayır
+Gamze Er,Bursa,Tost Makinesi,2,"349,00","698,00",25.01.2026,Hayır
+Ömer Polat,İzmir,Su Isıtıcı,3,"199,99","599,97",27.01.2026,Hayır
+Selin Aslan,Ankara,Mikser,1,"459,00","459,00",29.01.2026,Evet
+Kerem Yıldız,İstanbul,Kahve Makinesi,3,"1.234,50","3.703,50",02.02.2026,Hayır
+Deniz Korkmaz,Antalya,Ütü,2,"599,00","1.198,00",05.02.2026,Hayır
+Aslı Güneş,Bursa,Süpürge,1,"2.499,00","2.499,00",08.02.2026,Hayır
+Tolga Arslan,İzmir,Blender,1,"899,90","899,90",10.02.2026,Hayır
+Ceren Yavuz,Ankara,Tost Makinesi,4,"349,00","1.396,00",12.02.2026,Hayır
+Onur Çetin,İstanbul,Mikser,2,"459,00","918,00",15.02.2026,Evet
+Buse Kaplan,Bursa,Su Isıtıcı,1,"199,99","199,99",18.02.2026,Hayır
+Yusuf Doğan,Antalya,Kahve Makinesi,1,"1.234,50","1.234,50",21.02.2026,Hayır
