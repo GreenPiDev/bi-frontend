@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { clearChatHistory } from '../chatbot/chatbot-storage';
 import {
   acceptInvitation,
   ApiError,
@@ -99,6 +100,7 @@ export function useLogoutMutation() {
     mutationFn: () => logout(),
     onSuccess: () => {
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
+      clearChatHistory();
     },
   });
 }

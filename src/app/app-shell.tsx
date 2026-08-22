@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { tr } from '../i18n/tr';
 
@@ -81,6 +82,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="pt-16 md:pl-16">
         <div className="p-6 md:p-8">{children}</div>
       </main>
+
+      <ChatbotWidget />
     </div>
   );
 }

@@ -486,6 +486,27 @@ export function listAuditLogs(): Promise<AuditLogEntry[]> {
   return request('/audit-logs');
 }
 
+export type ChatRole = 'user' | 'assistant';
+
+export interface ChatHistoryItem {
+  role: ChatRole;
+  content: string;
+}
+
+export interface SendChatMessageInput {
+  message: string;
+  history: ChatHistoryItem[];
+}
+
+export interface ChatMessageResponse {
+  reply: string;
+  navigateTo: string | null;
+}
+
+export function sendChatMessage(input: SendChatMessageInput): Promise<ChatMessageResponse> {
+  return request('/chatbot/message', { method: 'POST', body: JSON.stringify(input) });
+}
+
 async function requestBlob(path: string): Promise<Blob> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',

@@ -363,4 +363,15 @@ export const tr = {
     forbidden: 'Bu sayfayı görüntüleme yetkiniz yok.',
     updateError: 'Modül güncellenemedi.',
   },
+  chatbot: {
+    openButtonLabel: 'Asistanı aç',
+    closeButtonLabel: 'Asistanı kapat',
+    title: 'PiLens Asistanı',
+    emptyState:
+      'Merhaba! Verileriniz hakkında soru sorabilir ya da bir sayfaya gitmemi isteyebilirsiniz.',
+    inputPlaceholder: 'Bir soru sorun...',
+    send: 'Gönder',
+    thinking: 'Düşünüyor...',
+    error: 'Bir hata oluştu, lütfen tekrar deneyin.',
+  },
 } as const;
