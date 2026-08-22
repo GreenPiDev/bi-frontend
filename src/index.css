@@ -16,6 +16,18 @@
   --color-success-dark: #15803d;
   --color-brand: #0f766e;
   --color-brand-dark: #0d5f58;
+  --chart-surface: #fcfcfb;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-muted: #898781;
+  --chart-series-1: #2a78d6;
+  --chart-series-2: #008300;
+  --chart-series-3: #e87ba4;
+  --chart-series-4: #eda100;
+  --chart-series-5: #1baf7a;
+  --chart-series-6: #eb6834;
+  --chart-series-7: #4a3aa7;
+  --chart-series-8: #e34948;
   --nav-height: 64px;
   --sidebar-width-collapsed: 64px;
   --sidebar-width-expanded: 240px;
@@ -38,6 +50,18 @@
   --color-success-dark: #22c55e;
   --color-brand: #2dd4bf;
   --color-brand-dark: #5eead4;
+  --chart-surface: #1a1a19;
+  --chart-grid: #2c2c2a;
+  --chart-axis: #383835;
+  --chart-muted: #898781;
+  --chart-series-1: #3987e5;
+  --chart-series-2: #008300;
+  --chart-series-3: #d55181;
+  --chart-series-4: #c98500;
+  --chart-series-5: #199e70;
+  --chart-series-6: #d95926;
+  --chart-series-7: #9085e9;
+  --chart-series-8: #e66767;
   color-scheme: dark;
 }
 
@@ -57,6 +81,14 @@
   --color-app-success-dark: var(--color-success-dark);
   --color-app-brand: var(--color-brand);
   --color-app-brand-dark: var(--color-brand-dark);
+  --color-app-chart-series-1: var(--chart-series-1);
+  --color-app-chart-series-2: var(--chart-series-2);
+  --color-app-chart-series-3: var(--chart-series-3);
+  --color-app-chart-series-4: var(--chart-series-4);
+  --color-app-chart-series-5: var(--chart-series-5);
+  --color-app-chart-series-6: var(--chart-series-6);
+  --color-app-chart-series-7: var(--chart-series-7);
+  --color-app-chart-series-8: var(--chart-series-8);
 }
 
 * {
