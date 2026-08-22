@@ -1,5 +1,6 @@
 import { usePlatformTenantsQuery } from '../features/platform-admin/use-platform-admin';
 import { tr } from '../i18n/tr';
+import { AppShell } from './app-shell';
 import { PlatformAdminTenantModules } from './platform-admin-tenant-modules';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
@@ -8,7 +9,7 @@ export function PlatformAdminPage() {
   const tenantsQuery = usePlatformTenantsQuery();
 
   return (
-    <div className="min-h-screen bg-app-bg p-6 md:p-10">
+    <AppShell>
       <h1 className="text-xl font-bold text-app-text">{tr.platformAdmin.title}</h1>
       <p className="mt-1 text-sm text-app-muted">{tr.platformAdmin.subtitle}</p>
 
@@ -48,6 +49,6 @@ export function PlatformAdminPage() {
           </table>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }

@@ -52,6 +52,7 @@ export const tr = {
       dashboards: 'Panolar',
       datasets: 'Veri Kümeleri',
       settings: 'Ayarlar',
+      platformAdmin: 'Kiracı Yönetimi',
     },
   },
   datasets: {

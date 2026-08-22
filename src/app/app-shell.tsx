@@ -1,4 +1,4 @@
-import { LayoutDashboard, LogOut, Settings, Table2 } from 'lucide-react';
+import { Building2, LayoutDashboard, LogOut, Settings, Table2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
@@ -18,6 +18,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
     { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
     { label: tr.shell.nav.settings, icon: Settings, path: isAdmin ? '/settings' : undefined },
+    ...(meQuery.data?.isPlatformAdmin
+      ? [{ label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' }]
+      : []),
   ];
 
   return (
