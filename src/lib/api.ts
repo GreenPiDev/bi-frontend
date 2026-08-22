@@ -11,6 +11,12 @@ export interface SafeUser {
   isPlatformAdmin: boolean;
 }
 
+export interface UserProfile extends SafeUser {
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
 export class ApiError extends Error {
   readonly code: string;
   readonly status: number;
@@ -107,6 +113,31 @@ export function logout(): Promise<{ ok: true }> {
 
 export function me(): Promise<SafeUser> {
   return request('/auth/me');
+}
+
+export function getProfile(): Promise<UserProfile> {
+  return request('/users/me');
+}
+
+export interface UpdateProfileInput {
+  name?: string;
+  email?: string;
+}
+
+export function updateProfile(input: UpdateProfileInput): Promise<UserProfile> {
+  return request('/users/me', { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export function changePassword(input: ChangePasswordInput): Promise<{ ok: true }> {
+  return request('/users/me/password', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
 }
 
 export function getInvitation(token: string): Promise<InvitationInfo> {

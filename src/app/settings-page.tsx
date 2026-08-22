@@ -16,6 +16,8 @@ const actionLabels: Record<string, string> = {
   UPLOAD: 'Yükledi',
   INVITE: 'Davet Etti',
   UPDATE_ROLE: 'Rol Değiştirdi',
+  UPDATE_PROFILE: 'Profilini Güncelledi',
+  CHANGE_PASSWORD: 'Şifresini Değiştirdi',
 };
 
 const entityLabels: Record<string, string> = {

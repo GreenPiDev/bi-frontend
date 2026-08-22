@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, LogOut, Settings, Table2 } from 'lucide-react';
+import { Building2, LayoutDashboard, LogOut, Settings, Table2, User } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
@@ -17,6 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navItems = [
     { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
     { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
+    { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     { label: tr.shell.nav.settings, icon: Settings, path: isAdmin ? '/settings' : undefined },
     ...(meQuery.data?.isPlatformAdmin
       ? [{ label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' }]
@@ -26,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-app-bg">
       <header className="fixed inset-x-0 top-0 z-[100] flex h-16 items-center justify-between border-b border-app-border bg-app-surface px-5">
-        <span className="text-lg font-bold text-app-brand">{tr.common.appName}</span>
+        <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
         <div className="flex items-center gap-4">
           {meQuery.data && (
             <span className="hidden text-sm font-semibold text-app-brand sm:inline">

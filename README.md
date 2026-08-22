@@ -1,4 +1,4 @@
-# bi-frontend — Pusula BI Web
+# bi-frontend — PiLens Web
 
 Vite + React 19 + TypeScript SPA. Bkz. kok dizindeki `docs/MIMARI.md` ve `docs/VARSAYIMLAR.md`.
 

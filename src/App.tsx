@@ -13,6 +13,7 @@ import { LoginPage } from './app/login-page';
 import { OnboardingPage } from './app/onboarding-page';
 import { PlatformAdminPage } from './app/platform-admin-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
+import { ProfilePage } from './app/profile-page';
 import { ProtectedRoute } from './app/protected-route';
 import { RegisterPage } from './app/register-page';
 import { SettingsPage } from './app/settings-page';
@@ -96,6 +97,14 @@ function App() {
           element={
             <ProtectedRoute>
               <DatasetDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

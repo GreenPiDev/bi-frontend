@@ -2,17 +2,23 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   acceptInvitation,
   ApiError,
+  changePassword,
+  getProfile,
   login,
   logout,
   me,
   register,
+  updateProfile,
   type AcceptInvitationInput,
+  type ChangePasswordInput,
   type LoginInput,
   type RegisterInput,
   type SafeUser,
+  type UpdateProfileInput,
 } from '../../lib/api';
 
 export const AUTH_QUERY_KEY = ['auth', 'me'];
+export const PROFILE_QUERY_KEY = ['users', 'me'];
 
 export function useMeQuery() {
   return useQuery<SafeUser | null>({
@@ -60,6 +66,30 @@ export function useAcceptInvitationMutation() {
     onSuccess: (result) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, result.user);
     },
+  });
+}
+
+export function useProfileQuery() {
+  return useQuery({
+    queryKey: PROFILE_QUERY_KEY,
+    queryFn: getProfile,
+  });
+}
+
+export function useUpdateProfileMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: UpdateProfileInput) => updateProfile(input),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(PROFILE_QUERY_KEY, profile);
+      queryClient.setQueryData(AUTH_QUERY_KEY, profile);
+    },
+  });
+}
+
+export function useChangePasswordMutation() {
+  return useMutation({
+    mutationFn: (input: ChangePasswordInput) => changePassword(input),
   });
 }
 

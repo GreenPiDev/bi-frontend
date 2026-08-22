@@ -1,6 +1,6 @@
 export const tr = {
   common: {
-    appName: 'Pusula BI',
+    appName: 'PiLens',
     loading: 'Yükleniyor...',
     save: 'Kaydet',
     cancel: 'İptal',
@@ -11,7 +11,7 @@ export const tr = {
     error: 'API bağlantısı kurulamadı',
   },
   auth: {
-    eyebrow: 'Pusula BI',
+    eyebrow: 'PiLens',
     loginTitle: 'Hesabınıza giriş yapın',
     loginSubtitle: 'Verilerinizi görselleştirmeye devam edin.',
     loginSubmit: 'Giriş yap',
@@ -51,8 +51,40 @@ export const tr = {
     nav: {
       dashboards: 'Panolar',
       datasets: 'Veri Kümeleri',
+      profile: 'Profil',
       settings: 'Ayarlar',
       platformAdmin: 'Kiracı Yönetimi',
+    },
+  },
+  profile: {
+    title: 'Profil',
+    subtitle: 'Hesap bilgilerini görüntüle ve düzenle.',
+    infoSection: {
+      title: 'Hesap Bilgileri',
+      roleLabel: 'Rol',
+      statusLabel: 'Durum',
+      statusActive: 'Aktif',
+      statusInactive: 'Pasif',
+      createdAtLabel: 'Katılma Tarihi',
+      lastLoginLabel: 'Son Giriş',
+      never: 'Henüz giriş yapılmadı',
+    },
+    editSection: {
+      title: 'Bilgilerini Düzenle',
+      nameLabel: 'Ad Soyad',
+      emailLabel: 'E-posta',
+      submit: 'Kaydet',
+      submitting: 'Kaydediliyor...',
+      success: 'Bilgilerin güncellendi.',
+    },
+    passwordSection: {
+      title: 'Şifreni Değiştir',
+      currentLabel: 'Mevcut Şifre',
+      newLabel: 'Yeni Şifre',
+      newConfirmLabel: 'Yeni Şifre (Tekrar)',
+      submit: 'Şifreyi Değiştir',
+      submitting: 'Değiştiriliyor...',
+      success: 'Şifren değiştirildi.',
     },
   },
   datasets: {
@@ -275,7 +307,7 @@ export const tr = {
     },
   },
   onboarding: {
-    title: "Pusula BI'a Hoş Geldin",
+    title: "PiLens'e Hoş Geldin",
     subtitle: '5 dakikada ilk panonu oluştur.',
     stepUpload: {
       heading: '1. Verini Yükle',
@@ -303,7 +335,7 @@ export const tr = {
     },
     stepDashboard: {
       heading: '3. İlk Panonu Oluştur',
-      description: 'Pusula BI, verine bakarak senin için otomatik bir pano kuracak.',
+      description: 'PiLens, verine bakarak senin için otomatik bir pano kuracak.',
       createButton: 'Panomu Oluştur',
       creating: 'Panon hazırlanıyor...',
       createError: 'Pano oluşturulamadı.',
