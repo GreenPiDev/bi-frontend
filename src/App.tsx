@@ -1,5 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AccountDetailPage } from './app/account-detail-page';
+import { AccountFormPage } from './app/account-form-page';
+import { AccountsListPage } from './app/accounts-list-page';
 import { AdminRoute } from './app/admin-route';
+import { ContactDetailPage } from './app/contact-detail-page';
+import { ContactFormPage } from './app/contact-form-page';
+import { ContactsListPage } from './app/contacts-list-page';
+import { CrmImportPage } from './app/crm-import-page';
+import { CrmModuleRoute } from './app/crm-module-route';
 import { DashboardEditPage } from './app/dashboard-edit-page';
 import { DashboardViewPage } from './app/dashboard-view-page';
 import { DashboardsListPage } from './app/dashboards-list-page';
@@ -97,6 +105,106 @@ function App() {
           element={
             <ProtectedRoute>
               <DatasetDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firmalar"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <AccountsListPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firmalar/yeni"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <AccountFormPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firmalar/ice-aktar"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <CrmImportPage entity="accounts" />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firmalar/:id"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <AccountDetailPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firmalar/:id/duzenle"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <AccountFormPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kisiler"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <ContactsListPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kisiler/yeni"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <ContactFormPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kisiler/ice-aktar"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <CrmImportPage entity="contacts" />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kisiler/:id"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <ContactDetailPage />
+              </CrmModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kisiler/:id/duzenle"
+          element={
+            <ProtectedRoute>
+              <CrmModuleRoute>
+                <ContactFormPage />
+              </CrmModuleRoute>
             </ProtectedRoute>
           }
         />

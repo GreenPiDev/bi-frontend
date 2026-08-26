@@ -1,6 +1,6 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api/v1';
 
-export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'VIEWER';
+export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'SALES' | 'VIEWER';
 
 export interface SafeUser {
   id: string;
@@ -167,6 +167,10 @@ export interface TenantModuleStatus {
   label: string;
   alwaysOn: boolean;
   enabled: boolean;
+}
+
+export function getMyTenantModules(): Promise<TenantModuleStatus[]> {
+  return request('/tenants/me/modules');
 }
 
 export function getPlatformTenants(): Promise<TenantSummary[]> {
@@ -507,9 +511,9 @@ export function sendChatMessage(input: SendChatMessageInput): Promise<ChatMessag
   return request('/chatbot/message', { method: 'POST', body: JSON.stringify(input) });
 }
 
-async function requestBlob(path: string): Promise<Blob> {
+async function requestBlob(path: string, method: 'GET' | 'POST' = 'POST'): Promise<Blob> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'POST',
+    method,
     credentials: 'include',
   });
   if (!response.ok) {
@@ -613,4 +617,156 @@ export function updateAlert(id: string, input: UpdateAlertInput): Promise<Alert>
 
 export function deleteAlert(id: string): Promise<void> {
   return request(`/alerts/${id}`, { method: 'DELETE' });
+}
+
+export interface PagedResult<T> {
+  data: T[];
+  meta: { page: number; pageSize: number; total: number; totalPages: number };
+}
+
+export interface Account {
+  id: string;
+  name: string;
+  taxNumber: string | null;
+  taxOffice: string | null;
+  sector: string | null;
+  website: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  ownerId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AccountWithContacts extends Account {
+  contacts: Contact[];
+}
+
+export interface AccountInput {
+  name: string;
+  taxNumber?: string;
+  taxOffice?: string;
+  sector?: string;
+  website?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  city?: string;
+}
+
+export function listAccounts(
+  params: { page?: number; q?: string } = {},
+): Promise<PagedResult<Account>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/accounts${qs ? `?${qs}` : ''}`);
+}
+
+export function getAccount(id: string): Promise<AccountWithContacts> {
+  return request(`/accounts/${id}`);
+}
+
+export function createAccount(input: AccountInput): Promise<Account> {
+  return request('/accounts', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateAccount(id: string, input: Partial<AccountInput>): Promise<Account> {
+  return request(`/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteAccount(id: string): Promise<void> {
+  return request(`/accounts/${id}`, { method: 'DELETE' });
+}
+
+export interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+  accountId: string | null;
+  account?: { id: string; name: string } | null;
+  title: string | null;
+  email: string | null;
+  phone: string | null;
+  ownerId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ContactInput {
+  firstName: string;
+  lastName: string;
+  accountId?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+}
+
+export function listContacts(
+  params: { page?: number; q?: string } = {},
+): Promise<PagedResult<Contact>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/contacts${qs ? `?${qs}` : ''}`);
+}
+
+export function getContact(id: string): Promise<Contact> {
+  return request(`/contacts/${id}`);
+}
+
+export function createContact(input: ContactInput): Promise<Contact> {
+  return request('/contacts', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateContact(id: string, input: Partial<ContactInput>): Promise<Contact> {
+  return request(`/contacts/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteContact(id: string): Promise<void> {
+  return request(`/contacts/${id}`, { method: 'DELETE' });
+}
+
+export type ImportEntity = 'accounts' | 'contacts';
+
+export interface ImportPreview {
+  headers: string[];
+  sampleRows: Record<string, string>[];
+  totalRows: number;
+}
+
+export interface ImportRowError {
+  row: number;
+  messages: string[];
+}
+
+export interface ImportResult {
+  totalRows: number;
+  imported: number;
+  errors: ImportRowError[];
+}
+
+export function previewImport(file: File): Promise<ImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/imports/preview', { method: 'POST', body: formData });
+}
+
+export function runImport(
+  entity: ImportEntity,
+  file: File,
+  mapping: Record<string, string>,
+): Promise<ImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('mapping', JSON.stringify(mapping));
+  return request(`/imports/${entity}`, { method: 'POST', body: formData });
+}
+
+export function exportEntity(entity: ImportEntity): Promise<Blob> {
+  return requestBlob(`/imports/${entity}/export`, 'GET');
 }

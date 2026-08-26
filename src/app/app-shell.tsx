@@ -1,10 +1,11 @@
-import { Building2, LayoutDashboard, LogOut, Settings, Table2, User } from 'lucide-react';
+import { Building2, Contact2, LayoutDashboard, LogOut, Settings, Table2, User } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
+import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
 import { tr } from '../i18n/tr';
 
 interface AppShellProps {
@@ -23,9 +24,16 @@ export function AppShell({ children, print = false }: AppShellProps) {
   const location = useLocation();
 
   const isAdmin = meQuery.data?.role === 'OWNER' || meQuery.data?.role === 'ADMIN';
+  const crmEnabled = useIsModuleEnabled('crm');
   const navItems = [
     { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
     { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
+    ...(crmEnabled
+      ? [
+          { label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' },
+          { label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' },
+        ]
+      : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     { label: tr.shell.nav.settings, icon: Settings, path: isAdmin ? '/settings' : undefined },
     ...(meQuery.data?.isPlatformAdmin
