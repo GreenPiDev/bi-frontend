@@ -35,9 +35,28 @@ interface ApiErrorBody {
   error: { code: string; message: string; details?: unknown };
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const NO_SILENT_REFRESH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+
+let refreshPromise: Promise<boolean> | null = null;
+
+async function silentRefresh(): Promise<boolean> {
+  if (!refreshPromise) {
+    refreshPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+      .then((res) => res.ok)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+async function doFetch(path: string, init?: RequestInit): Promise<Response> {
   const isFormData = init?.body instanceof FormData;
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  return fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: {
@@ -45,20 +64,35 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   });
+}
+
+async function throwApiError(response: Response): Promise<never> {
+  let body: ApiErrorBody | undefined;
+  try {
+    body = (await response.json()) as ApiErrorBody;
+  } catch {
+    body = undefined;
+  }
+  throw new ApiError(
+    body?.error.code ?? 'UNKNOWN_ERROR',
+    body?.error.message ?? 'Beklenmeyen bir hata olustu.',
+    response.status,
+    body?.error.details,
+  );
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let response = await doFetch(path, init);
+
+  if (response.status === 401 && !NO_SILENT_REFRESH_PATHS.includes(path)) {
+    const refreshed = await silentRefresh();
+    if (refreshed) {
+      response = await doFetch(path, init);
+    }
+  }
 
   if (!response.ok) {
-    let body: ApiErrorBody | undefined;
-    try {
-      body = (await response.json()) as ApiErrorBody;
-    } catch {
-      body = undefined;
-    }
-    throw new ApiError(
-      body?.error.code ?? 'UNKNOWN_ERROR',
-      body?.error.message ?? 'Beklenmeyen bir hata olustu.',
-      response.status,
-      body?.error.details,
-    );
+    return throwApiError(response);
   }
 
   if (response.status === 204) {
@@ -512,23 +546,20 @@ export function sendChatMessage(input: SendChatMessageInput): Promise<ChatMessag
 }
 
 async function requestBlob(path: string, method: 'GET' | 'POST' = 'POST'): Promise<Blob> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  let response = await fetch(`${API_BASE_URL}${path}`, {
     method,
     credentials: 'include',
   });
-  if (!response.ok) {
-    let body: ApiErrorBody | undefined;
-    try {
-      body = (await response.json()) as ApiErrorBody;
-    } catch {
-      body = undefined;
+
+  if (response.status === 401) {
+    const refreshed = await silentRefresh();
+    if (refreshed) {
+      response = await fetch(`${API_BASE_URL}${path}`, { method, credentials: 'include' });
     }
-    throw new ApiError(
-      body?.error.code ?? 'UNKNOWN_ERROR',
-      body?.error.message ?? 'Beklenmeyen bir hata olustu.',
-      response.status,
-      body?.error.details,
-    );
+  }
+
+  if (!response.ok) {
+    return throwApiError(response);
   }
   return response.blob();
 }
