@@ -6,6 +6,7 @@ import { useMeQuery } from '../features/auth/use-auth';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
 import { CrmSettingsSection } from '../features/crm/crm-settings-section';
 import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
+import { ActionPermissionsSection } from '../features/roles/action-permissions-section';
 import { PageAccessMatrixSection } from '../features/roles/page-access-matrix-section';
 import { RolesSettingsSection } from '../features/roles/roles-settings-section';
 import { UsersSettingsSection } from '../features/roles/users-settings-section';
@@ -103,7 +104,7 @@ export function SettingsPage() {
   const permissions = meQuery.data?.permissions;
   const canViewTab = (tabKey: string) => hasPermission(permissions, 'settings', 'VIEW', tabKey);
 
-  // Roller/Sayfa Erisimleri sekmelerinin GORUNURLUGU de artik diger sekmeler gibi RBAC
+  // Roller/Sayfa Erisimleri/Islem Izinleri sekmelerinin GORUNURLUGU de artik diger sekmeler gibi RBAC
   // (settings/roles, settings/pageAccess VIEW izni) ile kontrol edilir - varsayilan olarak
   // sadece COMPANYADMIN bu izne sahip (bkz. permission.types.ts default bos permissions).
   // Ama bu sekmeler icindeki YAZMA islemleri (rol olustur/sil/izin degistir) backend'de
@@ -132,6 +133,15 @@ export function SettingsPage() {
             key: 'pageAccess',
             label: tr.settings.tabs.pageAccess,
             content: <PageAccessMatrixSection />,
+          },
+        ]
+      : []),
+    ...(canViewTab('actionPermissions')
+      ? [
+          {
+            key: 'actionPermissions',
+            label: tr.settings.tabs.actionPermissions,
+            content: <ActionPermissionsSection />,
           },
         ]
       : []),

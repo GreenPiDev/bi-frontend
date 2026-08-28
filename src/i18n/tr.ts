@@ -269,6 +269,7 @@ export const tr = {
       roles: 'Roller',
       users: 'Kullanıcılar',
       pageAccess: 'Sayfa Erişimleri',
+      actionPermissions: 'İşlem İzinleri',
     },
     pageAccess: {
       title: 'Sayfa Erişimleri',
@@ -279,6 +280,19 @@ export const tr = {
       saveButton: 'Değişiklikleri Kaydet',
       discardButton: 'Değişiklikleri Geri Al',
       saveSuccess: 'Sayfa erişimleri güncellendi.',
+    },
+    actionPermissions: {
+      title: 'İşlem İzinleri',
+      subtitle:
+        'Seçilen rolün, görebildiği sayfalarda hangi işlemleri (oluşturma, güncelleme, silme, içe/dışa aktarma) yapabileceğini buradan yönetin.',
+      roleLabel: 'Rol',
+      noRoles: 'Henüz bir rol oluşturulmadı. Önce Roller sekmesinden bir rol oluşturun.',
+      pageColumn: 'Sayfa',
+      noActionsHint: 'Bu sayfada yönetilebilecek bir işlem yok.',
+      companyAdminHint: 'Bu rol tüm işlemlere yetkilidir.',
+      saveButton: 'Değişiklikleri Kaydet',
+      discardButton: 'Değişiklikleri Geri Al',
+      saveSuccess: 'İşlem izinleri güncellendi.',
     },
     roles: {
       title: 'Roller ve Kullanıcılar',
@@ -307,6 +321,8 @@ export const tr = {
         createAction: 'Oluştur',
         updateAction: 'Güncelle',
         deleteAction: 'Sil',
+        importAction: 'İçe Aktar',
+        exportAction: 'Dışa Aktar',
         save: 'Kaydet',
         saving: 'Kaydediliyor...',
         cancel: 'Vazgeç',

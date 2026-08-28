@@ -1,6 +1,10 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api/v1';
 
-export type PermissionAction = 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE';
+export type PermissionAction = 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT';
+
+/** VIEW ayrica "Sayfa Erisimleri" sekmesinde yonetilir; "Islem Izinleri" matrisinin
+ * sutunlarini belirleyen aksiyonlar bunlardir. */
+export type CrudPermissionAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT';
 
 export interface SafeUserRole {
   id: string;
@@ -898,6 +902,7 @@ export function updateUserRole(userId: string, roleIds: string[]): Promise<SafeU
 export interface PageTabDefinition {
   key: string;
   label: string;
+  supportedActions?: CrudPermissionAction[];
 }
 
 export interface PageDefinition {
@@ -906,6 +911,7 @@ export interface PageDefinition {
   tabs?: PageTabDefinition[];
   alwaysVisible?: boolean;
   requiresModule?: string;
+  supportedActions?: CrudPermissionAction[];
 }
 
 export function getPageRegistry(): Promise<PageDefinition[]> {
