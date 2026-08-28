@@ -12,10 +12,11 @@ import {
 const ROLES_QUERY_KEY = ['roles'];
 const PAGE_REGISTRY_QUERY_KEY = ['page-registry'];
 
-export function useRolesQuery() {
+export function useRolesQuery(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ROLES_QUERY_KEY,
     queryFn: () => listRoles(),
+    enabled: options?.enabled,
   });
 }
 

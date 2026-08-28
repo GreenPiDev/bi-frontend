@@ -1,11 +1,14 @@
 import { AppShell } from './app-shell';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { AlertsSection } from '../features/alerts/alerts-section';
+import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
 import { CrmSettingsSection } from '../features/crm/crm-settings-section';
 import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
+import { PageAccessMatrixSection } from '../features/roles/page-access-matrix-section';
 import { RolesSettingsSection } from '../features/roles/roles-settings-section';
+import { UsersSettingsSection } from '../features/roles/users-settings-section';
 import { ReportsSection } from '../features/reports/reports-section';
 import { tr } from '../i18n/tr';
 
@@ -97,23 +100,46 @@ function AuditLogTab() {
 export function SettingsPage() {
   const meQuery = useMeQuery();
   const crmEnabled = useIsModuleEnabled('crm');
-  const isCompanyAdmin = meQuery.data?.permissions.isCompanyAdmin ?? false;
+  const permissions = meQuery.data?.permissions;
+  const canViewTab = (tabKey: string) => hasPermission(permissions, 'settings', 'VIEW', tabKey);
 
+  // Roller/Sayfa Erisimleri sekmelerinin GORUNURLUGU de artik diger sekmeler gibi RBAC
+  // (settings/roles, settings/pageAccess VIEW izni) ile kontrol edilir - varsayilan olarak
+  // sadece COMPANYADMIN bu izne sahip (bkz. permission.types.ts default bos permissions).
+  // Ama bu sekmeler icindeki YAZMA islemleri (rol olustur/sil/izin degistir) backend'de
+  // hala sabit CompanyAdminGuard'da - bu yuzden VIEW izni verilen bir role bu ekranlari
+  // sadece salt-okunur gorur (bkz. roles-settings-section.tsx / page-access-matrix-section.tsx
+  // icindeki isCompanyAdmin kontrolleri).
   const tabs: HorizontalTabItem[] = [
-    { key: 'general', label: tr.settings.tabs.general, content: <GeneralTab /> },
-    ...(crmEnabled
+    ...(canViewTab('general')
+      ? [{ key: 'general', label: tr.settings.tabs.general, content: <GeneralTab /> }]
+      : []),
+    ...(crmEnabled && canViewTab('crm')
       ? [{ key: 'crm', label: tr.settings.tabs.crm, content: <CrmSettingsSection /> }]
       : []),
-    { key: 'audit', label: tr.settings.tabs.audit, content: <AuditLogTab /> },
-    ...(isCompanyAdmin
+    ...(canViewTab('audit')
+      ? [{ key: 'audit', label: tr.settings.tabs.audit, content: <AuditLogTab /> }]
+      : []),
+    ...(canViewTab('roles')
       ? [{ key: 'roles', label: tr.settings.tabs.roles, content: <RolesSettingsSection /> }]
+      : []),
+    ...(canViewTab('users')
+      ? [{ key: 'users', label: tr.settings.tabs.users, content: <UsersSettingsSection /> }]
+      : []),
+    ...(canViewTab('pageAccess')
+      ? [
+          {
+            key: 'pageAccess',
+            label: tr.settings.tabs.pageAccess,
+            content: <PageAccessMatrixSection />,
+          },
+        ]
       : []),
   ];
 
   return (
     <AppShell>
       <h1 className="text-xl font-bold text-app-text">{tr.settings.title}</h1>
-      <p className="text-sm text-app-muted">{tr.settings.subtitle}</p>
 
       <div className="mt-6">
         <HorizontalTabPanel tabs={tabs} queryParam="tab" />

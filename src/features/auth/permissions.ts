@@ -14,6 +14,8 @@ export function hasPermission(
   if (set.isCompanyAdmin) return true;
   return set.permissions.some(
     (p) =>
-      p.pageKey === pageKey && p.action === action && (p.tabKey === null || p.tabKey === tabKey),
+      p.pageKey === pageKey &&
+      p.action === action &&
+      (tabKey === undefined ? true : p.tabKey === tabKey),
   );
 }

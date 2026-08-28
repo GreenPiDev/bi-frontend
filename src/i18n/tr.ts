@@ -265,13 +265,24 @@ export const tr = {
     tabs: {
       general: 'Genel',
       crm: 'CRM Ayarları',
-      audit: 'Denetim Kaydı',
+      audit: 'Kullanıcı Aktiviteleri',
       roles: 'Roller',
+      users: 'Kullanıcılar',
+      pageAccess: 'Sayfa Erişimleri',
+    },
+    pageAccess: {
+      title: 'Sayfa Erişimleri',
+      subtitle:
+        'Her rolün hangi sayfaları görebileceğini ve hangi işlemleri yapabileceğini bu tablodan yönetin.',
+      pageColumn: 'Sayfa',
+      noRoles: 'Henüz bir rol oluşturulmadı. Önce Roller sekmesinden bir rol oluşturun.',
+      saveButton: 'Değişiklikleri Kaydet',
+      discardButton: 'Değişiklikleri Geri Al',
+      saveSuccess: 'Sayfa erişimleri güncellendi.',
     },
     roles: {
       title: 'Roller ve Kullanıcılar',
-      subtitle:
-        'Şirketinizin rollerini oluşturun, sayfa/aksiyon izinlerini belirleyin ve kullanıcılara atayın.',
+      subtitle: 'Sisteminizdeki kullanıcı rollerini oluşturun ve kullanıcılara atayın.',
       listTitle: 'Roller',
       newRoleButton: '+ Yeni Rol',
       systemBadge: 'Sistem',
@@ -280,6 +291,7 @@ export const tr = {
       deleteButton: 'Sil',
       deleteConfirm: 'Bu rolü silmek istediğinize emin misiniz?',
       systemRoleReadonlyHint: 'Sistem rolleri düzenlenemez/silinemez.',
+      viewOnlyHint: 'Bu ekranı sadece görüntüleyebilirsiniz, düzenleme yetkiniz yok.',
       deleteSuccess: 'Rol silindi, bu role sahip kullanıcılar Temel Kullanıcı rolüne taşındı.',
       createSuccess: 'Rol oluşturuldu.',
       updateSuccess: 'Rol güncellendi.',
@@ -288,9 +300,8 @@ export const tr = {
         editTitle: 'Rolü Düzenle',
         nameLabel: 'Rol adı',
         namePlaceholder: 'Örn. Satış Müdürü',
-        permissionsTitle: 'Sayfa Erişimleri',
-        permissionsSubtitle:
-          'Bu rolün hangi sayfaları görebileceğini ve hangi işlemleri yapabileceğini seçin.',
+        permissionsMovedHint:
+          'Sayfa erişimlerini "Sayfa Erişimleri" sekmesinden düzenleyebilirsiniz.',
         pageColumn: 'Sayfa',
         viewAction: 'Görüntüle',
         createAction: 'Oluştur',
@@ -302,7 +313,7 @@ export const tr = {
       },
       users: {
         title: 'Kullanıcılar',
-        subtitle: 'Şirketinizdeki kullanıcıları davet edin ve rollerini yönetin.',
+        subtitle: 'Sisteme kullanıcı ekleyin ve rollerini yönetin.',
         inviteButton: '+ Kullanıcı Davet Et',
         nameColumn: 'Ad',
         emailColumn: 'E-posta',

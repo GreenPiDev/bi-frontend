@@ -7,14 +7,19 @@ import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type RoleView } from '../../lib/api';
 import { tr } from '../../i18n/tr';
+import { useMeQuery } from '../auth/use-auth';
 import { RoleFormModal } from './role-form-modal';
-import { UsersSection } from './users-section';
-import { useDeleteRoleMutation, usePageRegistryQuery, useRolesQuery } from './use-roles';
+import { useDeleteRoleMutation, useRolesQuery } from './use-roles';
 
+/** Bu sekmenin GORUNURLUGU RBAC'a bagli (settings/roles VIEW), ama rol olusturma/
+ * silme/kullanici davet etme gibi YAZMA islemleri backend'de hala sabit
+ * CompanyAdminGuard'da - bu yuzden VIEW-only bir kullanici bu ekrani sadece
+ * salt-okunur gorur (bkz. roles.controller.ts, company-admin.guard.ts). */
 export function RolesSettingsSection() {
   const toast = useToast();
+  const meQuery = useMeQuery();
+  const isCompanyAdmin = meQuery.data?.permissions.isCompanyAdmin ?? false;
   const rolesQuery = useRolesQuery();
-  const pageRegistryQuery = usePageRegistryQuery();
   const deleteMutation = useDeleteRoleMutation();
   const [modalState, setModalState] = useState<
     { mode: 'create' } | { mode: 'edit'; role: RoleView } | null
@@ -66,6 +71,10 @@ export function RolesSettingsSection() {
                 {tr.settings.roles.systemRoleReadonlyHint}
               </span>
             </Tooltip>
+          ) : !isCompanyAdmin ? (
+            <Tooltip content={tr.settings.roles.viewOnlyHint}>
+              <span className="text-xs text-app-muted">{tr.settings.roles.viewOnlyHint}</span>
+            </Tooltip>
           ) : (
             <>
               <Button
@@ -93,9 +102,11 @@ export function RolesSettingsSection() {
             <h2 className="text-base font-bold text-app-text">{tr.settings.roles.listTitle}</h2>
             <p className="text-sm text-app-muted">{tr.settings.roles.subtitle}</p>
           </div>
-          <Button type="button" onClick={() => setModalState({ mode: 'create' })}>
-            {tr.settings.roles.newRoleButton}
-          </Button>
+          {isCompanyAdmin && (
+            <Button type="button" onClick={() => setModalState({ mode: 'create' })}>
+              {tr.settings.roles.newRoleButton}
+            </Button>
+          )}
         </div>
 
         <Table
@@ -106,11 +117,8 @@ export function RolesSettingsSection() {
         />
       </section>
 
-      <UsersSection roles={rolesQuery.data ?? []} />
-
-      {modalState && pageRegistryQuery.data && (
+      {modalState && (
         <RoleFormModal
-          pages={pageRegistryQuery.data}
           role={modalState.mode === 'edit' ? modalState.role : undefined}
           onClose={() => setModalState(null)}
         />

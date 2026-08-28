@@ -12,6 +12,7 @@ import { useInviteUserMutation, useUpdateUserRoleMutation, useUsersQuery } from 
 
 interface UsersSectionProps {
   roles: RoleView[];
+  isCompanyAdmin: boolean;
 }
 
 function InviteUserModal({ roles, onClose }: { roles: RoleView[]; onClose: () => void }) {
@@ -135,7 +136,7 @@ function EditUserRolesModal({
   );
 }
 
-export function UsersSection({ roles }: UsersSectionProps) {
+export function UsersSection({ roles, isCompanyAdmin }: UsersSectionProps) {
   const usersQuery = useUsersQuery();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SafeUser | null>(null);
@@ -154,23 +155,27 @@ export function UsersSection({ roles }: UsersSectionProps) {
         </div>
       ),
     },
-    {
-      key: 'actions',
-      header: tr.settings.roles.users.actionsColumn,
-      className: 'text-right',
-      render: (u) => (
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={(event) => {
-            event.stopPropagation();
-            setEditingUser(u);
-          }}
-        >
-          {tr.settings.roles.users.editRolesButton}
-        </Button>
-      ),
-    },
+    ...(isCompanyAdmin
+      ? [
+          {
+            key: 'actions',
+            header: tr.settings.roles.users.actionsColumn,
+            className: 'text-right',
+            render: (u: SafeUser) => (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setEditingUser(u);
+                }}
+              >
+                {tr.settings.roles.users.editRolesButton}
+              </Button>
+            ),
+          } satisfies TableColumn<SafeUser>,
+        ]
+      : []),
   ];
 
   return (
@@ -180,9 +185,11 @@ export function UsersSection({ roles }: UsersSectionProps) {
           <h2 className="text-base font-bold text-app-text">{tr.settings.roles.users.title}</h2>
           <p className="text-sm text-app-muted">{tr.settings.roles.users.subtitle}</p>
         </div>
-        <Button type="button" onClick={() => setInviteOpen(true)}>
-          {tr.settings.roles.users.inviteButton}
-        </Button>
+        {isCompanyAdmin && (
+          <Button type="button" onClick={() => setInviteOpen(true)}>
+            {tr.settings.roles.users.inviteButton}
+          </Button>
+        )}
       </div>
 
       <Table
