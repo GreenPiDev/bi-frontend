@@ -1,11 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Autocomplete } from '../components/ui/autocomplete';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { MultiSelect } from '../components/ui/multi-select';
 import { TextField } from '../components/ui/text-field';
+import { useToast } from '../components/ui/toast-context';
+import { PhoneField } from '../features/crm/phone-field';
 import {
   accountFormSchema,
   cleanEmptyStrings,
@@ -16,14 +20,22 @@ import {
   useCreateAccountMutation,
   useUpdateAccountMutation,
 } from '../features/crm/use-accounts';
-import { ApiError } from '../lib/api';
+import { useSectorOptionsQuery } from '../features/crm/use-sector-options';
+import { ApiError, type AccountType } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+const ACCOUNT_TYPE_OPTIONS: { value: AccountType; label: string }[] = [
+  { value: 'CUSTOMER', label: tr.crm.accounts.accountTypeOptions.CUSTOMER },
+  { value: 'SUPPLIER', label: tr.crm.accounts.accountTypeOptions.SUPPLIER },
+];
 
 export function AccountFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const toast = useToast();
   const accountQuery = useAccountQuery(id ?? '');
+  const sectorOptionsQuery = useSectorOptionsQuery();
   const createMutation = useCreateAccountMutation();
   const updateMutation = useUpdateAccountMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -32,8 +44,12 @@ export function AccountFormPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
-  } = useForm<AccountFormValues>({ resolver: zodResolver(accountFormSchema) });
+  } = useForm<AccountFormValues>({
+    resolver: zodResolver(accountFormSchema),
+    defaultValues: { accountTypes: [] },
+  });
 
   useEffect(() => {
     if (accountQuery.data) {
@@ -42,6 +58,7 @@ export function AccountFormPage() {
         taxNumber: accountQuery.data.taxNumber ?? undefined,
         taxOffice: accountQuery.data.taxOffice ?? undefined,
         sector: accountQuery.data.sector ?? undefined,
+        accountTypes: accountQuery.data.accountTypes,
         website: accountQuery.data.website ?? undefined,
         phone: accountQuery.data.phone ?? undefined,
         email: accountQuery.data.email ?? undefined,
@@ -61,7 +78,15 @@ export function AccountFormPage() {
 
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(cleanEmptyStrings(values), {
-      onSuccess: (account) => navigate(`/firmalar/${account.id}`),
+      onSuccess: (account) => {
+        toast.success(
+          isEdit ? tr.crm.accounts.form.updateSuccess : tr.crm.accounts.form.createSuccess,
+        );
+        navigate(`/firmalar/${account.id}`);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
     });
   });
 
@@ -99,10 +124,32 @@ export function AccountFormPage() {
             error={errors.taxOffice?.message}
             {...register('taxOffice')}
           />
-          <TextField
-            label={tr.crm.accounts.form.sectorLabel}
-            error={errors.sector?.message}
-            {...register('sector')}
+          <Controller
+            name="sector"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={tr.crm.accounts.form.sectorLabel}
+                placeholder={tr.crm.accounts.form.sectorPlaceholder}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                options={(sectorOptionsQuery.data ?? []).map((option) => option.label)}
+                error={errors.sector?.message}
+              />
+            )}
+          />
+          <Controller
+            name="accountTypes"
+            control={control}
+            render={({ field }) => (
+              <MultiSelect
+                label={tr.crm.accounts.form.accountTypesLabel}
+                placeholder={tr.crm.accounts.form.accountTypesPlaceholder}
+                value={field.value ?? []}
+                onChange={(value) => field.onChange(value as AccountType[])}
+                options={ACCOUNT_TYPE_OPTIONS}
+              />
+            )}
           />
           <TextField
             label={tr.crm.accounts.form.websiteLabel}
@@ -110,10 +157,17 @@ export function AccountFormPage() {
             error={errors.website?.message}
             {...register('website')}
           />
-          <TextField
-            label={tr.crm.accounts.form.phoneLabel}
-            error={errors.phone?.message}
-            {...register('phone')}
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <PhoneField
+                label={tr.crm.accounts.form.phoneLabel}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.phone?.message}
+              />
+            )}
           />
           <TextField
             label={tr.crm.accounts.form.emailLabel}

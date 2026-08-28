@@ -1,11 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
+import { useToast } from '../components/ui/toast-context';
+import { PhoneField } from '../features/crm/phone-field';
 import {
   cleanEmptyStrings,
   contactFormSchema,
@@ -20,10 +23,16 @@ import {
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
+const STATUS_OPTIONS = [
+  { value: 'ACTIVE', label: tr.crm.contacts.statusActive },
+  { value: 'INACTIVE', label: tr.crm.contacts.statusInactive },
+];
+
 export function ContactFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const toast = useToast();
   const contactQuery = useContactQuery(id ?? '');
   const accountsQuery = useAccountsQuery();
   const createMutation = useCreateContactMutation();
@@ -34,8 +43,12 @@ export function ContactFormPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
-  } = useForm<ContactFormValues>({ resolver: zodResolver(contactFormSchema) });
+  } = useForm<ContactFormValues>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: { status: 'ACTIVE' },
+  });
 
   useEffect(() => {
     if (contactQuery.data) {
@@ -46,6 +59,8 @@ export function ContactFormPage() {
         title: contactQuery.data.title ?? undefined,
         email: contactQuery.data.email ?? undefined,
         phone: contactQuery.data.phone ?? undefined,
+        status: contactQuery.data.status,
+        lastContactedAt: contactQuery.data.lastContactedAt?.slice(0, 10) ?? undefined,
       });
     }
   }, [contactQuery.data, reset]);
@@ -60,7 +75,15 @@ export function ContactFormPage() {
 
   const onSubmit = handleSubmit((values) => {
     mutation.mutate(cleanEmptyStrings(values), {
-      onSuccess: (contact) => navigate(`/kisiler/${contact.id}`),
+      onSuccess: (contact) => {
+        toast.success(
+          isEdit ? tr.crm.contacts.form.updateSuccess : tr.crm.contacts.form.createSuccess,
+        );
+        navigate(`/kisiler/${contact.id}`);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
     });
   });
 
@@ -93,23 +116,15 @@ export function ContactFormPage() {
             error={errors.lastName?.message}
             {...register('lastName')}
           />
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="accountId" className="text-sm font-semibold text-app-muted">
-              {tr.crm.contacts.form.accountLabel}
-            </label>
-            <select
-              id="accountId"
-              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-              {...register('accountId')}
-            >
-              <option value="">{tr.crm.contacts.form.accountPlaceholder}</option>
-              {accountsQuery.data?.data.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label={tr.crm.contacts.form.accountLabel}
+            placeholder={tr.crm.contacts.form.accountPlaceholder}
+            options={(accountsQuery.data?.data ?? []).map((account) => ({
+              value: account.id,
+              label: account.name,
+            }))}
+            {...register('accountId')}
+          />
           <TextField
             label={tr.crm.contacts.form.titleLabel}
             error={errors.title?.message}
@@ -121,10 +136,28 @@ export function ContactFormPage() {
             error={errors.email?.message}
             {...register('email')}
           />
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <PhoneField
+                label={tr.crm.contacts.form.phoneLabel}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.phone?.message}
+              />
+            )}
+          />
+          <Select
+            label={tr.crm.contacts.form.statusLabel}
+            options={STATUS_OPTIONS}
+            {...register('status')}
+          />
           <TextField
-            label={tr.crm.contacts.form.phoneLabel}
-            error={errors.phone?.message}
-            {...register('phone')}
+            label={tr.crm.contacts.form.lastContactedAtLabel}
+            type="date"
+            error={errors.lastContactedAt?.message}
+            {...register('lastContactedAt')}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>

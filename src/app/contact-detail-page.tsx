@@ -1,8 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useContactQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
 import { tr } from '../i18n/tr';
+
+const dateFormatter = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short' });
 
 export function ContactDetailPage() {
   const { id = '' } = useParams();
@@ -35,6 +38,12 @@ export function ContactDetailPage() {
     { label: tr.crm.contacts.form.titleLabel, value: contact.title ?? '—' },
     { label: tr.crm.contacts.form.emailLabel, value: contact.email ?? '—' },
     { label: tr.crm.contacts.form.phoneLabel, value: contact.phone ?? '—' },
+    {
+      label: tr.crm.contacts.form.lastContactedAtLabel,
+      value: contact.lastContactedAt
+        ? dateFormatter.format(new Date(contact.lastContactedAt))
+        : '—',
+    },
   ];
 
   return (
@@ -49,9 +58,16 @@ export function ContactDetailPage() {
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">
-            {contact.firstName} {contact.lastName}
-          </h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">
+              {contact.firstName} {contact.lastName}
+            </h1>
+            <Badge variant={contact.status === 'ACTIVE' ? 'success' : 'neutral'}>
+              {contact.status === 'ACTIVE'
+                ? tr.crm.contacts.statusActive
+                : tr.crm.contacts.statusInactive}
+            </Badge>
+          </div>
           {contact.account && (
             <button
               type="button"

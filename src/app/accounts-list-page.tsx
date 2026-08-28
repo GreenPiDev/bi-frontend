@@ -1,12 +1,58 @@
-import { Search } from 'lucide-react';
+import { AlertTriangle, Search } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Tooltip } from '../components/ui/tooltip';
 import { useAccountsQuery } from '../features/crm/use-accounts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { downloadBlob } from '../lib/download';
+import type { Account } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
+
+const columns: TableColumn<Account>[] = [
+  {
+    key: 'name',
+    header: tr.crm.accounts.nameColumn,
+    render: (a) => (
+      <span className="flex items-center gap-1.5 font-semibold text-app-text">
+        {a.name}
+        {a.missingCriticalFields.length > 0 && (
+          <Tooltip
+            content={tr.crm.accounts.missingFieldsWarning(
+              a.missingCriticalFields
+                .map((field) => CRITICAL_FIELD_LABELS[field] ?? field)
+                .join(', '),
+            )}
+          >
+            <AlertTriangle size={14} className="shrink-0 text-amber-500" />
+          </Tooltip>
+        )}
+      </span>
+    ),
+  },
+  {
+    key: 'city',
+    header: tr.crm.accounts.cityColumn,
+    className: 'text-app-muted',
+    render: (a) => a.city ?? '—',
+  },
+  {
+    key: 'phone',
+    header: tr.crm.accounts.phoneColumn,
+    className: 'text-app-muted',
+    render: (a) => a.phone ?? '—',
+  },
+  {
+    key: 'email',
+    header: tr.crm.accounts.emailColumn,
+    className: 'text-app-muted',
+    render: (a) => a.email ?? '—',
+  },
+];
 
 export function AccountsListPage() {
   const navigate = useNavigate();
@@ -70,69 +116,23 @@ export function AccountsListPage() {
         </Button>
       </form>
 
-      {accountsQuery.isPending && (
-        <p className="mt-6 text-sm text-app-muted">{tr.crm.accounts.loading}</p>
-      )}
-
-      {accountsQuery.data?.data.length === 0 && (
-        <div className="mt-6 rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
-          {tr.crm.accounts.empty}
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={accountsQuery.data?.data ?? []}
+        keyField={(account) => account.id}
+        onRowClick={(account) => navigate(`/firmalar/${account.id}`)}
+        isLoading={accountsQuery.isPending}
+        loadingMessage={tr.crm.accounts.loading}
+        emptyMessage={tr.crm.accounts.empty}
+      />
 
       {accountsQuery.data && accountsQuery.data.data.length > 0 && (
-        <>
-          <div className="mt-6 overflow-hidden rounded-xl border border-app-border bg-app-surface">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-                <tr>
-                  <th className="px-4 py-3">{tr.crm.accounts.nameColumn}</th>
-                  <th className="px-4 py-3">{tr.crm.accounts.cityColumn}</th>
-                  <th className="px-4 py-3">{tr.crm.accounts.phoneColumn}</th>
-                  <th className="px-4 py-3">{tr.crm.accounts.emailColumn}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {accountsQuery.data.data.map((account) => (
-                  <tr
-                    key={account.id}
-                    onClick={() => navigate(`/firmalar/${account.id}`)}
-                    className="cursor-pointer border-b border-app-border last:border-0 hover:bg-app-bg"
-                  >
-                    <td className="px-4 py-3 font-semibold text-app-text">{account.name}</td>
-                    <td className="px-4 py-3 text-app-muted">{account.city ?? '—'}</td>
-                    <td className="px-4 py-3 text-app-muted">{account.phone ?? '—'}</td>
-                    <td className="px-4 py-3 text-app-muted">{account.email ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between text-sm text-app-muted">
-            <span>
-              {tr.common.pageOf(accountsQuery.data.meta.page, accountsQuery.data.meta.totalPages)}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                {tr.common.previous}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={page >= accountsQuery.data.meta.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                {tr.common.next}
-              </Button>
-            </div>
-          </div>
-        </>
+        <Pagination
+          page={accountsQuery.data.meta.page}
+          totalPages={accountsQuery.data.meta.totalPages}
+          onPrevious={() => setPage((p) => p - 1)}
+          onNext={() => setPage((p) => p + 1)}
+        />
       )}
     </AppShell>
   );

@@ -51,6 +51,8 @@ describe('ContactsListPage', () => {
           email: null,
           phone: null,
           ownerId: null,
+          status: 'ACTIVE',
+          lastContactedAt: null,
           createdAt: '2026-08-01T00:00:00.000Z',
           updatedAt: '2026-08-01T00:00:00.000Z',
         },

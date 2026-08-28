@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import { ToastProvider } from './components/ui/toast';
 import './index.css';
 import 'react-grid-layout/css/styles.css';
 
@@ -15,7 +16,9 @@ if (!rootElement) {
 createRoot(rootElement).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

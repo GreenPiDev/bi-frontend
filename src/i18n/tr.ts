@@ -7,6 +7,7 @@ export const tr = {
     previous: 'Önceki',
     next: 'Sonraki',
     pageOf: (page: number, totalPages: number) => `Sayfa ${page} / ${Math.max(totalPages, 1)}`,
+    unexpectedError: 'Beklenmeyen bir hata oluştu.',
   },
   health: {
     checking: 'Bağlantı kontrol ediliyor...',
@@ -268,6 +269,28 @@ export const tr = {
   settings: {
     title: 'Ayarlar',
     subtitle: 'Zamanlanmış raporlarınızı ve denetim kaydınızı buradan yönetin.',
+    crm: {
+      title: 'CRM Ayarları',
+      subtitle: 'Sektör listesini ve kişi iletişim eşiğini yönetin.',
+      sectorOptions: {
+        title: 'Sektörler',
+        subtitle: 'Firma formunda seçilebilecek sektör listesi.',
+        addPlaceholder: 'Yeni sektör adı',
+        addButton: 'Ekle',
+        empty: 'Henüz sektör tanımlanmadı. Firma formunda serbest metin kabul edilir.',
+        deleteButton: 'Sil',
+        addSuccess: 'Sektör eklendi.',
+        deleteSuccess: 'Sektör silindi.',
+      },
+      inactivityThreshold: {
+        title: 'İletişim Kurulmama Bildirimi',
+        subtitle:
+          'Bir kişiyle bu kadar gündür iletişim kurulmadıysa ilgili kullanıcıya e-posta gönderilir.',
+        label: 'Eşik (gün)',
+        saveButton: 'Kaydet',
+        saveSuccess: 'Eşik güncellendi.',
+      },
+    },
     audit: {
       title: 'Denetim Kaydı',
       subtitle: 'Kim, ne zaman, ne yaptı.',
@@ -399,6 +422,7 @@ export const tr = {
       emailColumn: 'E-posta',
       deleteConfirm: 'Bu firmayı silmek istediğinize emin misiniz?',
       deleteError: 'Firma silinemedi.',
+      missingFieldsWarning: (fields: string) => `Eksik bilgi: ${fields}`,
       form: {
         newTitle: 'Yeni Firma',
         editTitle: 'Firmayı Düzenle',
@@ -406,6 +430,9 @@ export const tr = {
         taxNumberLabel: 'Vergi No / TC Kimlik No',
         taxOfficeLabel: 'Vergi Dairesi',
         sectorLabel: 'Sektör',
+        sectorPlaceholder: 'Sektör seçin veya yazın',
+        accountTypesLabel: 'Firma Türü',
+        accountTypesPlaceholder: 'Müşteri / Tedarikçi seçin',
         websiteLabel: 'Web Sitesi',
         phoneLabel: 'Telefon',
         emailLabel: 'E-posta',
@@ -414,6 +441,19 @@ export const tr = {
         submit: 'Kaydet',
         submitting: 'Kaydediliyor...',
         cancel: 'Vazgeç',
+        createSuccess: 'Firma oluşturuldu.',
+        updateSuccess: 'Firma güncellendi.',
+      },
+      accountTypeOptions: {
+        CUSTOMER: 'Müşteri',
+        SUPPLIER: 'Tedarikçi',
+      },
+      criticalFieldLabels: {
+        taxNumber: 'Vergi No',
+        phone: 'Telefon',
+        email: 'E-posta',
+        sector: 'Sektör',
+        city: 'Şehir',
       },
       detail: {
         back: 'Firmalara dön',
@@ -436,9 +476,12 @@ export const tr = {
       accountColumn: 'Firma',
       phoneColumn: 'Telefon',
       emailColumn: 'E-posta',
+      statusColumn: 'Durum',
       deleteConfirm: 'Bu kişiyi silmek istediğinize emin misiniz?',
       deleteError: 'Kişi silinemedi.',
       noAccount: 'Firma yok',
+      statusActive: 'Aktif',
+      statusInactive: 'Pasif',
       form: {
         newTitle: 'Yeni Kişi',
         editTitle: 'Kişiyi Düzenle',
@@ -449,9 +492,13 @@ export const tr = {
         titleLabel: 'Unvan',
         emailLabel: 'E-posta',
         phoneLabel: 'Telefon',
+        statusLabel: 'Durum',
+        lastContactedAtLabel: 'Son İletişim Tarihi',
         submit: 'Kaydet',
         submitting: 'Kaydediliyor...',
         cancel: 'Vazgeç',
+        createSuccess: 'Kişi oluşturuldu.',
+        updateSuccess: 'Kişi güncellendi.',
       },
     },
     import: {

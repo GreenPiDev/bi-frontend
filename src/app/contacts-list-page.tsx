@@ -2,11 +2,53 @@ import { Search } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { downloadBlob } from '../lib/download';
+import type { Contact } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+const columns: TableColumn<Contact>[] = [
+  {
+    key: 'name',
+    header: tr.crm.contacts.nameColumn,
+    render: (c) => (
+      <span className="font-semibold text-app-text">
+        {c.firstName} {c.lastName}
+      </span>
+    ),
+  },
+  {
+    key: 'account',
+    header: tr.crm.contacts.accountColumn,
+    className: 'text-app-muted',
+    render: (c) => c.account?.name ?? tr.crm.contacts.noAccount,
+  },
+  {
+    key: 'phone',
+    header: tr.crm.contacts.phoneColumn,
+    className: 'text-app-muted',
+    render: (c) => c.phone ?? '—',
+  },
+  {
+    key: 'email',
+    header: tr.crm.contacts.emailColumn,
+    className: 'text-app-muted',
+    render: (c) => c.email ?? '—',
+  },
+  {
+    key: 'status',
+    header: tr.crm.contacts.statusColumn,
+    render: (c) => (
+      <Badge variant={c.status === 'ACTIVE' ? 'success' : 'neutral'}>
+        {c.status === 'ACTIVE' ? tr.crm.contacts.statusActive : tr.crm.contacts.statusInactive}
+      </Badge>
+    ),
+  },
+];
 
 export function ContactsListPage() {
   const navigate = useNavigate();
@@ -70,73 +112,23 @@ export function ContactsListPage() {
         </Button>
       </form>
 
-      {contactsQuery.isPending && (
-        <p className="mt-6 text-sm text-app-muted">{tr.crm.contacts.loading}</p>
-      )}
-
-      {contactsQuery.data?.data.length === 0 && (
-        <div className="mt-6 rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
-          {tr.crm.contacts.empty}
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={contactsQuery.data?.data ?? []}
+        keyField={(contact) => contact.id}
+        onRowClick={(contact) => navigate(`/kisiler/${contact.id}`)}
+        isLoading={contactsQuery.isPending}
+        loadingMessage={tr.crm.contacts.loading}
+        emptyMessage={tr.crm.contacts.empty}
+      />
 
       {contactsQuery.data && contactsQuery.data.data.length > 0 && (
-        <>
-          <div className="mt-6 overflow-hidden rounded-xl border border-app-border bg-app-surface">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-                <tr>
-                  <th className="px-4 py-3">{tr.crm.contacts.nameColumn}</th>
-                  <th className="px-4 py-3">{tr.crm.contacts.accountColumn}</th>
-                  <th className="px-4 py-3">{tr.crm.contacts.phoneColumn}</th>
-                  <th className="px-4 py-3">{tr.crm.contacts.emailColumn}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contactsQuery.data.data.map((contact) => (
-                  <tr
-                    key={contact.id}
-                    onClick={() => navigate(`/kisiler/${contact.id}`)}
-                    className="cursor-pointer border-b border-app-border last:border-0 hover:bg-app-bg"
-                  >
-                    <td className="px-4 py-3 font-semibold text-app-text">
-                      {contact.firstName} {contact.lastName}
-                    </td>
-                    <td className="px-4 py-3 text-app-muted">
-                      {contact.account?.name ?? tr.crm.contacts.noAccount}
-                    </td>
-                    <td className="px-4 py-3 text-app-muted">{contact.phone ?? '—'}</td>
-                    <td className="px-4 py-3 text-app-muted">{contact.email ?? '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between text-sm text-app-muted">
-            <span>
-              {tr.common.pageOf(contactsQuery.data.meta.page, contactsQuery.data.meta.totalPages)}
-            </span>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                {tr.common.previous}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={page >= contactsQuery.data.meta.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                {tr.common.next}
-              </Button>
-            </div>
-          </div>
-        </>
+        <Pagination
+          page={contactsQuery.data.meta.page}
+          totalPages={contactsQuery.data.meta.totalPages}
+          onPrevious={() => setPage((p) => p - 1)}
+          onNext={() => setPage((p) => p + 1)}
+        />
       )}
     </AppShell>
   );

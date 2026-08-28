@@ -1,8 +1,12 @@
+import { AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useAccountQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { tr } from '../i18n/tr';
+
+const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
 
 export function AccountDetailPage() {
   const { id = '' } = useParams();
@@ -53,7 +57,26 @@ export function AccountDetailPage() {
       </button>
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-xl font-bold text-app-text">{account.name}</h1>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{account.name}</h1>
+            {account.accountTypes.map((type) => (
+              <Badge key={type} variant="info">
+                {tr.crm.accounts.accountTypeOptions[type]}
+              </Badge>
+            ))}
+          </div>
+          {account.missingCriticalFields.length > 0 && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400">
+              <AlertTriangle size={14} className="shrink-0" />
+              {tr.crm.accounts.missingFieldsWarning(
+                account.missingCriticalFields
+                  .map((field) => CRITICAL_FIELD_LABELS[field] ?? field)
+                  .join(', '),
+              )}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button
             type="button"

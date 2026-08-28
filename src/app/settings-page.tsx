@@ -1,6 +1,8 @@
 import { AppShell } from './app-shell';
 import { AlertsSection } from '../features/alerts/alerts-section';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
+import { CrmSettingsSection } from '../features/crm/crm-settings-section';
+import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
 import { ReportsSection } from '../features/reports/reports-section';
 import { tr } from '../i18n/tr';
 
@@ -33,6 +35,7 @@ const entityLabels: Record<string, string> = {
 
 export function SettingsPage() {
   const auditLogsQuery = useAuditLogsQuery();
+  const crmEnabled = useIsModuleEnabled('crm');
 
   return (
     <AppShell>
@@ -41,6 +44,7 @@ export function SettingsPage() {
 
       <ReportsSection />
       <AlertsSection />
+      {crmEnabled && <CrmSettingsSection />}
 
       <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
         <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.audit.title}</h2>

@@ -655,18 +655,22 @@ export interface PagedResult<T> {
   meta: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
+export type AccountType = 'CUSTOMER' | 'SUPPLIER';
+
 export interface Account {
   id: string;
   name: string;
   taxNumber: string | null;
   taxOffice: string | null;
   sector: string | null;
+  accountTypes: AccountType[];
   website: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
   city: string | null;
   ownerId: string | null;
+  missingCriticalFields: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -680,6 +684,7 @@ export interface AccountInput {
   taxNumber?: string;
   taxOffice?: string;
   sector?: string;
+  accountTypes?: AccountType[];
   website?: string;
   phone?: string;
   email?: string;
@@ -713,6 +718,8 @@ export function deleteAccount(id: string): Promise<void> {
   return request(`/accounts/${id}`, { method: 'DELETE' });
 }
 
+export type ContactStatus = 'ACTIVE' | 'INACTIVE';
+
 export interface Contact {
   id: string;
   firstName: string;
@@ -723,6 +730,8 @@ export interface Contact {
   email: string | null;
   phone: string | null;
   ownerId: string | null;
+  status: ContactStatus;
+  lastContactedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -734,6 +743,8 @@ export interface ContactInput {
   title?: string;
   email?: string;
   phone?: string;
+  status?: ContactStatus;
+  lastContactedAt?: string;
 }
 
 export function listContacts(
@@ -760,6 +771,41 @@ export function updateContact(id: string, input: Partial<ContactInput>): Promise
 
 export function deleteContact(id: string): Promise<void> {
   return request(`/contacts/${id}`, { method: 'DELETE' });
+}
+
+export interface SectorOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listSectorOptions(): Promise<SectorOption[]> {
+  return request('/sector-options');
+}
+
+export function createSectorOption(label: string): Promise<SectorOption> {
+  return request('/sector-options', { method: 'POST', body: JSON.stringify({ label }) });
+}
+
+export function deleteSectorOption(id: string): Promise<void> {
+  return request(`/sector-options/${id}`, { method: 'DELETE' });
+}
+
+export interface TenantSetting {
+  key: string;
+  value: unknown;
+  isDefault: boolean;
+}
+
+export function listTenantSettings(): Promise<TenantSetting[]> {
+  return request('/tenant-settings');
+}
+
+export function updateTenantSetting(key: string, value: unknown): Promise<TenantSetting> {
+  return request(`/tenant-settings/${encodeURIComponent(key)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ value }),
+  });
 }
 
 export type ImportEntity = 'accounts' | 'contacts';

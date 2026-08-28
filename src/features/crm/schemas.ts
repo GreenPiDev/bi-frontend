@@ -5,6 +5,10 @@ export const accountFormSchema = z.object({
   taxNumber: z.string().max(20).optional(),
   taxOffice: z.string().max(200).optional(),
   sector: z.string().max(200).optional(),
+  accountTypes: z
+    .array(z.enum(['CUSTOMER', 'SUPPLIER']))
+    .max(2)
+    .optional(),
   website: z
     .string()
     .max(300)
@@ -42,6 +46,8 @@ export const contactFormSchema = z.object({
       'Geçerli bir e-posta adresi girin.',
     ),
   phone: z.string().max(50).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  lastContactedAt: z.string().optional(),
 });
 
 export type ContactFormValues = z.infer<typeof contactFormSchema>;

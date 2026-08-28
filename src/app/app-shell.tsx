@@ -25,6 +25,9 @@ export function AppShell({ children, print = false }: AppShellProps) {
 
   const isAdmin = meQuery.data?.role === 'OWNER' || meQuery.data?.role === 'ADMIN';
   const crmEnabled = useIsModuleEnabled('crm');
+  /* G1: kullaniciya kapali menuler burada tamamen listeden cikarilir - disabled
+   * gosterip yine de gorunur birakmak yerine, yetkisi/modul erisimi olmayan
+   * kullanici o ogenin varligini hic gormemeli (bkz. CLAUDE.md A2.3.1). */
   const navItems = [
     { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
     { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
@@ -35,7 +38,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
         ]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
-    { label: tr.shell.nav.settings, icon: Settings, path: isAdmin ? '/settings' : undefined },
+    ...(isAdmin ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }] : []),
     ...(meQuery.data?.isPlatformAdmin
       ? [{ label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' }]
       : []),
