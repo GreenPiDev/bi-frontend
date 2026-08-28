@@ -6,6 +6,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { useMeQuery } from '../features/auth/use-auth';
+import { hasPermission } from '../features/auth/permissions';
 import { DashboardFilterBar } from '../features/dashboards/dashboard-filter-bar';
 import type { DashboardFilter } from '../features/dashboards/dashboard-filters';
 import { useDashboardQuery } from '../features/dashboards/use-dashboards';
@@ -32,7 +33,7 @@ export function DashboardViewPage() {
     onSuccess: (blob) => downloadBlob(blob, `${dashboardQuery.data?.name ?? 'pano'}.pdf`),
   });
 
-  const canEdit = meQuery.data && meQuery.data.role !== 'VIEWER';
+  const canEdit = hasPermission(meQuery.data?.permissions, 'dashboards', 'UPDATE');
   const widgets = dashboardQuery.data?.widgets ?? [];
   const widgetsById = new Map(widgets.map((widget) => [widget.id, widget]));
   const layout = (dashboardQuery.data?.layout ?? [])

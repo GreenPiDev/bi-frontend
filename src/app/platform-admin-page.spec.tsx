@@ -23,8 +23,9 @@ describe('PlatformAdminPage', () => {
       tenantId: 't1',
       email: 'admin@test.com',
       name: 'Admin Kisi',
-      role: 'OWNER',
+      roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: true,
+      permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getPlatformTenants').mockResolvedValue([]);
 

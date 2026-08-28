@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { AppShell } from './app-shell';
 import * as api from '../lib/api';
+import { createMockUser } from '../test/mock-user';
 
 function renderShell() {
   const queryClient = new QueryClient();
@@ -18,14 +19,7 @@ function renderShell() {
   );
 }
 
-const BASE_USER: api.SafeUser = {
-  id: 'u1',
-  tenantId: 't1',
-  email: 'test@test.com',
-  name: 'Test Kullanici',
-  role: 'OWNER',
-  isPlatformAdmin: false,
-};
+const BASE_USER: api.AuthenticatedUser = createMockUser();
 
 describe('AppShell', () => {
   it('platform admin olmayan kullaniciya Kiraci Yonetimi linkini gostermez', async () => {

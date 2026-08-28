@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import * as api from '../lib/api';
+import { createMockUser } from '../test/mock-user';
 
 function renderAppAt(path: string) {
   window.history.pushState({}, '', path);
@@ -14,14 +15,7 @@ function renderAppAt(path: string) {
   );
 }
 
-const baseUser = {
-  id: 'u1',
-  tenantId: 't1',
-  email: 'a@test.com',
-  name: 'A',
-  role: 'OWNER' as const,
-  isPlatformAdmin: false,
-};
+const baseUser = createMockUser({ email: 'a@test.com', name: 'A' });
 
 describe('CrmModuleRoute', () => {
   it("'crm' modulu kapaliyken bilgi mesaji gosterir, firma listesini gostermez", async () => {

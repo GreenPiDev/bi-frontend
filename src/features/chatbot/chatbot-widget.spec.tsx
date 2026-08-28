@@ -12,16 +12,17 @@ function LocationDisplay() {
   return <div data-testid="location">{location.pathname}</div>;
 }
 
-const USER_A: api.SafeUser = {
+const USER_A: api.AuthenticatedUser = {
   id: 'user-a',
   tenantId: 'tenant-a',
   email: 'a@example.com',
   name: 'Kullanici A',
-  role: 'OWNER',
+  roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
   isPlatformAdmin: false,
+  permissions: { isCompanyAdmin: true, permissions: [] },
 };
 
-const USER_B: api.SafeUser = {
+const USER_B: api.AuthenticatedUser = {
   ...USER_A,
   id: 'user-b',
   email: 'b@example.com',

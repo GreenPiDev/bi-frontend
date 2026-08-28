@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SettingsPage } from './settings-page';
@@ -22,12 +23,15 @@ describe('SettingsPage', () => {
   });
 
   it('kayit yokken bos durum gosterir', async () => {
+    const user = userEvent.setup();
     vi.spyOn(api, 'listAuditLogs').mockResolvedValue([]);
     renderSettingsPage();
+    await user.click(screen.getByRole('tab', { name: 'Denetim Kaydı' }));
     expect(await screen.findByText('Henüz bir işlem kaydedilmedi.')).toBeInTheDocument();
   });
 
   it('denetim kayitlarini tabloda listeler', async () => {
+    const user = userEvent.setup();
     vi.spyOn(api, 'listAuditLogs').mockResolvedValue([
       {
         id: 'a1',
@@ -42,6 +46,7 @@ describe('SettingsPage', () => {
       },
     ]);
     renderSettingsPage();
+    await user.click(screen.getByRole('tab', { name: 'Denetim Kaydı' }));
     expect(await screen.findByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('Oluşturdu')).toBeInTheDocument();
     expect(screen.getByText('Pano')).toBeInTheDocument();

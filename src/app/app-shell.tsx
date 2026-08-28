@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
+import { hasPermission } from '../features/auth/permissions';
 import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
 import { tr } from '../i18n/tr';
 
@@ -23,22 +24,30 @@ export function AppShell({ children, print = false }: AppShellProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = meQuery.data?.role === 'OWNER' || meQuery.data?.role === 'ADMIN';
+  const permissions = meQuery.data?.permissions;
+  const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
   const crmEnabled = useIsModuleEnabled('crm');
   /* G1: kullaniciya kapali menuler burada tamamen listeden cikarilir - disabled
    * gosterip yine de gorunur birakmak yerine, yetkisi/modul erisimi olmayan
-   * kullanici o ogenin varligini hic gormemeli (bkz. CLAUDE.md A2.3.1). */
+   * kullanici o ogenin varligini hic gormemeli (bkz. CLAUDE.md A2.3.1). Sayfa gorunurlugu
+   * artik rol ismine degil (OWNER/ADMIN) Permission sistemine gore belirlenir. */
   const navItems = [
-    { label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' },
-    { label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' },
-    ...(crmEnabled
-      ? [
-          { label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' },
-          { label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' },
-        ]
+    ...(canView('dashboards')
+      ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
+      : []),
+    ...(canView('datasets')
+      ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
+      : []),
+    ...(crmEnabled && canView('accounts')
+      ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
+      : []),
+    ...(crmEnabled && canView('contacts')
+      ? [{ label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' }]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
-    ...(isAdmin ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }] : []),
+    ...(canView('settings')
+      ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }]
+      : []),
     ...(meQuery.data?.isPlatformAdmin
       ? [{ label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' }]
       : []),

@@ -11,10 +11,10 @@ import {
   register,
   updateProfile,
   type AcceptInvitationInput,
+  type AuthenticatedUser,
   type ChangePasswordInput,
   type LoginInput,
   type RegisterInput,
-  type SafeUser,
   type UpdateProfileInput,
 } from '../../lib/api';
 
@@ -22,7 +22,7 @@ export const AUTH_QUERY_KEY = ['auth', 'me'];
 export const PROFILE_QUERY_KEY = ['users', 'me'];
 
 export function useMeQuery() {
-  return useQuery<SafeUser | null>({
+  return useQuery<AuthenticatedUser | null>({
     queryKey: AUTH_QUERY_KEY,
     queryFn: async () => {
       try {

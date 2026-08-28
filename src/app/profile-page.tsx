@@ -43,7 +43,9 @@ export function ProfilePage() {
             <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-app-muted">{tr.profile.infoSection.roleLabel}</dt>
-                <dd className="font-semibold text-app-text">{tr.roles[profileQuery.data.role]}</dd>
+                <dd className="font-semibold text-app-text">
+                  {profileQuery.data.roles.map((role) => role.name).join(', ')}
+                </dd>
               </div>
               <div>
                 <dt className="text-app-muted">{tr.profile.infoSection.statusLabel}</dt>

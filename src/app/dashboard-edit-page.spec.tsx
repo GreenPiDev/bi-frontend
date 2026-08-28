@@ -60,8 +60,9 @@ describe('DashboardEditPage', () => {
       tenantId: 't1',
       email: 'editor@test.com',
       name: 'Editor',
-      role: 'EDITOR',
+      roles: [{ id: 'r1', name: 'Editor' }],
       isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
       id: 'db-1',
@@ -128,8 +129,9 @@ describe('DashboardEditPage', () => {
       tenantId: 't1',
       email: 'editor@test.com',
       name: 'Editor',
-      role: 'EDITOR',
+      roles: [{ id: 'r1', name: 'Editor' }],
       isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
       id: 'db-1',

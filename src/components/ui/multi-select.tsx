@@ -12,7 +12,12 @@ interface MultiSelectProps {
   error?: string;
 }
 
-/** A4: dropdown alanlarda çoklu seçim (ör. bir firma hem müşteri hem tedarikçi olabilir). */
+/** A4: dropdown alanlarda çoklu seçim (ör. bir firma hem müşteri hem tedarikçi olabilir).
+ *
+ * Secenek listesi `position: fixed` ile butonun ekran konumuna gore konumlanir - `Modal`
+ * icerigi `overflow-auto` oldugu icin (bkz. modal.tsx), `absolute` konumlandirma listeyi
+ * kirpip modal'in kendisini kaydirmaya zorluyordu; `fixed` bu clipping context'inin disina
+ * cikar. */
 export function MultiSelect({
   label,
   value,
@@ -22,7 +27,11 @@ export function MultiSelect({
   error,
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
+  const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(
+    null,
+  );
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -33,6 +42,23 @@ export function MultiSelect({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function updateRect() {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setMenuRect({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+    updateRect();
+    window.addEventListener('resize', updateRect);
+    window.addEventListener('scroll', updateRect, true);
+    return () => {
+      window.removeEventListener('resize', updateRect);
+      window.removeEventListener('scroll', updateRect, true);
+    };
+  }, [open]);
 
   function toggleValue(optionValue: string) {
     onChange(
@@ -51,6 +77,7 @@ export function MultiSelect({
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
       <span className="text-sm font-semibold text-app-muted">{label}</span>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={clsx(
@@ -62,8 +89,16 @@ export function MultiSelect({
         <span className="truncate">{selectedLabels || placeholder}</span>
         <ChevronDown size={16} className="shrink-0 text-app-muted" />
       </button>
-      {open && (
-        <div className="absolute top-full z-20 mt-1 w-full rounded-lg border border-app-border bg-app-surface p-1.5 shadow-lg">
+      {open && menuRect && (
+        <div
+          style={{
+            position: 'fixed',
+            top: menuRect.top,
+            left: menuRect.left,
+            width: menuRect.width,
+          }}
+          className="z-[200] max-h-60 overflow-auto rounded-lg border border-app-border bg-app-surface p-1.5 shadow-lg"
+        >
           {options.map((option) => (
             <label
               key={option.value}

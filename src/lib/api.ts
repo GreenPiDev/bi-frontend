@@ -1,14 +1,36 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api/v1';
 
-export type UserRole = 'OWNER' | 'ADMIN' | 'EDITOR' | 'SALES' | 'VIEWER';
+export type PermissionAction = 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE';
+
+export interface SafeUserRole {
+  id: string;
+  name: string;
+}
 
 export interface SafeUser {
   id: string;
   tenantId: string;
   email: string;
   name: string;
-  role: UserRole;
+  roles: SafeUserRole[];
   isPlatformAdmin: boolean;
+}
+
+export interface EffectivePermission {
+  pageKey: string;
+  tabKey: string | null;
+  action: PermissionAction;
+}
+
+export interface EffectivePermissionSet {
+  isCompanyAdmin: boolean;
+  permissions: EffectivePermission[];
+}
+
+/** /auth/me yanitindaki "su an giris yapmis kullanici" gorunumu - nav filtreleme (G1)
+ * bu `permissions` alanini kullanir. */
+export interface AuthenticatedUser extends SafeUser {
+  permissions: EffectivePermissionSet;
 }
 
 export interface UserProfile extends SafeUser {
@@ -125,19 +147,20 @@ export interface AcceptInvitationInput {
 export interface InvitationInfo {
   tenantName: string;
   email: string;
-  role: UserRole;
+  roleIds: string[];
+  roleNames: string[];
   expired: boolean;
 }
 
-export function register(input: RegisterInput): Promise<{ user: SafeUser }> {
+export function register(input: RegisterInput): Promise<{ user: AuthenticatedUser }> {
   return request('/auth/register', { method: 'POST', body: JSON.stringify(input) });
 }
 
-export function login(input: LoginInput): Promise<{ user: SafeUser }> {
+export function login(input: LoginInput): Promise<{ user: AuthenticatedUser }> {
   return request('/auth/login', { method: 'POST', body: JSON.stringify(input) });
 }
 
-export function refresh(): Promise<{ user: SafeUser }> {
+export function refresh(): Promise<{ user: AuthenticatedUser }> {
   return request('/auth/refresh', { method: 'POST' });
 }
 
@@ -145,7 +168,7 @@ export function logout(): Promise<{ ok: true }> {
   return request('/auth/logout', { method: 'POST' });
 }
 
-export function me(): Promise<SafeUser> {
+export function me(): Promise<AuthenticatedUser> {
   return request('/auth/me');
 }
 
@@ -181,7 +204,7 @@ export function getInvitation(token: string): Promise<InvitationInfo> {
 export function acceptInvitation(
   token: string,
   input: AcceptInvitationInput,
-): Promise<{ user: SafeUser }> {
+): Promise<{ user: AuthenticatedUser }> {
   return request(`/invitations/${token}/accept`, {
     method: 'POST',
     body: JSON.stringify(input),
@@ -846,4 +869,93 @@ export function runImport(
 
 export function exportEntity(entity: ImportEntity): Promise<Blob> {
   return requestBlob(`/imports/${entity}/export`, 'GET');
+}
+
+// --- Kullanicilar / Davetler -----------------------------------------------
+
+export function listUsers(): Promise<SafeUser[]> {
+  return request('/users');
+}
+
+export interface InviteUserInput {
+  email: string;
+  roleIds: string[];
+}
+
+export function inviteUser(input: InviteUserInput): Promise<{ token: string; expiresAt: string }> {
+  return request('/users/invite', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateUserRole(userId: string, roleIds: string[]): Promise<SafeUser> {
+  return request(`/users/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ roleIds }),
+  });
+}
+
+// --- Roller / Sayfa Yonetimi (dinamik RBAC) ---------------------------------
+
+export interface PageTabDefinition {
+  key: string;
+  label: string;
+}
+
+export interface PageDefinition {
+  key: string;
+  label: string;
+  tabs?: PageTabDefinition[];
+  alwaysVisible?: boolean;
+  requiresModule?: string;
+}
+
+export function getPageRegistry(): Promise<PageDefinition[]> {
+  return request('/page-registry');
+}
+
+export interface RolePermissionView {
+  pageKey: string;
+  tabKey: string | null;
+  action: PermissionAction;
+}
+
+export interface RoleView {
+  id: string;
+  name: string;
+  isSystem: boolean;
+  isBasic: boolean;
+  isCompanyAdmin: boolean;
+  userCount: number;
+  permissions: RolePermissionView[];
+}
+
+export interface RolePermissionInput {
+  pageKey: string;
+  tabKey?: string | null;
+  actions: PermissionAction[];
+}
+
+export interface CreateRoleInput {
+  name: string;
+  permissions: RolePermissionInput[];
+}
+
+export interface UpdateRoleInput {
+  name?: string;
+  permissions?: RolePermissionInput[];
+}
+
+export function listRoles(): Promise<RoleView[]> {
+  return request('/roles');
+}
+
+export function createRole(input: CreateRoleInput): Promise<RoleView> {
+  return request('/roles', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateRole(id: string, input: UpdateRoleInput): Promise<RoleView> {
+  return request(`/roles/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteRole(id: string): Promise<void> {
+  return request(`/roles/${id}`, { method: 'DELETE' });
 }

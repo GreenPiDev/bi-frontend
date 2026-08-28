@@ -21,8 +21,9 @@ describe('PlatformAdminRoute', () => {
       tenantId: 't1',
       email: 'a@test.com',
       name: 'A',
-      role: 'OWNER',
+      roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
     });
     renderAppAt('/platform-admin');
 
@@ -37,8 +38,9 @@ describe('PlatformAdminRoute', () => {
       tenantId: 't1',
       email: 'admin@test.com',
       name: 'Admin',
-      role: 'OWNER',
+      roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: true,
+      permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getPlatformTenants').mockResolvedValue([]);
     renderAppAt('/platform-admin');

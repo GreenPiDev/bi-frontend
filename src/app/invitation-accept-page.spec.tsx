@@ -33,7 +33,8 @@ describe('InvitationAcceptPage', () => {
     vi.spyOn(api, 'getInvitation').mockResolvedValue({
       tenantName: 'Test Firma',
       email: 'viewer@example.com',
-      role: 'VIEWER',
+      roleIds: ['r1'],
+      roleNames: ['İzleyici'],
       expired: true,
     });
 
@@ -48,7 +49,8 @@ describe('InvitationAcceptPage', () => {
     vi.spyOn(api, 'getInvitation').mockResolvedValue({
       tenantName: 'Test Firma',
       email: 'viewer@example.com',
-      role: 'VIEWER',
+      roleIds: ['r1'],
+      roleNames: ['İzleyici'],
       expired: false,
     });
 

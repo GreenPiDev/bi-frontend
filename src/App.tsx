@@ -1,8 +1,7 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { AccountDetailPage } from './app/account-detail-page';
 import { AccountFormPage } from './app/account-form-page';
 import { AccountsListPage } from './app/accounts-list-page';
-import { AdminRoute } from './app/admin-route';
 import { ContactDetailPage } from './app/contact-detail-page';
 import { ContactFormPage } from './app/contact-form-page';
 import { ContactsListPage } from './app/contacts-list-page';
@@ -15,16 +14,25 @@ import { DatasetDetailPage } from './app/dataset-detail-page';
 import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
 import { DatasetsListPage } from './app/datasets-list-page';
-import { EditorRoute } from './app/editor-route';
 import { InvitationAcceptPage } from './app/invitation-accept-page';
 import { LoginPage } from './app/login-page';
 import { OnboardingPage } from './app/onboarding-page';
+import { PermissionRoute } from './app/permission-route';
 import { PlatformAdminPage } from './app/platform-admin-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { ProfilePage } from './app/profile-page';
 import { ProtectedRoute } from './app/protected-route';
 import { RegisterPage } from './app/register-page';
 import { SettingsPage } from './app/settings-page';
+
+function DashboardEditRoute() {
+  const { id = '' } = useParams();
+  return (
+    <PermissionRoute pageKey="dashboards" action="UPDATE" redirectTo={`/dashboards/${id}`}>
+      <DashboardEditPage />
+    </PermissionRoute>
+  );
+}
 
 function App() {
   return (
@@ -70,9 +78,7 @@ function App() {
           path="/dashboards/:id/edit"
           element={
             <ProtectedRoute>
-              <EditorRoute>
-                <DashboardEditPage />
-              </EditorRoute>
+              <DashboardEditRoute />
             </ProtectedRoute>
           }
         />
@@ -220,9 +226,9 @@ function App() {
           path="/settings"
           element={
             <ProtectedRoute>
-              <AdminRoute>
+              <PermissionRoute pageKey="settings" action="VIEW" redirectTo="/">
                 <SettingsPage />
-              </AdminRoute>
+              </PermissionRoute>
             </ProtectedRoute>
           }
         />

@@ -47,8 +47,9 @@ describe('DashboardViewPage', () => {
       tenantId: 't1',
       email: 'owner@test.com',
       name: 'Owner',
-      role: 'OWNER',
+      roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
     });
     const widget: api.Widget = {
       id: 'w1',
@@ -101,8 +102,9 @@ describe('DashboardViewPage', () => {
       tenantId: 't1',
       email: 'viewer@test.com',
       name: 'Viewer',
-      role: 'VIEWER',
+      roles: [{ id: 'r1', name: 'Goruntuleyici' }],
       isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: false, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
       id: 'db-1',

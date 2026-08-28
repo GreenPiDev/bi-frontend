@@ -78,7 +78,7 @@ export function InvitationAcceptPage() {
       </p>
       <h1 className="mb-1 text-2xl font-bold text-app-text">{tr.auth.invitationTitle}</h1>
       <p className="mb-7 text-sm text-app-muted">
-        {tr.auth.invitationSubtitleFor(invitation.tenantName, tr.roles[invitation.role])}
+        {tr.auth.invitationSubtitleFor(invitation.tenantName, invitation.roleNames.join(', '))}
       </p>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />
