@@ -14,9 +14,9 @@ function renderComponent() {
 }
 
 describe('PlatformAdminPageModules', () => {
-  it('sayfalari ve atanmis modulleri listeler (bir sayfa birden fazla modulde olabilir)', async () => {
+  it('sayfalari satir, modulleri kolon olarak listeler; atanmis kesisimlerde switch acik gorunur', async () => {
     vi.spyOn(api, 'getPlatformPageModules').mockResolvedValue([
-      { pageKey: 'accounts', label: 'Firmalar', moduleKeys: ['crm', 'core'] },
+      { pageKey: 'accounts', label: 'Firmalar', moduleKeys: ['crm'] },
       { pageKey: 'dashboards', label: 'Panolar', moduleKeys: [] },
     ]);
     vi.spyOn(api, 'getPlatformModuleDefinitions').mockResolvedValue([
@@ -28,10 +28,21 @@ describe('PlatformAdminPageModules', () => {
 
     expect(await screen.findByText('Firmalar')).toBeInTheDocument();
     expect(await screen.findByText('Panolar')).toBeInTheDocument();
-    expect(await screen.findByText('Cekirdek, Satis (CRM)')).toBeInTheDocument();
+    expect(await screen.findByText('Cekirdek')).toBeInTheDocument();
+    expect(await screen.findByText('Satis (CRM)')).toBeInTheDocument();
+
+    const firmalarCrmSwitch = await screen.findByRole('switch', {
+      name: 'Firmalar - Satis (CRM)',
+    });
+    expect(firmalarCrmSwitch).toHaveAttribute('aria-checked', 'true');
+
+    const panolarCrmSwitch = await screen.findByRole('switch', {
+      name: 'Panolar - Satis (CRM)',
+    });
+    expect(panolarCrmSwitch).toHaveAttribute('aria-checked', 'false');
   });
 
-  it('modul secimi degistirilince mutation dogru pageKey ve moduleKeys ile tetiklenir', async () => {
+  it('bir hucredeki switch tiklaninca mutation dogru pageKey ve guncellenmis moduleKeys ile tetiklenir', async () => {
     vi.spyOn(api, 'getPlatformPageModules').mockResolvedValue([
       { pageKey: 'dashboards', label: 'Panolar', moduleKeys: [] },
     ]);
@@ -45,11 +56,33 @@ describe('PlatformAdminPageModules', () => {
 
     renderComponent();
 
-    const toggleButton = await screen.findByRole('button', { name: 'Modül gerekmez' });
-    fireEvent.click(toggleButton);
-    const crmCheckbox = await screen.findByRole('checkbox', { name: 'Satis (CRM)' });
-    fireEvent.click(crmCheckbox);
+    const panolarCrmSwitch = await screen.findByRole('switch', {
+      name: 'Panolar - Satis (CRM)',
+    });
+    fireEvent.click(panolarCrmSwitch);
 
     await waitFor(() => expect(setSpy).toHaveBeenCalledWith('dashboards', ['crm']));
+  });
+
+  it('acik bir modul tekrar tiklaninca listeden cikarilir', async () => {
+    vi.spyOn(api, 'getPlatformPageModules').mockResolvedValue([
+      { pageKey: 'accounts', label: 'Firmalar', moduleKeys: ['crm', 'core'] },
+    ]);
+    vi.spyOn(api, 'getPlatformModuleDefinitions').mockResolvedValue([
+      { key: 'core', label: 'Cekirdek', alwaysOn: true },
+      { key: 'crm', label: 'Satis (CRM)', alwaysOn: false },
+    ]);
+    const setSpy = vi
+      .spyOn(api, 'setPlatformPageModule')
+      .mockResolvedValue([{ pageKey: 'accounts', label: 'Firmalar', moduleKeys: ['core'] }]);
+
+    renderComponent();
+
+    const firmalarCrmSwitch = await screen.findByRole('switch', {
+      name: 'Firmalar - Satis (CRM)',
+    });
+    fireEvent.click(firmalarCrmSwitch);
+
+    await waitFor(() => expect(setSpy).toHaveBeenCalledWith('accounts', ['core']));
   });
 });

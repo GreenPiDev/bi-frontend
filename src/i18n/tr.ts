@@ -481,8 +481,6 @@ export const tr = {
     pageModulesSubtitle:
       'Her sayfanın hangi modüle ait olduğunu belirleyin - nav menüsü ve müşteri erişimi buna göre şekillenir.',
     pageColumn: 'Sayfa',
-    moduleColumn: 'Modül',
-    noModuleOption: 'Modül gerekmez',
     pageModulesLoading: 'Sayfa-modül eşlemesi yükleniyor...',
     pageModuleUpdateError: 'Sayfa-modül eşlemesi güncellenemedi.',
   },
