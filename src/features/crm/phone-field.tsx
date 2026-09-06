@@ -22,12 +22,14 @@ interface PhoneFieldProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  required?: boolean;
+  hint?: string;
 }
 
 /** A3: ülke kodu seçimiyle birlikte telefon girişi. Mevcut serbest metin `phone`
  * alanına `+90 5xx xxx xx xx` gibi formatlanmış tek bir string olarak yazılır -
  * backend'de şema değişikliği gerekmedi (bkz. VARSAYIMLAR V18). */
-export function PhoneField({ label, value, onChange, error }: PhoneFieldProps) {
+export function PhoneField({ label, value, onChange, error, required, hint }: PhoneFieldProps) {
   const [prevValue, setPrevValue] = useState(value);
   const [code, setCode] = useState(() => splitPhone(value).code);
   const [number, setNumber] = useState(() => splitPhone(value).number);
@@ -48,7 +50,14 @@ export function PhoneField({ label, value, onChange, error }: PhoneFieldProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-semibold text-app-muted">{label}</label>
+      <label className="text-sm font-semibold text-app-muted">
+        {label}
+        {required && (
+          <span className="ml-0.5 text-app-danger" aria-hidden="true">
+            *
+          </span>
+        )}
+      </label>
       <div className="flex gap-2">
         <select
           value={code}
@@ -78,7 +87,11 @@ export function PhoneField({ label, value, onChange, error }: PhoneFieldProps) {
           )}
         />
       </div>
-      {error && <p className="text-xs text-app-danger">{error}</p>}
+      {error ? (
+        <p className="text-xs text-app-danger">{error}</p>
+      ) : (
+        hint && <p className="text-xs text-app-muted">{hint}</p>
+      )}
     </div>
   );
 }

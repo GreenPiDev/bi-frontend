@@ -8,6 +8,8 @@ interface AutocompleteProps {
   options: string[];
   placeholder?: string;
   error?: string;
+  required?: boolean;
+  hint?: string;
 }
 
 /** Serbest metin girişine izin veren öneri listesi - A2 (tenant sektör tanımlamadıysa
@@ -20,6 +22,8 @@ export function Autocomplete({
   options,
   placeholder,
   error,
+  required,
+  hint,
 }: AutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
@@ -64,7 +68,14 @@ export function Autocomplete({
 
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
-      <label className="text-sm font-semibold text-app-muted">{label}</label>
+      <label className="text-sm font-semibold text-app-muted">
+        {label}
+        {required && (
+          <span className="ml-0.5 text-app-danger" aria-hidden="true">
+            *
+          </span>
+        )}
+      </label>
       <input
         type="text"
         value={value}
@@ -100,7 +111,11 @@ export function Autocomplete({
           ))}
         </div>
       )}
-      {error && <p className="text-xs text-app-danger">{error}</p>}
+      {error ? (
+        <p className="text-xs text-app-danger">{error}</p>
+      ) : (
+        hint && <p className="text-xs text-app-muted">{hint}</p>
+      )}
     </div>
   );
 }

@@ -112,16 +112,20 @@ export function AccountFormPage() {
           <TextField
             label={tr.crm.accounts.form.nameLabel}
             error={errors.name?.message}
+            required
+            hint={tr.crm.accounts.form.nameHint}
             {...register('name')}
           />
           <TextField
             label={tr.crm.accounts.form.taxNumberLabel}
             error={errors.taxNumber?.message}
+            hint={tr.crm.accounts.form.taxNumberHint}
             {...register('taxNumber')}
           />
           <TextField
             label={tr.crm.accounts.form.taxOfficeLabel}
             error={errors.taxOffice?.message}
+            hint={tr.crm.accounts.form.taxOfficeHint}
             {...register('taxOffice')}
           />
           <Controller
@@ -135,6 +139,7 @@ export function AccountFormPage() {
                 onChange={field.onChange}
                 options={(sectorOptionsQuery.data ?? []).map((option) => option.label)}
                 error={errors.sector?.message}
+                hint={tr.crm.accounts.form.sectorHint}
               />
             )}
           />
@@ -148,6 +153,7 @@ export function AccountFormPage() {
                 value={field.value ?? []}
                 onChange={(value) => field.onChange(value as AccountType[])}
                 options={ACCOUNT_TYPE_OPTIONS}
+                hint={tr.crm.accounts.form.accountTypesHint}
               />
             )}
           />
@@ -155,6 +161,7 @@ export function AccountFormPage() {
             label={tr.crm.accounts.form.websiteLabel}
             placeholder="https://"
             error={errors.website?.message}
+            hint={tr.crm.accounts.form.websiteHint}
             {...register('website')}
           />
           <Controller
@@ -166,6 +173,7 @@ export function AccountFormPage() {
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={errors.phone?.message}
+                hint={tr.crm.accounts.form.phoneHint}
               />
             )}
           />
@@ -173,16 +181,19 @@ export function AccountFormPage() {
             label={tr.crm.accounts.form.emailLabel}
             type="email"
             error={errors.email?.message}
+            hint={tr.crm.accounts.form.emailHint}
             {...register('email')}
           />
           <TextField
             label={tr.crm.accounts.form.addressLabel}
             error={errors.address?.message}
+            hint={tr.crm.accounts.form.addressHint}
             {...register('address')}
           />
           <TextField
             label={tr.crm.accounts.form.cityLabel}
             error={errors.city?.message}
+            hint={tr.crm.accounts.form.cityHint}
             {...register('city')}
           />
           <div className="mt-1 flex gap-2">

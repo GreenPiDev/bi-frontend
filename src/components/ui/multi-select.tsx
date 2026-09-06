@@ -10,6 +10,8 @@ interface MultiSelectProps {
   options: SelectOption[];
   placeholder?: string;
   error?: string;
+  required?: boolean;
+  hint?: string;
 }
 
 /** A4: dropdown alanlarda çoklu seçim (ör. bir firma hem müşteri hem tedarikçi olabilir).
@@ -25,6 +27,8 @@ export function MultiSelect({
   options,
   placeholder = 'Seçiniz',
   error,
+  required,
+  hint,
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(
@@ -75,7 +79,14 @@ export function MultiSelect({
 
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
-      <span className="text-sm font-semibold text-app-muted">{label}</span>
+      <span className="text-sm font-semibold text-app-muted">
+        {label}
+        {required && (
+          <span className="ml-0.5 text-app-danger" aria-hidden="true">
+            *
+          </span>
+        )}
+      </span>
       <button
         ref={buttonRef}
         type="button"
@@ -115,7 +126,11 @@ export function MultiSelect({
           ))}
         </div>
       )}
-      {error && <p className="text-xs text-app-danger">{error}</p>}
+      {error ? (
+        <p className="text-xs text-app-danger">{error}</p>
+      ) : (
+        hint && <p className="text-xs text-app-muted">{hint}</p>
+      )}
     </div>
   );
 }
