@@ -27,6 +27,7 @@
     "react-grid-layout": "^2.2.4",
     "react-hook-form": "^7.85.0",
     "react-router-dom": "^7.18.2",
+    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
     "zod": "^4.4.3"
