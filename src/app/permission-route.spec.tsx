@@ -62,6 +62,9 @@ describe('PermissionRoute', () => {
 
   it('dashboards UPDATE izni olmayan kullaniciyi pano goruntuleme sayfasina yonlendirir', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(noPermissionsUser());
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'dashboards', moduleKeys: ['analytics'], accessible: true },
+    ]);
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
       id: 'd1',
       name: 'Test Panosu',

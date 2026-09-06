@@ -1,15 +1,21 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useMyTenantModulesQuery } from '../features/crm/use-tenant-modules';
+import { usePageAccessQuery } from '../features/crm/use-page-access';
 import { tr } from '../i18n/tr';
 import { AppShell } from './app-shell';
 
-export function CrmModuleRoute({ children }: { children: ReactNode }) {
+/**
+ * Route seviyesinde sayfa-modul erisim kontrolu - platform-admin panelindeki
+ * "Sayfa-Modul Eslemesi" ekraninda (bkz. platform-admin-page-modules.tsx) bir
+ * sayfanin modul atamasi degistirilince bu kontrol de otomatik guncellenir,
+ * ayrica kod degisikligi gerekmez (bkz. features/crm/use-page-access.ts).
+ */
+export function PageModuleRoute({ pageKey, children }: { pageKey: string; children: ReactNode }) {
   const meQuery = useMeQuery();
-  const modulesQuery = useMyTenantModulesQuery();
+  const pageAccessQuery = usePageAccessQuery();
 
-  if (meQuery.isPending || modulesQuery.isPending) {
+  if (meQuery.isPending || pageAccessQuery.isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-app-muted">
         {tr.common.loading}
@@ -21,9 +27,10 @@ export function CrmModuleRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
-  const crmEnabled = modulesQuery.data?.some((module) => module.key === 'crm' && module.enabled);
+  const entry = pageAccessQuery.data?.find((row) => row.pageKey === pageKey);
+  const accessible = entry?.accessible ?? true;
 
-  if (!crmEnabled) {
+  if (!accessible) {
     return (
       <AppShell>
         <div className="rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center">

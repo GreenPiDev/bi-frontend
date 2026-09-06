@@ -2,11 +2,11 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 import { AccountDetailPage } from './app/account-detail-page';
 import { AccountFormPage } from './app/account-form-page';
 import { AccountsListPage } from './app/accounts-list-page';
+import { CalendarPage } from './app/calendar-page';
 import { ContactDetailPage } from './app/contact-detail-page';
 import { ContactFormPage } from './app/contact-form-page';
 import { ContactsListPage } from './app/contacts-list-page';
 import { CrmImportPage } from './app/crm-import-page';
-import { CrmModuleRoute } from './app/crm-module-route';
 import { DashboardEditPage } from './app/dashboard-edit-page';
 import { DashboardViewPage } from './app/dashboard-view-page';
 import { DashboardsListPage } from './app/dashboards-list-page';
@@ -17,8 +17,10 @@ import { DatasetsListPage } from './app/datasets-list-page';
 import { InvitationAcceptPage } from './app/invitation-accept-page';
 import { LoginPage } from './app/login-page';
 import { OnboardingPage } from './app/onboarding-page';
+import { PageModuleRoute } from './app/page-module-route';
 import { PermissionRoute } from './app/permission-route';
 import { PlatformAdminPage } from './app/platform-admin-page';
+import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { ProfilePage } from './app/profile-page';
 import { ProtectedRoute } from './app/protected-route';
@@ -49,6 +51,14 @@ function App() {
             </PlatformAdminRoute>
           }
         />
+        <Route
+          path="/platform-admin/sayfa-modulleri"
+          element={
+            <PlatformAdminRoute>
+              <PlatformAdminPageModulesPage />
+            </PlatformAdminRoute>
+          }
+        />
         <Route path="/" element={<Navigate to="/dashboards" replace />} />
         <Route
           path="/onboarding"
@@ -62,7 +72,9 @@ function App() {
           path="/dashboards"
           element={
             <ProtectedRoute>
-              <DashboardsListPage />
+              <PageModuleRoute pageKey="dashboards">
+                <DashboardsListPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -70,7 +82,9 @@ function App() {
           path="/dashboards/:id"
           element={
             <ProtectedRoute>
-              <DashboardViewPage />
+              <PageModuleRoute pageKey="dashboards">
+                <DashboardViewPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -78,7 +92,9 @@ function App() {
           path="/dashboards/:id/edit"
           element={
             <ProtectedRoute>
-              <DashboardEditRoute />
+              <PageModuleRoute pageKey="dashboards">
+                <DashboardEditRoute />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -86,7 +102,9 @@ function App() {
           path="/datasets"
           element={
             <ProtectedRoute>
-              <DatasetsListPage />
+              <PageModuleRoute pageKey="datasets">
+                <DatasetsListPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -94,7 +112,9 @@ function App() {
           path="/datasets/upload"
           element={
             <ProtectedRoute>
-              <DatasetUploadPage />
+              <PageModuleRoute pageKey="datasets">
+                <DatasetUploadPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -102,7 +122,9 @@ function App() {
           path="/datasets/processing/:dataSourceId"
           element={
             <ProtectedRoute>
-              <DatasetProcessingPage />
+              <PageModuleRoute pageKey="datasets">
+                <DatasetProcessingPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -110,7 +132,9 @@ function App() {
           path="/datasets/:id"
           element={
             <ProtectedRoute>
-              <DatasetDetailPage />
+              <PageModuleRoute pageKey="datasets">
+                <DatasetDetailPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -118,9 +142,9 @@ function App() {
           path="/firmalar"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="accounts">
                 <AccountsListPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -128,9 +152,9 @@ function App() {
           path="/firmalar/yeni"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="accounts">
                 <AccountFormPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -138,9 +162,9 @@ function App() {
           path="/firmalar/ice-aktar"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="accounts">
                 <CrmImportPage entity="accounts" />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -148,9 +172,9 @@ function App() {
           path="/firmalar/:id"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="accounts">
                 <AccountDetailPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -158,9 +182,9 @@ function App() {
           path="/firmalar/:id/duzenle"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="accounts">
                 <AccountFormPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -168,9 +192,9 @@ function App() {
           path="/kisiler"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="contacts">
                 <ContactsListPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -178,9 +202,9 @@ function App() {
           path="/kisiler/yeni"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="contacts">
                 <ContactFormPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -188,9 +212,9 @@ function App() {
           path="/kisiler/ice-aktar"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="contacts">
                 <CrmImportPage entity="contacts" />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -198,9 +222,9 @@ function App() {
           path="/kisiler/:id"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="contacts">
                 <ContactDetailPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />
@@ -208,9 +232,19 @@ function App() {
           path="/kisiler/:id/duzenle"
           element={
             <ProtectedRoute>
-              <CrmModuleRoute>
+              <PageModuleRoute pageKey="contacts">
                 <ContactFormPage />
-              </CrmModuleRoute>
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ajanda"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="calendar">
+                <CalendarPage />
+              </PageModuleRoute>
             </ProtectedRoute>
           }
         />

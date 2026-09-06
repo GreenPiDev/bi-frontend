@@ -17,12 +17,11 @@ function renderAppAt(path: string) {
 
 const baseUser = createMockUser({ email: 'a@test.com', name: 'A' });
 
-describe('CrmModuleRoute', () => {
-  it("'crm' modulu kapaliyken bilgi mesaji gosterir, firma listesini gostermez", async () => {
+describe('PageModuleRoute', () => {
+  it('accounts sayfasi crm modulune atanmis ve crm kapaliyken bilgi mesaji gosterir, firma listesini gostermez', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(baseUser);
-    vi.spyOn(api, 'getMyTenantModules').mockResolvedValue([
-      { key: 'core', label: 'Cekirdek', alwaysOn: true, enabled: true },
-      { key: 'crm', label: 'Satis (CRM)', alwaysOn: false, enabled: false },
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'accounts', moduleKeys: ['crm'], accessible: false },
     ]);
     renderAppAt('/firmalar');
 
@@ -32,12 +31,25 @@ describe('CrmModuleRoute', () => {
     expect(screen.queryByText('Yeni Firma')).not.toBeInTheDocument();
   });
 
-  it("'crm' modulu aciksa firma listesini gosterir", async () => {
+  it('accounts sayfasi accessible=true ise firma listesini gosterir', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(baseUser);
-    vi.spyOn(api, 'getMyTenantModules').mockResolvedValue([
-      { key: 'core', label: 'Cekirdek', alwaysOn: true, enabled: true },
-      { key: 'crm', label: 'Satis (CRM)', alwaysOn: false, enabled: true },
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'accounts', moduleKeys: ['crm'], accessible: true },
     ]);
+    vi.spyOn(api, 'listAccounts').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    renderAppAt('/firmalar');
+
+    await waitFor(() => {
+      expect(screen.getByText('Yeni Firma')).toBeInTheDocument();
+    });
+  });
+
+  it('accounts sayfasina hic modul atanmamissa (eslesme yok) dogrudan erisilebilir', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(baseUser);
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
     vi.spyOn(api, 'listAccounts').mockResolvedValue({
       data: [],
       meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },

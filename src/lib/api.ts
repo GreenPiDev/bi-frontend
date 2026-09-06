@@ -234,8 +234,28 @@ export function getMyTenantModules(): Promise<TenantModuleStatus[]> {
   return request('/tenants/me/modules');
 }
 
+export interface PageAccessStatus {
+  pageKey: string;
+  moduleKeys: string[];
+  accessible: boolean;
+}
+
+export function getMyPageAccess(): Promise<PageAccessStatus[]> {
+  return request('/tenants/me/page-modules');
+}
+
 export function getPlatformTenants(): Promise<TenantSummary[]> {
   return request('/platform-admin/tenants');
+}
+
+export interface ModuleDefinition {
+  key: string;
+  label: string;
+  alwaysOn: boolean;
+}
+
+export function getPlatformModuleDefinitions(): Promise<ModuleDefinition[]> {
+  return request('/platform-admin/modules');
 }
 
 export function getPlatformTenantModules(tenantId: string): Promise<TenantModuleStatus[]> {
@@ -250,6 +270,26 @@ export function setPlatformTenantModule(
   return request(`/platform-admin/tenants/${tenantId}/modules/${moduleKey}`, {
     method: 'PATCH',
     body: JSON.stringify({ enabled }),
+  });
+}
+
+export interface PageModuleAssignment {
+  pageKey: string;
+  label: string;
+  moduleKeys: string[];
+}
+
+export function getPlatformPageModules(): Promise<PageModuleAssignment[]> {
+  return request('/platform-admin/page-modules');
+}
+
+export function setPlatformPageModule(
+  pageKey: string,
+  moduleKeys: string[],
+): Promise<PageModuleAssignment[]> {
+  return request(`/platform-admin/page-modules/${pageKey}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ moduleKeys }),
   });
 }
 
@@ -964,4 +1004,77 @@ export function updateRole(id: string, input: UpdateRoleInput): Promise<RoleView
 
 export function deleteRole(id: string): Promise<void> {
   return request(`/roles/${id}`, { method: 'DELETE' });
+}
+
+export interface CalendarEventAttendee {
+  id: string;
+  userId: string;
+  note: string | null;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  startAt: string;
+  endAt: string;
+  allDay: boolean;
+  createdById: string;
+  attendees: CalendarEventAttendee[];
+}
+
+export interface CalendarEventAttendeeInput {
+  userId: string;
+  note?: string;
+}
+
+export interface CalendarEventInput {
+  title: string;
+  description?: string;
+  startAt: string;
+  endAt: string;
+  allDay?: boolean;
+  attendees?: CalendarEventAttendeeInput[];
+}
+
+export interface AssignableUser {
+  id: string;
+  name: string;
+}
+
+export function listAssignableCalendarUsers(): Promise<AssignableUser[]> {
+  return request('/calendar-events/assignable-users');
+}
+
+export function listCalendarEvents(
+  params: { from?: string; to?: string; order?: 'asc' | 'desc' } = {},
+): Promise<CalendarEvent[]> {
+  const query = new URLSearchParams();
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  if (params.order) query.set('order', params.order);
+  const qs = query.toString();
+  return request(`/calendar-events${qs ? `?${qs}` : ''}`);
+}
+
+export function getCalendarEvent(id: string): Promise<CalendarEvent> {
+  return request(`/calendar-events/${id}`);
+}
+
+export function createCalendarEvent(input: CalendarEventInput): Promise<CalendarEvent> {
+  return request('/calendar-events', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateCalendarEvent(
+  id: string,
+  input: Partial<CalendarEventInput>,
+): Promise<CalendarEvent> {
+  return request(`/calendar-events/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteCalendarEvent(id: string): Promise<void> {
+  return request(`/calendar-events/${id}`, { method: 'DELETE' });
 }

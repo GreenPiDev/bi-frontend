@@ -34,4 +34,41 @@ describe('AppShell', () => {
     renderShell();
     expect(await screen.findByText('Kiracı Yönetimi')).toBeInTheDocument();
   });
+
+  it('accounts sayfasi crm modulune atanmis ama tenant modulu kapaliysa Firmalar linki gizlenir', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(BASE_USER);
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'accounts', moduleKeys: ['crm'], accessible: false },
+    ]);
+    renderShell();
+    await screen.findByText('Test Kullanici', { exact: false });
+    expect(screen.queryByText('Firmalar')).not.toBeInTheDocument();
+  });
+
+  it('accounts sayfasi crm modulune atanmis ve tenant modulu aciksa Firmalar linki gorunur', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(BASE_USER);
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'accounts', moduleKeys: ['crm'], accessible: true },
+    ]);
+    renderShell();
+    expect(await screen.findByText('Firmalar')).toBeInTheDocument();
+  });
+
+  it('bir sayfa modulsuz (moduleKeys bos) ise dogrudan gorunur', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(BASE_USER);
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'dashboards', moduleKeys: [], accessible: true },
+    ]);
+    renderShell();
+    expect(await screen.findByText('Panolar')).toBeInTheDocument();
+  });
+
+  it('birden fazla modulden birine sahip olmak sayfayi gorunur kilar (OR mantigi)', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(BASE_USER);
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([
+      { pageKey: 'accounts', moduleKeys: ['stok', 'crm'], accessible: true },
+    ]);
+    renderShell();
+    expect(await screen.findByText('Firmalar')).toBeInTheDocument();
+  });
 });

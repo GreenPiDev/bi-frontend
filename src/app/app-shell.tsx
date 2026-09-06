@@ -1,4 +1,14 @@
-import { Building2, Contact2, LayoutDashboard, LogOut, Settings, Table2, User } from 'lucide-react';
+import {
+  Building2,
+  CalendarDays,
+  Contact2,
+  LayoutDashboard,
+  Layers,
+  LogOut,
+  Settings,
+  Table2,
+  User,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
@@ -6,7 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
-import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
+import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
 import { tr } from '../i18n/tr';
 
 interface AppShellProps {
@@ -26,30 +36,50 @@ export function AppShell({ children, print = false }: AppShellProps) {
 
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
-  const crmEnabled = useIsModuleEnabled('crm');
   /* G1: kullaniciya kapali menuler burada tamamen listeden cikarilir - disabled
    * gosterip yine de gorunur birakmak yerine, yetkisi/modul erisimi olmayan
    * kullanici o ogenin varligini hic gormemeli (bkz. CLAUDE.md A2.3.1). Sayfa gorunurlugu
-   * artik rol ismine degil (OWNER/ADMIN) Permission sistemine gore belirlenir. */
+   * artik rol ismine degil (OWNER/ADMIN) Permission sistemine gore belirlenir. Modul
+   * erisimi de artik sayfaya ozel kod yerine, sureper adminin yonettigi sayfa-modul
+   * eslemesinden (bkz. features/crm/use-page-access.ts) genel bir sekilde okunur. */
+  const pageModuleAccess: Record<string, boolean> = {
+    dashboards: useIsPageModuleAccessible('dashboards'),
+    datasets: useIsPageModuleAccessible('datasets'),
+    accounts: useIsPageModuleAccessible('accounts'),
+    contacts: useIsPageModuleAccessible('contacts'),
+    calendar: useIsPageModuleAccessible('calendar'),
+    settings: useIsPageModuleAccessible('settings'),
+  };
+  const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
   const navItems = [
-    ...(canView('dashboards')
+    ...(canAccessPage('dashboards')
       ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
       : []),
-    ...(canView('datasets')
+    ...(canAccessPage('datasets')
       ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
       : []),
-    ...(crmEnabled && canView('accounts')
+    ...(canAccessPage('accounts')
       ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
       : []),
-    ...(crmEnabled && canView('contacts')
+    ...(canAccessPage('contacts')
       ? [{ label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' }]
       : []),
+    ...(canAccessPage('calendar')
+      ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
+      : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
-    ...(canView('settings')
+    ...(canAccessPage('settings')
       ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }]
       : []),
     ...(meQuery.data?.isPlatformAdmin
-      ? [{ label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' }]
+      ? [
+          { label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' },
+          {
+            label: tr.shell.nav.platformAdminPageModules,
+            icon: Layers,
+            path: '/platform-admin/sayfa-modulleri',
+          },
+        ]
       : []),
   ];
 
