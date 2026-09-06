@@ -68,6 +68,56 @@ export const calendarEventFormSchema = z
 
 export type CalendarEventFormValues = z.infer<typeof calendarEventFormSchema>;
 
+export const interactionFormSchema = z
+  .object({
+    accountName: z.string().min(1, 'Firma gerekli.').max(200),
+    contactName: z.string().max(200).optional(),
+    type: z.enum(['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER']),
+    notes: z.string().min(1, 'Notlar gerekli.').max(5000),
+    occurredAt: z.string().min(1, 'Tarih gerekli.'),
+    hasOpportunity: z.boolean().optional(),
+    opportunityName: z.string().max(200).optional(),
+    opportunityStage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
+    opportunityValue: z.string().optional(),
+    participants: z
+      .array(
+        z.object({
+          name: z.string().min(1, 'Ad gerekli.'),
+          isInternal: z.boolean(),
+          note: z.string().optional(),
+        }),
+      )
+      .max(20)
+      .optional(),
+    hasReminder: z.boolean().optional(),
+    reminderStartAt: z.string().optional(),
+    reminderAssigneeUserIds: z.array(z.string()).max(50).optional(),
+    reminderNote: z.string().max(1000).optional(),
+  })
+  .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
+    message: 'Fırsat adı en az 2 karakter olmalı.',
+    path: ['opportunityName'],
+  })
+  .refine((values) => !values.hasReminder || (values.reminderStartAt ?? '').length > 0, {
+    message: 'Hatırlatma tarihi gerekli.',
+    path: ['reminderStartAt'],
+  })
+  .refine((values) => !values.hasReminder || (values.reminderAssigneeUserIds ?? []).length > 0, {
+    message: 'En az bir kişi seçin.',
+    path: ['reminderAssigneeUserIds'],
+  });
+
+export type InteractionFormValues = z.infer<typeof interactionFormSchema>;
+
+export const opportunityFormSchema = z.object({
+  accountId: z.string().min(1, 'Firma gerekli.'),
+  name: z.string().min(2, 'Fırsat adı en az 2 karakter olmalı.').max(200),
+  stage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
+  estimatedValue: z.string().optional(),
+});
+
+export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {

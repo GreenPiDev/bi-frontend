@@ -1058,3 +1058,141 @@ export function updateCalendarEvent(
 export function deleteCalendarEvent(id: string): Promise<void> {
   return request(`/calendar-events/${id}`, { method: 'DELETE' });
 }
+
+export type InteractionType = 'CALL' | 'VISIT' | 'MEETING' | 'EMAIL' | 'OTHER';
+export type InteractionStatus = 'OPEN' | 'CLOSED';
+export type OpportunityStage = 'NEW' | 'QUALIFIED' | 'PROPOSAL' | 'WON' | 'LOST';
+
+export interface Opportunity {
+  id: string;
+  accountId: string;
+  interactionId: string | null;
+  name: string;
+  stage: OpportunityStage;
+  estimatedValue: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InteractionParticipant {
+  id: string;
+  name: string;
+  isInternal: boolean;
+  note: string | null;
+}
+
+export interface Interaction {
+  id: string;
+  accountId: string;
+  contactId: string | null;
+  account: Account;
+  contact: Contact | null;
+  type: InteractionType;
+  notes: string;
+  occurredAt: string;
+  status: InteractionStatus;
+  accountAutoCreated: boolean;
+  contactAutoCreated: boolean;
+  participants: InteractionParticipant[];
+  opportunity: Opportunity | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInteractionInput {
+  accountId?: string;
+  accountName?: string;
+  contactId?: string;
+  contactName?: string;
+  type: InteractionType;
+  notes: string;
+  occurredAt: string;
+  participants?: { name: string; isInternal: boolean; note?: string }[];
+  opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
+  reminder?: {
+    startAt: string;
+    title?: string;
+    assignees: { userId: string; note?: string }[];
+  };
+}
+
+export interface UpdateInteractionInput {
+  type?: InteractionType;
+  notes?: string;
+  occurredAt?: string;
+  status?: InteractionStatus;
+}
+
+export interface ReminderConflict {
+  userId: string;
+  suggestedStartAt: string;
+}
+
+export interface CreateInteractionResult {
+  interaction: Interaction;
+  reminderConflicts: ReminderConflict[];
+}
+
+export function listInteractions(
+  params: { page?: number; accountId?: string; status?: InteractionStatus } = {},
+): Promise<PagedResult<Interaction>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
+  const qs = query.toString();
+  return request(`/interactions${qs ? `?${qs}` : ''}`);
+}
+
+export function getInteraction(id: string): Promise<Interaction> {
+  return request(`/interactions/${id}`);
+}
+
+export function createInteraction(input: CreateInteractionInput): Promise<CreateInteractionResult> {
+  return request('/interactions', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateInteraction(id: string, input: UpdateInteractionInput): Promise<Interaction> {
+  return request(`/interactions/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteInteraction(id: string): Promise<void> {
+  return request(`/interactions/${id}`, { method: 'DELETE' });
+}
+
+export interface OpportunityInput {
+  accountId: string;
+  name: string;
+  stage?: OpportunityStage;
+  estimatedValue?: number;
+}
+
+export function listOpportunities(
+  params: { page?: number; accountId?: string; stage?: OpportunityStage } = {},
+): Promise<PagedResult<Opportunity>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.stage) query.set('stage', params.stage);
+  const qs = query.toString();
+  return request(`/opportunities${qs ? `?${qs}` : ''}`);
+}
+
+export function getOpportunity(id: string): Promise<Opportunity> {
+  return request(`/opportunities/${id}`);
+}
+
+export function createOpportunity(input: OpportunityInput): Promise<Opportunity> {
+  return request('/opportunities', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateOpportunity(
+  id: string,
+  input: Partial<OpportunityInput>,
+): Promise<Opportunity> {
+  return request(`/opportunities/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteOpportunity(id: string): Promise<void> {
+  return request(`/opportunities/${id}`, { method: 'DELETE' });
+}

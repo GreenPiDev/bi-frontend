@@ -5,8 +5,10 @@ import {
   LayoutDashboard,
   Layers,
   LogOut,
+  MessageCircle,
   Settings,
   Table2,
+  Target,
   User,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -48,6 +50,8 @@ export function AppShell({ children, print = false }: AppShellProps) {
     accounts: useIsPageModuleAccessible('accounts'),
     contacts: useIsPageModuleAccessible('contacts'),
     calendar: useIsPageModuleAccessible('calendar'),
+    interactions: useIsPageModuleAccessible('interactions'),
+    opportunities: useIsPageModuleAccessible('opportunities'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -66,6 +70,12 @@ export function AppShell({ children, print = false }: AppShellProps) {
       : []),
     ...(canAccessPage('calendar')
       ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
+      : []),
+    ...(canAccessPage('interactions')
+      ? [{ label: tr.shell.nav.interactions, icon: MessageCircle, path: '/gorusmeler' }]
+      : []),
+    ...(canAccessPage('opportunities')
+      ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     ...(canAccessPage('settings')

@@ -14,8 +14,14 @@ import { DatasetDetailPage } from './app/dataset-detail-page';
 import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
 import { DatasetsListPage } from './app/datasets-list-page';
+import { InteractionDetailPage } from './app/interaction-detail-page';
+import { InteractionFormPage } from './app/interaction-form-page';
+import { InteractionsListPage } from './app/interactions-list-page';
 import { LoginPage } from './app/login-page';
 import { OnboardingPage } from './app/onboarding-page';
+import { OpportunityDetailPage } from './app/opportunity-detail-page';
+import { OpportunityFormPage } from './app/opportunity-form-page';
+import { OpportunitiesListPage } from './app/opportunities-list-page';
 import { PageModuleRoute } from './app/page-module-route';
 import { PermissionRoute } from './app/permission-route';
 import { PlatformAdminPage } from './app/platform-admin-page';
@@ -242,6 +248,76 @@ function App() {
             <ProtectedRoute>
               <PageModuleRoute pageKey="calendar">
                 <CalendarPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gorusmeler"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="interactions">
+                <InteractionsListPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gorusmeler/yeni"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="interactions">
+                <InteractionFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/gorusmeler/:id"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="interactions">
+                <InteractionDetailPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firsatlar"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="opportunities">
+                <OpportunitiesListPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firsatlar/yeni"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="opportunities">
+                <OpportunityFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firsatlar/:id"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="opportunities">
+                <OpportunityDetailPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/firsatlar/:id/duzenle"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="opportunities">
+                <OpportunityFormPage />
               </PageModuleRoute>
             </ProtectedRoute>
           }
