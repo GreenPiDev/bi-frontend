@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/ui/toast';
 import * as api from '../../lib/api';
+import { createMockUser } from '../../test/mock-user';
 import { RolesSettingsSection } from './roles-settings-section';
 
 function renderSection() {
@@ -55,6 +56,10 @@ const USERS: api.SafeUser[] = [
 ];
 
 describe('RolesSettingsSection', () => {
+  beforeEach(() => {
+    vi.spyOn(api, 'me').mockResolvedValue(createMockUser());
+  });
+
   it('sistem rolu icin duzenle/sil butonlari yerine bilgi notu gosterir', async () => {
     vi.spyOn(api, 'listRoles').mockResolvedValue(ROLES);
     vi.spyOn(api, 'getPageRegistry').mockResolvedValue(PAGE_REGISTRY);
@@ -71,7 +76,7 @@ describe('RolesSettingsSection', () => {
     expect(dynamicRow!.querySelector('button')).not.toBeNull();
   });
 
-  it('yeni rol olusturma formu ad ve izinlerle POST /roles cagirir', async () => {
+  it('yeni rol olusturma formu adla POST /roles cagirir (izinler ayri Sayfa Erisimleri sekmesinden yonetilir)', async () => {
     const user = userEvent.setup();
     vi.spyOn(api, 'listRoles').mockResolvedValue(ROLES);
     vi.spyOn(api, 'getPageRegistry').mockResolvedValue(PAGE_REGISTRY);
@@ -87,13 +92,12 @@ describe('RolesSettingsSection', () => {
 
     await user.click(screen.getByRole('button', { name: '+ Yeni Rol' }));
     await user.type(await screen.findByLabelText('Rol adı'), 'Depo Sorumlusu');
-    await user.click(screen.getByLabelText('Panolar - VIEW'));
     await user.click(screen.getByRole('button', { name: 'Kaydet' }));
 
     await waitFor(() => {
       expect(createSpy).toHaveBeenCalledWith({
         name: 'Depo Sorumlusu',
-        permissions: [{ pageKey: 'dashboards', tabKey: null, actions: ['VIEW'] }],
+        permissions: [],
       });
     });
   });

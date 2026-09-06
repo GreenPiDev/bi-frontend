@@ -46,7 +46,7 @@ describe('PermissionRoute', () => {
     renderAppAt('/settings');
 
     await waitFor(() => {
-      expect(screen.queryByText('Denetim Kaydı')).not.toBeInTheDocument();
+      expect(screen.queryByText('Kullanıcı Aktiviteleri')).not.toBeInTheDocument();
     });
   });
 
@@ -56,7 +56,7 @@ describe('PermissionRoute', () => {
     renderAppAt('/settings');
 
     await waitFor(() => {
-      expect(screen.getByText('Denetim Kaydı')).toBeInTheDocument();
+      expect(screen.getByText('Kullanıcı Aktiviteleri')).toBeInTheDocument();
     });
   });
 

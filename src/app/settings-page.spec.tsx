@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SettingsPage } from './settings-page';
 import * as api from '../lib/api';
+import { createMockUser } from '../test/mock-user';
 
 function renderSettingsPage() {
   const queryClient = new QueryClient();
@@ -19,14 +20,14 @@ function renderSettingsPage() {
 
 describe('SettingsPage', () => {
   beforeEach(() => {
-    vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
+    vi.spyOn(api, 'me').mockResolvedValue(createMockUser());
   });
 
   it('kayit yokken bos durum gosterir', async () => {
     const user = userEvent.setup();
     vi.spyOn(api, 'listAuditLogs').mockResolvedValue([]);
     renderSettingsPage();
-    await user.click(screen.getByRole('tab', { name: 'Denetim Kaydı' }));
+    await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
     expect(await screen.findByText('Henüz bir işlem kaydedilmedi.')).toBeInTheDocument();
   });
 
@@ -46,7 +47,7 @@ describe('SettingsPage', () => {
       },
     ]);
     renderSettingsPage();
-    await user.click(screen.getByRole('tab', { name: 'Denetim Kaydı' }));
+    await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
     expect(await screen.findByText('Ada Lovelace')).toBeInTheDocument();
     expect(screen.getByText('Oluşturdu')).toBeInTheDocument();
     expect(screen.getByText('Pano')).toBeInTheDocument();
