@@ -27,8 +27,15 @@ import { PermissionRoute } from './app/permission-route';
 import { PlatformAdminPage } from './app/platform-admin-page';
 import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
+import { PriceListFormPage } from './app/price-list-form-page';
+import { PriceListsListPage } from './app/price-lists-list-page';
+import { ProductFormPage } from './app/product-form-page';
+import { ProductsListPage } from './app/products-list-page';
 import { ProfilePage } from './app/profile-page';
 import { ProtectedRoute } from './app/protected-route';
+import { QuoteDetailPage } from './app/quote-detail-page';
+import { QuoteFormPage } from './app/quote-form-page';
+import { QuotesListPage } from './app/quotes-list-page';
 import { RegisterPage } from './app/register-page';
 import { SettingsPage } from './app/settings-page';
 
@@ -318,6 +325,96 @@ function App() {
             <ProtectedRoute>
               <PageModuleRoute pageKey="opportunities">
                 <OpportunityFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teklifler"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="quotes">
+                <QuotesListPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teklifler/yeni"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="quotes">
+                <QuoteFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teklifler/:id"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="quotes">
+                <QuoteDetailPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/urunler"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="products">
+                <ProductsListPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/urunler/yeni"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="products">
+                <ProductFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/urunler/:id/duzenle"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="products">
+                <ProductFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiyat-listeleri"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="price-lists">
+                <PriceListsListPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiyat-listeleri/yeni"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="price-lists">
+                <PriceListFormPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/fiyat-listeleri/:id/duzenle"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="price-lists">
+                <PriceListFormPage />
               </PageModuleRoute>
             </ProtectedRoute>
           }

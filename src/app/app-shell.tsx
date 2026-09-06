@@ -2,12 +2,15 @@ import {
   Building2,
   CalendarDays,
   Contact2,
+  FileText,
   LayoutDashboard,
   Layers,
   LogOut,
   MessageCircle,
+  Package,
   Settings,
   Table2,
+  Tags,
   Target,
   User,
 } from 'lucide-react';
@@ -52,6 +55,9 @@ export function AppShell({ children, print = false }: AppShellProps) {
     calendar: useIsPageModuleAccessible('calendar'),
     interactions: useIsPageModuleAccessible('interactions'),
     opportunities: useIsPageModuleAccessible('opportunities'),
+    products: useIsPageModuleAccessible('products'),
+    'price-lists': useIsPageModuleAccessible('price-lists'),
+    quotes: useIsPageModuleAccessible('quotes'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -76,6 +82,15 @@ export function AppShell({ children, print = false }: AppShellProps) {
       : []),
     ...(canAccessPage('opportunities')
       ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
+      : []),
+    ...(canAccessPage('quotes')
+      ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
+      : []),
+    ...(canAccessPage('products')
+      ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]
+      : []),
+    ...(canAccessPage('price-lists')
+      ? [{ label: tr.shell.nav.priceLists, icon: Tags, path: '/fiyat-listeleri' }]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     ...(canAccessPage('settings')

@@ -1,10 +1,11 @@
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api/v1';
 
-export type PermissionAction = 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT';
+export type PermissionAction =
+  'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT' | 'APPROVE';
 
 /** VIEW ayrica "Sayfa Erisimleri" sekmesinde yonetilir; "Islem Izinleri" matrisinin
  * sutunlarini belirleyen aksiyonlar bunlardir. */
-export type CrudPermissionAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT';
+export type CrudPermissionAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT' | 'APPROVE';
 
 export interface SafeUserRole {
   id: string;
@@ -1067,6 +1068,7 @@ export interface Opportunity {
   id: string;
   accountId: string;
   interactionId: string | null;
+  quoteId: string | null;
   name: string;
   stage: OpportunityStage;
   estimatedValue: string | null;
@@ -1195,4 +1197,193 @@ export function updateOpportunity(
 
 export function deleteOpportunity(id: string): Promise<void> {
   return request(`/opportunities/${id}`, { method: 'DELETE' });
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  sku: string | null;
+  unit: string;
+  minStockLevel: number | null;
+  maxDiscountPct: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductInput {
+  name: string;
+  sku?: string;
+  unit?: string;
+  minStockLevel?: number;
+  maxDiscountPct?: number | null;
+}
+
+export function listProducts(
+  params: { page?: number; q?: string } = {},
+): Promise<PagedResult<Product>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/products${qs ? `?${qs}` : ''}`);
+}
+
+export function getProduct(id: string): Promise<Product> {
+  return request(`/products/${id}`);
+}
+
+export function createProduct(input: ProductInput): Promise<Product> {
+  return request('/products', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateProduct(id: string, input: Partial<ProductInput>): Promise<Product> {
+  return request(`/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteProduct(id: string): Promise<void> {
+  return request(`/products/${id}`, { method: 'DELETE' });
+}
+
+export interface PriceListItem {
+  id: string;
+  priceListId: string;
+  productId: string;
+  unitPrice: string;
+  product: Product;
+}
+
+export interface PriceList {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  items: PriceListItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PriceListItemInput {
+  productId: string;
+  unitPrice: number;
+}
+
+export interface PriceListInput {
+  name: string;
+  isDefault?: boolean;
+  items: PriceListItemInput[];
+}
+
+export function listPriceLists(
+  params: { page?: number; q?: string } = {},
+): Promise<PagedResult<PriceList>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/price-lists${qs ? `?${qs}` : ''}`);
+}
+
+export function getPriceList(id: string): Promise<PriceList> {
+  return request(`/price-lists/${id}`);
+}
+
+export function createPriceList(input: PriceListInput): Promise<PriceList> {
+  return request('/price-lists', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updatePriceList(id: string, input: Partial<PriceListInput>): Promise<PriceList> {
+  return request(`/price-lists/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deletePriceList(id: string): Promise<void> {
+  return request(`/price-lists/${id}`, { method: 'DELETE' });
+}
+
+export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
+
+export interface QuoteItem {
+  id: string;
+  quoteId: string;
+  productId: string;
+  product: Product;
+  quantity: string;
+  unitPrice: string;
+  discountPct: string;
+  discountNote: string | null;
+  vatPct: string;
+}
+
+export interface Quote {
+  id: string;
+  quoteNumber: string;
+  accountId: string;
+  account: Account;
+  priceListId: string;
+  priceList: PriceList;
+  status: QuoteStatus;
+  approvedAt: string | null;
+  approvedById: string | null;
+  createdById: string;
+  items: QuoteItem[];
+  opportunity: Opportunity | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteItemInput {
+  productId: string;
+  quantity: number;
+  unitPrice?: number;
+  discountPct?: number;
+  vatPct?: number;
+}
+
+export interface CreateQuoteInput {
+  accountId: string;
+  priceListId: string;
+  items: QuoteItemInput[];
+  opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
+}
+
+export interface UpdateQuoteInput {
+  priceListId?: string;
+  items?: QuoteItemInput[];
+}
+
+export function listQuotes(
+  params: { page?: number; accountId?: string; status?: QuoteStatus } = {},
+): Promise<PagedResult<Quote>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
+  const qs = query.toString();
+  return request(`/quotes${qs ? `?${qs}` : ''}`);
+}
+
+export function getQuote(id: string): Promise<Quote> {
+  return request(`/quotes/${id}`);
+}
+
+export function createQuote(input: CreateQuoteInput): Promise<Quote> {
+  return request('/quotes', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateQuote(id: string, input: UpdateQuoteInput): Promise<Quote> {
+  return request(`/quotes/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteQuote(id: string): Promise<void> {
+  return request(`/quotes/${id}`, { method: 'DELETE' });
+}
+
+export function approveQuote(id: string): Promise<Quote> {
+  return request(`/quotes/${id}/approve`, { method: 'POST' });
+}
+
+export function rejectQuote(id: string): Promise<Quote> {
+  return request(`/quotes/${id}/reject`, { method: 'POST' });
+}
+
+export function exportQuotePdf(quoteId: string): Promise<Blob> {
+  return requestBlob(`/exports/quote/${quoteId}/pdf`);
 }

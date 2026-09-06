@@ -118,6 +118,58 @@ export const opportunityFormSchema = z.object({
 
 export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;
 
+export const productFormSchema = z.object({
+  name: z.string().min(2, 'Ürün adı en az 2 karakter olmalı.').max(200),
+  sku: z.string().max(100).optional(),
+  unit: z.string().min(1, 'Birim gerekli.').max(50),
+  minStockLevel: z.string().optional(),
+  maxDiscountPct: z.string().optional(),
+});
+
+export type ProductFormValues = z.infer<typeof productFormSchema>;
+
+export const priceListFormSchema = z.object({
+  name: z.string().min(2, 'Fiyat listesi adı en az 2 karakter olmalı.').max(200),
+  isDefault: z.boolean().optional(),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().min(1, 'Ürün gerekli.'),
+        unitPrice: z.string().min(1, 'Birim fiyat gerekli.'),
+      }),
+    )
+    .min(1, 'En az bir ürün eklenmelidir.'),
+});
+
+export type PriceListFormValues = z.infer<typeof priceListFormSchema>;
+
+export const quoteFormSchema = z
+  .object({
+    accountId: z.string().min(1, 'Firma gerekli.'),
+    priceListId: z.string().min(1, 'Fiyat listesi gerekli.'),
+    items: z
+      .array(
+        z.object({
+          productId: z.string().min(1, 'Ürün gerekli.'),
+          quantity: z.string().min(1, 'Miktar gerekli.'),
+          unitPrice: z.string().optional(),
+          discountPct: z.string().optional(),
+          vatPct: z.string().optional(),
+        }),
+      )
+      .min(1, 'En az bir ürün satırı eklenmelidir.'),
+    hasOpportunity: z.boolean().optional(),
+    opportunityName: z.string().max(200).optional(),
+    opportunityStage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
+    opportunityValue: z.string().optional(),
+  })
+  .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
+    message: 'Fırsat adı en az 2 karakter olmalı.',
+    path: ['opportunityName'],
+  });
+
+export type QuoteFormValues = z.infer<typeof quoteFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {

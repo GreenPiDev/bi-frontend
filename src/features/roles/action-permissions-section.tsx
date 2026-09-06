@@ -21,7 +21,14 @@ import {
 } from './role-permission-utils';
 import { usePageRegistryQuery, useRolesQuery } from './use-roles';
 
-const ACTION_COLUMNS: CrudPermissionAction[] = ['CREATE', 'UPDATE', 'DELETE', 'IMPORT', 'EXPORT'];
+const ACTION_COLUMNS: CrudPermissionAction[] = [
+  'CREATE',
+  'UPDATE',
+  'DELETE',
+  'IMPORT',
+  'EXPORT',
+  'APPROVE',
+];
 
 const ACTION_LABELS: Record<CrudPermissionAction, string> = {
   CREATE: tr.settings.roles.form.createAction,
@@ -29,6 +36,7 @@ const ACTION_LABELS: Record<CrudPermissionAction, string> = {
   DELETE: tr.settings.roles.form.deleteAction,
   IMPORT: tr.settings.roles.form.importAction,
   EXPORT: tr.settings.roles.form.exportAction,
+  APPROVE: tr.settings.roles.form.approveAction,
 };
 
 interface ActionRow {
