@@ -33,6 +33,8 @@ import { ProductFormPage } from './app/product-form-page';
 import { ProductsListPage } from './app/products-list-page';
 import { ProfilePage } from './app/profile-page';
 import { ProtectedRoute } from './app/protected-route';
+import { PostSaleCaseDetailPage } from './app/post-sale-case-detail-page';
+import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
@@ -355,6 +357,26 @@ function App() {
             <ProtectedRoute>
               <PageModuleRoute pageKey="quotes">
                 <QuoteDetailPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/satis-sonrasi"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="post-sale-cases">
+                <PostSaleCaseListPage />
+              </PageModuleRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/satis-sonrasi/:id"
+          element={
+            <ProtectedRoute>
+              <PageModuleRoute pageKey="post-sale-cases">
+                <PostSaleCaseDetailPage />
               </PageModuleRoute>
             </ProtectedRoute>
           }

@@ -146,6 +146,7 @@ export type PriceListFormValues = z.infer<typeof priceListFormSchema>;
 export const quoteFormSchema = z
   .object({
     accountId: z.string().min(1, 'Firma gerekli.'),
+    contactId: z.string().optional(),
     priceListId: z.string().min(1, 'Fiyat listesi gerekli.'),
     items: z
       .array(

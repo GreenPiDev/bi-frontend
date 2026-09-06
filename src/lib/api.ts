@@ -1317,6 +1317,8 @@ export interface Quote {
   quoteNumber: string;
   accountId: string;
   account: Account;
+  contactId: string | null;
+  contact: Contact | null;
   priceListId: string;
   priceList: PriceList;
   status: QuoteStatus;
@@ -1339,6 +1341,7 @@ export interface QuoteItemInput {
 
 export interface CreateQuoteInput {
   accountId: string;
+  contactId?: string;
   priceListId: string;
   items: QuoteItemInput[];
   opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
@@ -1386,4 +1389,72 @@ export function rejectQuote(id: string): Promise<Quote> {
 
 export function exportQuotePdf(quoteId: string): Promise<Blob> {
   return requestBlob(`/exports/quote/${quoteId}/pdf`);
+}
+
+export type PostSaleCaseStatus = 'BEKLEMEDE' | 'HATIRLATILDI' | 'GERI_BILDIRIM_ALINDI';
+
+export interface FeedbackSurvey {
+  id: string;
+  postSaleCaseId: string;
+  contactId: string;
+  sentAt: string;
+  respondedAt: string | null;
+  responseNote: string | null;
+}
+
+export interface PostSaleCase {
+  id: string;
+  quoteId: string;
+  quote: Quote;
+  accountId: string;
+  account: Account;
+  contactId: string | null;
+  contact: Contact | null;
+  reminderAt: string;
+  reminderSentAt: string | null;
+  feedbackReceivedAt: string | null;
+  feedbackNote: string | null;
+  feedbackSurvey: FeedbackSurvey | null;
+  status: PostSaleCaseStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function listPostSaleCases(
+  params: {
+    page?: number;
+    accountId?: string;
+    status?: PostSaleCaseStatus;
+  } = {},
+): Promise<PagedResult<PostSaleCase>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
+  const qs = query.toString();
+  return request(`/post-sale-cases${qs ? `?${qs}` : ''}`);
+}
+
+export function getPostSaleCase(id: string): Promise<PostSaleCase> {
+  return request(`/post-sale-cases/${id}`);
+}
+
+export function sendPostSaleSurvey(
+  id: string,
+  input: { contactId?: string } = {},
+): Promise<PostSaleCase> {
+  return request(`/post-sale-cases/${id}/send-survey`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function markPostSaleFeedback(
+  id: string,
+  input: { responseNote?: string } = {},
+): Promise<PostSaleCase> {
+  return request(`/post-sale-cases/${id}/feedback`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
 }

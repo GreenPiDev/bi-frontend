@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { CrmSettingsSection } from './crm-settings-section';
@@ -74,10 +74,36 @@ describe('CrmSettingsSection', () => {
 
     await user.clear(input);
     await user.type(input, '90');
-    await user.click(screen.getByRole('button', { name: 'Kaydet' }));
+    const section = within(input.parentElement!.parentElement!);
+    await user.click(section.getByRole('button', { name: 'Kaydet' }));
 
     await waitFor(() =>
       expect(updateSpy).toHaveBeenCalledWith('crm.contactInactivityThresholdDays', 90),
     );
+  });
+
+  it('satis sonrasi hatirlatma esigini varsayilan olarak gosterir ve kaydetmeyi tetikler', async () => {
+    vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
+      { key: 'crm.postSaleFollowUpDays', value: 14, isDefault: true },
+    ]);
+    const updateSpy = vi.spyOn(api, 'updateTenantSetting').mockResolvedValue({
+      key: 'crm.postSaleFollowUpDays',
+      value: 7,
+      isDefault: false,
+    });
+
+    const user = userEvent.setup();
+    renderSection();
+
+    const input = (await screen.findByLabelText('Hatırlatma süresi (gün)')) as HTMLInputElement;
+    await waitFor(() => expect(input.value).toBe('14'));
+
+    await user.clear(input);
+    await user.type(input, '7');
+    const section = within(input.parentElement!.parentElement!);
+    await user.click(section.getByRole('button', { name: 'Kaydet' }));
+
+    await waitFor(() => expect(updateSpy).toHaveBeenCalledWith('crm.postSaleFollowUpDays', 7));
   });
 });

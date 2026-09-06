@@ -12,6 +12,7 @@ import {
 import { useTenantSettingsQuery, useUpdateTenantSettingMutation } from './use-tenant-settings';
 
 const THRESHOLD_KEY = 'crm.contactInactivityThresholdDays';
+const POST_SALE_FOLLOW_UP_DAYS_KEY = 'crm.postSaleFollowUpDays';
 
 function SectorOptionsManager() {
   const toast = useToast();
@@ -151,6 +152,70 @@ function InactivityThresholdSetting() {
   );
 }
 
+function PostSaleFollowUpDaysSetting() {
+  const toast = useToast();
+  const settingsQuery = useTenantSettingsQuery();
+  const updateMutation = useUpdateTenantSettingMutation();
+  const [value, setValue] = useState('');
+
+  const currentSetting = settingsQuery.data?.find(
+    (setting) => setting.key === POST_SALE_FOLLOW_UP_DAYS_KEY,
+  );
+
+  const [prevSettingValue, setPrevSettingValue] = useState<unknown>(undefined);
+  if (currentSetting && currentSetting.value !== prevSettingValue) {
+    setPrevSettingValue(currentSetting.value);
+    setValue(String(currentSetting.value));
+  }
+
+  function handleSave() {
+    const days = Number(value);
+    if (!Number.isInteger(days) || days < 1) {
+      return;
+    }
+    updateMutation.mutate(
+      { key: POST_SALE_FOLLOW_UP_DAYS_KEY, value: days },
+      {
+        onSuccess: () => toast.success(tr.settings.crm.postSaleFollowUpDays.saveSuccess),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
+  return (
+    <div className="mt-6 border-t border-app-border pt-6">
+      <h3 className="text-sm font-bold text-app-text">
+        {tr.settings.crm.postSaleFollowUpDays.title}
+      </h3>
+      <p className="text-sm text-app-muted">{tr.settings.crm.postSaleFollowUpDays.subtitle}</p>
+
+      <div className="mt-3 flex items-end gap-2">
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="post-sale-follow-up-days"
+            className="text-sm font-semibold text-app-muted"
+          >
+            {tr.settings.crm.postSaleFollowUpDays.label}
+          </label>
+          <input
+            id="post-sale-follow-up-days"
+            type="number"
+            min={1}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          />
+        </div>
+        <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
+          {tr.settings.crm.postSaleFollowUpDays.saveButton}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function CrmSettingsSection() {
   return (
     <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
@@ -159,6 +224,7 @@ export function CrmSettingsSection() {
 
       <SectorOptionsManager />
       <InactivityThresholdSetting />
+      <PostSaleFollowUpDaysSetting />
     </section>
   );
 }

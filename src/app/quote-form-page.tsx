@@ -9,6 +9,7 @@ import { Switch } from '../components/ui/switch';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { useAccountsQuery } from '../features/crm/use-accounts';
+import { useContactsQuery } from '../features/crm/use-contacts';
 import { usePriceListsQuery } from '../features/crm/use-price-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
@@ -24,6 +25,7 @@ export function QuoteFormPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const accountsQuery = useAccountsQuery();
+  const contactsQuery = useContactsQuery();
   const priceListsQuery = usePriceListsQuery();
   const productsQuery = useProductsQuery();
   const createMutation = useCreateQuoteMutation();
@@ -43,15 +45,23 @@ export function QuoteFormPage() {
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const hasOpportunity = watch('hasOpportunity');
+  const selectedAccountId = watch('accountId');
 
   const productOptions = (productsQuery.data?.data ?? []).map((product) => ({
     value: product.id,
     label: product.name,
   }));
+  const contactOptions = (contactsQuery.data?.data ?? [])
+    .filter((contact) => !selectedAccountId || contact.accountId === selectedAccountId)
+    .map((contact) => ({
+      value: contact.id,
+      label: `${contact.firstName} ${contact.lastName}`,
+    }));
 
   const onSubmit = handleSubmit((values) => {
     const input: CreateQuoteInput = {
       accountId: values.accountId,
+      contactId: values.contactId || undefined,
       priceListId: values.priceListId,
       items: values.items.map((item) => ({
         productId: item.productId,
@@ -119,6 +129,12 @@ export function QuoteFormPage() {
                 label: priceList.name,
               }))}
               {...register('priceListId')}
+            />
+            <Select
+              label={tr.crm.quotes.form.contactLabel}
+              placeholder={tr.crm.quotes.form.contactPlaceholder}
+              options={contactOptions}
+              {...register('contactId')}
             />
           </div>
 

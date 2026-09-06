@@ -124,7 +124,10 @@ export function QuoteDetailPage() {
               {tr.crm.quotes.statusOptions[quote.status]}
             </Badge>
           </div>
-          <p className="mt-1 text-sm text-app-muted">{quote.account.name}</p>
+          <p className="mt-1 text-sm text-app-muted">
+            {quote.account.name}
+            {quote.contact && ` · ${quote.contact.firstName} ${quote.contact.lastName}`}
+          </p>
         </div>
         {!isPrintMode && (
           <div className="flex flex-wrap gap-2">

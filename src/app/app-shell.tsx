@@ -3,6 +3,7 @@ import {
   CalendarDays,
   Contact2,
   FileText,
+  HeartHandshake,
   LayoutDashboard,
   Layers,
   LogOut,
@@ -58,6 +59,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
     products: useIsPageModuleAccessible('products'),
     'price-lists': useIsPageModuleAccessible('price-lists'),
     quotes: useIsPageModuleAccessible('quotes'),
+    'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -85,6 +87,15 @@ export function AppShell({ children, print = false }: AppShellProps) {
       : []),
     ...(canAccessPage('quotes')
       ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
+      : []),
+    ...(canAccessPage('post-sale-cases')
+      ? [
+          {
+            label: tr.shell.nav.postSaleSupport,
+            icon: HeartHandshake,
+            path: '/satis-sonrasi',
+          },
+        ]
       : []),
     ...(canAccessPage('products')
       ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]
