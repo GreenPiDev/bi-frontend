@@ -1,5 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { ChevronRight } from 'lucide-react';
 import { Fragment, useMemo, useState } from 'react';
+import { clsx } from 'clsx';
 import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
@@ -36,6 +38,16 @@ interface ActionRow {
   actions: CrudPermissionAction[];
 }
 
+/** Tab'li sayfalar (su an sadece "Ayarlar") tek bir collapsible grup olarak, tab'i
+ * olmayan sayfalar dogrudan tek bir satir olarak gosterilir - bkz. PageAccessMatrixSection
+ * ile ayni collapsible desen. */
+interface ActionPageGroup {
+  pageKey: string;
+  label: string;
+  hasTabs: boolean;
+  rows: ActionRow[];
+}
+
 /** "Islem Izinleri" sekmesi - Sayfa Erisimleri'nden (VIEW/gorunurluk) ayri, rol-secicili
  * bir yapi: once rol secilir, altta o rolun gorebildigi sayfalar icin CREATE/UPDATE/DELETE/
  * IMPORT/EXPORT switch'leri gosterilir. Sayfa x rol x aksiyon 3 boyutunu tek tabloya
@@ -50,6 +62,7 @@ export function ActionPermissionsSection() {
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Record<string, RolePermissionInput[]>>({});
   const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const roles = rolesQuery.data ?? [];
   const isLoading = rolesQuery.isPending || pageRegistryQuery.isPending;
@@ -57,32 +70,44 @@ export function ActionPermissionsSection() {
   const activeRoleId = selectedRoleId ?? roles[0]?.id ?? null;
   const activeRole = roles.find((r) => r.id === activeRoleId);
 
-  const rows = useMemo<ActionRow[]>(() => {
+  const groups = useMemo<ActionPageGroup[]>(() => {
     const pages = pageRegistryQuery.data ?? [];
-    const result: ActionRow[] = [];
+    const result: ActionPageGroup[] = [];
     for (const page of pages) {
       if (page.tabs && page.tabs.length > 0) {
-        for (const tab of page.tabs) {
-          if (tab.supportedActions && tab.supportedActions.length > 0) {
-            result.push({
-              pageKey: page.key,
-              tabKey: tab.key,
-              label: `${page.label} / ${tab.label}`,
-              actions: tab.supportedActions,
-            });
-          }
+        const tabRows = page.tabs
+          .filter((tab) => tab.supportedActions && tab.supportedActions.length > 0)
+          .map((tab) => ({
+            pageKey: page.key,
+            tabKey: tab.key,
+            label: tab.label,
+            actions: tab.supportedActions as CrudPermissionAction[],
+          }));
+        if (tabRows.length > 0) {
+          result.push({ pageKey: page.key, label: page.label, hasTabs: true, rows: tabRows });
         }
       } else if (page.supportedActions && page.supportedActions.length > 0) {
         result.push({
           pageKey: page.key,
-          tabKey: null,
           label: page.label,
-          actions: page.supportedActions,
+          hasTabs: false,
+          rows: [
+            { pageKey: page.key, tabKey: null, label: page.label, actions: page.supportedActions },
+          ],
         });
       }
     }
     return result;
   }, [pageRegistryQuery.data]);
+
+  function toggleExpanded(pageKey: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(pageKey)) next.delete(pageKey);
+      else next.add(pageKey);
+      return next;
+    });
+  }
 
   function permissionsFor(roleId: string): RolePermissionInput[] {
     if (draft[roleId]) return draft[roleId];
@@ -103,6 +128,26 @@ export function ActionPermissionsSection() {
       : [...entryActions, action];
     const next = withPermissionActions(current, pageKey, tabKey, nextActions);
     setDraft((prev) => ({ ...prev, [roleId]: next }));
+  }
+
+  function renderActionSwitch(
+    row: ActionRow,
+    action: CrudPermissionAction,
+    role: NonNullable<typeof activeRole>,
+  ) {
+    if (!row.actions.includes(action)) {
+      return <span className="text-app-muted">—</span>;
+    }
+    const permissions = permissionsFor(role.id);
+    const entry = findPermissionEntry(permissions, row.pageKey, row.tabKey);
+    return (
+      <Switch
+        disabled={!isCompanyAdmin || role.isSystem}
+        checked={entry?.actions.includes(action) ?? false}
+        onChange={() => toggleAction(role.id, row.pageKey, row.tabKey, action)}
+        label={`${role.name} - ${row.label} - ${ACTION_LABELS[action]}`}
+      />
+    );
   }
 
   function discardChanges() {
@@ -204,33 +249,68 @@ export function ActionPermissionsSection() {
                     </tr>
                   )}
                   {!activeRole.isCompanyAdmin &&
-                    rows.map((row) => {
-                      const permissions = permissionsFor(activeRole.id);
-                      const entry = findPermissionEntry(permissions, row.pageKey, row.tabKey);
+                    groups.map((group) => {
+                      const isExpanded = expanded.has(group.pageKey);
                       return (
-                        <Fragment key={`${row.pageKey}-${row.tabKey ?? ''}`}>
-                          <tr className="border-b border-app-border last:border-0">
-                            <td className="px-3 py-2 text-app-text">{row.label}</td>
+                        <Fragment key={group.pageKey}>
+                          <tr
+                            className={clsx(
+                              'border-b border-app-border last:border-0',
+                              group.hasTabs && 'cursor-pointer hover:bg-app-bg-muted',
+                            )}
+                            onClick={
+                              group.hasTabs ? () => toggleExpanded(group.pageKey) : undefined
+                            }
+                          >
+                            <td className="px-3 py-2">
+                              <span
+                                className={clsx(
+                                  'inline-flex items-center gap-1.5 font-semibold',
+                                  group.hasTabs ? 'text-app-primary' : 'text-app-text',
+                                )}
+                              >
+                                {group.hasTabs && (
+                                  <ChevronRight
+                                    size={14}
+                                    className={clsx(
+                                      'transition-transform',
+                                      isExpanded && 'rotate-90',
+                                    )}
+                                  />
+                                )}
+                                {group.label}
+                              </span>
+                            </td>
                             {ACTION_COLUMNS.map((action) => (
                               <td
                                 key={action}
                                 className="border-l border-app-border px-3 py-2 text-center"
+                                onClick={group.hasTabs ? (e) => e.stopPropagation() : undefined}
                               >
-                                {row.actions.includes(action) ? (
-                                  <Switch
-                                    disabled={!isCompanyAdmin || activeRole.isSystem}
-                                    checked={entry?.actions.includes(action) ?? false}
-                                    onChange={() =>
-                                      toggleAction(activeRole.id, row.pageKey, row.tabKey, action)
-                                    }
-                                    label={`${activeRole.name} - ${row.label} - ${ACTION_LABELS[action]}`}
-                                  />
-                                ) : (
-                                  <span className="text-app-muted">—</span>
-                                )}
+                                {group.hasTabs
+                                  ? null
+                                  : renderActionSwitch(group.rows[0], action, activeRole)}
                               </td>
                             ))}
                           </tr>
+                          {group.hasTabs &&
+                            isExpanded &&
+                            group.rows.map((row) => (
+                              <tr
+                                key={`${row.pageKey}-${row.tabKey ?? ''}`}
+                                className="border-b border-app-border bg-app-bg-muted/40 last:border-0"
+                              >
+                                <td className="px-3 py-2 pl-8 text-app-muted">{row.label}</td>
+                                {ACTION_COLUMNS.map((action) => (
+                                  <td
+                                    key={action}
+                                    className="border-l border-app-border px-3 py-2 text-center"
+                                  >
+                                    {renderActionSwitch(row, action, activeRole)}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
                         </Fragment>
                       );
                     })}
