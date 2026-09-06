@@ -16,13 +16,6 @@ export const loginFormSchema = z.object({
 
 export type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-export const acceptInvitationFormSchema = z.object({
-  name: z.string().min(1, 'Ad soyad gerekli.').max(120),
-  password: z.string().min(8, 'Şifre en az 8 karakter olmalı.').max(72),
-});
-
-export type AcceptInvitationFormValues = z.infer<typeof acceptInvitationFormSchema>;
-
 export const updateProfileFormSchema = z.object({
   name: z.string().min(1, 'Ad soyad gerekli.').max(120),
   email: z.string().email('Geçerli bir e-posta adresi girin.').max(255),

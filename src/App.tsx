@@ -14,7 +14,6 @@ import { DatasetDetailPage } from './app/dataset-detail-page';
 import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
 import { DatasetsListPage } from './app/datasets-list-page';
-import { InvitationAcceptPage } from './app/invitation-accept-page';
 import { LoginPage } from './app/login-page';
 import { OnboardingPage } from './app/onboarding-page';
 import { PageModuleRoute } from './app/page-module-route';
@@ -42,7 +41,6 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/invite/:token" element={<InvitationAcceptPage />} />
         <Route
           path="/platform-admin"
           element={

@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { clearChatHistory } from '../chatbot/chatbot-storage';
 import {
-  acceptInvitation,
   ApiError,
   changePassword,
   getProfile,
@@ -10,7 +9,6 @@ import {
   me,
   register,
   updateProfile,
-  type AcceptInvitationInput,
   type AuthenticatedUser,
   type ChangePasswordInput,
   type LoginInput,
@@ -53,17 +51,6 @@ export function useRegisterMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: RegisterInput) => register(input),
-    onSuccess: (result) => {
-      queryClient.setQueryData(AUTH_QUERY_KEY, result.user);
-    },
-  });
-}
-
-export function useAcceptInvitationMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ token, input }: { token: string; input: AcceptInvitationInput }) =>
-      acceptInvitation(token, input),
     onSuccess: (result) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, result.user);
     },

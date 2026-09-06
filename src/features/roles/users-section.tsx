@@ -8,32 +8,105 @@ import { TextField } from '../../components/ui/text-field';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type RoleView, type SafeUser } from '../../lib/api';
 import { tr } from '../../i18n/tr';
-import { useInviteUserMutation, useUpdateUserRoleMutation, useUsersQuery } from './use-users';
+import {
+  useCreateUserMutation,
+  useResetUserPasswordMutation,
+  useUpdateUserRoleMutation,
+  useUsersQuery,
+} from './use-users';
 
 interface UsersSectionProps {
   roles: RoleView[];
   isCompanyAdmin: boolean;
+  currentUserId?: string;
 }
 
-function InviteUserModal({ roles, onClose }: { roles: RoleView[]; onClose: () => void }) {
+/** Kullanici olusturma/sifre sifirlama sonrasi tek kullanimlik kimlik bilgilerini gosterir -
+ * bu sifre bir daha hicbir yerden alinamayacagi icin admin'in kopyalayip kullaniciya
+ * iletmesi gerekiyor. */
+function CredentialsResultModal({
+  title,
+  email,
+  password,
+  onClose,
+}: {
+  title: string;
+  email?: string;
+  password: string;
+  onClose: () => void;
+}) {
   const toast = useToast();
-  const inviteMutation = useInviteUserMutation();
+  const strings = tr.settings.roles.users.credentialsResult;
+
+  async function handleCopy() {
+    await navigator.clipboard.writeText(password);
+    toast.success(strings.copiedToast);
+  }
+
+  return (
+    <Modal
+      title={title}
+      onClose={onClose}
+      footer={
+        <Button type="button" onClick={onClose}>
+          {strings.closeButton}
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-app-muted">{strings.description}</p>
+        {email && (
+          <TextField label={strings.emailLabel} name="result-email" value={email} readOnly />
+        )}
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <TextField
+              label={strings.passwordLabel}
+              name="result-password"
+              value={password}
+              readOnly
+            />
+          </div>
+          <Button type="button" variant="secondary" onClick={() => void handleCopy()}>
+            {strings.copyButton}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function AddUserModal({ roles, onClose }: { roles: RoleView[]; onClose: () => void }) {
+  const toast = useToast();
+  const createMutation = useCreateUserMutation();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [roleIds, setRoleIds] = useState<string[]>([]);
+  const [result, setResult] = useState<{ email: string; password: string } | null>(null);
 
   function handleSubmit() {
-    if (!email.trim() || roleIds.length === 0) return;
-    inviteMutation.mutate(
-      { email: email.trim(), roleIds },
+    if (!name.trim() || !email.trim() || roleIds.length === 0) return;
+    createMutation.mutate(
+      { name: name.trim(), email: email.trim(), roleIds },
       {
-        onSuccess: () => {
-          toast.success(tr.settings.roles.users.inviteForm.success);
-          onClose();
+        onSuccess: (res) => {
+          setResult({ email: email.trim(), password: res.temporaryPassword });
         },
         onError: (error) => {
           toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
         },
       },
+    );
+  }
+
+  if (result) {
+    return (
+      <CredentialsResultModal
+        title={tr.settings.roles.users.credentialsResult.createTitle}
+        email={result.email}
+        password={result.password}
+        onClose={onClose}
+      />
     );
   }
 
@@ -48,10 +121,12 @@ function InviteUserModal({ roles, onClose }: { roles: RoleView[]; onClose: () =>
           </Button>
           <Button
             type="button"
-            disabled={inviteMutation.isPending || !email.trim() || roleIds.length === 0}
+            disabled={
+              createMutation.isPending || !name.trim() || !email.trim() || roleIds.length === 0
+            }
             onClick={handleSubmit}
           >
-            {inviteMutation.isPending
+            {createMutation.isPending
               ? tr.settings.roles.users.inviteForm.submitting
               : tr.settings.roles.users.inviteForm.submit}
           </Button>
@@ -60,7 +135,14 @@ function InviteUserModal({ roles, onClose }: { roles: RoleView[]; onClose: () =>
     >
       <div className="flex flex-col gap-4">
         <TextField
+          label={tr.settings.roles.users.inviteForm.nameLabel}
+          name="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <TextField
           label={tr.settings.roles.users.inviteForm.emailLabel}
+          name="email"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -136,10 +218,24 @@ function EditUserRolesModal({
   );
 }
 
-export function UsersSection({ roles, isCompanyAdmin }: UsersSectionProps) {
+export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSectionProps) {
+  const toast = useToast();
   const usersQuery = useUsersQuery();
+  const resetPasswordMutation = useResetUserPasswordMutation();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SafeUser | null>(null);
+  const [resetResult, setResetResult] = useState<{ email: string; password: string } | null>(null);
+
+  function handleResetPassword(user: SafeUser) {
+    resetPasswordMutation.mutate(user.id, {
+      onSuccess: (res) => {
+        setResetResult({ email: user.email, password: res.temporaryPassword });
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
 
   const columns: TableColumn<SafeUser>[] = [
     { key: 'name', header: tr.settings.roles.users.nameColumn, render: (u) => u.name },
@@ -162,16 +258,31 @@ export function UsersSection({ roles, isCompanyAdmin }: UsersSectionProps) {
             header: tr.settings.roles.users.actionsColumn,
             className: 'text-right',
             render: (u: SafeUser) => (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setEditingUser(u);
-                }}
-              >
-                {tr.settings.roles.users.editRolesButton}
-              </Button>
+              <div className="flex justify-end gap-2">
+                {u.id !== currentUserId && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={resetPasswordMutation.isPending}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleResetPassword(u);
+                    }}
+                  >
+                    {tr.settings.roles.users.resetPasswordButton}
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setEditingUser(u);
+                  }}
+                >
+                  {tr.settings.roles.users.editRolesButton}
+                </Button>
+              </div>
             ),
           } satisfies TableColumn<SafeUser>,
         ]
@@ -199,9 +310,17 @@ export function UsersSection({ roles, isCompanyAdmin }: UsersSectionProps) {
         isLoading={usersQuery.isPending}
       />
 
-      {inviteOpen && <InviteUserModal roles={roles} onClose={() => setInviteOpen(false)} />}
+      {inviteOpen && <AddUserModal roles={roles} onClose={() => setInviteOpen(false)} />}
       {editingUser && (
         <EditUserRolesModal user={editingUser} roles={roles} onClose={() => setEditingUser(null)} />
+      )}
+      {resetResult && (
+        <CredentialsResultModal
+          title={tr.settings.roles.users.credentialsResult.resetTitle}
+          email={resetResult.email}
+          password={resetResult.password}
+          onClose={() => setResetResult(null)}
+        />
       )}
     </section>
   );

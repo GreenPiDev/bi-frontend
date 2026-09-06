@@ -23,7 +23,8 @@ const actionLabels: Record<string, string> = {
   UPDATE: 'Güncelledi',
   DELETE: 'Sildi',
   UPLOAD: 'Yükledi',
-  INVITE: 'Davet Etti',
+  CREATE_USER: 'Kullanıcı Oluşturdu',
+  RESET_PASSWORD: 'Şifre Sıfırladı',
   UPDATE_ROLE: 'Rol Değiştirdi',
   UPDATE_PROFILE: 'Profilini Güncelledi',
   CHANGE_PASSWORD: 'Şifresini Değiştirdi',
@@ -37,7 +38,6 @@ const entityLabels: Record<string, string> = {
   User: 'Kullanıcı',
   ScheduledReport: 'Zamanlanmış Rapor',
   Alert: 'Alarm',
-  Invitation: 'Davet',
   Role: 'Rol',
 };
 

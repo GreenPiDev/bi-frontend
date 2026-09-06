@@ -143,19 +143,6 @@ export interface LoginInput {
   password: string;
 }
 
-export interface AcceptInvitationInput {
-  name: string;
-  password: string;
-}
-
-export interface InvitationInfo {
-  tenantName: string;
-  email: string;
-  roleIds: string[];
-  roleNames: string[];
-  expired: boolean;
-}
-
 export function register(input: RegisterInput): Promise<{ user: AuthenticatedUser }> {
   return request('/auth/register', { method: 'POST', body: JSON.stringify(input) });
 }
@@ -197,20 +184,6 @@ export interface ChangePasswordInput {
 export function changePassword(input: ChangePasswordInput): Promise<{ ok: true }> {
   return request('/users/me/password', {
     method: 'PATCH',
-    body: JSON.stringify(input),
-  });
-}
-
-export function getInvitation(token: string): Promise<InvitationInfo> {
-  return request(`/invitations/${token}`);
-}
-
-export function acceptInvitation(
-  token: string,
-  input: AcceptInvitationInput,
-): Promise<{ user: AuthenticatedUser }> {
-  return request(`/invitations/${token}/accept`, {
-    method: 'POST',
     body: JSON.stringify(input),
   });
 }
@@ -921,13 +894,20 @@ export function listUsers(): Promise<SafeUser[]> {
   return request('/users');
 }
 
-export interface InviteUserInput {
+export interface CreateUserInput {
   email: string;
+  name: string;
   roleIds: string[];
 }
 
-export function inviteUser(input: InviteUserInput): Promise<{ token: string; expiresAt: string }> {
-  return request('/users/invite', { method: 'POST', body: JSON.stringify(input) });
+export function createUser(
+  input: CreateUserInput,
+): Promise<{ user: SafeUser; temporaryPassword: string }> {
+  return request('/users', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function resetUserPassword(userId: string): Promise<{ temporaryPassword: string }> {
+  return request(`/users/${userId}/reset-password`, { method: 'POST' });
 }
 
 export function updateUserRole(userId: string, roleIds: string[]): Promise<SafeUser> {

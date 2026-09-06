@@ -12,5 +12,11 @@ export function UsersSettingsSection() {
   // VIEW-only bir kullanicinin "settings/roles" izni olmayabilir, gereksiz 403 onlensin.
   const rolesQuery = useRolesQuery({ enabled: isCompanyAdmin });
 
-  return <UsersSection roles={rolesQuery.data ?? []} isCompanyAdmin={isCompanyAdmin} />;
+  return (
+    <UsersSection
+      roles={rolesQuery.data ?? []}
+      isCompanyAdmin={isCompanyAdmin}
+      currentUserId={meQuery.data?.id}
+    />
+  );
 }
