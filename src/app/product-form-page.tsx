@@ -36,6 +36,9 @@ export function ProductFormPage() {
     defaultValues: { unit: 'adet' },
   });
 
+  const minStockLevelField = register('minStockLevel');
+  const maxDiscountPctField = register('maxDiscountPct');
+
   useEffect(() => {
     if (productQuery.data) {
       reset({
@@ -101,26 +104,45 @@ export function ProductFormPage() {
           <FormError message={apiErrorMessage} />
           <TextField
             label={tr.crm.products.form.nameLabel}
+            required
+            hint={tr.crm.products.form.nameHint}
             error={errors.name?.message}
             {...register('name')}
           />
-          <TextField label={tr.crm.products.form.skuLabel} {...register('sku')} />
+          <TextField
+            label={tr.crm.products.form.skuLabel}
+            hint={tr.crm.products.form.skuHint}
+            {...register('sku')}
+          />
           <TextField
             label={tr.crm.products.form.unitLabel}
+            required
+            hint={tr.crm.products.form.unitHint}
             error={errors.unit?.message}
             {...register('unit')}
           />
           <TextField
-            type="number"
+            type="text"
+            inputMode="numeric"
             label={tr.crm.products.form.minStockLevelLabel}
-            {...register('minStockLevel')}
+            hint={tr.crm.products.form.minStockLevelHint}
+            {...minStockLevelField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/[^0-9]/g, '');
+              minStockLevelField.onChange(event);
+            }}
           />
           <TextField
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             label={tr.crm.products.form.maxDiscountPctLabel}
             hint={tr.crm.products.form.maxDiscountPctHint}
-            {...register('maxDiscountPct')}
+            error={errors.maxDiscountPct?.message}
+            {...maxDiscountPctField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
+              maxDiscountPctField.onChange(event);
+            }}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>
