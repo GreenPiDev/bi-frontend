@@ -7,6 +7,7 @@ import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
 import { useAccountQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
+import { useProjectsQuery } from '../features/crm/use-projects';
 import { useQuotesQuery } from '../features/crm/use-quotes';
 import { tr } from '../i18n/tr';
 
@@ -27,6 +28,7 @@ export function AccountDetailPage() {
   const interactionsQuery = useInteractionsQuery({ accountId: id });
   const opportunitiesQuery = useOpportunitiesQuery({ accountId: id });
   const quotesQuery = useQuotesQuery({ accountId: id });
+  const projectsQuery = useProjectsQuery({ accountId: id });
 
   if (accountQuery.isPending) {
     return (
@@ -229,6 +231,31 @@ export function AccountDetailPage() {
                           <Badge variant={QUOTE_STATUS_BADGE_VARIANT[quote.status]}>
                             {tr.crm.quotes.statusOptions[quote.status]}
                           </Badge>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ),
+            },
+            {
+              key: 'projects',
+              label: tr.crm.accounts.detail.tabProjects,
+              content: (
+                <div className="rounded-xl border border-app-border bg-app-surface p-6">
+                  {(projectsQuery.data?.data.length ?? 0) === 0 ? (
+                    <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noProjects}</p>
+                  ) : (
+                    <ul className="flex flex-col gap-3">
+                      {projectsQuery.data?.data.map((project) => (
+                        <li key={project.id}>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/projeler/${project.id}`)}
+                            className="text-sm font-semibold text-app-brand hover:underline"
+                          >
+                            {project.projectNumber} · {project.name}
+                          </button>
                         </li>
                       ))}
                     </ul>

@@ -118,6 +118,16 @@ export const opportunityFormSchema = z.object({
 
 export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;
 
+export const projectFormSchema = z.object({
+  accountId: z.string().min(1, 'Firma gerekli.'),
+  quoteId: z.string().optional(),
+  name: z.string().min(2, 'Proje adı en az 2 karakter olmalı.').max(200),
+  estimatedBudget: z.string().min(1, 'Tahmini bütçe gerekli.'),
+  actualCost: z.string().optional(),
+});
+
+export type ProjectFormValues = z.infer<typeof projectFormSchema>;
+
 export const productFormSchema = z.object({
   name: z.string().min(2, 'Ürün adı en az 2 karakter olmalı.').max(200),
   sku: z.string().max(100).optional(),

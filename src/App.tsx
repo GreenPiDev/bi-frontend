@@ -35,6 +35,9 @@ import { ProductDetailPage } from './app/product-detail-page';
 import { ProductFormPage } from './app/product-form-page';
 import { ProductsListPage } from './app/products-list-page';
 import { ProfilePage } from './app/profile-page';
+import { ProjectDetailPage } from './app/project-detail-page';
+import { ProjectFormPage } from './app/project-form-page';
+import { ProjectsListPage } from './app/projects-list-page';
 import { ProtectedRoute } from './app/protected-route';
 import { PostSaleCaseDetailPage } from './app/post-sale-case-detail-page';
 import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
@@ -84,6 +87,7 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'opportunities', path: '/firsatlar' },
   { pageKey: 'quotes', path: '/teklifler' },
   { pageKey: 'post-sale-cases', path: '/satis-sonrasi' },
+  { pageKey: 'projects', path: '/projeler' },
   { pageKey: 'products', path: '/urunler' },
   { pageKey: 'price-lists', path: '/fiyat-listeleri' },
   { pageKey: 'settings', path: '/settings' },
@@ -408,6 +412,38 @@ function App() {
           element={
             <TenantPageRoute pageKey="post-sale-cases">
               <PostSaleCaseDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/projeler"
+          element={
+            <TenantPageRoute pageKey="projects">
+              <ProjectsListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/projeler/yeni"
+          element={
+            <TenantPageRoute pageKey="projects">
+              <ProjectFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/projeler/:id"
+          element={
+            <TenantPageRoute pageKey="projects">
+              <ProjectDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/projeler/:id/duzenle"
+          element={
+            <TenantPageRoute pageKey="projects">
+              <ProjectFormPage />
             </TenantPageRoute>
           }
         />

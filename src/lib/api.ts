@@ -1391,6 +1391,53 @@ export function approveQuote(id: string): Promise<Quote> {
   return request(`/quotes/${id}/approve`, { method: 'POST' });
 }
 
+export interface Project {
+  id: string;
+  projectNumber: string;
+  accountId: string;
+  quoteId: string | null;
+  name: string;
+  estimatedBudget: string;
+  actualCost: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectInput {
+  accountId: string;
+  quoteId?: string;
+  name: string;
+  estimatedBudget: number;
+  actualCost?: number;
+}
+
+export function listProjects(
+  params: { page?: number; accountId?: string } = {},
+): Promise<PagedResult<Project>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.accountId) query.set('accountId', params.accountId);
+  const qs = query.toString();
+  return request(`/projects${qs ? `?${qs}` : ''}`);
+}
+
+export function getProject(id: string): Promise<Project> {
+  return request(`/projects/${id}`);
+}
+
+export function createProject(input: ProjectInput): Promise<Project> {
+  return request('/projects', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateProject(id: string, input: Partial<ProjectInput>): Promise<Project> {
+  return request(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteProject(id: string): Promise<void> {
+  return request(`/projects/${id}`, { method: 'DELETE' });
+}
+
 export function rejectQuote(id: string): Promise<Quote> {
   return request(`/quotes/${id}/reject`, { method: 'POST' });
 }

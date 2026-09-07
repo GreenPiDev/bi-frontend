@@ -1,4 +1,5 @@
 import {
+  Briefcase,
   Building2,
   CalendarDays,
   Contact2,
@@ -60,6 +61,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
     'price-lists': useIsPageModuleAccessible('price-lists'),
     quotes: useIsPageModuleAccessible('quotes'),
     'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
+    projects: useIsPageModuleAccessible('projects'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -96,6 +98,9 @@ export function AppShell({ children, print = false }: AppShellProps) {
             path: '/satis-sonrasi',
           },
         ]
+      : []),
+    ...(canAccessPage('projects')
+      ? [{ label: tr.shell.nav.projects, icon: Briefcase, path: '/projeler' }]
       : []),
     ...(canAccessPage('products')
       ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]
