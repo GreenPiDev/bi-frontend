@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
-import { Button } from '../components/ui/button';
 import { useProductQuery } from '../features/crm/use-products';
 import { tr } from '../i18n/tr';
 
@@ -46,17 +45,8 @@ export function ProductDetailPage() {
         {'←'} {tr.crm.products.detail.back}
       </button>
 
-      <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+      <div className="mt-6">
         <h1 className="text-xl font-bold text-app-text">{product.name}</h1>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(`/urunler/duzenle/${id}`)}
-          >
-            {tr.crm.products.detail.editButton}
-          </Button>
-        </div>
       </div>
 
       <dl className="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-app-border bg-app-surface p-6 sm:grid-cols-2">
