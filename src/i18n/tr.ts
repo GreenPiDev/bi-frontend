@@ -418,6 +418,9 @@ export const tr = {
       actionColumn: 'İşlem',
       entityColumn: 'Öğe',
       dateColumn: 'Tarih',
+      detailToggleExpand: 'Detayları göster',
+      detailToggleCollapse: 'Detayları gizle',
+      noDetail: 'Bu kayıt için ek detay yok.',
     },
     reports: {
       title: 'Zamanlanmış Raporlar',
@@ -1147,10 +1150,13 @@ export const tr = {
       quantityColumn: 'Miktar',
       minStockLevelColumn: 'Minimum Stok Seviyesi',
       actionsColumn: 'İşlem',
+      searchPlaceholder: 'Ürün ara...',
       save: 'Kaydet',
       saving: 'Kaydediliyor...',
       saveSuccess: 'Stok miktarı güncellendi.',
+      editTooltip: 'Stok miktarını düzenle',
       lowStockBadge: 'Düşük Stok',
+      lowStockTooltip: 'Düşük stok',
       lowStockSummary: (count: number) =>
         count === 1
           ? '1 üründe stok minimum seviyenin altında.'

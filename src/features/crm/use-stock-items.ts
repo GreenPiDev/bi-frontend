@@ -4,7 +4,7 @@ import { listLowStockItems, listStockItems, upsertStockItem } from '../../lib/ap
 export const STOCK_ITEMS_QUERY_KEY = ['stock-items'];
 export const LOW_STOCK_ITEMS_QUERY_KEY = ['stock-items', 'low-stock'];
 
-export function useStockItemsQuery(params: { page?: number } = {}) {
+export function useStockItemsQuery(params: { page?: number; q?: string } = {}) {
   return useQuery({
     queryKey: [...STOCK_ITEMS_QUERY_KEY, params],
     queryFn: () => listStockItems(params),

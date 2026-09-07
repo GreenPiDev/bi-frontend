@@ -1596,9 +1596,12 @@ export interface StockItem {
   updatedAt: string;
 }
 
-export function listStockItems(params: { page?: number } = {}): Promise<PagedResult<StockItem>> {
+export function listStockItems(
+  params: { page?: number; q?: string } = {},
+): Promise<PagedResult<StockItem>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/stock-items${qs ? `?${qs}` : ''}`);
 }

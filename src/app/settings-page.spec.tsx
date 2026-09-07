@@ -52,4 +52,55 @@ describe('SettingsPage', () => {
     expect(screen.getByText('Oluşturdu')).toBeInTheDocument();
     expect(screen.getByText('Pano')).toBeInTheDocument();
   });
+
+  it('detaylari genislet denince stok kaydinin meta bilgisini (urun adi) gosterir', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([
+      {
+        id: 'a2',
+        userId: 'u1',
+        userName: 'Ada Lovelace',
+        userEmail: 'ada@test.com',
+        action: 'UPDATE',
+        entity: 'StockItem',
+        entityId: 'si1',
+        meta: { productId: 'p1', productName: 'Sunucu', quantity: 12 },
+        createdAt: '2026-08-22T10:00:00.000Z',
+      },
+    ]);
+    renderSettingsPage();
+    await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
+    expect(await screen.findByText('Stok')).toBeInTheDocument();
+    expect(screen.queryByText('Sunucu')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Detayları göster' }));
+
+    expect(await screen.findByText('Sunucu')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
+  });
+
+  it('stok guncellemesinde onceki ve yeni miktari birlikte gosterir', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([
+      {
+        id: 'a3',
+        userId: 'u1',
+        userName: 'Ada Lovelace',
+        userEmail: 'ada@test.com',
+        action: 'UPDATE',
+        entity: 'StockItem',
+        entityId: 'si1',
+        meta: { productId: 'p1', productName: 'Sunucu', previousQuantity: '3', quantity: 20 },
+        createdAt: '2026-08-22T10:00:00.000Z',
+      },
+    ]);
+    renderSettingsPage();
+    await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
+    await user.click(await screen.findByRole('button', { name: 'Detayları göster' }));
+
+    expect(await screen.findByText('Önceki Miktar')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText('Yeni Miktar')).toBeInTheDocument();
+    expect(screen.getByText('20')).toBeInTheDocument();
+  });
 });

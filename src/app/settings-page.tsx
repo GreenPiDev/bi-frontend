@@ -1,3 +1,5 @@
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Fragment, useState } from 'react';
 import { AppShell } from './app-shell';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { AlertsSection } from '../features/alerts/alerts-section';
@@ -39,7 +41,74 @@ const entityLabels: Record<string, string> = {
   ScheduledReport: 'Zamanlanmış Rapor',
   Alert: 'Alarm',
   Role: 'Rol',
+  Product: 'Ürün',
+  PriceList: 'Fiyat Listesi',
+  StockItem: 'Stok',
+  PurchaseOrder: 'Satın Alma Siparişi',
 };
+
+/** log.meta icindeki bilinen alanlar icin okunabilir etiket - entity'ye gore degil,
+ * anahtar ismine gore calisir (ayni anahtar birden fazla entity'de gecebiliyor, orn.
+ * "name"), boylece her entity icin ayri bir kolon acmaya gerek kalmiyor. Bilinmeyen
+ * anahtarlar oldugu gibi (raw key) gosterilir. */
+const META_KEY_LABELS: Record<string, string> = {
+  name: 'Ad',
+  title: 'Başlık',
+  label: 'Etiket',
+  value: 'Değer',
+  fileName: 'Dosya Adı',
+  sizeBytes: 'Boyut (bayt)',
+  fieldCount: 'Alan Sayısı',
+  productId: 'Ürün ID',
+  productName: 'Ürün',
+  previousQuantity: 'Önceki Miktar',
+  quantity: 'Yeni Miktar',
+  orderNumber: 'Sipariş No',
+  projectNumber: 'Proje No',
+  quoteNumber: 'Teklif No',
+  firstName: 'Ad',
+  lastName: 'Soyad',
+  email: 'E-posta',
+  roleIds: "Rol ID'leri",
+  previousRoleIds: "Önceki Rol ID'leri",
+  newRoleIds: "Yeni Rol ID'leri",
+  reassignedUsers: 'Taşınan Kullanıcı Sayısı',
+  dashboardId: 'Pano ID',
+  widgetId: 'Widget ID',
+  cron: 'Zamanlama (cron)',
+  operator: 'Operatör',
+  threshold: 'Eşik',
+  action: 'Alt İşlem',
+};
+
+function formatMetaValue(value: unknown): string {
+  if (value === null || value === undefined) return '—';
+  if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : '—';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+function AuditLogMetaDetail({ meta }: { meta: unknown }) {
+  const entries =
+    meta && typeof meta === 'object' && !Array.isArray(meta)
+      ? Object.entries(meta as Record<string, unknown>)
+      : [];
+
+  if (entries.length === 0) {
+    return <p className="text-sm text-app-muted">{tr.settings.audit.noDetail}</p>;
+  }
+
+  return (
+    <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
+      {entries.map(([key, value]) => (
+        <div key={key} className="contents">
+          <dt className="text-app-muted">{META_KEY_LABELS[key] ?? key}</dt>
+          <dd className="text-app-text">{formatMetaValue(value)}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 function GeneralTab() {
   return (
@@ -52,6 +121,7 @@ function GeneralTab() {
 
 function AuditLogTab() {
   const auditLogsQuery = useAuditLogsQuery();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <section>
@@ -66,6 +136,7 @@ function AuditLogTab() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-app-border text-xs uppercase text-app-muted">
               <tr>
+                <th className="w-px px-3 py-2" />
                 <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.userColumn}</th>
                 <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.actionColumn}</th>
                 <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.entityColumn}</th>
@@ -73,23 +144,56 @@ function AuditLogTab() {
               </tr>
             </thead>
             <tbody>
-              {auditLogsQuery.data.map((log) => (
-                <tr key={log.id} className="border-b border-app-border last:border-0">
-                  <td className="whitespace-nowrap px-3 py-2 text-app-text">
-                    {log.userName}
-                    <span className="ml-1 text-app-muted">({log.userEmail})</span>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-app-text">
-                    {actionLabels[log.action] ?? log.action}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-app-text">
-                    {entityLabels[log.entity] ?? log.entity}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-app-muted">
-                    {dateFormatter.format(new Date(log.createdAt))}
-                  </td>
-                </tr>
-              ))}
+              {auditLogsQuery.data.map((log) => {
+                const isExpanded = expandedId === log.id;
+                return (
+                  <Fragment key={log.id}>
+                    <tr
+                      onClick={() => setExpandedId(isExpanded ? null : log.id)}
+                      className="cursor-pointer border-b border-app-border last:border-0 hover:bg-app-bg"
+                    >
+                      <td className="px-3 py-2 text-app-muted">
+                        <button
+                          type="button"
+                          aria-label={
+                            isExpanded
+                              ? tr.settings.audit.detailToggleCollapse
+                              : tr.settings.audit.detailToggleExpand
+                          }
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setExpandedId(isExpanded ? null : log.id);
+                          }}
+                          className="flex items-center rounded-lg p-1 hover:bg-app-surface"
+                        >
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </button>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-app-text">
+                        {log.userName}
+                        <span className="ml-1 text-app-muted">({log.userEmail})</span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-app-text">
+                        {actionLabels[log.action] ?? log.action}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-app-text">
+                        {entityLabels[log.entity] ?? log.entity}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-2 text-app-muted">
+                        {dateFormatter.format(new Date(log.createdAt))}
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="border-b border-app-border bg-app-bg last:border-0">
+                        <td />
+                        <td colSpan={4} className="px-3 py-3">
+                          <AuditLogMetaDetail meta={log.meta} />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

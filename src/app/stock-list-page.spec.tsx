@@ -55,7 +55,7 @@ describe('StockListPage', () => {
     expect(await screen.findByText('Minimum seviyenin altında ürün yok.')).toBeInTheDocument();
   });
 
-  it('dusuk stoklu urunu uyari rozetiyle gosterir ve ozet sayisini bildirir', async () => {
+  it('dusuk stoklu urunu uyari ikonuyla gosterir ve ozet sayisini bildirir', async () => {
     vi.spyOn(api, 'listStockItems').mockResolvedValue({
       data: [lowStockItem, okItem],
       meta: { page: 1, pageSize: 25, total: 2, totalPages: 1 },
@@ -64,12 +64,13 @@ describe('StockListPage', () => {
     renderPage();
 
     expect(await screen.findByText('Widget')).toBeInTheDocument();
-    expect(await screen.findByText('Düşük Stok')).toBeInTheDocument();
     expect(await screen.findByText('1 üründe stok minimum seviyenin altında.')).toBeInTheDocument();
     expect(screen.getByText('Gadget')).toBeInTheDocument();
+    // "Düşük Stok" artık daimi görünen bir rozet değil, hover/focus tetiklenen bir tooltip
+    expect(screen.queryByText('Düşük Stok')).not.toBeInTheDocument();
   });
 
-  it('miktar guncellenip kaydedilince upsert cagrisi yapilir', async () => {
+  it('duzenle ikonuna tiklayinca satir icin miktar girisi acilir, kaydedince upsert cagrisi yapilir', async () => {
     vi.spyOn(api, 'listStockItems').mockResolvedValue({
       data: [okItem],
       meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
@@ -82,11 +83,18 @@ describe('StockListPage', () => {
     const user = userEvent.setup();
     renderPage();
 
+    expect(await screen.findByText('Gadget')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('50')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Stok miktarını düzenle' }));
+
     const quantityInput = await screen.findByDisplayValue('50');
     await user.clear(quantityInput);
     await user.type(quantityInput, '75');
-    await user.click(screen.getAllByRole('button', { name: 'Kaydet' })[0]);
+    await user.click(screen.getByRole('button', { name: 'Kaydet' }));
 
     await waitFor(() => expect(upsertSpy).toHaveBeenCalledWith('p2', 75));
+    // kayittan sonra satir tekrar salt-okunur moda doner
+    expect(screen.queryByDisplayValue('75')).not.toBeInTheDocument();
   });
 });
