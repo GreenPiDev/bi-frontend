@@ -12,8 +12,13 @@ interface KpiCardProps {
 }
 
 export function KpiCard({ result, format }: KpiCardProps) {
-  const column = result.columns[0];
-  const rawValue = result.rows[0]?.[0];
+  // Boyut secilmis bir KPI'da sutunlar once boyut sonra olcu sirasinda gelir (bkz.
+  // query-builder.ts) - ilk NUMBER tipli sutunu (her zaman bir olcudur, boyut degil)
+  // hedef almak, boyut degerini (metin) sayiya cevirmeye calisip NaN uretmeyi onler.
+  const measureIndex = result.columns.findIndex((c) => c.type === 'NUMBER');
+  const columnIndex = measureIndex >= 0 ? measureIndex : 0;
+  const column = result.columns[columnIndex];
+  const rawValue = result.rows[0]?.[columnIndex];
   const value = typeof rawValue === 'number' ? rawValue : Number(rawValue ?? 0);
   const formatted =
     format === 'currency' ? currencyFormatter.format(value) : numberFormatter.format(value);

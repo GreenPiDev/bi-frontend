@@ -75,7 +75,7 @@ describe('PermissionRoute', () => {
       createdAt: '2026-08-28T00:00:00.000Z',
       widgets: [],
     });
-    renderAppAt('/dashboards/d1/edit');
+    renderAppAt('/dashboards/edit/d1');
 
     await waitFor(() => {
       expect(window.location.pathname).toBe('/dashboards/d1');

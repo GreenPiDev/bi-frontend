@@ -14,7 +14,7 @@ function renderDashboardsListPage() {
         <Routes>
           <Route path="/dashboards" element={<DashboardsListPage />} />
           <Route path="/dashboards/:id" element={<div>view-page</div>} />
-          <Route path="/dashboards/:id/edit" element={<div>edit-page</div>} />
+          <Route path="/dashboards/edit/:id" element={<div>edit-page</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,

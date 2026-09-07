@@ -5,11 +5,16 @@ import { GridLayout, useContainerWidth } from 'react-grid-layout';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
+import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import { DashboardFilterBar } from '../features/dashboards/dashboard-filter-bar';
 import type { DashboardFilter } from '../features/dashboards/dashboard-filters';
-import { useDashboardQuery } from '../features/dashboards/use-dashboards';
+import {
+  useDashboardQuery,
+  useDeleteDashboardMutation,
+} from '../features/dashboards/use-dashboards';
 import { DrillDownModal } from '../features/dashboards/widgets/drill-down-modal';
 import { WidgetCsvExportButton } from '../features/dashboards/widgets/widget-csv-export-button';
 import { WidgetRenderer } from '../features/dashboards/widgets/widget-renderer';
@@ -21,6 +26,7 @@ import { tr } from '../i18n/tr';
 export function DashboardViewPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const isPrintMode = searchParams.get('print') === '1';
   const dashboardQuery = useDashboardQuery(id);
@@ -32,8 +38,21 @@ export function DashboardViewPage() {
     mutationFn: () => exportDashboardPdf(id),
     onSuccess: (blob) => downloadBlob(blob, `${dashboardQuery.data?.name ?? 'pano'}.pdf`),
   });
+  const deleteMutation = useDeleteDashboardMutation();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const canEdit = hasPermission(meQuery.data?.permissions, 'dashboards', 'UPDATE');
+  const canDelete = hasPermission(meQuery.data?.permissions, 'dashboards', 'DELETE');
+
+  function handleDelete() {
+    deleteMutation.mutate(id, {
+      onSuccess: () => navigate('/dashboards'),
+      onError: (error) => {
+        setConfirmDeleteOpen(false);
+        toast.error(error instanceof ApiError ? error.message : tr.dashboards.viewer.deleteError);
+      },
+    });
+  }
   const widgets = dashboardQuery.data?.widgets ?? [];
   const widgetsById = new Map(widgets.map((widget) => [widget.id, widget]));
   const layout = (dashboardQuery.data?.layout ?? [])
@@ -72,8 +91,18 @@ export function DashboardViewPage() {
               </Button>
             )}
             {canEdit && (
-              <Button type="button" onClick={() => navigate(`/dashboards/${id}/edit`)}>
+              <Button type="button" onClick={() => navigate(`/dashboards/edit/${id}`)}>
                 {tr.dashboards.viewer.editButton}
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => setConfirmDeleteOpen(true)}
+                disabled={deleteMutation.isPending}
+              >
+                {tr.dashboards.viewer.deleteButton}
               </Button>
             )}
           </div>
@@ -138,6 +167,17 @@ export function DashboardViewPage() {
           datasetId={drillDown.datasetId}
           filters={drillDown.filters}
           onClose={() => setDrillDown(undefined)}
+        />
+      )}
+
+      {confirmDeleteOpen && (
+        <ConfirmModal
+          title={tr.dashboards.viewer.deleteConfirmTitle}
+          message={tr.dashboards.viewer.deleteConfirm}
+          confirmLabel={tr.dashboards.viewer.deleteButton}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
         />
       )}
     </AppShell>

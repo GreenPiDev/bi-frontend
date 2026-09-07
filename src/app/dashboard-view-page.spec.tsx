@@ -1,20 +1,25 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { DashboardViewPage } from './dashboard-view-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderDashboardViewPage(initialPath = '/dashboards/db-1') {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route path="/dashboards/:id" element={<DashboardViewPage />} />
-          <Route path="/dashboards/:id/edit" element={<div>edit-page</div>} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={[initialPath]}>
+          <Routes>
+            <Route path="/dashboards" element={<div>list-page</div>} />
+            <Route path="/dashboards/:id" element={<DashboardViewPage />} />
+            <Route path="/dashboards/edit/:id" element={<div>edit-page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -121,5 +126,79 @@ describe('DashboardViewPage', () => {
 
     await screen.findByText('Satış Panosu');
     expect(screen.queryByRole('button', { name: 'Düzenle' })).not.toBeInTheDocument();
+  });
+
+  it('Sil butonu: onay modalinda onaylaninca panoyu siler ve listeye yonlendirir', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      email: 'admin@test.com',
+      name: 'Admin',
+      roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
+      isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
+    });
+    vi.spyOn(api, 'getDashboard').mockResolvedValue({
+      id: 'db-1',
+      name: 'Satış Panosu',
+      description: null,
+      layout: [],
+      filters: [],
+      createdById: 'u1',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      widgets: [],
+    });
+    vi.spyOn(api, 'deleteDashboard').mockResolvedValue(undefined);
+
+    const user = userEvent.setup();
+    renderDashboardViewPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Panoyu sil' });
+    expect(
+      within(dialog).getByText('Bu panoyu silmek istediğine emin misin? Bu işlem geri alınamaz.'),
+    ).toBeInTheDocument();
+
+    await user.click(within(dialog).getByRole('button', { name: 'Sil' }));
+
+    expect(api.deleteDashboard).toHaveBeenCalledWith('db-1');
+    expect(await screen.findByText('list-page')).toBeInTheDocument();
+  });
+
+  it('Sil butonu: onay modalinde vazgecilirse silme istegi atilmaz ve modal kapanir', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      email: 'admin@test.com',
+      name: 'Admin',
+      roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
+      isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
+    });
+    vi.spyOn(api, 'getDashboard').mockResolvedValue({
+      id: 'db-1',
+      name: 'Satış Panosu',
+      description: null,
+      layout: [],
+      filters: [],
+      createdById: 'u1',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      widgets: [],
+    });
+    // Onceki testte ayni spy'a birikmis cagri gecmisini temizle (vitest config'de
+    // global clearMocks yok, ayni dosyadaki spy'lar arasi durum sizabiliyor).
+    const deleteDashboardSpy = vi.spyOn(api, 'deleteDashboard').mockResolvedValue(undefined);
+    deleteDashboardSpy.mockClear();
+
+    const user = userEvent.setup();
+    renderDashboardViewPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Panoyu sil' });
+
+    await user.click(within(dialog).getByRole('button', { name: 'İptal' }));
+
+    expect(deleteDashboardSpy).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog', { name: 'Panoyu sil' })).not.toBeInTheDocument();
   });
 });

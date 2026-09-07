@@ -4,18 +4,21 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { DashboardEditPage } from './dashboard-edit-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderDashboardEditPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/dashboards/db-1/edit']}>
-        <Routes>
-          <Route path="/dashboards/:id/edit" element={<DashboardEditPage />} />
-          <Route path="/dashboards/:id" element={<div>view-page</div>} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/dashboards/edit/db-1']}>
+          <Routes>
+            <Route path="/dashboards/edit/:id" element={<DashboardEditPage />} />
+            <Route path="/dashboards/:id" element={<div>view-page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -121,6 +124,82 @@ describe('DashboardEditPage', () => {
       },
       position: { x: 0, y: 0, w: 4, h: 2 },
     });
+  });
+
+  it("kaydet basarili olunca basari toast'i gosterir", async () => {
+    vi.spyOn(api, 'me').mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      email: 'editor@test.com',
+      name: 'Editor',
+      roles: [{ id: 'r1', name: 'Editor' }],
+      isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
+    });
+    vi.spyOn(api, 'getDashboard').mockResolvedValue({
+      id: 'db-1',
+      name: 'Satış Panosu',
+      description: null,
+      layout: [],
+      filters: [],
+      createdById: 'u1',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      widgets: [],
+    });
+    vi.spyOn(api, 'listDatasets').mockResolvedValue([]);
+    vi.spyOn(api, 'updateDashboard').mockResolvedValue({
+      id: 'db-1',
+      name: 'Satış Panosu',
+      description: null,
+      layout: [],
+      filters: [],
+      createdById: 'u1',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      widgets: [],
+    });
+
+    const user = userEvent.setup();
+    renderDashboardEditPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Kaydet' }));
+
+    expect(await screen.findByText('Değişiklikler kaydedildi.')).toBeInTheDocument();
+  });
+
+  it("kaydet basarisiz olunca hata toast'i gosterir", async () => {
+    vi.spyOn(api, 'me').mockResolvedValue({
+      id: 'u1',
+      tenantId: 't1',
+      email: 'editor@test.com',
+      name: 'Editor',
+      roles: [{ id: 'r1', name: 'Editor' }],
+      isPlatformAdmin: false,
+      permissions: { isCompanyAdmin: true, permissions: [] },
+    });
+    vi.spyOn(api, 'getDashboard').mockResolvedValue({
+      id: 'db-1',
+      name: 'Satış Panosu',
+      description: null,
+      layout: [],
+      filters: [],
+      createdById: 'u1',
+      createdAt: '2026-08-01T00:00:00.000Z',
+      widgets: [],
+    });
+    vi.spyOn(api, 'listDatasets').mockResolvedValue([]);
+    vi.spyOn(api, 'updateDashboard').mockRejectedValue(
+      new api.ApiError('SERVER_ERROR', 'Sunucu hatasi olustu.', 500),
+    );
+
+    const user = userEvent.setup();
+    renderDashboardEditPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Kaydet' }));
+
+    // Hem inline FormError hem toast ayni mesaji gosterdigi icin (bkz. account-form-page.tsx
+    // deseni), toast'i role="status" konteynerinden ayirt ediyoruz.
+    const toast = await screen.findByRole('status');
+    expect(toast).toHaveTextContent('Sunucu hatasi olustu.');
   });
 
   it('geri butonu goruntuleme sayfasina gider', async () => {

@@ -33,7 +33,7 @@ export function DashboardsListPage() {
         onSuccess: (dashboard) => {
           setIsCreating(false);
           setName('');
-          navigate(`/dashboards/${dashboard.id}/edit`);
+          navigate(`/dashboards/edit/${dashboard.id}`);
         },
       },
     );

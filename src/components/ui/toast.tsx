@@ -9,6 +9,7 @@ interface ToastItem {
   id: number;
   variant: ToastVariant;
   message: string;
+  leaving: boolean;
 }
 
 const VARIANT_ICON: Record<ToastVariant, typeof CheckCircle2> = {
@@ -17,13 +18,27 @@ const VARIANT_ICON: Record<ToastVariant, typeof CheckCircle2> = {
   info: Info,
 };
 
-const VARIANT_CLASSES: Record<ToastVariant, string> = {
-  success: 'border-app-success/40 text-app-success',
-  error: 'border-app-danger/40 text-app-danger',
-  info: 'border-app-primary/40 text-app-primary',
+/** accent: karti sol kenar seridi, glow: kart etrafindaki renkli isima golgesi. */
+const VARIANT_CLASSES: Record<ToastVariant, { accent: string; icon: string; glow: string }> = {
+  success: {
+    accent: 'bg-app-success',
+    icon: 'text-app-success',
+    glow: 'shadow-app-success/25',
+  },
+  error: {
+    accent: 'bg-app-danger',
+    icon: 'text-app-danger',
+    glow: 'shadow-app-danger/25',
+  },
+  info: {
+    accent: 'bg-app-primary',
+    icon: 'text-app-primary',
+    glow: 'shadow-app-primary/25',
+  },
 };
 
 const AUTO_DISMISS_MS = 4000;
+const EXIT_ANIMATION_MS = 280;
 
 /** İşlem (ekleme/güncelleme/silme) sonuçlarını kullanıcıya bildiren tek merkezi mekanizma.
  * Ekstra bağımlılık yok (CLAUDE.md §3 "shadcn yok, elle yazılmış bileşenler" ilkesiyle
@@ -33,14 +48,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const nextId = useRef(1);
 
-  const dismiss = useCallback((id: number) => {
+  // Anında listeden çıkarmak yerine önce "leaving" isaretleniyor (cikis animasyonunun
+  // oynayabilmesi icin), gercek kaldirma cikis suresi kadar gecikmeli yapiliyor.
+  const remove = useCallback((id: number) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
+
+  const dismiss = useCallback(
+    (id: number) => {
+      setToasts((current) =>
+        current.map((toast) => (toast.id === id ? { ...toast, leaving: true } : toast)),
+      );
+      window.setTimeout(() => remove(id), EXIT_ANIMATION_MS);
+    },
+    [remove],
+  );
 
   const push = useCallback(
     (variant: ToastVariant, message: string) => {
       const id = nextId.current++;
-      setToasts((current) => [...current, { id, variant, message }]);
+      setToasts((current) => [...current, { id, variant, message, leaving: false }]);
       window.setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
     },
     [dismiss],
@@ -58,20 +85,24 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed top-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2">
+      <div className="pointer-events-none fixed bottom-4 right-4 z-[120] flex w-full max-w-sm flex-col gap-3">
         {toasts.map((toast) => {
           const Icon = VARIANT_ICON[toast.variant];
+          const styles = VARIANT_CLASSES[toast.variant];
           return (
             <div
               key={toast.id}
               role="status"
               className={clsx(
-                'pointer-events-auto flex items-start gap-2.5 rounded-lg border bg-app-surface px-4 py-3 text-sm shadow-lg',
-                VARIANT_CLASSES[toast.variant],
+                'pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-2xl',
+                'border border-app-border bg-app-surface/90 px-4 py-3.5 text-sm shadow-xl backdrop-blur-md',
+                styles.glow,
+                toast.leaving ? 'animate-toast-out' : 'animate-toast-in',
               )}
             >
-              <Icon size={18} className="mt-0.5 shrink-0" />
-              <p className="flex-1 text-app-text">{toast.message}</p>
+              <span className={clsx('absolute inset-y-0 left-0 w-1', styles.accent)} />
+              <Icon size={19} className={clsx('mt-0.5 shrink-0', styles.icon)} />
+              <p className="flex-1 font-medium text-app-text">{toast.message}</p>
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}

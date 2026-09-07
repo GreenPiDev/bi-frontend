@@ -183,6 +183,10 @@ export const tr = {
     viewer: {
       backToList: 'Panolara dön',
       editButton: 'Düzenle',
+      deleteButton: 'Sil',
+      deleteConfirmTitle: 'Panoyu sil',
+      deleteConfirm: 'Bu panoyu silmek istediğine emin misin? Bu işlem geri alınamaz.',
+      deleteError: 'Pano silinemedi.',
       empty: 'Bu pano henüz boş. Düzenleme moduna geçip widget ekleyebilirsin.',
       exportPdf: 'PDF indir',
       exportPdfBusy: 'PDF hazırlanıyor...',

@@ -17,7 +17,7 @@ export function Button({ variant = 'primary', className, disabled, ...props }: B
   return (
     <button
       className={clsx(
-        'rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+        'cursor-pointer rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60',
         variantClasses[variant],
         className,
       )}

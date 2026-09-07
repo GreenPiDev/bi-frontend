@@ -102,7 +102,7 @@ function App() {
           }
         />
         <Route
-          path="/dashboards/:id/edit"
+          path="/dashboards/edit/:id"
           element={
             <ProtectedRoute>
               <PageModuleRoute pageKey="dashboards">

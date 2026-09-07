@@ -47,8 +47,16 @@ export function useUpdateDashboardMutation(id: string) {
   return useMutation({
     mutationFn: (input: UpdateDashboardInput) => updateDashboard(id, input),
     onSuccess: (dashboard) => {
+      // ['dashboards', id] setQueryData ile zaten senkron guncelleniyor; queryKey prefix
+      // eslesmesi yuzunden bunu da kapsayan genis bir invalidateQueries cagirmak, az sonra
+      // ayni sorguyu tekrar fetch ettirip dashboard-edit-page.tsx'teki layout re-sync
+      // efektini ikinci kez tetikliyordu - bu da react-grid-layout'un onLayoutChange'i
+      // gecikmeli olarak tekrar firlatip "Kaydedilmemis degisiklikler var" uyarisinin
+      // basarili kayittan hemen sonra geri gelmesine yol aciyordu. exact:true ile sadece
+      // liste sorgusu (['dashboards']) invalidate edilir, acik detay sorgusuna dokunulmaz
+      // (useCreateWidgetMutation/useUpdateWidgetMutation'daki ayni desen icin bkz. asagisi).
       queryClient.setQueryData(['dashboards', id], dashboard);
-      void queryClient.invalidateQueries({ queryKey: DASHBOARDS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: DASHBOARDS_QUERY_KEY, exact: true });
     },
   });
 }

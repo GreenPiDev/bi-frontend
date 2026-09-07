@@ -14,13 +14,30 @@ import { WidgetPickerPanel } from '../features/dashboards/widgets/widget-picker-
 import { WidgetRenderer } from '../features/dashboards/widgets/widget-renderer';
 import { WidgetSettingsForm } from '../features/dashboards/widgets/widget-settings-form';
 import { WidgetTile } from '../features/dashboards/widgets/widget-tile';
+import { useToast } from '../components/ui/toast-context';
 import type { LayoutItem, Widget } from '../lib/api';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
+function isSameLayout(a: LayoutItem[], b: LayoutItem[]): boolean {
+  if (a.length !== b.length) return false;
+  const byWidgetId = new Map(a.map((item) => [item.widgetId, item]));
+  return b.every((item) => {
+    const prev = byWidgetId.get(item.widgetId);
+    return (
+      prev !== undefined &&
+      prev.x === item.x &&
+      prev.y === item.y &&
+      prev.w === item.w &&
+      prev.h === item.h
+    );
+  });
+}
+
 export function DashboardEditPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const dashboardQuery = useDashboardQuery(id);
   const updateDashboardMutation = useUpdateDashboardMutation(id);
   const updateWidgetMutation = useUpdateWidgetMutation(id);
@@ -67,14 +84,37 @@ export function DashboardEditPage() {
   }
 
   function handleLayoutChange(nextLayout: Layout) {
-    setLayout(
-      nextLayout.map((item) => ({ widgetId: item.i, x: item.x, y: item.y, w: item.w, h: item.h })),
-    );
-    setIsDirty(true);
+    const next = nextLayout.map((item) => ({
+      widgetId: item.i,
+      x: item.x,
+      y: item.y,
+      w: item.w,
+      h: item.h,
+    }));
+    setLayout(next);
+    // react-grid-layout, ilk mount'ta kendi ic normalizasyonu (compaction, eksik alan
+    // doldurma) propsLayout'tan en ufak farklıysa onLayoutChange'i kendiliginden bir kez
+    // tetikliyor - kullanici hicbir sey degistirmemis olsa bile. Gercekten x/y/w/h degeri
+    // degismedigi surece "kaydedilmemis degisiklik" gostermemek icin deger bazli kiyaslama
+    // yapiyoruz.
+    if (!isSameLayout(layout, next)) {
+      setIsDirty(true);
+    }
   }
 
   function handleSaveLayout() {
-    updateDashboardMutation.mutate({ layout }, { onSuccess: () => setIsDirty(false) });
+    updateDashboardMutation.mutate(
+      { layout },
+      {
+        onSuccess: () => {
+          setIsDirty(false);
+          toast.success(tr.dashboards.editor.saveSuccess);
+        },
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.dashboards.editor.saveError);
+        },
+      },
+    );
   }
 
   function handleDeleteWidget(widgetId: string) {
@@ -106,14 +146,8 @@ export function DashboardEditPage() {
           {isDirty && (
             <span className="text-sm text-app-muted">{tr.dashboards.editor.unsavedChanges}</span>
           )}
-          <Button
-            type="button"
-            onClick={handleSaveLayout}
-            disabled={updateDashboardMutation.isPending}
-          >
-            {updateDashboardMutation.isPending
-              ? tr.dashboards.editor.saving
-              : tr.dashboards.editor.save}
+          <Button type="button" onClick={handleSaveLayout}>
+            {tr.dashboards.editor.save}
           </Button>
         </div>
       </div>
@@ -144,7 +178,7 @@ export function DashboardEditPage() {
                 if (!widget) return null;
                 return (
                   <div key={item.i} onClick={() => setSelectedWidgetId(widget.id)}>
-                    <WidgetTile title={widget.title}>
+                    <WidgetTile title={widget.title} selected={widget.id === selectedWidgetId}>
                       <WidgetRenderer widget={widget} />
                     </WidgetTile>
                   </div>
