@@ -64,6 +64,14 @@ export const tr = {
       platformAdmin: 'Kiracı Yönetimi',
       platformAdminPageModules: 'Sayfa-Modül Eşlemesi',
     },
+    navGroups: {
+      analytics: 'Analitik',
+      accounts: 'Cari',
+      salesProcess: 'Satış Süreci',
+      operations: 'Operasyon',
+      system: 'Sistem',
+      platformAdmin: 'Platform Admin',
+    },
   },
   profile: {
     title: 'Profil',

@@ -2,12 +2,14 @@ import {
   Briefcase,
   Building2,
   CalendarDays,
+  ChevronDown,
   Contact2,
   FileText,
   HeartHandshake,
   LayoutDashboard,
   Layers,
   LogOut,
+  type LucideIcon,
   MessageCircle,
   Package,
   Settings,
@@ -28,6 +30,12 @@ import { hasPermission } from '../features/auth/permissions';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
 import { tr } from '../i18n/tr';
 
+interface NavItem {
+  label: string;
+  icon: LucideIcon;
+  path: string;
+}
+
 interface AppShellProps {
   children: ReactNode;
   /** PDF export'unun Playwright ile render ettigi sade rapor gorunumu (bkz.
@@ -40,6 +48,9 @@ export function AppShell({ children, print = false }: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const toggleGroup = (key: string, currentlyCollapsed: boolean) =>
+    setCollapsedGroups((prev) => ({ ...prev, [key]: !currentlyCollapsed }));
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -69,70 +80,111 @@ export function AppShell({ children, print = false }: AppShellProps) {
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
-  const navItems = [
-    ...(canAccessPage('dashboards')
-      ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
-      : []),
-    ...(canAccessPage('datasets')
-      ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
-      : []),
-    ...(canAccessPage('accounts')
-      ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
-      : []),
-    ...(canAccessPage('contacts')
-      ? [{ label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' }]
-      : []),
-    ...(canAccessPage('calendar')
-      ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
-      : []),
-    ...(canAccessPage('interactions')
-      ? [{ label: tr.shell.nav.interactions, icon: MessageCircle, path: '/gorusmeler' }]
-      : []),
-    ...(canAccessPage('opportunities')
-      ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
-      : []),
-    ...(canAccessPage('quotes')
-      ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
-      : []),
-    ...(canAccessPage('post-sale-cases')
-      ? [
-          {
-            label: tr.shell.nav.postSaleSupport,
-            icon: HeartHandshake,
-            path: '/satis-sonrasi',
-          },
-        ]
-      : []),
-    ...(canAccessPage('projects')
-      ? [{ label: tr.shell.nav.projects, icon: Briefcase, path: '/projeler' }]
-      : []),
-    ...(canAccessPage('purchase-orders')
-      ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
-      : []),
-    ...(canAccessPage('stock')
-      ? [{ label: tr.shell.nav.stock, icon: Warehouse, path: '/stok' }]
-      : []),
-    ...(canAccessPage('products')
-      ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]
-      : []),
-    ...(canAccessPage('price-lists')
-      ? [{ label: tr.shell.nav.priceLists, icon: Tags, path: '/fiyat-listeleri' }]
-      : []),
-    { label: tr.shell.nav.profile, icon: User, path: '/profile' },
-    ...(canAccessPage('settings')
-      ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }]
-      : []),
-    ...(meQuery.data?.isPlatformAdmin
-      ? [
-          { label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' },
-          {
-            label: tr.shell.nav.platformAdminPageModules,
-            icon: Layers,
-            path: '/platform-admin/sayfa-modulleri',
-          },
-        ]
-      : []),
-  ];
+
+  const navGroups: { key: string; label: string; icon: LucideIcon; items: NavItem[] }[] = [
+    {
+      key: 'analytics',
+      label: tr.shell.navGroups.analytics,
+      icon: LayoutDashboard,
+      items: [
+        ...(canAccessPage('dashboards')
+          ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
+          : []),
+        ...(canAccessPage('datasets')
+          ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
+          : []),
+      ],
+    },
+    {
+      key: 'accounts',
+      label: tr.shell.navGroups.accounts,
+      icon: Building2,
+      items: [
+        ...(canAccessPage('accounts')
+          ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
+          : []),
+        ...(canAccessPage('contacts')
+          ? [{ label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' }]
+          : []),
+      ],
+    },
+    {
+      key: 'salesProcess',
+      label: tr.shell.navGroups.salesProcess,
+      icon: Target,
+      items: [
+        ...(canAccessPage('calendar')
+          ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
+          : []),
+        ...(canAccessPage('interactions')
+          ? [{ label: tr.shell.nav.interactions, icon: MessageCircle, path: '/gorusmeler' }]
+          : []),
+        ...(canAccessPage('opportunities')
+          ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
+          : []),
+        ...(canAccessPage('quotes')
+          ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
+          : []),
+      ],
+    },
+    {
+      key: 'operations',
+      label: tr.shell.navGroups.operations,
+      icon: Package,
+      items: [
+        ...(canAccessPage('post-sale-cases')
+          ? [
+              {
+                label: tr.shell.nav.postSaleSupport,
+                icon: HeartHandshake,
+                path: '/satis-sonrasi',
+              },
+            ]
+          : []),
+        ...(canAccessPage('projects')
+          ? [{ label: tr.shell.nav.projects, icon: Briefcase, path: '/projeler' }]
+          : []),
+        ...(canAccessPage('purchase-orders')
+          ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
+          : []),
+        ...(canAccessPage('stock')
+          ? [{ label: tr.shell.nav.stock, icon: Warehouse, path: '/stok' }]
+          : []),
+        ...(canAccessPage('products')
+          ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]
+          : []),
+        ...(canAccessPage('price-lists')
+          ? [{ label: tr.shell.nav.priceLists, icon: Tags, path: '/fiyat-listeleri' }]
+          : []),
+      ],
+    },
+    {
+      key: 'system',
+      label: tr.shell.navGroups.system,
+      icon: Settings,
+      items: [
+        { label: tr.shell.nav.profile, icon: User, path: '/profile' },
+        ...(canAccessPage('settings')
+          ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }]
+          : []),
+      ],
+    },
+    {
+      key: 'platformAdmin',
+      label: tr.shell.navGroups.platformAdmin,
+      icon: Layers,
+      items: meQuery.data?.isPlatformAdmin
+        ? [
+            { label: tr.shell.nav.platformAdmin, icon: Building2, path: '/platform-admin' },
+            {
+              label: tr.shell.nav.platformAdminPageModules,
+              icon: Layers,
+              path: '/platform-admin/sayfa-modulleri',
+            },
+          ]
+        : [],
+    },
+  ].filter((group) => group.items.length > 0);
 
   if (print) {
     return (
@@ -177,24 +229,66 @@ export function AppShell({ children, print = false }: AppShellProps) {
         )}
       >
         <ul className="flex flex-col py-3">
-          {navItems.map(({ label, icon: Icon, path }) => {
-            const isActive = path !== undefined && location.pathname.startsWith(path);
+          {navGroups.map((group) => {
+            const containsActiveItem = group.items.some((item) =>
+              location.pathname.startsWith(item.path),
+            );
+            const isCollapsed = collapsedGroups[group.key] ?? !containsActiveItem;
             return (
-              <li key={label}>
+              <li key={group.key}>
                 <button
                   type="button"
-                  disabled={path === undefined}
-                  onClick={() => path && navigate(path)}
+                  onClick={() => toggleGroup(group.key, isCollapsed)}
+                  className="flex h-9 w-full cursor-pointer items-center gap-3 whitespace-nowrap text-app-muted transition-colors duration-200 hover:bg-app-brand/10 hover:text-app-text"
+                >
+                  <span className="relative inline-flex h-5 w-16 shrink-0 items-center justify-center">
+                    <group.icon
+                      size={18}
+                      className={clsx(
+                        'absolute transition-all duration-300 ease-in-out',
+                        sidebarOpen ? 'scale-50 opacity-0' : 'scale-100 opacity-100',
+                      )}
+                    />
+                    <ChevronDown
+                      size={14}
+                      className={clsx(
+                        'absolute transition-all duration-300 ease-in-out',
+                        sidebarOpen ? 'scale-100 opacity-100' : 'scale-50 opacity-0',
+                        isCollapsed && '-rotate-90',
+                      )}
+                    />
+                  </span>
+                  <span className="text-xs font-bold uppercase tracking-wide">{group.label}</span>
+                </button>
+                <div
                   className={clsx(
-                    'flex h-12 w-full items-center gap-3 whitespace-nowrap cursor-pointer hover:bg-app-bg hover:text-app-text disabled:cursor-not-allowed disabled:opacity-50',
-                    isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted',
+                    'grid transition-[grid-template-rows] duration-300 ease-in-out',
+                    isCollapsed ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]',
                   )}
                 >
-                  <span className="inline-flex w-16 shrink-0 items-center justify-center">
-                    <Icon size={20} />
-                  </span>
-                  <span className="text-sm font-semibold">{label}</span>
-                </button>
+                  <ul className="overflow-hidden">
+                    {group.items.map(({ label, icon: Icon, path }) => {
+                      const isActive = location.pathname.startsWith(path);
+                      return (
+                        <li key={label}>
+                          <button
+                            type="button"
+                            onClick={() => navigate(path)}
+                            className={clsx(
+                              'flex h-12 w-full cursor-pointer items-center gap-3 whitespace-nowrap transition-colors duration-200 hover:bg-app-brand/10 hover:text-app-text',
+                              isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted',
+                            )}
+                          >
+                            <span className="inline-flex w-16 shrink-0 items-center justify-center">
+                              <Icon size={20} />
+                            </span>
+                            <span className="text-sm font-semibold">{label}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </li>
             );
           })}
