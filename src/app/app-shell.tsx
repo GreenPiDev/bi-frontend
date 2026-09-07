@@ -171,7 +171,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
                   disabled={path === undefined}
                   onClick={() => path && navigate(path)}
                   className={clsx(
-                    'flex h-12 w-full items-center gap-3 whitespace-nowrap hover:bg-app-bg hover:text-app-text disabled:cursor-not-allowed disabled:opacity-50',
+                    'flex h-12 w-full items-center gap-3 whitespace-nowrap cursor-pointer hover:bg-app-bg hover:text-app-text disabled:cursor-not-allowed disabled:opacity-50',
                     isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted',
                   )}
                 >
