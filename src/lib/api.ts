@@ -1513,3 +1513,103 @@ export function markPostSaleFeedback(
     body: JSON.stringify(input),
   });
 }
+
+// Siparis / Satin Alma (SP1-SP3) + Stok (ST1) - §2.3.11/§2.3.12
+
+export type PurchaseOrderStatus = 'DRAFT' | 'CONFIRMED';
+export type PurchaseOrderItemSource = 'QUOTE' | 'EXTRA';
+
+export interface PurchaseOrderItem {
+  id: string;
+  purchaseOrderId: string;
+  productId: string | null;
+  description: string;
+  quantity: string;
+  source: PurchaseOrderItemSource;
+  product: Product | null;
+  createdAt: string;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  orderNumber: string;
+  quoteId: string;
+  quote: Quote;
+  projectId: string | null;
+  project: Project | null;
+  status: PurchaseOrderStatus;
+  createdById: string;
+  items: PurchaseOrderItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PurchaseOrderItemInput {
+  id?: string;
+  productId?: string;
+  description: string;
+  quantity: number;
+  source: PurchaseOrderItemSource;
+}
+
+export interface UpdatePurchaseOrderInput {
+  items?: PurchaseOrderItemInput[];
+  status?: PurchaseOrderStatus;
+}
+
+export function listPurchaseOrders(
+  params: { page?: number; quoteId?: string; projectId?: string } = {},
+): Promise<PagedResult<PurchaseOrder>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.quoteId) query.set('quoteId', params.quoteId);
+  if (params.projectId) query.set('projectId', params.projectId);
+  const qs = query.toString();
+  return request(`/purchase-orders${qs ? `?${qs}` : ''}`);
+}
+
+export function getPurchaseOrder(id: string): Promise<PurchaseOrder> {
+  return request(`/purchase-orders/${id}`);
+}
+
+export function createPurchaseOrderFromQuote(quoteId: string): Promise<PurchaseOrder> {
+  return request(`/quotes/${quoteId}/create-purchase-order`, { method: 'POST' });
+}
+
+export function updatePurchaseOrder(
+  id: string,
+  input: UpdatePurchaseOrderInput,
+): Promise<PurchaseOrder> {
+  return request(`/purchase-orders/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deletePurchaseOrder(id: string): Promise<void> {
+  return request(`/purchase-orders/${id}`, { method: 'DELETE' });
+}
+
+export interface StockItem {
+  id: string;
+  productId: string;
+  quantity: string;
+  product: { id: string; name: string; minStockLevel: number | null };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function listStockItems(params: { page?: number } = {}): Promise<PagedResult<StockItem>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  const qs = query.toString();
+  return request(`/stock-items${qs ? `?${qs}` : ''}`);
+}
+
+export function listLowStockItems(): Promise<StockItem[]> {
+  return request('/stock-items/low-stock');
+}
+
+export function upsertStockItem(productId: string, quantity: number): Promise<StockItem> {
+  return request(`/stock-items/${productId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ quantity }),
+  });
+}

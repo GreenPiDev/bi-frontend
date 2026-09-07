@@ -5,8 +5,12 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
+import { useToast } from '../components/ui/toast-context';
+import { hasPermission } from '../features/auth/permissions';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useQuotesQuery } from '../features/crm/use-quotes';
-import type { Quote, QuoteStatus } from '../lib/api';
+import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
+import { ApiError, type Quote, type QuoteStatus } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
@@ -28,40 +32,86 @@ function quoteTotal(quote: Quote): number {
   }, 0);
 }
 
-const columns: TableColumn<Quote>[] = [
-  {
-    key: 'quoteNumber',
-    header: tr.crm.quotes.numberColumn,
-    render: (q) => <span className="font-semibold text-app-text">{q.quoteNumber}</span>,
-  },
-  {
-    key: 'account',
-    header: tr.crm.quotes.accountColumn,
-    render: (q) => q.account.name,
-  },
-  {
-    key: 'status',
-    header: tr.crm.quotes.statusColumn,
-    render: (q) => (
-      <Badge variant={STATUS_BADGE_VARIANT[q.status]}>
-        {tr.crm.quotes.statusOptions[q.status]}
-      </Badge>
-    ),
-  },
-  {
-    key: 'total',
-    header: tr.crm.quotes.totalColumn,
-    className: 'text-app-muted',
-    render: (q) =>
-      new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(quoteTotal(q)),
-  },
-];
-
 export function QuotesListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const meQuery = useMeQuery();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<QuoteStatus | ''>('');
   const quotesQuery = useQuotesQuery({ page, status: status || undefined });
+  const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
+  const canCreatePurchaseOrder = hasPermission(
+    meQuery.data?.permissions,
+    'purchase-orders',
+    'CREATE',
+  );
+
+  function handleCreatePurchaseOrder(quoteId: string) {
+    createPurchaseOrderMutation.mutate(quoteId, {
+      onSuccess: (purchaseOrder) => {
+        toast.success(tr.crm.quotes.createPurchaseOrderSuccess);
+        navigate(`/siparisler/${purchaseOrder.id}`);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
+  const columns: TableColumn<Quote>[] = [
+    {
+      key: 'quoteNumber',
+      header: tr.crm.quotes.numberColumn,
+      render: (q) => <span className="font-semibold text-app-text">{q.quoteNumber}</span>,
+    },
+    {
+      key: 'account',
+      header: tr.crm.quotes.accountColumn,
+      render: (q) => q.account.name,
+    },
+    {
+      key: 'status',
+      header: tr.crm.quotes.statusColumn,
+      render: (q) => (
+        <Badge variant={STATUS_BADGE_VARIANT[q.status]}>
+          {tr.crm.quotes.statusOptions[q.status]}
+        </Badge>
+      ),
+    },
+    {
+      key: 'total',
+      header: tr.crm.quotes.totalColumn,
+      className: 'text-app-muted',
+      render: (q) =>
+        new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
+          quoteTotal(q),
+        ),
+    },
+    ...(canCreatePurchaseOrder
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            render: (q: Quote) =>
+              q.status === 'APPROVED' ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={createPurchaseOrderMutation.isPending}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleCreatePurchaseOrder(q.id);
+                  }}
+                >
+                  {createPurchaseOrderMutation.isPending
+                    ? tr.crm.quotes.createPurchaseOrderBusy
+                    : tr.crm.quotes.createPurchaseOrderButton}
+                </Button>
+              ) : null,
+          } satisfies TableColumn<Quote>,
+        ]
+      : []),
+  ];
 
   return (
     <AppShell>

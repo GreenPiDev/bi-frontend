@@ -14,7 +14,9 @@ import {
   Table2,
   Tags,
   Target,
+  Truck,
   User,
+  Warehouse,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -62,6 +64,8 @@ export function AppShell({ children, print = false }: AppShellProps) {
     quotes: useIsPageModuleAccessible('quotes'),
     'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
     projects: useIsPageModuleAccessible('projects'),
+    'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
+    stock: useIsPageModuleAccessible('stock'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -101,6 +105,12 @@ export function AppShell({ children, print = false }: AppShellProps) {
       : []),
     ...(canAccessPage('projects')
       ? [{ label: tr.shell.nav.projects, icon: Briefcase, path: '/projeler' }]
+      : []),
+    ...(canAccessPage('purchase-orders')
+      ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
+      : []),
+    ...(canAccessPage('stock')
+      ? [{ label: tr.shell.nav.stock, icon: Warehouse, path: '/stok' }]
       : []),
     ...(canAccessPage('products')
       ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]

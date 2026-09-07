@@ -41,10 +41,13 @@ import { ProjectsListPage } from './app/projects-list-page';
 import { ProtectedRoute } from './app/protected-route';
 import { PostSaleCaseDetailPage } from './app/post-sale-case-detail-page';
 import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
+import { PurchaseOrderDetailPage } from './app/purchase-order-detail-page';
+import { PurchaseOrderListPage } from './app/purchase-order-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
 import { SettingsPage } from './app/settings-page';
+import { StockListPage } from './app/stock-list-page';
 import { hasPermission } from './features/auth/permissions';
 import { useMeQuery } from './features/auth/use-auth';
 import { usePageAccessQuery } from './features/crm/use-page-access';
@@ -88,6 +91,8 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'quotes', path: '/teklifler' },
   { pageKey: 'post-sale-cases', path: '/satis-sonrasi' },
   { pageKey: 'projects', path: '/projeler' },
+  { pageKey: 'purchase-orders', path: '/siparisler' },
+  { pageKey: 'stock', path: '/stok' },
   { pageKey: 'products', path: '/urunler' },
   { pageKey: 'price-lists', path: '/fiyat-listeleri' },
   { pageKey: 'settings', path: '/settings' },
@@ -444,6 +449,30 @@ function App() {
           element={
             <TenantPageRoute pageKey="projects">
               <ProjectFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/siparisler"
+          element={
+            <TenantPageRoute pageKey="purchase-orders">
+              <PurchaseOrderListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/siparisler/:id"
+          element={
+            <TenantPageRoute pageKey="purchase-orders">
+              <PurchaseOrderDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/stok"
+          element={
+            <TenantPageRoute pageKey="stock">
+              <StockListPage />
             </TenantPageRoute>
           }
         />

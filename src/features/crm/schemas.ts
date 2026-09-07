@@ -181,6 +181,20 @@ export const quoteFormSchema = z
 
 export type QuoteFormValues = z.infer<typeof quoteFormSchema>;
 
+export const purchaseOrderFormSchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string().optional(),
+      productId: z.string().optional(),
+      description: z.string().min(1, 'Açıklama gerekli.').max(300),
+      quantity: z.string().min(1, 'Miktar gerekli.'),
+      source: z.enum(['QUOTE', 'EXTRA']),
+    }),
+  ),
+});
+
+export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {
