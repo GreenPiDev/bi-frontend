@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { getMyPageAccess } from '../../lib/api';
 
-export function usePageAccessQuery() {
+export function usePageAccessQuery(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ['tenants', 'me', 'page-modules'],
     queryFn: () => getMyPageAccess(),
+    enabled: options.enabled,
   });
 }
 

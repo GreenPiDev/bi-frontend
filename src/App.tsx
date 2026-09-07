@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { AccountDetailPage } from './app/account-detail-page';
 import { AccountFormPage } from './app/account-form-page';
@@ -40,7 +41,9 @@ import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
 import { RegisterPage } from './app/register-page';
 import { SettingsPage } from './app/settings-page';
+import { hasPermission } from './features/auth/permissions';
 import { useMeQuery } from './features/auth/use-auth';
+import { usePageAccessQuery } from './features/crm/use-page-access';
 import { tr } from './i18n/tr';
 
 function DashboardEditRoute() {
@@ -52,8 +55,46 @@ function DashboardEditRoute() {
   );
 }
 
+/** Tenant sayfalarinin ortak guard zinciri: giris yapilmis olmali (ProtectedRoute),
+ * sayfa VIEW iznine sahip olmali (PermissionRoute - bkz. G1, backend'deki
+ * @RequiresPermission(pageKey,'VIEW') ile ayni guvenlik sinirinin frontend karsiligi),
+ * ve sayfanin bagli oldugu modul (crm/analytics) tenant'ta acik olmali (PageModuleRoute).
+ * Izinsiz erisim denemesi kok / rotasina duser, orada RootRedirect kullaniciyi gercekten
+ * erisebildigi ilk sayfaya (yoksa /profile'a) yonlendirir. */
+function TenantPageRoute({ pageKey, children }: { pageKey: string; children: ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <PermissionRoute pageKey={pageKey} action="VIEW" redirectTo="/">
+        <PageModuleRoute pageKey={pageKey}>{children}</PageModuleRoute>
+      </PermissionRoute>
+    </ProtectedRoute>
+  );
+}
+
+/** Sidebar'daki (app-shell.tsx) ile ayni sira - kullanicinin gercekten erisebildigi ilk
+ * sayfa. Hicbiri erisilebilir degilse /profile'a duser (her zaman gorunur, bkz. G1). */
+const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
+  { pageKey: 'dashboards', path: '/dashboards' },
+  { pageKey: 'datasets', path: '/datasets' },
+  { pageKey: 'accounts', path: '/firmalar' },
+  { pageKey: 'contacts', path: '/kisiler' },
+  { pageKey: 'calendar', path: '/ajanda' },
+  { pageKey: 'interactions', path: '/gorusmeler' },
+  { pageKey: 'opportunities', path: '/firsatlar' },
+  { pageKey: 'quotes', path: '/teklifler' },
+  { pageKey: 'post-sale-cases', path: '/satis-sonrasi' },
+  { pageKey: 'products', path: '/urunler' },
+  { pageKey: 'price-lists', path: '/fiyat-listeleri' },
+  { pageKey: 'settings', path: '/settings' },
+];
+
 function RootRedirect() {
   const meQuery = useMeQuery();
+  // Platform-admin hicbir tenant sayfa/modul verisine ihtiyac duymaz - sorguyu
+  // sadece normal tenant kullanicisi icin calistiririz (aksi halde gereksiz yere
+  // bu sorgunun donmesini bekleriz).
+  const isPlatformAdmin = meQuery.data?.isPlatformAdmin ?? false;
+  const pageAccessQuery = usePageAccessQuery({ enabled: !!meQuery.data && !isPlatformAdmin });
 
   if (meQuery.isPending) {
     return (
@@ -63,11 +104,32 @@ function RootRedirect() {
     );
   }
 
-  if (meQuery.data?.isPlatformAdmin) {
+  if (!meQuery.data) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (isPlatformAdmin) {
     return <Navigate to="/platform-admin" replace />;
   }
 
-  return <Navigate to="/dashboards" replace />;
+  if (pageAccessQuery.isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-app-muted">
+        {tr.common.loading}
+      </div>
+    );
+  }
+
+  const permissions = meQuery.data.permissions;
+  const isModuleAccessible = (pageKey: string) => {
+    const entry = pageAccessQuery.data?.find((row) => row.pageKey === pageKey);
+    return entry?.accessible ?? true;
+  };
+  const firstAccessible = ROOT_REDIRECT_CANDIDATES.find(
+    ({ pageKey }) => hasPermission(permissions, pageKey, 'VIEW') && isModuleAccessible(pageKey),
+  );
+
+  return <Navigate to={firstAccessible?.path ?? '/profile'} replace />;
 }
 
 function App() {
@@ -104,361 +166,289 @@ function App() {
         <Route
           path="/dashboards"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="dashboards">
-                <DashboardsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="dashboards">
+              <DashboardsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/dashboards/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="dashboards">
-                <DashboardViewPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="dashboards">
+              <DashboardViewPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/dashboards/edit/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="dashboards">
-                <DashboardEditRoute />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="dashboards">
+              <DashboardEditRoute />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/datasets"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="datasets">
-                <DatasetsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="datasets">
+              <DatasetsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/datasets/upload"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="datasets">
-                <DatasetUploadPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="datasets">
+              <DatasetUploadPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/datasets/processing/:dataSourceId"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="datasets">
-                <DatasetProcessingPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="datasets">
+              <DatasetProcessingPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/datasets/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="datasets">
-                <DatasetDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="datasets">
+              <DatasetDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firmalar"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="accounts">
-                <AccountsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="accounts">
+              <AccountsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firmalar/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="accounts">
-                <AccountFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="accounts">
+              <AccountFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firmalar/ice-aktar"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="accounts">
-                <CrmImportPage entity="accounts" />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="accounts">
+              <CrmImportPage entity="accounts" />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firmalar/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="accounts">
-                <AccountDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="accounts">
+              <AccountDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firmalar/:id/duzenle"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="accounts">
-                <AccountFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="accounts">
+              <AccountFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/kisiler"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="contacts">
-                <ContactsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="contacts">
+              <ContactsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/kisiler/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="contacts">
-                <ContactFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="contacts">
+              <ContactFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/kisiler/ice-aktar"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="contacts">
-                <CrmImportPage entity="contacts" />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="contacts">
+              <CrmImportPage entity="contacts" />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/kisiler/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="contacts">
-                <ContactDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="contacts">
+              <ContactDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/kisiler/:id/duzenle"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="contacts">
-                <ContactFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="contacts">
+              <ContactFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/ajanda"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="calendar">
-                <CalendarPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="calendar">
+              <CalendarPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/gorusmeler"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="interactions">
-                <InteractionsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="interactions">
+              <InteractionsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/gorusmeler/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="interactions">
-                <InteractionFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="interactions">
+              <InteractionFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/gorusmeler/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="interactions">
-                <InteractionDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="interactions">
+              <InteractionDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firsatlar"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="opportunities">
-                <OpportunitiesListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="opportunities">
+              <OpportunitiesListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firsatlar/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="opportunities">
-                <OpportunityFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="opportunities">
+              <OpportunityFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firsatlar/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="opportunities">
-                <OpportunityDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="opportunities">
+              <OpportunityDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/firsatlar/:id/duzenle"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="opportunities">
-                <OpportunityFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="opportunities">
+              <OpportunityFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/teklifler"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="quotes">
-                <QuotesListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="quotes">
+              <QuotesListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/teklifler/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="quotes">
-                <QuoteFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="quotes">
+              <QuoteFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/teklifler/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="quotes">
-                <QuoteDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="quotes">
+              <QuoteDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/satis-sonrasi"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="post-sale-cases">
-                <PostSaleCaseListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="post-sale-cases">
+              <PostSaleCaseListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/satis-sonrasi/:id"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="post-sale-cases">
-                <PostSaleCaseDetailPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="post-sale-cases">
+              <PostSaleCaseDetailPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/urunler"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="products">
-                <ProductsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="products">
+              <ProductsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/urunler/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="products">
-                <ProductFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="products">
+              <ProductFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/urunler/:id/duzenle"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="products">
-                <ProductFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="products">
+              <ProductFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/fiyat-listeleri"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="price-lists">
-                <PriceListsListPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="price-lists">
+              <PriceListsListPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/fiyat-listeleri/yeni"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="price-lists">
-                <PriceListFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="price-lists">
+              <PriceListFormPage />
+            </TenantPageRoute>
           }
         />
         <Route
           path="/fiyat-listeleri/:id/duzenle"
           element={
-            <ProtectedRoute>
-              <PageModuleRoute pageKey="price-lists">
-                <PriceListFormPage />
-              </PageModuleRoute>
-            </ProtectedRoute>
+            <TenantPageRoute pageKey="price-lists">
+              <PriceListFormPage />
+            </TenantPageRoute>
           }
         />
         <Route

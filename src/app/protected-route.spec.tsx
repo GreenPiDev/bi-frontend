@@ -3,7 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import * as api from '../lib/api';
+import type { AuthenticatedUser, EffectivePermission } from '../lib/api';
 import { createMockUser } from '../test/mock-user';
+
+function userWithPermissions(permissions: EffectivePermission[]): AuthenticatedUser {
+  return createMockUser({
+    permissions: { isCompanyAdmin: false, permissions },
+  });
+}
 
 function renderAppAt(path: string) {
   window.history.pushState({}, '', path);
@@ -66,6 +73,57 @@ describe('ProtectedRoute - platform-admin erisim kisitlamasi', () => {
 
     await waitFor(() => {
       expect(screen.queryByText('Kiracı Modül Yönetimi')).not.toBeInTheDocument();
+    });
+  });
+});
+
+describe('TenantPageRoute / RootRedirect - VIEW izin kontrolu', () => {
+  it('dashboards VIEW izni olmayan kullanici /dashboards URLine elle gitse bile panolari gormez, / rotasina duser', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(userWithPermissions([]));
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
+    vi.spyOn(api, 'getProfile').mockResolvedValue({
+      ...userWithPermissions([]),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: null,
+    });
+    renderAppAt('/dashboards');
+
+    await waitFor(() => {
+      expect(screen.getByText('Hesap bilgilerini görüntüle ve düzenle.')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Yeni Pano')).not.toBeInTheDocument();
+  });
+
+  it('kok / rotasi, dashboards izni olmayan ama accounts VIEW izni olan kullaniciyi firmalar sayfasina duser', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(
+      userWithPermissions([{ pageKey: 'accounts', tabKey: null, action: 'VIEW' }]),
+    );
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
+    vi.spyOn(api, 'listAccounts').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    renderAppAt('/');
+
+    await waitFor(() => {
+      expect(screen.getByText('Yeni Firma')).toBeInTheDocument();
+    });
+  });
+
+  it('hicbir sayfaya VIEW izni olmayan kullanici kok / rotasinda /profile sayfasina duser', async () => {
+    vi.spyOn(api, 'me').mockResolvedValue(userWithPermissions([]));
+    vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
+    vi.spyOn(api, 'getProfile').mockResolvedValue({
+      ...userWithPermissions([]),
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: null,
+    });
+    renderAppAt('/');
+
+    await waitFor(() => {
+      expect(screen.getByText('Hesap bilgilerini görüntüle ve düzenle.')).toBeInTheDocument();
     });
   });
 });
