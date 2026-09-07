@@ -50,7 +50,20 @@ export function ProductsListPage() {
     {
       key: 'name',
       header: tr.crm.products.nameColumn,
-      render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
+      render: (p) => (
+        <div className="flex items-center gap-2.5">
+          {p.imageUrl ? (
+            <img
+              src={p.imageUrl}
+              alt=""
+              className="h-8 w-8 rounded-md border border-app-border object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-md border border-dashed border-app-border" />
+          )}
+          <span className="font-semibold text-app-text">{p.name}</span>
+        </div>
+      ),
     },
     {
       key: 'sku',
@@ -63,6 +76,12 @@ export function ProductsListPage() {
       header: tr.crm.products.unitColumn,
       className: 'text-app-muted',
       render: (p) => p.unit,
+    },
+    {
+      key: 'category',
+      header: tr.crm.products.categoryColumn,
+      className: 'text-app-muted',
+      render: (p) => p.category ?? '—',
     },
     {
       key: 'maxDiscountPct',

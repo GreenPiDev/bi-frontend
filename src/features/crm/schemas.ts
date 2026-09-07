@@ -134,6 +134,9 @@ export const productFormSchema = z.object({
   unit: z.string().min(1, 'Birim gerekli.').max(50),
   minStockLevel: z.string().optional(),
   maxDiscountPct: z.string().optional(),
+  description: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
+  costPrice: z.string().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

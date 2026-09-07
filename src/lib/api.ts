@@ -1214,6 +1214,10 @@ export interface Product {
   unit: string;
   minStockLevel: number | null;
   maxDiscountPct: string | null;
+  description: string | null;
+  category: string | null;
+  costPrice: string | null;
+  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1224,6 +1228,9 @@ export interface ProductInput {
   unit?: string;
   minStockLevel?: number;
   maxDiscountPct?: number | null;
+  description?: string | null;
+  category?: string | null;
+  costPrice?: number | null;
 }
 
 export function listProducts(
@@ -1250,6 +1257,16 @@ export function updateProduct(id: string, input: Partial<ProductInput>): Promise
 
 export function deleteProduct(id: string): Promise<void> {
   return request(`/products/${id}`, { method: 'DELETE' });
+}
+
+export function uploadProductImage(id: string, file: File): Promise<Product> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request(`/products/${id}/image`, { method: 'POST', body: formData });
+}
+
+export function deleteProductImage(id: string): Promise<Product> {
+  return request(`/products/${id}/image`, { method: 'DELETE' });
 }
 
 export interface PriceListItem {

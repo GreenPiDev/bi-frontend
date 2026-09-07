@@ -2,9 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createProduct,
   deleteProduct,
+  deleteProductImage,
   getProduct,
   listProducts,
   updateProduct,
+  uploadProductImage,
   type ProductInput,
 } from '../../lib/api';
 
@@ -52,6 +54,28 @@ export function useDeleteProductMutation() {
     mutationFn: (id: string) => deleteProduct(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+  });
+}
+
+export function useUploadProductImageMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadProductImage(id, file),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['products', id] });
+    },
+  });
+}
+
+export function useDeleteProductImageMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteProductImage(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['products', id] });
     },
   });
 }
