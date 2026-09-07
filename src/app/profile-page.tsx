@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { PasswordField } from '../components/ui/password-field';
 import { TextField } from '../components/ui/text-field';
 import {
   useChangePasswordMutation,
@@ -166,25 +167,25 @@ function ChangePasswordForm() {
         {changePasswordMutation.isSuccess && (
           <p className="text-sm font-medium text-app-brand">{tr.profile.passwordSection.success}</p>
         )}
-        <TextField
+        <PasswordField
           label={tr.profile.passwordSection.currentLabel}
-          type="password"
           autoComplete="current-password"
           error={errors.currentPassword?.message}
+          toggleLabels={tr.common.passwordToggle}
           {...registerField('currentPassword')}
         />
-        <TextField
+        <PasswordField
           label={tr.profile.passwordSection.newLabel}
-          type="password"
           autoComplete="new-password"
           error={errors.newPassword?.message}
+          toggleLabels={tr.common.passwordToggle}
           {...registerField('newPassword')}
         />
-        <TextField
+        <PasswordField
           label={tr.profile.passwordSection.newConfirmLabel}
-          type="password"
           autoComplete="new-password"
           error={errors.newPasswordConfirm?.message}
+          toggleLabels={tr.common.passwordToggle}
           {...registerField('newPasswordConfirm')}
         />
         <Button type="submit" disabled={changePasswordMutation.isPending} className="self-start">

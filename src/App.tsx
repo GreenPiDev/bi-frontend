@@ -19,6 +19,7 @@ import { InteractionDetailPage } from './app/interaction-detail-page';
 import { InteractionFormPage } from './app/interaction-form-page';
 import { InteractionsListPage } from './app/interactions-list-page';
 import { LoginPage } from './app/login-page';
+import { NewCustomerPage } from './app/new-customer-page';
 import { OnboardingPage } from './app/onboarding-page';
 import { OpportunityDetailPage } from './app/opportunity-detail-page';
 import { OpportunityFormPage } from './app/opportunity-form-page';
@@ -39,7 +40,6 @@ import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
-import { RegisterPage } from './app/register-page';
 import { SettingsPage } from './app/settings-page';
 import { hasPermission } from './features/auth/permissions';
 import { useMeQuery } from './features/auth/use-auth';
@@ -137,12 +137,19 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/platform-admin"
           element={
             <PlatformAdminRoute>
               <PlatformAdminPage />
+            </PlatformAdminRoute>
+          }
+        />
+        <Route
+          path="/new-customer"
+          element={
+            <PlatformAdminRoute>
+              <NewCustomerPage />
             </PlatformAdminRoute>
           }
         />

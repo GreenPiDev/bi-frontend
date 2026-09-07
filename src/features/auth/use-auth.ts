@@ -7,12 +7,10 @@ import {
   login,
   logout,
   me,
-  register,
   updateProfile,
   type AuthenticatedUser,
   type ChangePasswordInput,
   type LoginInput,
-  type RegisterInput,
   type UpdateProfileInput,
 } from '../../lib/api';
 
@@ -41,16 +39,6 @@ export function useLoginMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: LoginInput) => login(input),
-    onSuccess: (result) => {
-      queryClient.setQueryData(AUTH_QUERY_KEY, result.user);
-    },
-  });
-}
-
-export function useRegisterMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (input: RegisterInput) => register(input),
     onSuccess: (result) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, result.user);
     },

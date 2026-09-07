@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createTenant,
   getPlatformModuleDefinitions,
   getPlatformPageModules,
   getPlatformTenantModules,
   getPlatformTenants,
+  resetTenantAdminPassword,
   setPlatformPageModule,
   setPlatformTenantModule,
+  type CreateTenantInput,
   type ModuleDefinition,
   type PageModuleAssignment,
   type TenantModuleStatus,
@@ -17,6 +20,22 @@ export function usePlatformTenantsQuery() {
   return useQuery({
     queryKey: PLATFORM_TENANTS_QUERY_KEY,
     queryFn: getPlatformTenants,
+  });
+}
+
+export function useCreateTenantMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateTenantInput) => createTenant(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_TENANTS_QUERY_KEY });
+    },
+  });
+}
+
+export function useResetTenantAdminPasswordMutation() {
+  return useMutation({
+    mutationFn: (tenantId: string) => resetTenantAdminPassword(tenantId),
   });
 }
 

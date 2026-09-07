@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/ui/auth-layout';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { PasswordField } from '../components/ui/password-field';
 import { TextField } from '../components/ui/text-field';
 import { useLoginMutation } from '../features/auth/use-auth';
 import { loginFormSchema, type LoginFormValues } from '../features/auth/schemas';
@@ -43,23 +44,17 @@ export function LoginPage() {
             error={errors.email?.message}
             {...registerField('email')}
           />
-          <TextField
+          <PasswordField
             label={tr.auth.fields.password}
-            type="password"
             autoComplete="current-password"
             error={errors.password?.message}
+            toggleLabels={tr.common.passwordToggle}
             {...registerField('password')}
           />
           <Button type="submit" disabled={loginMutation.isPending} className="mt-1">
             {loginMutation.isPending ? tr.auth.loginSubmitting : tr.auth.loginSubmit}
           </Button>
         </form>
-        <p className="mt-5 text-center text-sm text-app-muted">
-          {tr.auth.noAccount}{' '}
-          <Link to="/register" className="font-semibold text-app-brand">
-            {tr.auth.registerLink}
-          </Link>
-        </p>
       </div>
     </AuthLayout>
   );

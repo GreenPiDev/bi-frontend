@@ -132,20 +132,9 @@ export async function getHealth(): Promise<{ status: string; timestamp: string }
   return request('/health');
 }
 
-export interface RegisterInput {
-  tenantName: string;
-  name: string;
-  email: string;
-  password: string;
-}
-
 export interface LoginInput {
   email: string;
   password: string;
-}
-
-export function register(input: RegisterInput): Promise<{ user: AuthenticatedUser }> {
-  return request('/auth/register', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export function login(input: LoginInput): Promise<{ user: AuthenticatedUser }> {
@@ -195,6 +184,7 @@ export interface TenantSummary {
   slug: string;
   plan: string;
   createdAt: string;
+  adminEmail: string | null;
 }
 
 export interface TenantModuleStatus {
@@ -220,6 +210,24 @@ export function getMyPageAccess(): Promise<PageAccessStatus[]> {
 
 export function getPlatformTenants(): Promise<TenantSummary[]> {
   return request('/platform-admin/tenants');
+}
+
+export interface CreateTenantInput {
+  tenantName: string;
+  adminName: string;
+  adminEmail: string;
+}
+
+export function createTenant(
+  input: CreateTenantInput,
+): Promise<{ tenant: TenantSummary; temporaryPassword: string }> {
+  return request('/platform-admin/tenants', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function resetTenantAdminPassword(tenantId: string): Promise<{ temporaryPassword: string }> {
+  return request(`/platform-admin/tenants/${tenantId}/reset-admin-password`, {
+    method: 'POST',
+  });
 }
 
 export interface ModuleDefinition {
