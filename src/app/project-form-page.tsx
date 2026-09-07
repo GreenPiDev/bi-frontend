@@ -38,6 +38,9 @@ export function ProjectFormPage() {
     formState: { errors },
   } = useForm<ProjectFormValues>({ resolver: zodResolver(projectFormSchema) });
 
+  const estimatedBudgetField = register('estimatedBudget');
+  const actualCostField = register('actualCost');
+
   const selectedAccountId = watch('accountId');
   const quotesQuery = useQuotesQuery({ accountId: selectedAccountId || undefined });
   const quoteOptions = (quotesQuery.data?.data ?? []).map((quote) => ({
@@ -133,19 +136,27 @@ export function ProjectFormPage() {
           <TextField
             label={tr.crm.projects.form.estimatedBudgetLabel}
             required
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             hint={tr.crm.projects.form.estimatedBudgetHint}
             error={errors.estimatedBudget?.message}
-            {...register('estimatedBudget')}
+            {...estimatedBudgetField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
+              estimatedBudgetField.onChange(event);
+            }}
           />
           <TextField
             label={tr.crm.projects.form.actualCostLabel}
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             hint={tr.crm.projects.form.actualCostHint}
             error={errors.actualCost?.message}
-            {...register('actualCost')}
+            {...actualCostField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
+              actualCostField.onChange(event);
+            }}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>
