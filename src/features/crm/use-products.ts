@@ -58,13 +58,15 @@ export function useDeleteProductMutation() {
   });
 }
 
-export function useUploadProductImageMutation(id: string) {
+/** id, mutate() cagrisinda verilir - "Yeni Ürün" formunda henuz id yokken hook kurulur,
+ * urun kaydedildikten sonra donen id ile ayni mutation kullanilabilsin diye. */
+export function useUploadProductImageMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (file: File) => uploadProductImage(id, file),
-    onSuccess: () => {
+    mutationFn: ({ id, file }: { id: string; file: File }) => uploadProductImage(id, file),
+    onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['products', id] });
+      void queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
     },
   });
 }

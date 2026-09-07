@@ -30,10 +30,14 @@ export function ProductFormPage() {
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [removingImage, setRemovingImage] = useState(false);
+  // Secilen dosya, "Kaydet"e basilana kadar R2'ye yuklenmez - sadece yerel bir
+  // onizleme URL'i gosterilir.
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [pendingImagePreviewUrl, setPendingImagePreviewUrl] = useState<string | null>(null);
   const productQuery = useProductQuery(id ?? '');
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
-  const uploadImageMutation = useUploadProductImageMutation(id ?? '');
+  const uploadImageMutation = useUploadProductImageMutation();
   const deleteImageMutation = useDeleteProductImageMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
 
@@ -66,6 +70,15 @@ export function ProductFormPage() {
     }
   }, [productQuery.data, reset]);
 
+  // Onizleme URL'ini bilesen kapanirken / secim degisirken serbest birak.
+  useEffect(() => {
+    return () => {
+      if (pendingImagePreviewUrl) {
+        URL.revokeObjectURL(pendingImagePreviewUrl);
+      }
+    };
+  }, [pendingImagePreviewUrl]);
+
   if (isEdit && productQuery.isPending) {
     return (
       <AppShell>
@@ -74,7 +87,7 @@ export function ProductFormPage() {
     );
   }
 
-  const onSubmit = handleSubmit((values) => {
+  const onSubmit = handleSubmit(async (values) => {
     const input: ProductInput = {
       name: values.name,
       sku: values.sku || undefined,
@@ -89,20 +102,32 @@ export function ProductFormPage() {
       costPrice:
         values.costPrice === undefined || values.costPrice === '' ? null : Number(values.costPrice),
     };
-    mutation.mutate(input, {
-      onSuccess: (product) => {
+
+    let product;
+    try {
+      product = await mutation.mutateAsync(input);
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      return;
+    }
+
+    if (pendingImageFile) {
+      try {
+        await uploadImageMutation.mutateAsync({ id: product.id, file: pendingImageFile });
+        setPendingImageFile(null);
+        setPendingImagePreviewUrl(null);
+      } catch (error) {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        // Urun bilgileri zaten kaydedildi - kullanici formda kalip gorseli tekrar deneyebilir.
         toast.success(
           isEdit ? tr.crm.products.form.updateSuccess : tr.crm.products.form.createSuccess,
         );
-        if (isEdit) {
-          return;
-        }
-        navigate(`/urunler/duzenle/${product.id}`);
-      },
-      onError: (error) => {
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-      },
-    });
+        return;
+      }
+    }
+
+    toast.success(isEdit ? tr.crm.products.form.updateSuccess : tr.crm.products.form.createSuccess);
+    navigate('/urunler');
   });
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
@@ -117,11 +142,19 @@ export function ProductFormPage() {
       toast.error(tr.crm.products.detail.imageTooLarge);
       return;
     }
-    uploadImageMutation.mutate(file, {
-      onSuccess: () => toast.success(tr.crm.products.detail.imageUploadSuccess),
-      onError: (error) =>
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError),
-    });
+    if (pendingImagePreviewUrl) {
+      URL.revokeObjectURL(pendingImagePreviewUrl);
+    }
+    setPendingImageFile(file);
+    setPendingImagePreviewUrl(URL.createObjectURL(file));
+  }
+
+  function handleCancelImageSelection() {
+    if (pendingImagePreviewUrl) {
+      URL.revokeObjectURL(pendingImagePreviewUrl);
+    }
+    setPendingImageFile(null);
+    setPendingImagePreviewUrl(null);
   }
 
   function handleConfirmRemoveImage() {
@@ -137,6 +170,8 @@ export function ProductFormPage() {
   }
 
   const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
+  const isSaving = mutation.isPending || uploadImageMutation.isPending;
+  const displayedImageUrl = pendingImagePreviewUrl ?? productQuery.data?.imageUrl ?? null;
 
   return (
     <AppShell>
@@ -153,44 +188,47 @@ export function ProductFormPage() {
           {isEdit ? tr.crm.products.form.editTitle : tr.crm.products.form.newTitle}
         </h1>
 
-        {isEdit && (
-          <div className="mt-6 flex items-center gap-4">
-            {productQuery.data?.imageUrl ? (
-              <img
-                src={productQuery.data.imageUrl}
-                alt={tr.crm.products.detail.imageAlt}
-                className="h-24 w-24 rounded-lg border border-app-border object-cover"
-              />
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-app-border text-center text-xs text-app-muted">
-                {tr.crm.products.detail.noImage}
-              </div>
-            )}
-            <div className="flex flex-col gap-2">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={uploadImageMutation.isPending}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {productQuery.data?.imageUrl
-                  ? tr.crm.products.detail.replaceImageButton
-                  : tr.crm.products.detail.uploadImageButton}
+        <div className="mt-6 flex items-center gap-4">
+          {displayedImageUrl ? (
+            <img
+              src={displayedImageUrl}
+              alt={tr.crm.products.detail.imageAlt}
+              className="h-24 w-24 rounded-lg border border-app-border object-cover"
+            />
+          ) : (
+            <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-app-border text-center text-xs text-app-muted">
+              {tr.crm.products.detail.noImage}
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleImageChange}
+            />
+            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
+              {displayedImageUrl
+                ? tr.crm.products.detail.replaceImageButton
+                : tr.crm.products.detail.uploadImageButton}
+            </Button>
+            {pendingImageFile ? (
+              <Button type="button" variant="secondary" onClick={handleCancelImageSelection}>
+                {tr.crm.products.detail.cancelImageSelection}
               </Button>
-              {productQuery.data?.imageUrl && (
+            ) : (
+              isEdit &&
+              productQuery.data?.imageUrl && (
                 <Button type="button" variant="danger" onClick={() => setRemovingImage(true)}>
                   {tr.crm.products.detail.removeImageButton}
                 </Button>
-              )}
-            </div>
+              )
+            )}
           </div>
+        </div>
+        {pendingImageFile && (
+          <p className="mt-2 text-xs text-app-muted">{tr.crm.products.detail.imagePendingLabel}</p>
         )}
 
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4" noValidate>
@@ -259,8 +297,8 @@ export function ProductFormPage() {
             }}
           />
           <div className="mt-1 flex gap-2">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? tr.crm.products.form.submitting : tr.crm.products.form.submit}
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? tr.crm.products.form.submitting : tr.crm.products.form.submit}
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/urunler')}>
               {tr.crm.products.form.cancel}

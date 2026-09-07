@@ -905,6 +905,8 @@ export const tr = {
         imageRemoveSuccess: 'Görsel kaldırıldı.',
         imageTooLarge: 'Görsel 1,5 MB’dan büyük olamaz.',
         imageUnsupportedType: 'Sadece JPEG, PNG veya WEBP formatında görsel yüklenebilir.',
+        imagePendingLabel: 'Yeni görsel seçildi, "Kaydet"e basınca yüklenecek.',
+        cancelImageSelection: 'Seçimi İptal Et',
       },
       form: {
         newTitle: 'Yeni Ürün',
