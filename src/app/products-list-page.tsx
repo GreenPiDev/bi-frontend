@@ -1,51 +1,109 @@
-import { Search } from 'lucide-react';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
-import { useProductsQuery } from '../features/crm/use-products';
-import type { Product } from '../lib/api';
+import { Tooltip } from '../components/ui/tooltip';
+import { useToast } from '../components/ui/toast-context';
+import { useDeleteProductMutation, useProductsQuery } from '../features/crm/use-products';
+import { ApiError, type Product } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const columns: TableColumn<Product>[] = [
-  {
-    key: 'name',
-    header: tr.crm.products.nameColumn,
-    render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
-  },
-  {
-    key: 'sku',
-    header: tr.crm.products.skuColumn,
-    className: 'text-app-muted',
-    render: (p) => p.sku ?? '—',
-  },
-  {
-    key: 'unit',
-    header: tr.crm.products.unitColumn,
-    className: 'text-app-muted',
-    render: (p) => p.unit,
-  },
-  {
-    key: 'maxDiscountPct',
-    header: tr.crm.products.maxDiscountColumn,
-    className: 'text-app-muted',
-    render: (p) => (p.maxDiscountPct ? `%${p.maxDiscountPct}` : '—'),
-  },
-];
 
 export function ProductsListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const [qInput, setQInput] = useState('');
+  const [deletingProduct, setDeletingProduct] = useState<Product | undefined>(undefined);
   const productsQuery = useProductsQuery({ page, q: q || undefined });
+  const deleteMutation = useDeleteProductMutation();
 
   function handleSearchSubmit(event: FormEvent) {
     event.preventDefault();
     setPage(1);
     setQ(qInput.trim());
   }
+
+  function handleSearchReset() {
+    setPage(1);
+    setQInput('');
+    setQ('');
+  }
+
+  function handleConfirmDelete() {
+    if (!deletingProduct) return;
+    deleteMutation.mutate(deletingProduct.id, {
+      onSuccess: () => {
+        toast.success(tr.crm.products.deleteSuccess);
+        setDeletingProduct(undefined);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
+  const columns: TableColumn<Product>[] = [
+    {
+      key: 'name',
+      header: tr.crm.products.nameColumn,
+      render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
+    },
+    {
+      key: 'sku',
+      header: tr.crm.products.skuColumn,
+      className: 'text-app-muted',
+      render: (p) => p.sku ?? '—',
+    },
+    {
+      key: 'unit',
+      header: tr.crm.products.unitColumn,
+      className: 'text-app-muted',
+      render: (p) => p.unit,
+    },
+    {
+      key: 'maxDiscountPct',
+      header: tr.crm.products.maxDiscountColumn,
+      className: 'text-app-muted',
+      render: (p) => (p.maxDiscountPct ? `%${p.maxDiscountPct}` : '—'),
+    },
+    {
+      key: 'actions',
+      header: tr.crm.products.actionsColumn,
+      className: 'w-px',
+      render: (p) => (
+        <div className="flex items-center gap-1">
+          <Tooltip content={tr.crm.products.editTooltip}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                navigate(`/urunler/duzenle/${p.id}`);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
+            >
+              <Pencil size={16} />
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.products.deleteTooltip}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeletingProduct(p);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
+            >
+              <Trash2 size={16} />
+            </button>
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <AppShell>
@@ -59,7 +117,7 @@ export function ProductsListPage() {
         </Button>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mt-6 flex max-w-md items-center gap-2">
+      <form onSubmit={handleSearchSubmit} className="mt-6 flex w-full items-center gap-2">
         <div className="relative flex-1">
           <Search
             size={16}
@@ -74,7 +132,10 @@ export function ProductsListPage() {
           />
         </div>
         <Button type="submit" variant="secondary">
-          {tr.crm.products.title}
+          {tr.common.search}
+        </Button>
+        <Button type="button" variant="secondary" onClick={handleSearchReset}>
+          {tr.common.reset}
         </Button>
       </form>
 
@@ -82,7 +143,7 @@ export function ProductsListPage() {
         columns={columns}
         data={productsQuery.data?.data ?? []}
         keyField={(product) => product.id}
-        onRowClick={(product) => navigate(`/urunler/${product.id}/duzenle`)}
+        onRowClick={(product) => navigate(`/urunler/${product.id}`)}
         isLoading={productsQuery.isPending}
         loadingMessage={tr.crm.products.loading}
         emptyMessage={tr.crm.products.empty}
@@ -94,6 +155,17 @@ export function ProductsListPage() {
           totalPages={productsQuery.data.meta.totalPages}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
+        />
+      )}
+
+      {deletingProduct && (
+        <ConfirmModal
+          title={tr.crm.products.deleteConfirmTitle}
+          message={tr.crm.products.deleteConfirm}
+          confirmLabel={tr.crm.products.deleteTooltip}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingProduct(undefined)}
         />
       )}
     </AppShell>

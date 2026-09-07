@@ -68,6 +68,12 @@ export function AccountsListPage() {
     setQ(qInput.trim());
   }
 
+  function handleSearchReset() {
+    setPage(1);
+    setQInput('');
+    setQ('');
+  }
+
   return (
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -97,7 +103,7 @@ export function AccountsListPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mt-6 flex max-w-md items-center gap-2">
+      <form onSubmit={handleSearchSubmit} className="mt-6 flex w-full items-center gap-2">
         <div className="relative flex-1">
           <Search
             size={16}
@@ -112,7 +118,10 @@ export function AccountsListPage() {
           />
         </div>
         <Button type="submit" variant="secondary">
-          {tr.crm.accounts.title}
+          {tr.common.search}
+        </Button>
+        <Button type="button" variant="secondary" onClick={handleSearchReset}>
+          {tr.common.reset}
         </Button>
       </form>
 

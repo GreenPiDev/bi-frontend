@@ -31,6 +31,7 @@ import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { PriceListFormPage } from './app/price-list-form-page';
 import { PriceListsListPage } from './app/price-lists-list-page';
+import { ProductDetailPage } from './app/product-detail-page';
 import { ProductFormPage } from './app/product-form-page';
 import { ProductsListPage } from './app/products-list-page';
 import { ProfilePage } from './app/profile-page';
@@ -427,10 +428,18 @@ function App() {
           }
         />
         <Route
-          path="/urunler/:id/duzenle"
+          path="/urunler/duzenle/:id"
           element={
             <TenantPageRoute pageKey="products">
               <ProductFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/urunler/:id"
+          element={
+            <TenantPageRoute pageKey="products">
+              <ProductDetailPage />
             </TenantPageRoute>
           }
         />
