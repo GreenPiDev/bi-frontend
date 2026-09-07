@@ -102,6 +102,8 @@ export function OpportunityFormPage() {
           <FormError message={apiErrorMessage} />
           <Select
             label={tr.crm.opportunities.form.accountLabel}
+            required
+            hint={tr.crm.opportunities.form.accountHint}
             error={errors.accountId?.message}
             options={(accountsQuery.data?.data ?? []).map((account) => ({
               value: account.id,
@@ -111,11 +113,14 @@ export function OpportunityFormPage() {
           />
           <TextField
             label={tr.crm.opportunities.form.nameLabel}
+            required
+            hint={tr.crm.opportunities.form.nameHint}
             error={errors.name?.message}
             {...register('name')}
           />
           <Select
             label={tr.crm.opportunities.form.stageLabel}
+            hint={tr.crm.opportunities.form.stageHint}
             options={STAGE_OPTIONS}
             {...register('stage')}
           />
@@ -123,6 +128,7 @@ export function OpportunityFormPage() {
             label={tr.crm.opportunities.form.valueLabel}
             type="number"
             step="0.01"
+            hint={tr.crm.opportunities.form.valueHint}
             error={errors.estimatedValue?.message}
             {...register('estimatedValue')}
           />

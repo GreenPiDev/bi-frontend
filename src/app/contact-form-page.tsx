@@ -108,17 +108,22 @@ export function ContactFormPage() {
           <FormError message={apiErrorMessage} />
           <TextField
             label={tr.crm.contacts.form.firstNameLabel}
+            required
+            hint={tr.crm.contacts.form.firstNameHint}
             error={errors.firstName?.message}
             {...register('firstName')}
           />
           <TextField
             label={tr.crm.contacts.form.lastNameLabel}
+            required
+            hint={tr.crm.contacts.form.lastNameHint}
             error={errors.lastName?.message}
             {...register('lastName')}
           />
           <Select
             label={tr.crm.contacts.form.accountLabel}
             placeholder={tr.crm.contacts.form.accountPlaceholder}
+            hint={tr.crm.contacts.form.accountHint}
             options={(accountsQuery.data?.data ?? []).map((account) => ({
               value: account.id,
               label: account.name,
@@ -127,12 +132,14 @@ export function ContactFormPage() {
           />
           <TextField
             label={tr.crm.contacts.form.titleLabel}
+            hint={tr.crm.contacts.form.titleHint}
             error={errors.title?.message}
             {...register('title')}
           />
           <TextField
             label={tr.crm.contacts.form.emailLabel}
             type="email"
+            hint={tr.crm.contacts.form.emailHint}
             error={errors.email?.message}
             {...register('email')}
           />
@@ -144,18 +151,21 @@ export function ContactFormPage() {
                 label={tr.crm.contacts.form.phoneLabel}
                 value={field.value ?? ''}
                 onChange={field.onChange}
+                hint={tr.crm.contacts.form.phoneHint}
                 error={errors.phone?.message}
               />
             )}
           />
           <Select
             label={tr.crm.contacts.form.statusLabel}
+            hint={tr.crm.contacts.form.statusHint}
             options={STATUS_OPTIONS}
             {...register('status')}
           />
           <TextField
             label={tr.crm.contacts.form.lastContactedAtLabel}
             type="date"
+            hint={tr.crm.contacts.form.lastContactedAtHint}
             error={errors.lastContactedAt?.message}
             {...register('lastContactedAt')}
           />

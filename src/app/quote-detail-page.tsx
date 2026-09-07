@@ -189,7 +189,7 @@ export function QuoteDetailPage() {
               <tr key={item.id} className="border-t border-app-border">
                 <td className="py-2 pr-3 text-app-text">
                   {item.product.name}
-                  {item.discountNote && (
+                  {!isPrintMode && item.discountNote && (
                     <p className="text-xs text-app-muted">{item.discountNote}</p>
                   )}
                 </td>

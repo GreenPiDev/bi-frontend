@@ -159,6 +159,8 @@ export function InteractionFormPage() {
                 <Autocomplete
                   label={tr.crm.interactions.form.accountLabel}
                   placeholder={tr.crm.interactions.form.accountPlaceholder}
+                  required
+                  hint={tr.crm.interactions.form.accountHint}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   options={(accountsQuery.data?.data ?? []).map((account) => account.name)}
@@ -173,6 +175,7 @@ export function InteractionFormPage() {
                 <Autocomplete
                   label={tr.crm.interactions.form.contactLabel}
                   placeholder={tr.crm.interactions.form.contactPlaceholder}
+                  hint={tr.crm.interactions.form.contactHint}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   options={contactSuggestions}
@@ -181,23 +184,34 @@ export function InteractionFormPage() {
             />
             <Select
               label={tr.crm.interactions.form.typeLabel}
+              required
+              hint={tr.crm.interactions.form.typeHint}
               options={TYPE_OPTIONS}
               {...register('type')}
             />
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-semibold text-app-muted">
                 {tr.crm.interactions.form.notesLabel}
+                <span className="ml-0.5 text-app-danger" aria-hidden="true">
+                  *
+                </span>
               </label>
               <textarea
                 rows={4}
                 className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
                 {...register('notes')}
               />
-              <FormError message={errors.notes?.message} />
+              {errors.notes ? (
+                <FormError message={errors.notes.message} />
+              ) : (
+                <p className="text-xs text-app-muted">{tr.crm.interactions.form.notesHint}</p>
+              )}
             </div>
             <TextField
               type="datetime-local"
               label={tr.crm.interactions.form.occurredAtLabel}
+              required
+              hint={tr.crm.interactions.form.occurredAtHint}
               error={errors.occurredAt?.message}
               {...register('occurredAt')}
             />
@@ -220,11 +234,14 @@ export function InteractionFormPage() {
               <div className="mt-4 flex flex-col gap-4">
                 <TextField
                   label={tr.crm.interactions.form.opportunityNameLabel}
+                  required
+                  hint={tr.crm.interactions.form.opportunityNameHint}
                   error={errors.opportunityName?.message}
                   {...register('opportunityName')}
                 />
                 <Select
                   label={tr.crm.interactions.form.opportunityStageLabel}
+                  hint={tr.crm.interactions.form.opportunityStageHint}
                   options={STAGE_OPTIONS}
                   {...register('opportunityStage')}
                 />
@@ -232,6 +249,7 @@ export function InteractionFormPage() {
                   type="number"
                   step="0.01"
                   label={tr.crm.interactions.form.opportunityValueLabel}
+                  hint={tr.crm.interactions.form.opportunityValueHint}
                   {...register('opportunityValue')}
                 />
               </div>
@@ -299,6 +317,8 @@ export function InteractionFormPage() {
                 <TextField
                   type="datetime-local"
                   label={tr.crm.interactions.form.reminderDateLabel}
+                  required
+                  hint={tr.crm.interactions.form.reminderDateHint}
                   error={errors.reminderStartAt?.message}
                   {...register('reminderStartAt')}
                 />
@@ -309,6 +329,8 @@ export function InteractionFormPage() {
                     <MultiSelect
                       label={tr.crm.interactions.form.reminderAssigneesLabel}
                       placeholder={tr.crm.interactions.form.reminderAssigneesPlaceholder}
+                      required
+                      hint={tr.crm.interactions.form.reminderAssigneesHint}
                       value={field.value ?? []}
                       onChange={field.onChange}
                       options={(assignableUsersQuery.data ?? []).map((user) => ({
@@ -321,6 +343,7 @@ export function InteractionFormPage() {
                 />
                 <TextField
                   label={tr.crm.interactions.form.reminderNoteLabel}
+                  hint={tr.crm.interactions.form.reminderNoteHint}
                   {...register('reminderNote')}
                 />
               </div>
