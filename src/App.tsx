@@ -40,6 +40,8 @@ import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
 import { RegisterPage } from './app/register-page';
 import { SettingsPage } from './app/settings-page';
+import { useMeQuery } from './features/auth/use-auth';
+import { tr } from './i18n/tr';
 
 function DashboardEditRoute() {
   const { id = '' } = useParams();
@@ -48,6 +50,24 @@ function DashboardEditRoute() {
       <DashboardEditPage />
     </PermissionRoute>
   );
+}
+
+function RootRedirect() {
+  const meQuery = useMeQuery();
+
+  if (meQuery.isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-app-muted">
+        {tr.common.loading}
+      </div>
+    );
+  }
+
+  if (meQuery.data?.isPlatformAdmin) {
+    return <Navigate to="/platform-admin" replace />;
+  }
+
+  return <Navigate to="/dashboards" replace />;
 }
 
 function App() {
@@ -72,7 +92,7 @@ function App() {
             </PlatformAdminRoute>
           }
         />
-        <Route path="/" element={<Navigate to="/dashboards" replace />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route
           path="/onboarding"
           element={
@@ -444,7 +464,7 @@ function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowPlatformAdmin>
               <ProfilePage />
             </ProtectedRoute>
           }

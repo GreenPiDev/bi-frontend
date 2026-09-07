@@ -5,7 +5,16 @@ import { useModuleAccessRealtimeSync } from '../features/platform-admin/use-modu
 import { tr } from '../i18n/tr';
 import { useRealtimeConnection } from '../lib/realtime';
 
-export function ProtectedRoute({ children }: { children: ReactNode }) {
+export function ProtectedRoute({
+  children,
+  allowPlatformAdmin = false,
+}: {
+  children: ReactNode;
+  /** Süperadmin sadece platform-admin alanında çalışır (bkz. CLAUDE.md §5) — tenant
+   * sayfaları (dashboards, firmalar, vb.) varsayılan olarak süperadmine kapalıdır, bu
+   * kontrolü açıkça isteyen route'lar (ör. /profile) `allowPlatformAdmin` geçer. */
+  allowPlatformAdmin?: boolean;
+}) {
   const meQuery = useMeQuery();
   const isAuthenticated = !!meQuery.data;
 
@@ -22,6 +31,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!meQuery.data) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (meQuery.data.isPlatformAdmin && !allowPlatformAdmin) {
+    return <Navigate to="/platform-admin" replace />;
   }
 
   return <>{children}</>;
