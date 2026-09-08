@@ -1644,3 +1644,68 @@ export function upsertStockItem(productId: string, quantity: number): Promise<St
     body: JSON.stringify({ quantity }),
   });
 }
+
+export type MessageRelatedEntity = 'PROJECT' | 'QUOTE' | 'INTERACTION';
+export type MessageRecipientKind = 'TO' | 'CC';
+
+export interface MessageRecipient {
+  id: string;
+  userId: string;
+  kind: MessageRecipientKind;
+  readAt: string | null;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  body: string;
+  sentAt: string;
+  relatedEntity: MessageRelatedEntity | null;
+  relatedEntityId: string | null;
+  recipients: MessageRecipient[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMessageInput {
+  body: string;
+  toUserIds: string[];
+  ccUserIds?: string[];
+  relatedEntity?: MessageRelatedEntity;
+  relatedEntityId?: string;
+}
+
+export function listMessages(
+  params: {
+    page?: number;
+    q?: string;
+    box?: 'inbox' | 'sent';
+    relatedEntity?: MessageRelatedEntity;
+    relatedEntityId?: string;
+  } = {},
+): Promise<PagedResult<Message>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
+  if (params.box) query.set('box', params.box);
+  if (params.relatedEntity) query.set('relatedEntity', params.relatedEntity);
+  if (params.relatedEntityId) query.set('relatedEntityId', params.relatedEntityId);
+  const qs = query.toString();
+  return request(`/messages${qs ? `?${qs}` : ''}`);
+}
+
+export function getMessage(id: string): Promise<Message> {
+  return request(`/messages/${id}`);
+}
+
+export function createMessage(input: CreateMessageInput): Promise<Message> {
+  return request('/messages', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function markMessageRead(id: string): Promise<void> {
+  return request(`/messages/${id}/read`, { method: 'PATCH' });
+}
+
+export function listAssignableMessageUsers(): Promise<AssignableUser[]> {
+  return request('/messages/assignable-users');
+}

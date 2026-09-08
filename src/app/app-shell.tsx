@@ -10,6 +10,7 @@ import {
   Layers,
   LogOut,
   type LucideIcon,
+  Mail,
   MessageCircle,
   Package,
   Settings,
@@ -24,9 +25,11 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { FloatingWidgetsDock } from '../components/ui/floating-widgets-dock';
 import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
+import { MessagingWidget } from '../features/crm/messaging-widget';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
 import { tr } from '../i18n/tr';
 
@@ -77,6 +80,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
     projects: useIsPageModuleAccessible('projects'),
     'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
     stock: useIsPageModuleAccessible('stock'),
+    messages: useIsPageModuleAccessible('messages'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -124,6 +128,9 @@ export function AppShell({ children, print = false }: AppShellProps) {
           : []),
         ...(canAccessPage('quotes')
           ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
+          : []),
+        ...(canAccessPage('messages')
+          ? [{ label: tr.shell.nav.messages, icon: Mail, path: '/mesajlar' }]
           : []),
       ],
     },
@@ -312,7 +319,10 @@ export function AppShell({ children, print = false }: AppShellProps) {
         <div className="p-6 md:p-8">{children}</div>
       </main>
 
-      <ChatbotWidget />
+      <FloatingWidgetsDock>
+        <ChatbotWidget />
+        {canAccessPage('messages') && <MessagingWidget />}
+      </FloatingWidgetsDock>
     </div>
   );
 }

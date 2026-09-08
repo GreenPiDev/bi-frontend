@@ -27,6 +27,8 @@ import { OpportunitiesListPage } from './app/opportunities-list-page';
 import { PageModuleRoute } from './app/page-module-route';
 import { PermissionRoute } from './app/permission-route';
 import { PlatformAdminPage } from './app/platform-admin-page';
+import { MessageDetailPage } from './app/message-detail-page';
+import { MessagesListPage } from './app/messages-list-page';
 import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { PriceListFormPage } from './app/price-list-form-page';
@@ -95,6 +97,7 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'stock', path: '/stok' },
   { pageKey: 'products', path: '/urunler' },
   { pageKey: 'price-lists', path: '/fiyat-listeleri' },
+  { pageKey: 'messages', path: '/mesajlar' },
   { pageKey: 'settings', path: '/settings' },
 ];
 
@@ -401,6 +404,22 @@ function App() {
           element={
             <TenantPageRoute pageKey="quotes">
               <QuoteDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/mesajlar"
+          element={
+            <TenantPageRoute pageKey="messages">
+              <MessagesListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/mesajlar/:id"
+          element={
+            <TenantPageRoute pageKey="messages">
+              <MessageDetailPage />
             </TenantPageRoute>
           }
         />

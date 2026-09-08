@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
 import { useModuleAccessRealtimeSync } from '../features/platform-admin/use-module-access-realtime-sync';
 import { tr } from '../i18n/tr';
 import { useRealtimeConnection } from '../lib/realtime';
@@ -20,6 +21,7 @@ export function ProtectedRoute({
 
   useRealtimeConnection(isAuthenticated);
   useModuleAccessRealtimeSync();
+  useMessagesRealtimeSync();
 
   if (meQuery.isPending) {
     return (

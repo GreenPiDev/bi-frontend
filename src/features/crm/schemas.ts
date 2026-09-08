@@ -198,6 +198,21 @@ export const purchaseOrderFormSchema = z.object({
 
 export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
 
+export const messageFormSchema = z
+  .object({
+    body: z.string().min(1, 'Mesaj metni gerekli.').max(5000),
+    toUserIds: z.array(z.string()).min(1, 'En az bir alıcı seçilmelidir.'),
+    ccUserIds: z.array(z.string()).max(50).optional(),
+    relatedEntity: z.enum(['PROJECT', 'QUOTE', 'INTERACTION']).optional(),
+    relatedEntityId: z.string().optional(),
+  })
+  .refine((values) => !values.relatedEntity || Boolean(values.relatedEntityId), {
+    message: 'Kayıt türü seçildiyse kayıt kimliği de girilmelidir.',
+    path: ['relatedEntityId'],
+  });
+
+export type MessageFormValues = z.infer<typeof messageFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {

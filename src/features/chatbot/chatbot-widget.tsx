@@ -63,7 +63,7 @@ export function ChatbotWidget() {
   }
 
   return (
-    <div className="fixed right-5 bottom-5 z-[110] flex flex-col items-end gap-3">
+    <div className="flex flex-col items-end gap-3">
       {open && (
         <div className="flex h-[28rem] w-80 flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl">
           <div className="flex items-center justify-between border-b border-app-border px-4 py-3">
