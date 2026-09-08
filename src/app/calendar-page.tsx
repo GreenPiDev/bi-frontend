@@ -5,6 +5,7 @@ import { AppShell } from './app-shell';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
 import { CalendarEventFormModal } from './calendar-event-form-modal';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import {
   useCalendarEventsQuery,
@@ -108,7 +109,10 @@ export function CalendarPage() {
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.calendar.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.calendar.title}</h1>
+            <PageHelp text={tr.help.calendar} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.calendar.subtitle}</p>
         </div>
         <div className="flex gap-2">

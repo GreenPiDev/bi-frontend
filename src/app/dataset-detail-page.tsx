@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { PageHelp } from '../components/ui/page-help';
 import {
   useDatasetPreviewQuery,
   useDatasetQuery,
@@ -81,7 +82,10 @@ export function DatasetDetailPage() {
       </button>
 
       {datasetQuery.data && (
-        <h1 className="mt-4 text-xl font-bold text-app-text">{datasetQuery.data.name}</h1>
+        <div className="mt-4 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-app-text">{datasetQuery.data.name}</h1>
+          <PageHelp text={tr.help.datasetDetail} />
+        </div>
       )}
 
       <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">

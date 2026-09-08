@@ -4,6 +4,7 @@ import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
+import { PageHelp } from '../components/ui/page-help';
 import { useAccountQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
@@ -76,6 +77,7 @@ export function AccountDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{account.name}</h1>
+            <PageHelp text={tr.help.accountDetail} />
             {account.accountTypes.map((type) => (
               <Badge key={type} variant="info">
                 {tr.crm.accounts.accountTypeOptions[type]}

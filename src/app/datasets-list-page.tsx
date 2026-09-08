@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { useDatasetsQuery } from '../features/datasets/use-datasets';
 import { tr } from '../i18n/tr';
 
@@ -15,7 +16,10 @@ export function DatasetsListPage() {
     <AppShell>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.datasets.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.datasets.title}</h1>
+            <PageHelp text={tr.help.datasets} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.datasets.subtitle}</p>
         </div>
         <Button type="button" onClick={() => navigate('/datasets/upload')}>

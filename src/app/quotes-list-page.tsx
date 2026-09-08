@@ -4,6 +4,7 @@ import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { useToast } from '../components/ui/toast-context';
 import { hasPermission } from '../features/auth/permissions';
@@ -117,7 +118,10 @@ export function QuotesListPage() {
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.quotes.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.quotes.title}</h1>
+            <PageHelp text={tr.help.quotes} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.quotes.subtitle}</p>
         </div>
         <Button type="button" onClick={() => navigate('/teklifler/yeni')}>

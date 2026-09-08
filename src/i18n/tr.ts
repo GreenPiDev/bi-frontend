@@ -14,6 +14,68 @@ export const tr = {
       show: 'Şifreyi göster',
       hide: 'Şifreyi gizle',
     },
+    pageHelp: 'Yardım',
+  },
+  help: {
+    dashboards:
+      'Ekiplerinizin oluşturduğu tüm panoları buradan görüntüleyip yenisini oluşturabilirsiniz. Her pano, verilerinizi grafik ve KPI kartlarıyla özetler.',
+    dashboardView:
+      'Bu panodaki grafikleri inceleyin, üstteki filtre/tarih aralığını değiştirerek tüm kartları aynı anda güncelleyin. Bir grafiğe tıklayarak arkasındaki ham satırları görebilirsiniz.',
+    dashboardEdit:
+      'Izgaraya yeni widget ekleyin, mevcutları sürükleyip yeniden boyutlandırın. Değişiklikler yalnızca "Kaydet"e bastığınızda kalıcı olur.',
+    datasets:
+      'Yüklediğiniz Excel/CSV dosyalarının listesi burada. Yeni bir dosya yükleyerek veya mevcut birinin kolon tiplerini düzenleyerek devam edebilirsiniz.',
+    datasetDetail:
+      'Bu veri kümesinin kolonlarını (isim, tip, ölçü/boyut/tarih rolü) düzenleyin ve ilk birkaç satırını önizleyin.',
+    accounts:
+      'Firmalarınızın (cari) listesi. Arama yapabilir, yeni firma ekleyebilir, Excel ile toplu içe/dışa aktarabilirsiniz. Ünlem ikonu, o firmada eksik kritik bilgi olduğunu gösterir.',
+    accountDetail:
+      'Bu firmanın genel bilgilerini ve firmayla yapılan tüm işleri (görüşmeler, fırsatlar, teklifler, projeler) sekmeler halinde görüntüleyin.',
+    contacts:
+      'Firmalara bağlı kişilerin listesi. Bir kişinin aktif/pasif durumunu ve son iletişim tarihini buradan takip edebilirsiniz.',
+    contactDetail: 'Bu kişinin iletişim bilgilerini görüntüleyin ve düzenleyin.',
+    calendar:
+      'Görüşme, teklif ve diğer kayıtlara bağlı tüm hatırlatma ve etkinlikleriniz burada. Bir güne tıklayarak yeni etkinlik oluşturabilir, üstteki listeye geçerek ters kronolojik görünümü kullanabilirsiniz.',
+    interactions:
+      'Müşteri/tedarikçi görüşmelerinizin kaydı. Yeni bir görüşme girerken bilinmeyen firma/kişi otomatik olarak cari kaydına eklenir.',
+    interactionDetail:
+      'Bu görüşmenin detaylarını, katılımcılarını ve varsa bağlı fırsatını görüntüleyin; görüşmeyi kapatarak hatırlatmalarını durdurabilirsiniz.',
+    opportunities:
+      'Satış fırsatlarınızın listesi, aşamalarına göre filtrelenebilir. Fırsatlar bir görüşmeden veya teklif oluştururken otomatik de doğabilir.',
+    opportunityDetail:
+      'Bu fırsatın aşamasını, tahmini değerini ve bağlı kayıtlarını görüntüleyip güncelleyin.',
+    products:
+      'Sattığınız/ürettiğiniz ürünlerin kataloğu. Ürün ekleyip düzenleyebilir, görsel yükleyebilir, azami iskonto oranı ve minimum stok seviyesi tanımlayabilirsiniz.',
+    productDetail: 'Bu ürünün tüm bilgilerini (açıklama, kategori, maliyet, görsel) görüntüleyin.',
+    priceLists:
+      'Ürünleriniz için farklı fiyat listeleri oluşturun; teklif hazırlarken bu listelerden biri seçilir.',
+    quotes:
+      'Müşterilerinize gönderdiğiniz tekliflerin listesi, durumlarına göre filtrelenebilir. Onaylanmış bir teklif otomatik olarak satış sonrası desteğe ve isterseniz satın alma siparişine dönüşür.',
+    quoteDetail:
+      'Bu teklifin satırlarını, iskonto/KDV hesaplarını görüntüleyin; yetkiniz varsa onaylayıp reddedebilir, PDF olarak indirebilirsiniz.',
+    postSaleCases:
+      'Onaylanan tekliflerin satış sonrası takibi burada yapılır: memnuniyet hatırlatmaları ve anket geri bildirimleri bu listeden izlenir.',
+    postSaleCaseDetail:
+      'Bu satış sonrası kaydın hatırlatma ve anket durumunu görüntüleyip geri bildirimi işaretleyin.',
+    projects:
+      'Müşteri işleriniz için açılan projelerin listesi. Bir proje isteğe bağlı olarak bir teklife bağlanabilir.',
+    projectDetail: 'Bu projenin bütçe/maliyet bilgilerini ve varsa bağlı teklifini görüntüleyin.',
+    purchaseOrders:
+      'Onaylanmış tekliflerden oluşturulan satın alma siparişlerinin listesi. Bir siparişin kalemlerini buradan düzenleyebilirsiniz.',
+    purchaseOrderDetail:
+      'Bu siparişin kalemlerini düzenleyin; teklifte olmayan ek kalemler de ekleyebilirsiniz.',
+    stock:
+      'Ürünlerinizin stok miktarları burada. Minimum stok seviyesinin altına düşen ürünler kırmızı rozetle işaretlenir.',
+    profile:
+      'Hesap bilgilerinizi ve profil fotoğrafınızı buradan görüntüleyip güncelleyebilirsiniz.',
+    settings:
+      "Kullanıcı, rol/yetki, zamanlanmış rapor, alarm ve denetim kaydı ayarları ile CRM'e özgü sektör/eşik ayarları burada yönetilir.",
+    onboarding:
+      'İlk kurulum sihirbazı: dosyanızı yükleyin, kolonları onaylayın ve ilk panonuzu oluşturun (veya hazır demo veriyle başlayın).',
+    platformAdmin:
+      'Süper admin ekranı: kiracıları, modüllerini ve yöneticilerini buradan yönetirsiniz.',
+    platformAdminPageModules:
+      'Hangi sayfanın hangi modüle bağlı olduğunu buradan eşleyebilir, modülleri kapatılabilir/her zaman açık olarak işaretleyebilirsiniz.',
   },
   health: {
     checking: 'Bağlantı kontrol ediliyor...',

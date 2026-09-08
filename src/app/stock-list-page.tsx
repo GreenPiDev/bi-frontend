@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -132,7 +133,10 @@ export function StockListPage() {
   return (
     <AppShell>
       <div>
-        <h1 className="text-xl font-bold text-app-text">{tr.crm.stock.title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-app-text">{tr.crm.stock.title}</h1>
+          <PageHelp text={tr.help.stock} />
+        </div>
         <p className="mt-1 text-sm text-app-muted">{tr.crm.stock.subtitle}</p>
       </div>
 

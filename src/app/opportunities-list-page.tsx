@@ -4,6 +4,7 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
+import { PageHelp } from '../components/ui/page-help';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import type { Opportunity, OpportunityStage } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -46,7 +47,10 @@ export function OpportunitiesListPage() {
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.opportunities.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.opportunities.title}</h1>
+            <PageHelp text={tr.help.opportunities} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.opportunities.subtitle}</p>
         </div>
         <Button type="button" onClick={() => navigate('/firsatlar/yeni')}>

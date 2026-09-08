@@ -6,6 +6,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
@@ -74,7 +75,10 @@ export function DashboardViewPage() {
 
       <div className={clsx('flex items-start justify-between gap-4', !isPrintMode && 'mt-4')}>
         {dashboardQuery.data && (
-          <h1 className="text-xl font-bold text-app-text">{dashboardQuery.data.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{dashboardQuery.data.name}</h1>
+            <PageHelp text={tr.help.dashboardView} />
+          </div>
         )}
         {!isPrintMode && (
           <div className="flex items-center gap-3">

@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
@@ -120,6 +121,7 @@ export function QuoteDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{quote.quoteNumber}</h1>
+            <PageHelp text={tr.help.quoteDetail} />
             <Badge variant={STATUS_BADGE_VARIANT[quote.status]}>
               {tr.crm.quotes.statusOptions[quote.status]}
             </Badge>

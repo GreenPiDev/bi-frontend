@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { PageHelp } from '../components/ui/page-help';
 import {
   useDashboardQuery,
   useDeleteWidgetMutation,
@@ -154,7 +155,10 @@ export function DashboardEditPage() {
       <FormError message={saveErrorMessage} />
 
       {dashboardQuery.data && (
-        <h1 className="mt-4 text-xl font-bold text-app-text">{dashboardQuery.data.name}</h1>
+        <div className="mt-4 flex items-center gap-2">
+          <h1 className="text-xl font-bold text-app-text">{dashboardQuery.data.name}</h1>
+          <PageHelp text={tr.help.dashboardEdit} />
+        </div>
       )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_280px]">

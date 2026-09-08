@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
+import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { usePurchaseOrdersQuery } from '../features/crm/use-purchase-orders';
 import type { PurchaseOrder, PurchaseOrderStatus } from '../lib/api';
@@ -62,7 +63,10 @@ export function PurchaseOrderListPage() {
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.purchaseOrders.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.purchaseOrders.title}</h1>
+            <PageHelp text={tr.help.purchaseOrders} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.purchaseOrders.subtitle}</p>
         </div>
       </div>

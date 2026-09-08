@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import type { Interaction } from '../lib/api';
@@ -51,7 +52,10 @@ export function InteractionsListPage() {
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.interactions.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.interactions.title}</h1>
+            <PageHelp text={tr.help.interactions} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.interactions.subtitle}</p>
         </div>
         <Button type="button" onClick={() => navigate('/gorusmeler/yeni')}>

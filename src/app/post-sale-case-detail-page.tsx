@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -94,6 +95,7 @@ export function PostSaleCaseDetailPage() {
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <h1 className="text-xl font-bold text-app-text">{postSaleCase.quote.quoteNumber}</h1>
+        <PageHelp text={tr.help.postSaleCaseDetail} />
         <Badge variant={STATUS_BADGE_VARIANT[postSaleCase.status]}>
           {tr.crm.postSaleCases.statusOptions[postSaleCase.status]}
         </Badge>

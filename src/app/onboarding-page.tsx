@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { PageHelp } from '../components/ui/page-help';
 import { TextField } from '../components/ui/text-field';
 import {
   useDatasetQuery,
@@ -140,7 +141,10 @@ export function OnboardingPage() {
   return (
     <AppShell>
       <div className="mx-auto mt-6 max-w-2xl">
-        <h1 className="text-xl font-bold text-app-text">{tr.onboarding.title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-app-text">{tr.onboarding.title}</h1>
+          <PageHelp text={tr.help.onboarding} />
+        </div>
         <p className="mt-1 text-sm text-app-muted">{tr.onboarding.subtitle}</p>
 
         <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-8">

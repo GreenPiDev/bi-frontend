@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import {
   useDeleteInteractionMutation,
@@ -65,6 +66,7 @@ export function InteractionDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{interaction.account.name}</h1>
+            <PageHelp text={tr.help.interactionDetail} />
             <Badge variant={interaction.status === 'OPEN' ? 'success' : 'neutral'}>
               {tr.crm.interactions.statusOptions[interaction.status]}
             </Badge>

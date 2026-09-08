@@ -5,6 +5,7 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
+import { PageHelp } from '../components/ui/page-help';
 import { PasswordField } from '../components/ui/password-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -37,7 +38,10 @@ export function ProfilePage() {
 
   return (
     <AppShell>
-      <h1 className="text-xl font-bold text-app-text">{tr.profile.title}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold text-app-text">{tr.profile.title}</h1>
+        <PageHelp text={tr.help.profile} />
+      </div>
       <p className="text-sm text-app-muted">{tr.profile.subtitle}</p>
 
       {profileQuery.isPending && <p className="mt-4 text-sm text-app-muted">{tr.common.loading}</p>}

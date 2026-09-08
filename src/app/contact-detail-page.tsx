@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { useContactQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
 import { tr } from '../i18n/tr';
 
@@ -62,6 +63,7 @@ export function ContactDetailPage() {
             <h1 className="text-xl font-bold text-app-text">
               {contact.firstName} {contact.lastName}
             </h1>
+            <PageHelp text={tr.help.contactDetail} />
             <Badge variant={contact.status === 'ACTIVE' ? 'success' : 'neutral'}>
               {contact.status === 'ACTIVE'
                 ? tr.crm.contacts.statusActive

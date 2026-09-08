@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { useDeleteProjectMutation, useProjectQuery } from '../features/crm/use-projects';
 import { tr } from '../i18n/tr';
 
@@ -52,6 +53,7 @@ export function ProjectDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{project.name}</h1>
+            <PageHelp text={tr.help.projectDetail} />
             <span className="text-sm font-semibold text-app-muted">{project.projectNumber}</span>
           </div>
         </div>

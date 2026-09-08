@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import {
   useDeleteOpportunityMutation,
   useOpportunityQuery,
@@ -49,6 +50,7 @@ export function OpportunityDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{opportunity.name}</h1>
+            <PageHelp text={tr.help.opportunityDetail} />
             <Badge variant="info">{tr.crm.opportunities.stageOptions[opportunity.stage]}</Badge>
           </div>
           {opportunity.estimatedValue && (

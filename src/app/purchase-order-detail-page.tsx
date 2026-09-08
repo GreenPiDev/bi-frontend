@@ -7,6 +7,7 @@ import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -131,6 +132,7 @@ export function PurchaseOrderDetailPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{purchaseOrder.orderNumber}</h1>
+            <PageHelp text={tr.help.purchaseOrderDetail} />
             <Badge variant={STATUS_BADGE_VARIANT[purchaseOrder.status]}>
               {tr.crm.purchaseOrders.statusOptions[purchaseOrder.status]}
             </Badge>

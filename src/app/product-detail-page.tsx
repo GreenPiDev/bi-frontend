@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { PageHelp } from '../components/ui/page-help';
 import { useProductQuery } from '../features/crm/use-products';
 import { tr } from '../i18n/tr';
 
@@ -59,6 +60,7 @@ export function ProductDetailPage() {
           />
         ) : null}
         <h1 className="text-xl font-bold text-app-text">{product.name}</h1>
+        <PageHelp text={tr.help.productDetail} />
       </div>
 
       {product.description && (

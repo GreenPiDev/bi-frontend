@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { usePlatformTenantsQuery } from '../features/platform-admin/use-platform-admin';
 import { tr } from '../i18n/tr';
 import { AppShell } from './app-shell';
@@ -15,7 +16,10 @@ export function PlatformAdminPage() {
     <AppShell>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.platformAdmin.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.platformAdmin.title}</h1>
+            <PageHelp text={tr.help.platformAdmin} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.platformAdmin.subtitle}</p>
         </div>
         <Link to="/new-customer">

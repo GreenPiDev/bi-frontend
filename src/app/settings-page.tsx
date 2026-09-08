@@ -2,6 +2,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { AppShell } from './app-shell';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
+import { PageHelp } from '../components/ui/page-help';
 import { AlertsSection } from '../features/alerts/alerts-section';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -253,7 +254,10 @@ export function SettingsPage() {
 
   return (
     <AppShell>
-      <h1 className="text-xl font-bold text-app-text">{tr.settings.title}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold text-app-text">{tr.settings.title}</h1>
+        <PageHelp text={tr.help.settings} />
+      </div>
 
       <div className="mt-6">
         <HorizontalTabPanel tabs={tabs} queryParam="tab" />

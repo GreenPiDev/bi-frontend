@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useProjectsQuery } from '../features/crm/use-projects';
 import type { Project } from '../lib/api';
@@ -49,7 +50,10 @@ export function ProjectsListPage() {
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.projects.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.projects.title}</h1>
+            <PageHelp text={tr.help.projects} />
+          </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.projects.subtitle}</p>
         </div>
         <Button type="button" onClick={() => navigate('/projeler/yeni')}>
