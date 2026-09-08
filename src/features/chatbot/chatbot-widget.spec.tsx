@@ -19,6 +19,7 @@ const USER_A: api.AuthenticatedUser = {
   name: 'Kullanici A',
   roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
   isPlatformAdmin: false,
+  avatarUrl: null,
   permissions: { isCompanyAdmin: true, permissions: [] },
 };
 

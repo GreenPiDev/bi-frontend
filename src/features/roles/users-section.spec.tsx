@@ -19,7 +19,7 @@ const ROLES = [
 ];
 
 function safeUser(overrides: Pick<SafeUser, 'id' | 'email' | 'name' | 'roles'>): SafeUser {
-  return { tenantId: 't1', isPlatformAdmin: false, ...overrides };
+  return { tenantId: 't1', isPlatformAdmin: false, avatarUrl: null, ...overrides };
 }
 
 function renderComponent(props: Partial<Parameters<typeof UsersSection>[0]> = {}) {

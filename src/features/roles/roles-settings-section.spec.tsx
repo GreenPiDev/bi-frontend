@@ -52,6 +52,7 @@ const USERS: api.SafeUser[] = [
     name: 'Ada Lovelace',
     roles: [{ id: 'role-sales', name: 'Satış' }],
     isPlatformAdmin: false,
+    avatarUrl: null,
   },
 ];
 

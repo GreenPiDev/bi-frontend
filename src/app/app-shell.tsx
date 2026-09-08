@@ -205,9 +205,22 @@ export function AppShell({ children, print = false }: AppShellProps) {
         <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
         <div className="flex items-center gap-4">
           {meQuery.data && (
-            <span className="hidden text-sm font-semibold text-app-brand sm:inline">
-              {tr.shell.welcome(meQuery.data.name)}
-            </span>
+            <div className="hidden items-center gap-2 sm:flex">
+              {meQuery.data.avatarUrl ? (
+                <img
+                  src={meQuery.data.avatarUrl}
+                  alt={tr.profile.avatarSection.alt}
+                  className="h-8 w-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-app-bg-muted text-xs font-bold text-app-muted">
+                  {meQuery.data.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="text-sm font-semibold text-app-brand">
+                {tr.shell.welcome(meQuery.data.name)}
+              </span>
+            </div>
           )}
           <button
             type="button"

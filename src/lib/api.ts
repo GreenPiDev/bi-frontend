@@ -19,6 +19,7 @@ export interface SafeUser {
   name: string;
   roles: SafeUserRole[];
   isPlatformAdmin: boolean;
+  avatarUrl: string | null;
 }
 
 export interface EffectivePermission {
@@ -176,6 +177,16 @@ export function changePassword(input: ChangePasswordInput): Promise<{ ok: true }
     method: 'PATCH',
     body: JSON.stringify(input),
   });
+}
+
+export function uploadAvatar(file: File): Promise<UserProfile> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/users/me/avatar', { method: 'POST', body: formData });
+}
+
+export function deleteAvatar(): Promise<UserProfile> {
+  return request('/users/me/avatar', { method: 'DELETE' });
 }
 
 export interface TenantSummary {

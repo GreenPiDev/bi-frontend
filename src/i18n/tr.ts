@@ -76,6 +76,21 @@ export const tr = {
   profile: {
     title: 'Profil',
     subtitle: 'Hesap bilgilerini görüntüle ve düzenle.',
+    avatarSection: {
+      title: 'Profil Fotoğrafı',
+      alt: 'Profil fotoğrafı',
+      noAvatar: 'Henüz fotoğraf eklenmemiş',
+      uploadButton: 'Fotoğraf Yükle',
+      replaceButton: 'Fotoğrafı Değiştir',
+      removeButton: 'Fotoğrafı Kaldır',
+      removeConfirmTitle: 'Fotoğrafı kaldır',
+      removeConfirmMessage: 'Profil fotoğrafını kaldırmak istediğinize emin misiniz?',
+      unsupportedType: 'Sadece JPEG, PNG veya WEBP formatında görsel yüklenebilir.',
+      tooLarge: 'Görsel 1,5 MB’dan büyük olamaz.',
+      uploadSuccess: 'Profil fotoğrafı güncellendi.',
+      removeSuccess: 'Profil fotoğrafı kaldırıldı.',
+      uploading: 'Yükleniyor...',
+    },
     infoSection: {
       title: 'Hesap Bilgileri',
       roleLabel: 'Rol',

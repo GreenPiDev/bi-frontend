@@ -25,6 +25,7 @@ describe('PlatformAdminPageModulesPage', () => {
       name: 'Admin Kisi',
       roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: true,
+      avatarUrl: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getPlatformPageModules').mockResolvedValue([]);

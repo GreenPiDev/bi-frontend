@@ -28,6 +28,7 @@ beforeEach(() => {
     name: 'Admin Kisi',
     roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
     isPlatformAdmin: true,
+    avatarUrl: null,
     permissions: { isCompanyAdmin: true, permissions: [] },
   });
 });

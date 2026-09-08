@@ -23,6 +23,7 @@ function noPermissionsUser(): AuthenticatedUser {
     name: 'Viewer',
     roles: [{ id: 'r1', name: 'Goruntuleyici' }],
     isPlatformAdmin: false,
+    avatarUrl: null,
     permissions: { isCompanyAdmin: false, permissions: [] },
   };
 }
@@ -35,6 +36,7 @@ function companyAdminUser(): AuthenticatedUser {
     name: 'Owner',
     roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
     isPlatformAdmin: false,
+    avatarUrl: null,
     permissions: { isCompanyAdmin: true, permissions: [] },
   };
 }

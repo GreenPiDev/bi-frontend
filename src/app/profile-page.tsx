@@ -1,15 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
 import { PasswordField } from '../components/ui/password-field';
 import { TextField } from '../components/ui/text-field';
+import { useToast } from '../components/ui/toast-context';
 import {
   useChangePasswordMutation,
+  useDeleteAvatarMutation,
   useProfileQuery,
   useUpdateProfileMutation,
+  useUploadAvatarMutation,
 } from '../features/auth/use-auth';
 import {
   changePasswordFormSchema,
@@ -25,6 +29,9 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
   timeStyle: 'short',
 });
 
+const MAX_AVATAR_SIZE_BYTES = 1.5 * 1024 * 1024;
+const ACCEPTED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 export function ProfilePage() {
   const profileQuery = useProfileQuery();
 
@@ -37,6 +44,8 @@ export function ProfilePage() {
 
       {profileQuery.data && (
         <div className="mt-6 flex flex-col gap-6">
+          <AvatarSection avatarUrl={profileQuery.data.avatarUrl} name={profileQuery.data.name} />
+
           <section className="rounded-xl border border-app-border bg-app-surface p-4">
             <h2 className="mb-4 text-base font-bold text-app-text">
               {tr.profile.infoSection.title}
@@ -79,6 +88,103 @@ export function ProfilePage() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+function AvatarSection({ avatarUrl, name }: { avatarUrl: string | null; name: string }) {
+  const toast = useToast();
+  const strings = tr.profile.avatarSection;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [removing, setRemoving] = useState(false);
+  const uploadMutation = useUploadAvatarMutation();
+  const deleteMutation = useDeleteAvatarMutation();
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!ACCEPTED_AVATAR_TYPES.includes(file.type)) {
+      toast.error(strings.unsupportedType);
+      return;
+    }
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      toast.error(strings.tooLarge);
+      return;
+    }
+    uploadMutation.mutate(file, {
+      onSuccess: () => toast.success(strings.uploadSuccess),
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
+  function handleConfirmRemove() {
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success(strings.removeSuccess);
+        setRemoving(false);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        setRemoving(false);
+      },
+    });
+  }
+
+  return (
+    <section className="rounded-xl border border-app-border bg-app-surface p-4">
+      <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
+      <div className="flex items-center gap-4">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={strings.alt} className="h-20 w-20 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-app-bg-muted text-2xl font-bold text-app-muted">
+            {name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="flex flex-col gap-2">
+          {!avatarUrl && <p className="text-xs text-app-muted">{strings.noAvatar}</p>}
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={uploadMutation.isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {uploadMutation.isPending
+                ? strings.uploading
+                : avatarUrl
+                  ? strings.replaceButton
+                  : strings.uploadButton}
+            </Button>
+            {avatarUrl && (
+              <Button type="button" variant="danger" onClick={() => setRemoving(true)}>
+                {strings.removeButton}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {removing && (
+        <ConfirmModal
+          title={strings.removeConfirmTitle}
+          message={strings.removeConfirmMessage}
+          confirmLabel={strings.removeButton}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setRemoving(false)}
+        />
+      )}
+    </section>
   );
 }
 

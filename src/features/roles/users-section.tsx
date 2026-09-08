@@ -238,7 +238,22 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
   }
 
   const columns: TableColumn<SafeUser>[] = [
-    { key: 'name', header: tr.settings.roles.users.nameColumn, render: (u) => u.name },
+    {
+      key: 'name',
+      header: tr.settings.roles.users.nameColumn,
+      render: (u) => (
+        <div className="flex items-center gap-2">
+          {u.avatarUrl ? (
+            <img src={u.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-app-bg-muted text-xs font-bold text-app-muted">
+              {u.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <span>{u.name}</span>
+        </div>
+      ),
+    },
     { key: 'email', header: tr.settings.roles.users.emailColumn, render: (u) => u.email },
     {
       key: 'roles',

@@ -3,11 +3,13 @@ import { clearChatHistory } from '../chatbot/chatbot-storage';
 import {
   ApiError,
   changePassword,
+  deleteAvatar,
   getProfile,
   login,
   logout,
   me,
   updateProfile,
+  uploadAvatar,
   type AuthenticatedUser,
   type ChangePasswordInput,
   type LoginInput,
@@ -66,6 +68,30 @@ export function useUpdateProfileMutation() {
 export function useChangePasswordMutation() {
   return useMutation({
     mutationFn: (input: ChangePasswordInput) => changePassword(input),
+  });
+}
+
+export function useUploadAvatarMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => uploadAvatar(file),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(PROFILE_QUERY_KEY, profile);
+      void queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+}
+
+export function useDeleteAvatarMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteAvatar(),
+    onSuccess: (profile) => {
+      queryClient.setQueryData(PROFILE_QUERY_KEY, profile);
+      void queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
   });
 }
 
