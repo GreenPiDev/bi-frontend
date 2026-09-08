@@ -1,17 +1,20 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { MultiSelect } from '../components/ui/multi-select';
-import { Select } from '../components/ui/select';
-import { TextField } from '../components/ui/text-field';
+import { Select, type SelectOption } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
 import { messageFormSchema, type MessageFormValues } from '../features/crm/schemas';
+import { useInteractionsQuery } from '../features/crm/use-interactions';
 import {
   useAssignableMessageUsersQuery,
   useCreateMessageMutation,
 } from '../features/crm/use-messages';
+import { useProjectsQuery } from '../features/crm/use-projects';
+import { useQuotesQuery } from '../features/crm/use-quotes';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -29,6 +32,7 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<MessageFormValues>({
     resolver: zodResolver(messageFormSchema),
@@ -40,6 +44,42 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
     value: user.id,
     label: user.name,
   }));
+
+  // Kayit turu degistiginde onceki secimin (baska bir turdeki bir kayda ait
+  // olabilecek) ID'sini elde tutmuyoruz - bkz. asagidaki kayit-secimi dropdown'u.
+  useEffect(() => {
+    setValue('relatedEntityId', '');
+  }, [relatedEntity, setValue]);
+
+  const projectsQuery = useProjectsQuery({}, { enabled: relatedEntity === 'PROJECT' });
+  const quotesQuery = useQuotesQuery({}, { enabled: relatedEntity === 'QUOTE' });
+  const interactionsQuery = useInteractionsQuery({}, { enabled: relatedEntity === 'INTERACTION' });
+
+  let relatedEntityOptions: SelectOption[] = [];
+  let relatedEntityOptionsLoading = false;
+  if (relatedEntity === 'PROJECT') {
+    relatedEntityOptionsLoading = projectsQuery.isPending;
+    relatedEntityOptions = (projectsQuery.data?.data ?? []).map((project) => ({
+      value: project.id,
+      label: `${project.projectNumber} — ${project.name}`,
+    }));
+  } else if (relatedEntity === 'QUOTE') {
+    relatedEntityOptionsLoading = quotesQuery.isPending;
+    relatedEntityOptions = (quotesQuery.data?.data ?? []).map((quote) => ({
+      value: quote.id,
+      label: `${quote.quoteNumber} — ${quote.account.name}`,
+    }));
+  } else if (relatedEntity === 'INTERACTION') {
+    relatedEntityOptionsLoading = interactionsQuery.isPending;
+    relatedEntityOptions = (interactionsQuery.data?.data ?? []).map((interaction) => ({
+      value: interaction.id,
+      label: `${interaction.account.name} — ${tr.crm.interactions.typeOptions[interaction.type]} (${new Date(interaction.occurredAt).toLocaleDateString('tr-TR')})`,
+    }));
+  }
+  const relatedEntityIdPlaceholder =
+    !relatedEntityOptionsLoading && relatedEntityOptions.length === 0
+      ? tr.crm.messages.form.relatedEntityIdEmptyOption
+      : tr.crm.messages.form.relatedEntityIdPlaceholder;
 
   function onSubmit(values: MessageFormValues) {
     createMutation.mutate(
@@ -121,14 +161,25 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
             value,
             label,
           }))}
-          {...register('relatedEntity')}
+          error={errors.relatedEntity?.message}
+          {...register('relatedEntity', {
+            setValueAs: (value) => (value === '' ? undefined : value),
+          })}
         />
         {relatedEntity && (
-          <TextField
-            label={tr.crm.messages.form.relatedEntityIdLabel}
-            hint={tr.crm.messages.form.relatedEntityIdHint}
-            error={errors.relatedEntityId?.message}
-            {...register('relatedEntityId')}
+          <Controller
+            name="relatedEntityId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label={tr.crm.messages.form.relatedEntityIdLabel}
+                placeholder={relatedEntityIdPlaceholder}
+                options={relatedEntityOptions}
+                error={errors.relatedEntityId?.message}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+              />
+            )}
           />
         )}
       </form>

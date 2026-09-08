@@ -16,10 +16,12 @@ export const QUOTES_QUERY_KEY = ['quotes'];
 
 export function useQuotesQuery(
   params: { page?: number; accountId?: string; status?: QuoteStatus } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...QUOTES_QUERY_KEY, params],
     queryFn: () => listQuotes(params),
+    enabled: options.enabled ?? true,
   });
 }
 

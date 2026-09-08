@@ -14,10 +14,12 @@ export const INTERACTIONS_QUERY_KEY = ['interactions'];
 
 export function useInteractionsQuery(
   params: { page?: number; accountId?: string; status?: InteractionStatus } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...INTERACTIONS_QUERY_KEY, params],
     queryFn: () => listInteractions(params),
+    enabled: options.enabled ?? true,
   });
 }
 
