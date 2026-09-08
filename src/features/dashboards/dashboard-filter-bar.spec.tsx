@@ -26,6 +26,18 @@ function makeDataset(): DatasetWithFields {
         isVisible: true,
         ordinal: 0,
       },
+      {
+        id: 'f2',
+        datasetId: 'ds-1',
+        sourceName: 'Tarih',
+        name: 'tarih',
+        label: 'Tarih',
+        type: 'DATE',
+        role: 'DATE',
+        format: null,
+        isVisible: true,
+        ordinal: 1,
+      },
     ],
   };
 }
@@ -85,5 +97,17 @@ describe('DashboardFilterBar', () => {
     fireEvent.click(await screen.findByText('+ Filtre ekle'));
     fireEvent.change(screen.getByLabelText(/Veri kümesi/), { target: { value: 'ds-1' } });
     expect(await screen.findByLabelText(/Alan/)).toBeInTheDocument();
+  });
+
+  it('DATE tipindeki alan icin ortak takvim (Calendar) bileseni gosterilir', async () => {
+    vi.spyOn(api, 'getDataset').mockResolvedValue(makeDataset());
+    renderBar([]);
+    fireEvent.click(await screen.findByText('+ Filtre ekle'));
+    fireEvent.change(screen.getByLabelText(/Veri kümesi/), { target: { value: 'ds-1' } });
+    fireEvent.change(await screen.findByLabelText(/Alan/), { target: { value: 'tarih' } });
+
+    const dateButton = await screen.findByRole('button', { name: 'Değer' });
+    fireEvent.click(dateButton);
+    expect(await screen.findByText('Bugün')).toBeInTheDocument();
   });
 });

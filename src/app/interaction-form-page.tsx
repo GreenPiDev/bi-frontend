@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Autocomplete } from '../components/ui/autocomplete';
 import { Button } from '../components/ui/button';
+import { DateTimeField } from '../components/ui/date-time-field';
 import { FormError } from '../components/ui/form-error';
 import { MultiSelect } from '../components/ui/multi-select';
 import { Select } from '../components/ui/select';
@@ -65,6 +66,7 @@ export function InteractionFormPage() {
   const hasReminder = watch('hasReminder');
 
   const onSubmit = handleSubmit((values) => {
+    const accountName = values.accountName?.trim();
     const contactName = values.contactName?.trim();
     const matchedContact = contactName
       ? (contactsQuery.data?.data ?? []).find(
@@ -74,7 +76,7 @@ export function InteractionFormPage() {
       : undefined;
 
     const input: CreateInteractionInput = {
-      ...(matchedAccount ? { accountId: matchedAccount.id } : { accountName: values.accountName }),
+      ...(accountName ? (matchedAccount ? { accountId: matchedAccount.id } : { accountName }) : {}),
       ...(contactName ? (matchedContact ? { contactId: matchedContact.id } : { contactName }) : {}),
       type: values.type,
       notes: values.notes,
@@ -107,7 +109,7 @@ export function InteractionFormPage() {
     createMutation.mutate(input, {
       onSuccess: (result) => {
         toast.success(tr.crm.interactions.form.createSuccess);
-        if (result.interaction.accountAutoCreated) {
+        if (result.interaction.accountAutoCreated && result.interaction.account) {
           toast.info(tr.crm.interactions.accountAutoCreatedNotice(result.interaction.account.name));
         }
         if (result.interaction.contactAutoCreated && result.interaction.contact) {
@@ -159,7 +161,6 @@ export function InteractionFormPage() {
                 <Autocomplete
                   label={tr.crm.interactions.form.accountLabel}
                   placeholder={tr.crm.interactions.form.accountPlaceholder}
-                  required
                   hint={tr.crm.interactions.form.accountHint}
                   value={field.value ?? ''}
                   onChange={field.onChange}
@@ -207,13 +208,19 @@ export function InteractionFormPage() {
                 <p className="text-xs text-app-muted">{tr.crm.interactions.form.notesHint}</p>
               )}
             </div>
-            <TextField
-              type="datetime-local"
-              label={tr.crm.interactions.form.occurredAtLabel}
-              required
-              hint={tr.crm.interactions.form.occurredAtHint}
-              error={errors.occurredAt?.message}
-              {...register('occurredAt')}
+            <Controller
+              name="occurredAt"
+              control={control}
+              render={({ field }) => (
+                <DateTimeField
+                  label={tr.crm.interactions.form.occurredAtLabel}
+                  required
+                  hint={tr.crm.interactions.form.occurredAtHint}
+                  error={errors.occurredAt?.message}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                />
+              )}
             />
           </div>
 
@@ -261,34 +268,49 @@ export function InteractionFormPage() {
               {tr.crm.interactions.form.participantsSectionTitle}
             </span>
             <div className="mt-3 flex flex-col gap-3">
-              {fields.map((field, index) => (
-                <div key={field.id} className="flex items-end gap-2">
-                  <div className="flex-1">
-                    <TextField
-                      label={tr.crm.interactions.form.participantNamePlaceholder}
-                      {...register(`participants.${index}.name` as const)}
+              {fields.map((field, index) => {
+                const isInternal = watch(`participants.${index}.isInternal` as const);
+                return (
+                  <div key={field.id} className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <Controller
+                        name={`participants.${index}.name` as const}
+                        control={control}
+                        render={({ field: nameField }) => (
+                          <Autocomplete
+                            label={tr.crm.interactions.form.participantNamePlaceholder}
+                            value={nameField.value ?? ''}
+                            onChange={nameField.onChange}
+                            options={
+                              isInternal
+                                ? (assignableUsersQuery.data ?? []).map((user) => user.name)
+                                : []
+                            }
+                          />
+                        )}
+                      />
+                    </div>
+                    <Controller
+                      name={`participants.${index}.isInternal` as const}
+                      control={control}
+                      render={({ field: internalField }) => (
+                        <div className="flex items-center gap-1.5 pb-2.5">
+                          <Switch
+                            checked={internalField.value ?? false}
+                            onChange={internalField.onChange}
+                          />
+                          <span className="text-xs text-app-muted">
+                            {tr.crm.interactions.form.participantInternalLabel}
+                          </span>
+                        </div>
+                      )}
                     />
+                    <Button type="button" variant="secondary" onClick={() => remove(index)}>
+                      {tr.crm.interactions.form.removeParticipant}
+                    </Button>
                   </div>
-                  <Controller
-                    name={`participants.${index}.isInternal` as const}
-                    control={control}
-                    render={({ field: internalField }) => (
-                      <div className="flex items-center gap-1.5 pb-2.5">
-                        <Switch
-                          checked={internalField.value ?? false}
-                          onChange={internalField.onChange}
-                        />
-                        <span className="text-xs text-app-muted">
-                          {tr.crm.interactions.form.participantInternalLabel}
-                        </span>
-                      </div>
-                    )}
-                  />
-                  <Button type="button" variant="secondary" onClick={() => remove(index)}>
-                    {tr.crm.interactions.form.removeParticipant}
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
               <Button
                 type="button"
                 variant="secondary"
@@ -314,13 +336,19 @@ export function InteractionFormPage() {
             />
             {hasReminder && (
               <div className="mt-4 flex flex-col gap-4">
-                <TextField
-                  type="datetime-local"
-                  label={tr.crm.interactions.form.reminderDateLabel}
-                  required
-                  hint={tr.crm.interactions.form.reminderDateHint}
-                  error={errors.reminderStartAt?.message}
-                  {...register('reminderStartAt')}
+                <Controller
+                  name="reminderStartAt"
+                  control={control}
+                  render={({ field }) => (
+                    <DateTimeField
+                      label={tr.crm.interactions.form.reminderDateLabel}
+                      required
+                      hint={tr.crm.interactions.form.reminderDateHint}
+                      error={errors.reminderStartAt?.message}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
                 <Controller
                   name="reminderAssigneeUserIds"

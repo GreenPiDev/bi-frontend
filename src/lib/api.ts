@@ -1104,9 +1104,9 @@ export interface InteractionParticipant {
 
 export interface Interaction {
   id: string;
-  accountId: string;
+  accountId: string | null;
   contactId: string | null;
-  account: Account;
+  account: Account | null;
   contact: Contact | null;
   type: InteractionType;
   notes: string;

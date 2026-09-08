@@ -851,6 +851,7 @@ export const tr = {
         participantsTitle: 'Diğer Katılımcılar',
         opportunityTitle: 'İlişkili Fırsat',
         noParticipants: 'Katılımcı eklenmemiş.',
+        noAccountFallback: 'Firma yok',
       },
       form: {
         newTitle: 'Yeni Görüşme',
@@ -859,11 +860,11 @@ export const tr = {
         accountLabel: 'Firma',
         accountPlaceholder: 'Firma seçin veya yeni firma adı yazın',
         accountHint:
-          'Zorunlu. Kayıtlı bir firma seçin; listede yoksa serbest metin girin, kayıt tamamlanınca o isimle otomatik yeni bir firma oluşur.',
-        contactLabel: 'Kişi (opsiyonel)',
+          'Firma veya kişiden en az biri doldurulmalı. Kayıtlı bir firma seçin; listede yoksa serbest metin girin, kayıt tamamlanınca o isimle otomatik yeni bir firma oluşur.',
+        contactLabel: 'Kişi',
         contactPlaceholder: 'Kişi seçin veya yeni kişi adı yazın',
         contactHint:
-          'Opsiyonel. Seçilen firmaya bağlı kişiler listelenir; kayıtlı değilse yazdığınız isim otomatik olarak bu firmanın kontağı olarak eklenir.',
+          'Firma veya kişiden en az biri doldurulmalı. Seçilen firmaya bağlı kişiler listelenir; kayıtlı değilse yazdığınız isim otomatik olarak eklenir (firma boşsa kişi firmasız kaydedilir).',
         typeLabel: 'Görüşme Türü',
         typeHint: 'Zorunlu.',
         notesLabel: 'Notlar',

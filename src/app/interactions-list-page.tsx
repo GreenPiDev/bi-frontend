@@ -19,7 +19,9 @@ const columns: TableColumn<Interaction>[] = [
   {
     key: 'account',
     header: tr.crm.interactions.accountColumn,
-    render: (i) => <span className="font-semibold text-app-text">{i.account.name}</span>,
+    render: (i) => (
+      <span className="font-semibold text-app-text">{i.account ? i.account.name : '—'}</span>
+    ),
   },
   {
     key: 'contact',

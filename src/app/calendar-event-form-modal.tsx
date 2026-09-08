@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../components/ui/button';
+import { DateTimeField } from '../components/ui/date-time-field';
 import { Modal } from '../components/ui/modal';
 import { MultiSelect } from '../components/ui/multi-select';
 import { Switch } from '../components/ui/switch';
@@ -127,17 +128,29 @@ export function CalendarEventFormModal({
           />
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextField
-            type="datetime-local"
-            label={tr.crm.calendar.form.startLabel}
-            error={errors.startAt?.message}
-            {...register('startAt')}
+          <Controller
+            name="startAt"
+            control={control}
+            render={({ field }) => (
+              <DateTimeField
+                label={tr.crm.calendar.form.startLabel}
+                error={errors.startAt?.message}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+              />
+            )}
           />
-          <TextField
-            type="datetime-local"
-            label={tr.crm.calendar.form.endLabel}
-            error={errors.endAt?.message}
-            {...register('endAt')}
+          <Controller
+            name="endAt"
+            control={control}
+            render={({ field }) => (
+              <DateTimeField
+                label={tr.crm.calendar.form.endLabel}
+                error={errors.endAt?.message}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+              />
+            )}
           />
         </div>
         <Controller

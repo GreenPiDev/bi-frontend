@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { DateField } from '../components/ui/date-field';
 import { FormError } from '../components/ui/form-error';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
@@ -162,12 +163,18 @@ export function ContactFormPage() {
             options={STATUS_OPTIONS}
             {...register('status')}
           />
-          <TextField
-            label={tr.crm.contacts.form.lastContactedAtLabel}
-            type="date"
-            hint={tr.crm.contacts.form.lastContactedAtHint}
-            error={errors.lastContactedAt?.message}
-            {...register('lastContactedAt')}
+          <Controller
+            name="lastContactedAt"
+            control={control}
+            render={({ field }) => (
+              <DateField
+                label={tr.crm.contacts.form.lastContactedAtLabel}
+                hint={tr.crm.contacts.form.lastContactedAtHint}
+                error={errors.lastContactedAt?.message}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+              />
+            )}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>

@@ -70,7 +70,7 @@ export type CalendarEventFormValues = z.infer<typeof calendarEventFormSchema>;
 
 export const interactionFormSchema = z
   .object({
-    accountName: z.string().min(1, 'Firma gerekli.').max(200),
+    accountName: z.string().max(200).optional(),
     contactName: z.string().max(200).optional(),
     type: z.enum(['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER']),
     notes: z.string().min(1, 'Notlar gerekli.').max(5000),
@@ -94,6 +94,14 @@ export const interactionFormSchema = z
     reminderAssigneeUserIds: z.array(z.string()).max(50).optional(),
     reminderNote: z.string().max(1000).optional(),
   })
+  .refine(
+    (values) =>
+      (values.accountName ?? '').trim().length > 0 || (values.contactName ?? '').trim().length > 0,
+    {
+      message: 'Firma veya kişiden en az biri doldurulmalı.',
+      path: ['accountName'],
+    },
+  )
   .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
     message: 'Fırsat adı en az 2 karakter olmalı.',
     path: ['opportunityName'],

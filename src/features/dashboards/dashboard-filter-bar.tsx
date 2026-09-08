@@ -1,6 +1,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '../../components/ui/button';
+import { DateField } from '../../components/ui/date-field';
 import { getDataset } from '../../lib/api';
 import type { DatasetFieldType, DatasetWithFields, FilterOperator } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -23,6 +24,44 @@ const inputTypeByFieldType: Record<DatasetFieldType, string> = {
 function coerceValue(fieldType: DatasetFieldType, raw: string): unknown {
   if (fieldType === 'NUMBER') return Number(raw);
   return raw;
+}
+
+interface FilterValueInputProps {
+  id: string;
+  label: string;
+  fieldType: DatasetFieldType;
+  inputType: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/** DATE tipindeki dataset alanlari icin ortak Calendar tabanli DateField, digerleri icin
+ * ham native input - operator/deger formu her dataset alan tipi icin genel kalmali. */
+function FilterValueInput({
+  id,
+  label,
+  fieldType,
+  inputType,
+  value,
+  onChange,
+}: FilterValueInputProps) {
+  if (fieldType === 'DATE') {
+    return <DateField label={label} value={value} onChange={onChange} />;
+  }
+  return (
+    <div className="flex flex-col gap-1">
+      <label htmlFor={id} className="text-xs font-semibold text-app-muted">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={inputType}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+      />
+    </div>
+  );
 }
 
 interface DashboardFilterFormProps {
@@ -154,49 +193,34 @@ function DashboardFilterForm({ datasets, onAdd, onCancel }: DashboardFilterFormP
       )}
 
       {field && needsValue && !needsRange && (
-        <div className="flex flex-col gap-1">
-          <label htmlFor="dash-filter-value" className="text-xs font-semibold text-app-muted">
-            {tr.dashboards.filters.valueLabel}
-          </label>
-          <input
-            id="dash-filter-value"
-            type={inputType}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-          />
-        </div>
+        <FilterValueInput
+          id="dash-filter-value"
+          label={tr.dashboards.filters.valueLabel}
+          fieldType={field.type}
+          inputType={inputType}
+          value={value}
+          onChange={setValue}
+        />
       )}
 
       {field && needsRange && (
         <>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="dash-filter-value-from"
-              className="text-xs font-semibold text-app-muted"
-            >
-              {tr.dashboards.filters.valueFromLabel}
-            </label>
-            <input
-              id="dash-filter-value-from"
-              type={inputType}
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-              className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="dash-filter-value-to" className="text-xs font-semibold text-app-muted">
-              {tr.dashboards.filters.valueToLabel}
-            </label>
-            <input
-              id="dash-filter-value-to"
-              type={inputType}
-              value={valueTo}
-              onChange={(event) => setValueTo(event.target.value)}
-              className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-            />
-          </div>
+          <FilterValueInput
+            id="dash-filter-value-from"
+            label={tr.dashboards.filters.valueFromLabel}
+            fieldType={field.type}
+            inputType={inputType}
+            value={value}
+            onChange={setValue}
+          />
+          <FilterValueInput
+            id="dash-filter-value-to"
+            label={tr.dashboards.filters.valueToLabel}
+            fieldType={field.type}
+            inputType={inputType}
+            value={valueTo}
+            onChange={setValueTo}
+          />
         </>
       )}
 

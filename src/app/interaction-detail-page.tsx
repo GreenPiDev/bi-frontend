@@ -65,7 +65,13 @@ export function InteractionDetailPage() {
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{interaction.account.name}</h1>
+            <h1 className="text-xl font-bold text-app-text">
+              {interaction.account
+                ? interaction.account.name
+                : interaction.contact
+                  ? `${interaction.contact.firstName} ${interaction.contact.lastName}`
+                  : tr.crm.interactions.detail.noAccountFallback}
+            </h1>
             <PageHelp text={tr.help.interactionDetail} />
             <Badge variant={interaction.status === 'OPEN' ? 'success' : 'neutral'}>
               {tr.crm.interactions.statusOptions[interaction.status]}
