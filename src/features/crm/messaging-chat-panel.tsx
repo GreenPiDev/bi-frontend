@@ -1,14 +1,14 @@
 import { clsx } from 'clsx';
 import { Link2, Send, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeQuery } from '../auth/use-auth';
 import {
+  useConversationQuery,
   useCreateMessageMutation,
-  useMarkMessageReadMutation,
-  useMessageQuery,
+  useMarkConversationReadMutation,
 } from './use-messages';
-import type { Message, MessageRelatedEntity } from '../../lib/api';
+import type { MessageRelatedEntity } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 
 const RELATED_ENTITY_PATH: Record<MessageRelatedEntity, string> = {
@@ -18,18 +18,16 @@ const RELATED_ENTITY_PATH: Record<MessageRelatedEntity, string> = {
 };
 
 interface MessagingChatPanelProps {
-  messageId: string;
+  conversationId: string;
   closing: boolean;
   onClose: () => void;
   userNameById: Map<string, string>;
 }
 
-/** Widget'in tek sohbet penceresi - LinkedIn'deki surekli thread degil, secilen tek
- * `Message` kaydinin (ve o oturumda gonderilen yanitlarin) kompakt gorunumu; veri
- * modeli mesajlari birbirine baglamiyor (bkz. docs/VARSAYIMLAR.md), bu yuzden "yanit"
- * aslinda ayni alicilara giden yeni bir Message. */
+/** Widget'in tek sohbet penceresi - secilen konusmanin tum gecmisini gosterir, yanitlar
+ * ayni conversationId'ye baglanir (bkz. /mesajlar/:id detay sayfasindaki ayni desen). */
 export function MessagingChatPanel({
-  messageId,
+  conversationId,
   closing,
   onClose,
   userNameById,
@@ -37,60 +35,63 @@ export function MessagingChatPanel({
   const navigate = useNavigate();
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
-  const messageQuery = useMessageQuery(messageId);
-  const markReadMutation = useMarkMessageReadMutation(messageId);
+  const conversationQuery = useConversationQuery(conversationId);
+  const markReadMutation = useMarkConversationReadMutation(conversationId);
   const createMutation = useCreateMessageMutation();
   const [replyBody, setReplyBody] = useState('');
-  const [localReplies, setLocalReplies] = useState<Message[]>([]);
 
-  // Farkli bir mesaja gecince onceki pencerenin yerel yanitlari sizmasin diye
-  // render sirasinda senkron sifirlanir - chatbot-widget.tsx'teki `loadedForUserId`
-  // deseninin ayni (bir effect icinde setState yerine).
-  const [repliesForMessageId, setRepliesForMessageId] = useState(messageId);
-  if (messageId !== repliesForMessageId) {
-    setRepliesForMessageId(messageId);
-    setLocalReplies([]);
-  }
-
-  const message = messageQuery.data;
-  const myRecipient = message?.recipients.find((recipient) => recipient.userId === currentUserId);
-
-  useEffect(() => {
-    if (myRecipient && !myRecipient.readAt && !markReadMutation.isPending) {
-      markReadMutation.mutate();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myRecipient?.id, myRecipient?.readAt]);
+  const messages = useMemo(() => conversationQuery.data?.messages ?? [], [conversationQuery.data]);
 
   function displayUserName(userId: string): string {
     if (userId === currentUserId) return tr.crm.messages.you;
     return userNameById.get(userId) ?? userId;
   }
 
+  const hasUnread = messages.some((message) =>
+    message.recipients.some((recipient) => recipient.userId === currentUserId && !recipient.readAt),
+  );
+
+  useEffect(() => {
+    if (hasUnread && !markReadMutation.isPending) {
+      markReadMutation.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnread, conversationId]);
+
+  const otherParticipantIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const message of messages) {
+      ids.add(message.senderId);
+      for (const recipient of message.recipients) {
+        ids.add(recipient.userId);
+      }
+    }
+    if (currentUserId) ids.delete(currentUserId);
+    return Array.from(ids);
+  }, [messages, currentUserId]);
+
   function handleSendReply() {
     const body = replyBody.trim();
-    if (!body || !message || createMutation.isPending) return;
-
-    const isSender = message.senderId === currentUserId;
-    const toUserIds = isSender
-      ? message.recipients.map((recipient) => recipient.userId)
-      : [message.senderId];
+    if (!body || otherParticipantIds.length === 0 || createMutation.isPending) return;
 
     createMutation.mutate(
-      { body, toUserIds },
+      { body, toUserIds: otherParticipantIds, conversationId },
       {
-        onSuccess: (created) => {
-          setLocalReplies((prev) => [...prev, created]);
+        onSuccess: () => {
           setReplyBody('');
         },
       },
     );
   }
 
-  const counterpartName = message
-    ? message.senderId === currentUserId
-      ? message.recipients.map((recipient) => displayUserName(recipient.userId)).join(', ')
-      : displayUserName(message.senderId)
+  const relatedEntity = conversationQuery.data?.relatedEntity;
+  const relatedEntityId = conversationQuery.data?.relatedEntityId;
+
+  const lastMessage = messages[messages.length - 1];
+  const counterpartName = lastMessage
+    ? lastMessage.senderId === currentUserId
+      ? lastMessage.recipients.map((recipient) => displayUserName(recipient.userId)).join(', ')
+      : displayUserName(lastMessage.senderId)
     : '';
 
   return (
@@ -113,46 +114,42 @@ export function MessagingChatPanel({
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        {messageQuery.isPending && (
+        {conversationQuery.isPending && (
           <p className="text-xs text-app-muted">{tr.crm.messages.loading}</p>
         )}
-        {message && (
-          <>
-            {message.relatedEntity && message.relatedEntityId && (
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(
-                    `${RELATED_ENTITY_PATH[message.relatedEntity as MessageRelatedEntity]}/${message.relatedEntityId}`,
-                  )
-                }
-                className="flex w-full items-center gap-1.5 rounded-lg border border-app-primary/30 bg-app-primary/10 px-2.5 py-1.5 text-left text-xs text-app-text hover:bg-app-primary/15"
-              >
-                <Link2 size={13} className="shrink-0" />
-                <span className="truncate">
-                  {tr.crm.messages.detail.relatedBanner(
-                    tr.crm.messages.relatedEntityOptions[message.relatedEntity],
-                  )}
-                </span>
-              </button>
-            )}
-            <div className="max-w-[85%] rounded-lg bg-app-bg-muted px-3 py-2 text-sm text-app-text">
-              {message.body}
-            </div>
-            <p className="text-[10px] text-app-muted">
-              {displayUserName(message.senderId)} ·{' '}
-              {new Date(message.sentAt).toLocaleString('tr-TR')}
-            </p>
-          </>
+        {relatedEntity && relatedEntityId && (
+          <button
+            type="button"
+            onClick={() => navigate(`${RELATED_ENTITY_PATH[relatedEntity]}/${relatedEntityId}`)}
+            className="flex w-full items-center gap-1.5 rounded-lg border border-app-primary/30 bg-app-primary/10 px-2.5 py-1.5 text-left text-xs text-app-text hover:bg-app-primary/15"
+          >
+            <Link2 size={13} className="shrink-0" />
+            <span className="truncate">
+              {tr.crm.messages.detail.relatedBanner(
+                tr.crm.messages.relatedEntityOptions[relatedEntity],
+              )}
+            </span>
+          </button>
         )}
-        {localReplies.map((reply) => (
-          <div key={reply.id} className="ml-auto max-w-[85%] space-y-0.5">
-            <div className="rounded-lg bg-app-brand px-3 py-2 text-sm text-white">{reply.body}</div>
-            <p className="text-right text-[10px] text-app-muted">
-              {new Date(reply.sentAt).toLocaleString('tr-TR')}
-            </p>
-          </div>
-        ))}
+        {messages.map((message) => {
+          const isMine = message.senderId === currentUserId;
+          return (
+            <div key={message.id} className={clsx('max-w-[85%] space-y-0.5', isMine && 'ml-auto')}>
+              <div
+                className={clsx(
+                  'rounded-lg px-3 py-2 text-sm',
+                  isMine ? 'bg-app-brand text-white' : 'bg-app-bg-muted text-app-text',
+                )}
+              >
+                {message.body}
+              </div>
+              <p className={clsx('text-[10px] text-app-muted', isMine && 'text-right')}>
+                {!isMine && `${displayUserName(message.senderId)} · `}
+                {new Date(message.sentAt).toLocaleString('tr-TR')}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <form

@@ -35,13 +35,13 @@ export function Drawer({ title, onClose, children, footer, width = 'sm' }: Drawe
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40" onClick={onClose}>
+    <div className="fixed inset-x-0 top-16 bottom-0 z-50 bg-black/40" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
         className={clsx(
-          'fixed inset-y-0 right-0 flex h-full w-full flex-col bg-app-surface p-5 shadow-xl',
+          'animate-drawer-slide-in fixed top-16 right-0 bottom-0 flex w-full flex-col bg-app-surface p-5 shadow-xl',
           WIDTH_CLASSES[width],
         )}
         onClick={(event) => event.stopPropagation()}

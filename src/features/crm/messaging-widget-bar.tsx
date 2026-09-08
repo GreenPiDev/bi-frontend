@@ -1,23 +1,23 @@
 import { clsx } from 'clsx';
-import { ChevronDown, ChevronUp, PenSquare, Search, SlidersHorizontal } from 'lucide-react';
+import { PenSquare, Search, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Drawer } from '../../components/ui/drawer';
 import { Select } from '../../components/ui/select';
 import { useMeQuery } from '../auth/use-auth';
 import { tr } from '../../i18n/tr';
-import type { Message, MessageRelatedEntity } from '../../lib/api';
+import type { ConversationSummary, MessageRelatedEntity } from '../../lib/api';
 
 interface MessagingWidgetBarProps {
   expanded: boolean;
   closing: boolean;
   onToggleExpanded: () => void;
   onCompose: () => void;
-  hasUnread: boolean;
-  messages: Message[];
+  unreadTotal: number;
+  conversations: ConversationSummary[];
   isLoading: boolean;
   userNameById: Map<string, string>;
-  onSelectMessage: (id: string) => void;
-  selectedMessageId: string | null;
+  onSelectConversation: (id: string) => void;
+  selectedConversationId: string | null;
   q: string;
   onQChange: (value: string) => void;
   box: 'inbox' | 'sent' | undefined;
@@ -34,12 +34,12 @@ export function MessagingWidgetBar({
   closing,
   onToggleExpanded,
   onCompose,
-  hasUnread,
-  messages,
+  unreadTotal,
+  conversations,
   isLoading,
   userNameById,
-  onSelectMessage,
-  selectedMessageId,
+  onSelectConversation,
+  selectedConversationId,
   q,
   onQChange,
   box,
@@ -51,54 +51,58 @@ export function MessagingWidgetBar({
   const currentUserId = meQuery.data?.id;
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
-  function displayCounterpart(message: Message): string {
-    const isSender = message.senderId === currentUserId;
+  function displayCounterpart(conversation: ConversationSummary): string {
+    const { lastMessage } = conversation;
+    const isSender = lastMessage.senderId === currentUserId;
     if (isSender) {
-      return message.recipients
+      return lastMessage.recipients
         .map((recipient) => userNameById.get(recipient.userId) ?? recipient.userId)
         .join(', ');
     }
-    return userNameById.get(message.senderId) ?? message.senderId;
-  }
-
-  function isUnread(message: Message): boolean {
-    return message.recipients.some(
-      (recipient) => recipient.userId === currentUserId && !recipient.readAt,
-    );
+    return userNameById.get(lastMessage.senderId) ?? lastMessage.senderId;
   }
 
   const showExpandedContent = expanded || closing;
 
   return (
     <div className="flex w-80 flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl">
-      <div className="flex items-center justify-between gap-2 border-b border-app-border px-4 py-3">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggleExpanded}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onToggleExpanded();
+          }
+        }}
+        aria-label={
+          expanded ? tr.crm.messages.widget.collapseAria : tr.crm.messages.widget.expandAria
+        }
+        className="group flex cursor-pointer items-center justify-between gap-2 border-b border-app-border px-4 py-3"
+      >
         <span className="flex items-center gap-2 text-sm font-semibold text-app-text">
-          {tr.crm.messages.widget.title}
-          {hasUnread && (
+          <span className="group-hover:underline">{tr.crm.messages.widget.title}</span>
+          {unreadTotal > 0 && (
             <span
-              className="h-2 w-2 rounded-full bg-app-success"
-              aria-label={tr.crm.messages.widget.unreadIndicatorAria}
-            />
+              className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-app-danger px-1 text-[11px] font-bold text-white"
+              aria-label={tr.crm.messages.unreadCountAria(unreadTotal)}
+            >
+              {unreadTotal > 9 ? '9+' : unreadTotal}
+            </span>
           )}
         </span>
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={onCompose}
+            onClick={(event) => {
+              event.stopPropagation();
+              onCompose();
+            }}
             aria-label={tr.crm.messages.widget.newMessageAria}
-            className="text-app-muted hover:text-app-text"
+            className="cursor-pointer text-app-muted hover:text-app-text"
           >
             <PenSquare size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={onToggleExpanded}
-            aria-label={
-              expanded ? tr.crm.messages.widget.collapseAria : tr.crm.messages.widget.expandAria
-            }
-            className="text-app-muted hover:text-app-text"
-          >
-            {expanded ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
           </button>
         </div>
       </div>
@@ -131,19 +135,19 @@ export function MessagingWidgetBar({
 
           <div className="max-h-96 flex-1 overflow-y-auto">
             {isLoading && <p className="p-4 text-xs text-app-muted">{tr.crm.messages.loading}</p>}
-            {!isLoading && messages.length === 0 && (
+            {!isLoading && conversations.length === 0 && (
               <p className="p-4 text-xs text-app-muted">{tr.crm.messages.widget.emptyState}</p>
             )}
-            {messages.map((message) => {
-              const unread = isUnread(message);
+            {conversations.map((conversation) => {
+              const unread = conversation.unreadCount > 0;
               return (
                 <button
-                  key={message.id}
+                  key={conversation.conversationId}
                   type="button"
-                  onClick={() => onSelectMessage(message.id)}
+                  onClick={() => onSelectConversation(conversation.conversationId)}
                   className={clsx(
                     'flex w-full flex-col gap-0.5 border-b border-app-border px-4 py-2.5 text-left last:border-0 hover:bg-app-bg',
-                    selectedMessageId === message.id && 'bg-app-bg',
+                    selectedConversationId === conversation.conversationId && 'bg-app-bg',
                   )}
                 >
                   <span className="flex items-center justify-between gap-2">
@@ -153,13 +157,20 @@ export function MessagingWidgetBar({
                         unread ? 'font-bold text-app-text' : 'font-semibold text-app-text',
                       )}
                     >
-                      {displayCounterpart(message)}
+                      {displayCounterpart(conversation)}
                     </span>
-                    <span className="shrink-0 text-[10px] text-app-muted">
-                      {new Date(message.sentAt).toLocaleDateString('tr-TR')}
+                    <span className="flex shrink-0 items-center gap-1.5 text-[10px] text-app-muted">
+                      {new Date(conversation.lastMessage.sentAt).toLocaleDateString('tr-TR')}
+                      {unread && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-app-danger px-1 text-[10px] font-bold text-white">
+                          {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
+                        </span>
+                      )}
                     </span>
                   </span>
-                  <span className="truncate text-xs text-app-muted">{message.body}</span>
+                  <span className="truncate text-xs text-app-muted">
+                    {conversation.lastMessage.body}
+                  </span>
                 </button>
               );
             })}

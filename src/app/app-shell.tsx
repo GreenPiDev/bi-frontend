@@ -31,12 +31,14 @@ import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import { MessagingWidget } from '../features/crm/messaging-widget';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
+import { useUnreadConversationsTotal } from '../features/crm/use-messages';
 import { tr } from '../i18n/tr';
 
 interface NavItem {
   label: string;
   icon: LucideIcon;
   path: string;
+  badgeCount?: number;
 }
 
 interface AppShellProps {
@@ -84,6 +86,8 @@ export function AppShell({ children, print = false }: AppShellProps) {
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
+  const canAccessMessages = canAccessPage('messages');
+  const unreadConversationsTotal = useUnreadConversationsTotal(canAccessMessages);
 
   const navGroups: { key: string; label: string; icon: LucideIcon; items: NavItem[] }[] = [
     {
@@ -129,8 +133,15 @@ export function AppShell({ children, print = false }: AppShellProps) {
         ...(canAccessPage('quotes')
           ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
           : []),
-        ...(canAccessPage('messages')
-          ? [{ label: tr.shell.nav.messages, icon: Mail, path: '/mesajlar' }]
+        ...(canAccessMessages
+          ? [
+              {
+                label: tr.shell.nav.messages,
+                icon: Mail,
+                path: '/mesajlar',
+                badgeCount: unreadConversationsTotal,
+              },
+            ]
           : []),
       ],
     },
@@ -287,8 +298,10 @@ export function AppShell({ children, print = false }: AppShellProps) {
                   )}
                 >
                   <ul className="overflow-hidden">
-                    {group.items.map(({ label, icon: Icon, path }) => {
+                    {group.items.map(({ label, icon: Icon, path, badgeCount }) => {
                       const isActive = location.pathname.startsWith(path);
+                      const unreadCount = badgeCount ?? 0;
+                      const hasUnread = unreadCount > 0;
                       return (
                         <li key={label}>
                           <button
@@ -296,11 +309,21 @@ export function AppShell({ children, print = false }: AppShellProps) {
                             onClick={() => navigate(path)}
                             className={clsx(
                               'flex h-12 w-full cursor-pointer items-center gap-3 whitespace-nowrap transition-colors duration-200 hover:bg-app-brand/10 hover:text-app-text',
-                              isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted',
+                              hasUnread && 'text-app-danger',
+                              !hasUnread &&
+                                (isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted'),
                             )}
                           >
-                            <span className="inline-flex w-16 shrink-0 items-center justify-center">
+                            <span className="relative inline-flex w-16 shrink-0 items-center justify-center">
                               <Icon size={20} />
+                              {hasUnread && (
+                                <span
+                                  className="absolute top-1 right-3 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-app-danger px-1 text-[10px] font-bold text-white"
+                                  aria-label={tr.crm.messages.unreadCountAria(unreadCount)}
+                                >
+                                  {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                              )}
                             </span>
                             <span className="text-sm font-semibold">{label}</span>
                           </button>

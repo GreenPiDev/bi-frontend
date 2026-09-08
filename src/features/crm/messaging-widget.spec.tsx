@@ -37,24 +37,9 @@ describe('MessagingWidget', () => {
     vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
       { id: 'user-other', name: 'Diğer Kullanıcı' },
     ]);
-    vi.spyOn(api, 'listMessages').mockResolvedValue({
-      data: [
-        {
-          id: 'msg-1',
-          senderId: 'user-other',
-          body: 'Merhaba, teklifi inceledin mi?',
-          sentAt: '2026-01-01T10:00:00.000Z',
-          relatedEntity: null,
-          relatedEntityId: null,
-          recipients: [{ id: 'rec-1', userId: 'user-me', kind: 'TO', readAt: null }],
-          createdAt: '2026-01-01T10:00:00.000Z',
-          updatedAt: '2026-01-01T10:00:00.000Z',
-        },
-      ],
-      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
-    });
-    vi.spyOn(api, 'getMessage').mockResolvedValue({
+    const message = {
       id: 'msg-1',
+      conversationId: 'conv-1',
       senderId: 'user-other',
       body: 'Merhaba, teklifi inceledin mi?',
       sentAt: '2026-01-01T10:00:00.000Z',
@@ -63,8 +48,27 @@ describe('MessagingWidget', () => {
       recipients: [{ id: 'rec-1', userId: 'user-me', kind: 'TO', readAt: null }],
       createdAt: '2026-01-01T10:00:00.000Z',
       updatedAt: '2026-01-01T10:00:00.000Z',
+    } satisfies api.Message;
+    vi.spyOn(api, 'listMessages').mockResolvedValue({
+      data: [
+        {
+          conversationId: 'conv-1',
+          relatedEntity: null,
+          relatedEntityId: null,
+          messageCount: 1,
+          unreadCount: 1,
+          lastMessage: message,
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
     });
-    vi.spyOn(api, 'markMessageRead').mockResolvedValue(undefined);
+    vi.spyOn(api, 'getConversation').mockResolvedValue({
+      conversationId: 'conv-1',
+      relatedEntity: null,
+      relatedEntityId: null,
+      messages: [message],
+    });
+    vi.spyOn(api, 'markConversationRead').mockResolvedValue(undefined);
   });
 
   it('varsayilan olarak daralti durumdadir, baslik gorunur ama liste gorunmez', async () => {
@@ -87,7 +91,7 @@ describe('MessagingWidget', () => {
     await user.click(await screen.findByText('Diğer Kullanıcı'));
 
     expect(await screen.findAllByText('Merhaba, teklifi inceledin mi?')).toHaveLength(2);
-    expect(api.markMessageRead).toHaveBeenCalledWith('msg-1');
+    expect(api.markConversationRead).toHaveBeenCalledWith('conv-1');
   });
 
   it('sohbet penceresini kapat butonu kapatir', async () => {

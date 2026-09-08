@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { NewMessageModal } from '../../app/new-message-modal';
-import { useMeQuery } from '../auth/use-auth';
 import { MessagingChatPanel } from './messaging-chat-panel';
 import { MessagingWidgetBar } from './messaging-widget-bar';
-import { useAssignableMessageUsersQuery, useMessagesQuery } from './use-messages';
+import {
+  useAssignableMessageUsersQuery,
+  useMessagesQuery,
+  useUnreadConversationsTotal,
+} from './use-messages';
 import type { MessageRelatedEntity } from '../../lib/api';
 
 const EXIT_ANIMATION_MS = 160;
@@ -13,12 +16,9 @@ const EXIT_ANIMATION_MS = 160;
  * (bkz. components/ui/floating-widgets-dock.tsx, app-shell.tsx onu ChatbotWidget'in
  * yaninda dock'a yerlestiriyor); burada sadece kendi ic genisleme/animasyon state'i var. */
 export function MessagingWidget() {
-  const meQuery = useMeQuery();
-  const currentUserId = meQuery.data?.id;
-
   const [expanded, setExpanded] = useState(false);
   const [barClosing, setBarClosing] = useState(false);
-  const [openMessageId, setOpenMessageId] = useState<string | null>(null);
+  const [openConversationId, setOpenConversationId] = useState<string | null>(null);
   const [chatClosing, setChatClosing] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
@@ -27,6 +27,10 @@ export function MessagingWidget() {
   const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity | undefined>(undefined);
 
   const messagesQuery = useMessagesQuery({ page: 1, q: q || undefined, box, relatedEntity });
+  // Baslikta gosterilen kumulatif sayac, kullanicinin cubuk icindeki filtrelerinden
+  // (q/box/relatedEntity) bagimsiz olmali - tum konusmalar icin ayri, filtresiz bir sorgu.
+  // Sidebar'daki "Mesajlar" ogesiyle ayni hook/query key'i paylasir.
+  const unreadTotal = useUnreadConversationsTotal();
   const usersQuery = useAssignableMessageUsersQuery();
 
   const userNameById = useMemo(() => {
@@ -37,15 +41,12 @@ export function MessagingWidget() {
     return map;
   }, [usersQuery.data]);
 
-  const messages = messagesQuery.data?.data ?? [];
-  const hasUnread = messages.some((message) =>
-    message.recipients.some((recipient) => recipient.userId === currentUserId && !recipient.readAt),
-  );
+  const conversations = messagesQuery.data?.data ?? [];
 
   function closeChatPanel() {
     setChatClosing(true);
     window.setTimeout(() => {
-      setOpenMessageId(null);
+      setOpenConversationId(null);
       setChatClosing(false);
     }, EXIT_ANIMATION_MS);
   }
@@ -55,7 +56,7 @@ export function MessagingWidget() {
       setExpanded(true);
       return;
     }
-    if (openMessageId) {
+    if (openConversationId) {
       closeChatPanel();
     }
     setBarClosing(true);
@@ -67,9 +68,9 @@ export function MessagingWidget() {
 
   return (
     <div className="flex flex-row items-end gap-3">
-      {openMessageId && (
+      {openConversationId && (
         <MessagingChatPanel
-          messageId={openMessageId}
+          conversationId={openConversationId}
           closing={chatClosing}
           onClose={closeChatPanel}
           userNameById={userNameById}
@@ -80,12 +81,12 @@ export function MessagingWidget() {
         closing={barClosing}
         onToggleExpanded={handleToggleExpanded}
         onCompose={() => setNewMessageOpen(true)}
-        hasUnread={hasUnread}
-        messages={messages}
+        unreadTotal={unreadTotal}
+        conversations={conversations}
         isLoading={messagesQuery.isPending}
         userNameById={userNameById}
-        onSelectMessage={setOpenMessageId}
-        selectedMessageId={openMessageId}
+        onSelectConversation={setOpenConversationId}
+        selectedConversationId={openConversationId}
         q={q}
         onQChange={setQ}
         box={box}

@@ -3,7 +3,6 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
@@ -11,8 +10,20 @@ import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAssignableMessageUsersQuery, useMessagesQuery } from '../features/crm/use-messages';
-import type { Message, MessageRelatedEntity } from '../lib/api';
+import type { ConversationSummary, MessageRelatedEntity } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+function UnreadCountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-app-danger px-1 text-[11px] font-bold text-white"
+      aria-label={tr.crm.messages.unreadCountAria(count)}
+    >
+      {count > 9 ? '9+' : count}
+    </span>
+  );
+}
 
 export function MessagesListPage() {
   const navigate = useNavigate();
@@ -55,17 +66,19 @@ export function MessagesListPage() {
     setQ('');
   }
 
-  const columns: TableColumn<Message>[] = [
+  const columns: TableColumn<ConversationSummary>[] = [
+    {
+      key: 'unread',
+      header: '',
+      className: 'w-8',
+      render: (conversation) => <UnreadCountBadge count={conversation.unreadCount} />,
+    },
     {
       key: 'sender',
       header: tr.crm.messages.senderColumn,
-      render: (message) => (
-        <span className="flex items-center gap-1.5 font-semibold text-app-text">
-          {displayUserName(message.senderId)}
-          {currentUserId &&
-            message.recipients.some(
-              (recipient) => recipient.userId === currentUserId && !recipient.readAt,
-            ) && <Badge variant="info">{tr.crm.messages.unreadBadge}</Badge>}
+      render: (conversation) => (
+        <span className="font-semibold text-app-text">
+          {displayUserName(conversation.lastMessage.senderId)}
         </span>
       ),
     },
@@ -73,20 +86,22 @@ export function MessagesListPage() {
       key: 'recipients',
       header: tr.crm.messages.recipientsColumn,
       className: 'text-app-muted',
-      render: (message) =>
-        message.recipients.map((recipient) => displayUserName(recipient.userId)).join(', '),
+      render: (conversation) =>
+        conversation.lastMessage.recipients
+          .map((recipient) => displayUserName(recipient.userId))
+          .join(', '),
     },
     {
       key: 'body',
       header: tr.crm.messages.bodyColumn,
       className: 'max-w-xs truncate text-app-muted',
-      render: (message) => message.body,
+      render: (conversation) => conversation.lastMessage.body,
     },
     {
       key: 'sentAt',
       header: tr.crm.messages.sentAtColumn,
       className: 'text-app-muted',
-      render: (message) => new Date(message.sentAt).toLocaleString('tr-TR'),
+      render: (conversation) => new Date(conversation.lastMessage.sentAt).toLocaleString('tr-TR'),
     },
   ];
 
@@ -135,8 +150,8 @@ export function MessagesListPage() {
       <Table
         columns={columns}
         data={messagesQuery.data?.data ?? []}
-        keyField={(message) => message.id}
-        onRowClick={(message) => navigate(`/mesajlar/${message.id}`)}
+        keyField={(conversation) => conversation.conversationId}
+        onRowClick={(conversation) => navigate(`/mesajlar/${conversation.conversationId}`)}
         isLoading={messagesQuery.isPending}
         loadingMessage={tr.crm.messages.loading}
         emptyMessage={tr.crm.messages.empty}

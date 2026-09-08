@@ -1657,6 +1657,7 @@ export interface MessageRecipient {
 
 export interface Message {
   id: string;
+  conversationId: string;
   senderId: string;
   body: string;
   sentAt: string;
@@ -1667,12 +1668,29 @@ export interface Message {
   updatedAt: string;
 }
 
+export interface ConversationSummary {
+  conversationId: string;
+  relatedEntity: MessageRelatedEntity | null;
+  relatedEntityId: string | null;
+  lastMessage: Message;
+  messageCount: number;
+  unreadCount: number;
+}
+
+export interface ConversationDetail {
+  conversationId: string;
+  relatedEntity: MessageRelatedEntity | null;
+  relatedEntityId: string | null;
+  messages: Message[];
+}
+
 export interface CreateMessageInput {
   body: string;
   toUserIds: string[];
   ccUserIds?: string[];
   relatedEntity?: MessageRelatedEntity;
   relatedEntityId?: string;
+  conversationId?: string;
 }
 
 export function listMessages(
@@ -1683,7 +1701,7 @@ export function listMessages(
     relatedEntity?: MessageRelatedEntity;
     relatedEntityId?: string;
   } = {},
-): Promise<PagedResult<Message>> {
+): Promise<PagedResult<ConversationSummary>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.q) query.set('q', params.q);
@@ -1694,16 +1712,16 @@ export function listMessages(
   return request(`/messages${qs ? `?${qs}` : ''}`);
 }
 
-export function getMessage(id: string): Promise<Message> {
-  return request(`/messages/${id}`);
+export function getConversation(conversationId: string): Promise<ConversationDetail> {
+  return request(`/messages/${conversationId}`);
 }
 
 export function createMessage(input: CreateMessageInput): Promise<Message> {
   return request('/messages', { method: 'POST', body: JSON.stringify(input) });
 }
 
-export function markMessageRead(id: string): Promise<void> {
-  return request(`/messages/${id}/read`, { method: 'PATCH' });
+export function markConversationRead(conversationId: string): Promise<void> {
+  return request(`/messages/${conversationId}/read`, { method: 'PATCH' });
 }
 
 export function listAssignableMessageUsers(): Promise<AssignableUser[]> {
