@@ -107,7 +107,7 @@ export function PostSaleCaseDetailPage() {
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div className="rounded-xl border border-app-border bg-app-surface p-6">
+        <div className="border-t border-app-border p-6">
           <h2 className="text-sm font-bold text-app-text">
             {tr.crm.postSaleCases.detail.reminderAtLabel}
           </h2>
@@ -119,7 +119,7 @@ export function PostSaleCaseDetailPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-app-border bg-app-surface p-6">
+        <div className="border-t border-app-border p-6">
           <h2 className="text-sm font-bold text-app-text">
             {tr.crm.postSaleCases.detail.surveyTitle}
           </h2>
@@ -168,7 +168,7 @@ export function PostSaleCaseDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+      <div className="mt-6 border-t border-app-border p-6">
         <h2 className="text-sm font-bold text-app-text">
           {tr.crm.postSaleCases.detail.feedbackTitle}
         </h2>

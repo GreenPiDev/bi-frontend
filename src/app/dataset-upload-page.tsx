@@ -63,7 +63,7 @@ export function DatasetUploadPage() {
         {'←'} {tr.datasets.upload.back}
       </button>
 
-      <div className="mx-auto mt-6 max-w-xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mx-auto mt-6 max-w-xl p-8">
         <h1 className="text-lg font-bold text-app-text">{tr.datasets.upload.title}</h1>
         <p className="mt-1 text-sm text-app-muted">{tr.datasets.upload.subtitle}</p>
 
@@ -99,7 +99,7 @@ export function DatasetUploadPage() {
         </form>
       </div>
 
-      <div className="mx-auto mt-4 max-w-xl rounded-xl border border-app-border bg-app-surface p-6">
+      <div className="mx-auto mt-4 max-w-xl p-6">
         <h2 className="text-sm font-bold text-app-text">{tr.datasets.upload.sampleTitle}</h2>
         <p className="mt-1 text-sm text-app-muted">{tr.datasets.upload.sampleSubtitle}</p>
 

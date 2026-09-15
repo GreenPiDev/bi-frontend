@@ -26,7 +26,7 @@ export function PlatformAdminPageModules() {
   }
 
   return (
-    <div className="mt-6 overflow-auto rounded-xl border border-app-border bg-app-surface">
+    <div className="mt-6 overflow-auto border-t border-app-border">
       <table className="w-full text-left text-sm">
         <thead className="border-b border-app-border text-xs uppercase text-app-muted">
           <tr>
@@ -48,7 +48,10 @@ export function PlatformAdminPageModules() {
         </thead>
         <tbody>
           {pageModulesQuery.data?.map((assignment) => (
-            <tr key={assignment.pageKey} className="border-b border-app-border last:border-0">
+            <tr
+              key={assignment.pageKey}
+              className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+            >
               <td className="px-4 py-3 font-semibold text-app-text">{assignment.label}</td>
               {modules.map((module) => (
                 <td key={module.key} className="border-l border-app-border px-4 py-3 text-center">

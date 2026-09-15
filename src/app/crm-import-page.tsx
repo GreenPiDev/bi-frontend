@@ -76,7 +76,7 @@ export function CrmImportPage({ entity }: { entity: ImportEntity }) {
         {'←'} {tr.crm.import.back}
       </button>
 
-      <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mx-auto mt-6 max-w-2xl p-8">
         <h1 className="text-lg font-bold text-app-text">{tr.crm.import.title}</h1>
 
         {!preview && (

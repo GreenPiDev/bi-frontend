@@ -122,7 +122,7 @@ export function DashboardViewPage() {
       )}
 
       {dashboardQuery.data && widgets.length === 0 && (
-        <div className="mt-6 rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
+        <div className="mt-6 border-t border-dashed border-app-border p-8 text-center text-sm text-app-muted">
           {tr.dashboards.viewer.empty}
         </div>
       )}

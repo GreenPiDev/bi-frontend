@@ -161,7 +161,7 @@ export function QuoteFormPage() {
         <h1 className="text-lg font-bold text-app-text">{tr.crm.quotes.form.newTitle}</h1>
 
         <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_400px]">
-          <div className="flex flex-col gap-6 rounded-xl border border-app-border bg-app-surface p-8">
+          <div className="flex flex-col gap-6 border-t border-app-border p-8">
             <FormError message={apiErrorMessage} />
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -331,7 +331,7 @@ export function QuoteFormPage() {
           </div>
 
           <aside className="lg:sticky lg:top-6 lg:self-start">
-            <div className="flex flex-col gap-4 rounded-xl border border-app-border bg-app-surface p-6">
+            <div className="flex flex-col gap-4 border-t border-app-border p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-app-text">
                   {tr.crm.quotes.form.summaryTitle}

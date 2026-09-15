@@ -57,7 +57,7 @@ export function NewCustomerPage() {
         {strings.backLink}
       </Link>
 
-      <div className="mx-auto mt-6 max-w-xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mx-auto mt-6 max-w-xl p-8">
         {result ? (
           <div className="flex flex-col gap-4">
             <h1 className="text-lg font-bold text-app-text">{strings.successTitle}</h1>

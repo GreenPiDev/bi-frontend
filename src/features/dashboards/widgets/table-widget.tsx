@@ -28,7 +28,10 @@ export function TableWidget({ result }: { result: QueryResult }) {
         </thead>
         <tbody>
           {result.rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className="border-b border-app-border last:border-0">
+            <tr
+              key={rowIndex}
+              className="border-b border-app-border last:border-0 hover:bg-app-brand/10"
+            >
               {row.map((value, cellIndex) => {
                 const column = result.columns[cellIndex];
                 return (

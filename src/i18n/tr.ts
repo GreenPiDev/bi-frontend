@@ -137,6 +137,8 @@ export const tr = {
       system: 'Sistem',
       platformAdmin: 'Platform Admin',
     },
+    searchPlaceholder: 'Sayfa ara...',
+    searchNoResults: 'Sonuç bulunamadı',
   },
   profile: {
     title: 'Profil',

@@ -166,7 +166,7 @@ export function ReportsSection() {
   const dashboardNameById = new Map(dashboardsQuery.data?.map((d) => [d.id, d.name]) ?? []);
 
   return (
-    <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
+    <section className="border-t border-app-border p-4">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-app-text">{tr.settings.reports.title}</h2>

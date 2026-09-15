@@ -102,7 +102,7 @@ export function PriceListFormPage() {
         {'←'} {tr.crm.priceLists.title}
       </button>
 
-      <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
           {isEdit ? tr.crm.priceLists.form.editTitle : tr.crm.priceLists.form.newTitle}
         </h1>
@@ -110,7 +110,7 @@ export function PriceListFormPage() {
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6" noValidate>
           <FormError message={apiErrorMessage} />
 
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
             <TextField
               label={tr.crm.priceLists.form.nameLabel}
               error={errors.name?.message}

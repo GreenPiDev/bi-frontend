@@ -113,7 +113,7 @@ function AuditLogMetaDetail({ meta }: { meta: unknown }) {
 
 function GeneralTab() {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <ReportsSection />
       <AlertsSection />
     </div>
@@ -151,7 +151,7 @@ function AuditLogTab() {
                   <Fragment key={log.id}>
                     <tr
                       onClick={() => setExpandedId(isExpanded ? null : log.id)}
-                      className="cursor-pointer border-b border-app-border last:border-0 hover:bg-app-bg"
+                      className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-app-brand/10"
                     >
                       <td className="px-3 py-2 text-app-muted">
                         <button

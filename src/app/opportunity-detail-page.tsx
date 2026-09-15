@@ -76,7 +76,7 @@ export function OpportunityDetailPage() {
       </div>
 
       {opportunity.interactionId && (
-        <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+        <div className="mt-6 border-t border-app-border p-6">
           <button
             type="button"
             onClick={() => navigate(`/gorusmeler/${opportunity.interactionId}`)}

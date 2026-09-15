@@ -93,13 +93,19 @@ export function OpportunityFormPage() {
         {'←'} {tr.crm.opportunities.title}
       </button>
 
-      <div className="mx-auto mt-6 max-w-xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
           {isEdit ? tr.crm.opportunities.form.editTitle : tr.crm.opportunities.form.newTitle}
         </h1>
 
-        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4" noValidate>
-          <FormError message={apiErrorMessage} />
+        <form
+          onSubmit={onSubmit}
+          className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2"
+          noValidate
+        >
+          <div className="sm:col-span-2">
+            <FormError message={apiErrorMessage} />
+          </div>
           <Select
             label={tr.crm.opportunities.form.accountLabel}
             required
@@ -132,7 +138,7 @@ export function OpportunityFormPage() {
             error={errors.estimatedValue?.message}
             {...register('estimatedValue')}
           />
-          <div className="mt-1 flex gap-2">
+          <div className="mt-1 flex gap-2 sm:col-span-2">
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending
                 ? tr.crm.opportunities.form.submitting

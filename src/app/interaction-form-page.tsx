@@ -147,13 +147,15 @@ export function InteractionFormPage() {
         {'←'} {tr.crm.interactions.detail.back}
       </button>
 
-      <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">{tr.crm.interactions.form.newTitle}</h1>
 
-        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6" noValidate>
-          <FormError message={apiErrorMessage} />
+        <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2" noValidate>
+          <div className="lg:col-span-2">
+            <FormError message={apiErrorMessage} />
+          </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 lg:col-span-2 sm:grid-cols-2">
             <Controller
               name="accountName"
               control={control}
@@ -190,7 +192,7 @@ export function InteractionFormPage() {
               options={TYPE_OPTIONS}
               {...register('type')}
             />
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
               <label className="text-sm font-semibold text-app-muted">
                 {tr.crm.interactions.form.notesLabel}
                 <span className="ml-0.5 text-app-danger" aria-hidden="true">
@@ -378,7 +380,7 @@ export function InteractionFormPage() {
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 lg:col-span-2">
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending
                 ? tr.crm.interactions.form.submitting

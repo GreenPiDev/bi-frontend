@@ -118,7 +118,7 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabGeneral,
               content: (
                 <>
-                  <dl className="grid grid-cols-1 gap-4 rounded-xl border border-app-border bg-app-surface p-6 sm:grid-cols-2">
+                  <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {fields.map((field) => (
                       <div key={field.label}>
                         <dt className="text-xs font-semibold uppercase text-app-muted">
@@ -129,7 +129,7 @@ export function AccountDetailPage() {
                     ))}
                   </dl>
 
-                  <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+                  <div className="mt-6 border-t border-app-border pt-6">
                     <h2 className="text-sm font-bold text-app-text">
                       {tr.crm.accounts.detail.contactsTitle}
                     </h2>
@@ -138,7 +138,7 @@ export function AccountDetailPage() {
                         {tr.crm.accounts.detail.noContacts}
                       </p>
                     ) : (
-                      <ul className="mt-3 flex flex-col gap-2">
+                      <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {account.contacts.map((contact) => (
                           <li key={contact.id}>
                             <button
@@ -160,7 +160,7 @@ export function AccountDetailPage() {
               key: 'interactions',
               label: tr.crm.accounts.detail.tabInteractions,
               content: (
-                <div className="rounded-xl border border-app-border bg-app-surface p-6">
+                <div>
                   {(interactionsQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">
                       {tr.crm.accounts.detail.noInteractions}
@@ -188,7 +188,7 @@ export function AccountDetailPage() {
               key: 'opportunities',
               label: tr.crm.accounts.detail.tabOpportunities,
               content: (
-                <div className="rounded-xl border border-app-border bg-app-surface p-6">
+                <div>
                   {(opportunitiesQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">
                       {tr.crm.accounts.detail.noOpportunities}
@@ -216,7 +216,7 @@ export function AccountDetailPage() {
               key: 'quotes',
               label: tr.crm.accounts.detail.tabQuotes,
               content: (
-                <div className="rounded-xl border border-app-border bg-app-surface p-6">
+                <div>
                   {(quotesQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noQuotes}</p>
                   ) : (
@@ -244,7 +244,7 @@ export function AccountDetailPage() {
               key: 'projects',
               label: tr.crm.accounts.detail.tabProjects,
               content: (
-                <div className="rounded-xl border border-app-border bg-app-surface p-6">
+                <div>
                   {(projectsQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noProjects}</p>
                   ) : (

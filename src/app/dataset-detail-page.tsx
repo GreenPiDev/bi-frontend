@@ -88,7 +88,7 @@ export function DatasetDetailPage() {
         </div>
       )}
 
-      <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+      <section className="mt-6 border-t border-app-border p-6">
         <h2 className="text-base font-bold text-app-text">{tr.datasets.detail.schemaTitle}</h2>
         <p className="mt-1 text-sm text-app-muted">{tr.datasets.detail.schemaSubtitle}</p>
 
@@ -107,7 +107,10 @@ export function DatasetDetailPage() {
                 {datasetQuery.data.fields.map((field) => {
                   const edit = edits[field.id] ?? toEdit(field);
                   return (
-                    <tr key={field.id} className="border-b border-app-border last:border-0">
+                    <tr
+                      key={field.id}
+                      className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                    >
                       <td className="px-3 py-2">
                         <input
                           value={edit.label}
@@ -180,7 +183,7 @@ export function DatasetDetailPage() {
         <FormError message={apiErrorMessage && tr.datasets.detail.saveError} />
       </section>
 
-      <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+      <section className="mt-6 border-t border-app-border p-6">
         <h2 className="text-base font-bold text-app-text">{tr.datasets.detail.previewTitle}</h2>
         <p className="mt-1 text-sm text-app-muted">{tr.datasets.detail.previewSubtitle}</p>
 
@@ -198,7 +201,10 @@ export function DatasetDetailPage() {
               </thead>
               <tbody>
                 {previewQuery.data.rows.map((row, rowIndex) => (
-                  <tr key={rowIndex} className="border-b border-app-border last:border-0">
+                  <tr
+                    key={rowIndex}
+                    className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                  >
                     {row.map((value, cellIndex) => (
                       <td key={cellIndex} className="whitespace-nowrap px-3 py-2 text-app-muted">
                         {String(value ?? '')}

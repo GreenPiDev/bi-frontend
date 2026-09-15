@@ -47,10 +47,10 @@ export function ProfilePage() {
       {profileQuery.isPending && <p className="mt-4 text-sm text-app-muted">{tr.common.loading}</p>}
 
       {profileQuery.data && (
-        <div className="mt-6 flex flex-col gap-6">
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <AvatarSection avatarUrl={profileQuery.data.avatarUrl} name={profileQuery.data.name} />
 
-          <section className="rounded-xl border border-app-border bg-app-surface p-4">
+          <section className="border-t border-app-border p-4">
             <h2 className="mb-4 text-base font-bold text-app-text">
               {tr.profile.infoSection.title}
             </h2>
@@ -137,7 +137,7 @@ function AvatarSection({ avatarUrl, name }: { avatarUrl: string | null; name: st
   }
 
   return (
-    <section className="rounded-xl border border-app-border bg-app-surface p-4">
+    <section className="border-t border-app-border p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
       <div className="flex items-center gap-4">
         {avatarUrl ? (
@@ -216,7 +216,7 @@ function ProfileEditForm({ name, email }: { name: string; email: string }) {
     updateMutation.error instanceof ApiError ? updateMutation.error.message : undefined;
 
   return (
-    <section className="rounded-xl border border-app-border bg-app-surface p-4">
+    <section className="border-t border-app-border p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.profile.editSection.title}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />
@@ -270,7 +270,7 @@ function ChangePasswordForm() {
       : undefined;
 
   return (
-    <section className="rounded-xl border border-app-border bg-app-surface p-4">
+    <section className="border-t border-app-border p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.profile.passwordSection.title}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />

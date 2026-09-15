@@ -71,32 +71,36 @@ export function ProjectDetailPage() {
         </div>
       </div>
 
-      <dl className="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-app-border bg-app-surface p-6 sm:grid-cols-2">
-        <div>
-          <dt className="text-xs font-semibold uppercase text-app-muted">
-            {tr.crm.projects.detail.estimatedBudgetLabel}
-          </dt>
-          <dd className="mt-1 text-sm text-app-text">{formatCurrency(project.estimatedBudget)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs font-semibold uppercase text-app-muted">
-            {tr.crm.projects.detail.actualCostLabel}
-          </dt>
-          <dd className="mt-1 text-sm text-app-text">{formatCurrency(project.actualCost)}</dd>
-        </div>
-      </dl>
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-4 border-t border-app-border p-6 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs font-semibold uppercase text-app-muted">
+              {tr.crm.projects.detail.estimatedBudgetLabel}
+            </dt>
+            <dd className="mt-1 text-sm text-app-text">
+              {formatCurrency(project.estimatedBudget)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-semibold uppercase text-app-muted">
+              {tr.crm.projects.detail.actualCostLabel}
+            </dt>
+            <dd className="mt-1 text-sm text-app-text">{formatCurrency(project.actualCost)}</dd>
+          </div>
+        </dl>
 
-      {project.quoteId && (
-        <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
-          <button
-            type="button"
-            onClick={() => navigate(`/teklifler/${project.quoteId}`)}
-            className="text-sm font-semibold text-app-brand hover:underline"
-          >
-            {tr.crm.projects.detail.relatedQuoteLink}
-          </button>
-        </div>
-      )}
+        {project.quoteId && (
+          <div className="border-t border-app-border p-6">
+            <button
+              type="button"
+              onClick={() => navigate(`/teklifler/${project.quoteId}`)}
+              className="text-sm font-semibold text-app-brand hover:underline"
+            >
+              {tr.crm.projects.detail.relatedQuoteLink}
+            </button>
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }

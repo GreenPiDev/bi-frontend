@@ -173,7 +173,7 @@ export function QuoteDetailPage() {
         </p>
       )}
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-app-border bg-app-surface p-6">
+      <div className="mt-6 overflow-x-auto border-t border-app-border p-6">
         <h2 className="text-sm font-bold text-app-text">{tr.crm.quotes.detail.itemsTitle}</h2>
         <table className="mt-3 w-full text-left text-sm">
           <thead className="text-xs font-semibold uppercase text-app-muted">
@@ -188,7 +188,10 @@ export function QuoteDetailPage() {
           </thead>
           <tbody>
             {quote.items.map((item) => (
-              <tr key={item.id} className="border-t border-app-border">
+              <tr
+                key={item.id}
+                className="bg-app-surface border-t border-app-border hover:bg-app-brand/10"
+              >
                 <td className="py-2 pr-3 text-app-text">
                   {item.product.name}
                   {!isPrintMode && item.discountNote && (
@@ -226,7 +229,7 @@ export function QuoteDetailPage() {
       </div>
 
       {!isPrintMode && quote.opportunity && (
-        <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+        <div className="mt-6 border-t border-app-border p-6">
           <h2 className="text-sm font-bold text-app-text">
             {tr.crm.quotes.detail.opportunityTitle}
           </h2>

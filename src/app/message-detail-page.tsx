@@ -39,7 +39,7 @@ function ConversationMessageItem({
   );
 
   return (
-    <div className="rounded-xl border border-app-border bg-app-surface">
+    <div className="border-t border-app-border">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -204,7 +204,7 @@ export function MessageDetailPage() {
 
       {otherParticipantIds.length > 0 && (
         <form
-          className="mt-4 flex items-center gap-2 rounded-xl border border-app-border bg-app-surface p-3"
+          className="mt-4 flex items-center gap-2 border-t border-app-border p-3"
           onSubmit={(event) => {
             event.preventDefault();
             handleReplySubmit();

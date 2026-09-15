@@ -218,7 +218,7 @@ function PostSaleFollowUpDaysSetting() {
 
 export function CrmSettingsSection() {
   return (
-    <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
+    <section className="mt-6 border-t border-app-border p-4">
       <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.crm.title}</h2>
       <p className="mb-4 text-sm text-app-muted">{tr.settings.crm.subtitle}</p>
 

@@ -32,13 +32,13 @@ export function DatasetsListPage() {
       )}
 
       {datasetsQuery.data?.length === 0 && (
-        <div className="mt-6 rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
+        <div className="mt-6 border-t border-dashed border-app-border p-8 text-center text-sm text-app-muted">
           {tr.datasets.empty}
         </div>
       )}
 
       {datasetsQuery.data && datasetsQuery.data.length > 0 && (
-        <div className="mt-6 overflow-hidden rounded-xl border border-app-border bg-app-surface">
+        <div className="mt-6 overflow-hidden border-t border-app-border">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-app-border text-xs uppercase text-app-muted">
               <tr>
@@ -52,7 +52,7 @@ export function DatasetsListPage() {
                 <tr
                   key={dataset.id}
                   onClick={() => navigate(`/datasets/${dataset.id}`)}
-                  className="cursor-pointer border-b border-app-border last:border-0 hover:bg-app-bg"
+                  className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-app-brand/10"
                 >
                   <td className="px-4 py-3 font-semibold text-app-text">{dataset.name}</td>
                   <td className="px-4 py-3 text-app-muted">

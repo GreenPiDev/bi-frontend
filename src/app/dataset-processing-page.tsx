@@ -20,7 +20,7 @@ export function DatasetProcessingPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto mt-16 max-w-xl rounded-xl border border-app-border bg-app-surface p-8 text-center">
+      <div className="mx-auto mt-16 max-w-xl p-8 text-center">
         {status === 'FAILED' ? (
           <>
             <h1 className="text-lg font-bold text-app-danger">

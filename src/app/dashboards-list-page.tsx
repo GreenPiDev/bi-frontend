@@ -60,7 +60,7 @@ export function DashboardsListPage() {
       {isCreating && (
         <form
           onSubmit={handleCreate}
-          className="mt-6 flex items-end gap-3 rounded-xl border border-app-border bg-app-surface p-6"
+          className="mt-6 flex items-end gap-3 border-t border-app-border p-6"
         >
           <div className="flex-1">
             <TextField
@@ -94,13 +94,13 @@ export function DashboardsListPage() {
       )}
 
       {dashboardsQuery.data?.length === 0 && (
-        <div className="mt-6 rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
+        <div className="mt-6 border-t border-dashed border-app-border p-8 text-center text-sm text-app-muted">
           {tr.dashboards.list.empty}
         </div>
       )}
 
       {dashboardsQuery.data && dashboardsQuery.data.length > 0 && (
-        <div className="mt-6 overflow-hidden rounded-xl border border-app-border bg-app-surface">
+        <div className="mt-6 overflow-hidden border-t border-app-border">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-app-border text-xs uppercase text-app-muted">
               <tr>
@@ -113,7 +113,7 @@ export function DashboardsListPage() {
                 <tr
                   key={dashboard.id}
                   onClick={() => navigate(`/dashboards/${dashboard.id}`)}
-                  className="cursor-pointer border-b border-app-border last:border-0 hover:bg-app-bg"
+                  className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-app-brand/10"
                 >
                   <td className="px-4 py-3 font-semibold text-app-text">{dashboard.name}</td>
                   <td className="px-4 py-3 text-app-muted">

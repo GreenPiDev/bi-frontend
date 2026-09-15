@@ -162,7 +162,7 @@ export function DashboardEditPage() {
       )}
 
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr_280px]">
-        <section className="rounded-xl border border-app-border bg-app-surface p-4">
+        <section className="border-t border-app-border p-4">
           <h2 className="mb-4 text-base font-bold text-app-text">
             {tr.dashboards.editor.fieldsTitle}
           </h2>
@@ -191,13 +191,13 @@ export function DashboardEditPage() {
             </GridLayout>
           )}
           {rglLayout.length === 0 && (
-            <div className="rounded-xl border border-dashed border-app-border bg-app-surface p-8 text-center text-sm text-app-muted">
+            <div className="border-t border-dashed border-app-border p-8 text-center text-sm text-app-muted">
               {tr.dashboards.viewer.empty}
             </div>
           )}
         </section>
 
-        <section className="rounded-xl border border-app-border bg-app-surface p-4">
+        <section className="border-t border-app-border p-4">
           <h2 className="mb-4 text-base font-bold text-app-text">
             {tr.dashboards.editor.settingsTitle}
           </h2>

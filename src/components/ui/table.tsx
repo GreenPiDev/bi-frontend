@@ -61,8 +61,8 @@ export function Table<T>({
               key={keyField(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={clsx(
-                'border-b border-app-border last:border-0',
-                onRowClick && 'cursor-pointer hover:bg-app-bg',
+                'bg-app-surface border-b border-app-border last:border-0',
+                onRowClick && 'cursor-pointer hover:bg-app-brand/10',
               )}
             >
               {columns.map((column) => (

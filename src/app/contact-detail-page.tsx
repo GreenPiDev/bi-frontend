@@ -94,7 +94,7 @@ export function ContactDetailPage() {
         </div>
       </div>
 
-      <dl className="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-app-border bg-app-surface p-6 sm:grid-cols-2">
+      <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-app-border p-6 sm:grid-cols-2 lg:grid-cols-3">
         {fields.map((field) => (
           <div key={field.label}>
             <dt className="text-xs font-semibold uppercase text-app-muted">{field.label}</dt>

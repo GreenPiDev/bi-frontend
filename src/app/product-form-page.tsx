@@ -183,7 +183,7 @@ export function ProductFormPage() {
         {'←'} {tr.crm.products.title}
       </button>
 
-      <div className="mx-auto mt-6 max-w-xl rounded-xl border border-app-border bg-app-surface p-8">
+      <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
           {isEdit ? tr.crm.products.form.editTitle : tr.crm.products.form.newTitle}
         </h1>
@@ -231,8 +231,14 @@ export function ProductFormPage() {
           <p className="mt-2 text-xs text-app-muted">{tr.crm.products.detail.imagePendingLabel}</p>
         )}
 
-        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4" noValidate>
-          <FormError message={apiErrorMessage} />
+        <form
+          onSubmit={onSubmit}
+          className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2"
+          noValidate
+        >
+          <div className="sm:col-span-2">
+            <FormError message={apiErrorMessage} />
+          </div>
           <TextField
             label={tr.crm.products.form.nameLabel}
             required
@@ -257,11 +263,13 @@ export function ProductFormPage() {
             hint={tr.crm.products.form.categoryHint}
             {...register('category')}
           />
-          <TextareaField
-            label={tr.crm.products.form.descriptionLabel}
-            hint={tr.crm.products.form.descriptionHint}
-            {...register('description')}
-          />
+          <div className="sm:col-span-2">
+            <TextareaField
+              label={tr.crm.products.form.descriptionLabel}
+              hint={tr.crm.products.form.descriptionHint}
+              {...register('description')}
+            />
+          </div>
           <TextField
             type="text"
             inputMode="decimal"
@@ -296,7 +304,7 @@ export function ProductFormPage() {
               maxDiscountPctField.onChange(event);
             }}
           />
-          <div className="mt-1 flex gap-2">
+          <div className="mt-1 flex gap-2 sm:col-span-2">
             <Button type="submit" disabled={isSaving}>
               {isSaving ? tr.crm.products.form.submitting : tr.crm.products.form.submit}
             </Button>

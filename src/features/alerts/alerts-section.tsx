@@ -161,7 +161,7 @@ export function AlertsSection() {
   const [isAdding, setIsAdding] = useState(false);
 
   return (
-    <section className="mt-6 rounded-xl border border-app-border bg-app-surface p-4">
+    <section className="border-t border-app-border p-4">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-app-text">{tr.settings.alerts.title}</h2>

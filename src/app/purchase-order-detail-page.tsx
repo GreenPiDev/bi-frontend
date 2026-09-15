@@ -162,10 +162,7 @@ export function PurchaseOrderDetailPage() {
         )}
       </div>
 
-      <form
-        onSubmit={onSubmit}
-        className="mt-6 rounded-xl border border-app-border bg-app-surface p-6"
-      >
+      <form onSubmit={onSubmit} className="mt-6 border-t border-app-border p-6">
         <h2 className="text-sm font-bold text-app-text">
           {tr.crm.purchaseOrders.detail.itemsTitle}
         </h2>

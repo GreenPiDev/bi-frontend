@@ -147,7 +147,7 @@ export function OnboardingPage() {
         </div>
         <p className="mt-1 text-sm text-app-muted">{tr.onboarding.subtitle}</p>
 
-        <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-8">
+        <div className="mt-6 border-t border-app-border p-8">
           {step === 'upload' && (
             <>
               <h2 className="text-lg font-bold text-app-text">
@@ -257,7 +257,10 @@ export function OnboardingPage() {
                       {datasetQuery.data.fields.map((field) => {
                         const edit = edits[field.id] ?? toEdit(field);
                         return (
-                          <tr key={field.id} className="border-b border-app-border last:border-0">
+                          <tr
+                            key={field.id}
+                            className="bg-app-surface border-b border-app-border last:border-0"
+                          >
                             <td className="px-3 py-2">
                               <input
                                 value={edit.label}

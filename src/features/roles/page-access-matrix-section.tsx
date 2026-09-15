@@ -116,7 +116,7 @@ export function PageAccessMatrixSection() {
       {roles.length === 0 ? (
         <p className="text-sm text-app-muted">{tr.settings.pageAccess.noRoles}</p>
       ) : (
-        <div className="overflow-auto rounded-lg border border-app-border">
+        <div className="bg-app-surface overflow-auto rounded-lg border border-app-border">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-app-border bg-app-bg-muted text-xs uppercase text-app-muted">
               <tr>
@@ -145,7 +145,7 @@ export function PageAccessMatrixSection() {
                     <tr
                       className={clsx(
                         'border-b border-app-border last:border-0',
-                        hasTabs && 'cursor-pointer hover:bg-app-bg-muted',
+                        hasTabs && 'cursor-pointer hover:bg-app-brand/10',
                       )}
                       onClick={hasTabs ? () => toggleExpanded(page.key) : undefined}
                     >

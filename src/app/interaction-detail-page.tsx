@@ -94,54 +94,64 @@ export function InteractionDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
-        <h2 className="text-sm font-bold text-app-text">{tr.crm.interactions.detail.notesTitle}</h2>
-        <p className="mt-2 whitespace-pre-wrap text-sm text-app-text">{interaction.notes}</p>
-        {interaction.contact && (
-          <p className="mt-4 text-sm text-app-muted">
-            {tr.crm.interactions.contactColumn}: {interaction.contact.firstName}{' '}
-            {interaction.contact.lastName}
-          </p>
-        )}
-      </div>
-
-      {interaction.opportunity && (
-        <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="border-t border-app-border p-6">
           <h2 className="text-sm font-bold text-app-text">
-            {tr.crm.interactions.detail.opportunityTitle}
+            {tr.crm.interactions.detail.notesTitle}
           </h2>
-          <button
-            type="button"
-            onClick={() => navigate(`/firsatlar/${interaction.opportunity?.id}`)}
-            className="mt-2 text-sm font-semibold text-app-brand hover:underline"
-          >
-            {interaction.opportunity.name} (
-            {tr.crm.opportunities.stageOptions[interaction.opportunity.stage]})
-          </button>
+          <p className="mt-2 whitespace-pre-wrap text-sm text-app-text">{interaction.notes}</p>
+          {interaction.contact && (
+            <p className="mt-4 text-sm text-app-muted">
+              {tr.crm.interactions.contactColumn}: {interaction.contact.firstName}{' '}
+              {interaction.contact.lastName}
+            </p>
+          )}
         </div>
-      )}
 
-      <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-6">
-        <h2 className="text-sm font-bold text-app-text">
-          {tr.crm.interactions.detail.participantsTitle}
-        </h2>
-        {interaction.participants.length === 0 ? (
-          <p className="mt-2 text-sm text-app-muted">{tr.crm.interactions.detail.noParticipants}</p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {interaction.participants.map((participant) => (
-              <li key={participant.id} className="text-sm text-app-text">
-                {participant.name}{' '}
-                <span className="text-app-muted">
-                  (
-                  {participant.isInternal ? tr.crm.interactions.form.participantInternalLabel : '—'}
-                  )
-                </span>
-                {participant.note && <span className="text-app-muted"> — {participant.note}</span>}
-              </li>
-            ))}
-          </ul>
+        {interaction.opportunity && (
+          <div className="border-t border-app-border p-6">
+            <h2 className="text-sm font-bold text-app-text">
+              {tr.crm.interactions.detail.opportunityTitle}
+            </h2>
+            <button
+              type="button"
+              onClick={() => navigate(`/firsatlar/${interaction.opportunity?.id}`)}
+              className="mt-2 text-sm font-semibold text-app-brand hover:underline"
+            >
+              {interaction.opportunity.name} (
+              {tr.crm.opportunities.stageOptions[interaction.opportunity.stage]})
+            </button>
+          </div>
         )}
+
+        <div className="border-t border-app-border p-6">
+          <h2 className="text-sm font-bold text-app-text">
+            {tr.crm.interactions.detail.participantsTitle}
+          </h2>
+          {interaction.participants.length === 0 ? (
+            <p className="mt-2 text-sm text-app-muted">
+              {tr.crm.interactions.detail.noParticipants}
+            </p>
+          ) : (
+            <ul className="mt-3 flex flex-col gap-2">
+              {interaction.participants.map((participant) => (
+                <li key={participant.id} className="text-sm text-app-text">
+                  {participant.name}{' '}
+                  <span className="text-app-muted">
+                    (
+                    {participant.isInternal
+                      ? tr.crm.interactions.form.participantInternalLabel
+                      : '—'}
+                    )
+                  </span>
+                  {participant.note && (
+                    <span className="text-app-muted"> — {participant.note}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </AppShell>
   );
