@@ -68,6 +68,8 @@ export const tr = {
       'Bu siparişin kalemlerini düzenleyin; teklifte olmayan ek kalemler de ekleyebilirsiniz.',
     stock:
       'Ürünlerinizin stok miktarları burada. Minimum stok seviyesinin altına düşen ürünler kırmızı rozetle işaretlenir.',
+    inventory:
+      'Ürün kataloğunuzu, ürün listelerinizi (kataloglarınızı), fiyat listelerinizi ve stok durumunuzu tek yerden yönetin.',
     profile:
       'Hesap bilgilerinizi ve profil fotoğrafınızı buradan görüntüleyip güncelleyebilirsiniz.',
     settings:
@@ -118,14 +120,11 @@ export const tr = {
       calendar: 'Ajanda',
       interactions: 'Görüşmeler',
       opportunities: 'Fırsatlar',
-      productLists: 'Ürün Listeleri',
-      products: 'Ürünler',
-      priceLists: 'Fiyat Listeleri',
       quotes: 'Teklifler',
       postSaleSupport: 'Satış Sonrası Destek',
       projects: 'Projeler',
       purchaseOrders: 'Siparişler',
-      stock: 'Stok',
+      inventory: 'Envanter Yönetimi',
       messages: 'Mesajlar',
       profile: 'Profil',
       settings: 'Ayarlar',
@@ -142,6 +141,17 @@ export const tr = {
     },
     searchPlaceholder: 'Sayfa ara...',
     searchNoResults: 'Sonuç bulunamadı',
+  },
+  inventory: {
+    title: 'Envanter Yönetimi',
+    subtitle: 'Ürün kataloğu, ürün listeleri, fiyat listeleri ve stok tek ekranda.',
+    noAccess: 'Bu sayfadaki sekmelerden hiçbirine erişim yetkiniz yok.',
+    tabs: {
+      products: 'Ürünler',
+      productLists: 'Ürün Listeleri',
+      priceLists: 'Fiyat Listeleri',
+      stock: 'Stok',
+    },
   },
   profile: {
     title: 'Profil',
@@ -981,6 +991,12 @@ export const tr = {
         cancel: 'Vazgeç',
         createSuccess: 'Ürün listesi oluşturuldu.',
         updateSuccess: 'Ürün listesi güncellendi.',
+      },
+      productsSection: {
+        title: 'Bu Listedeki Ürünler',
+        empty: 'Bu listede henüz ürün yok.',
+        loading: 'Ürünler yükleniyor...',
+        addButton: 'Ürün Ekle',
       },
     },
     products: {

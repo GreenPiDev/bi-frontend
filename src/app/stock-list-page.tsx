@@ -60,7 +60,7 @@ function QuantityEditor({ item, onDone }: { item: StockItem; onDone: () => void 
   );
 }
 
-export function StockListPage() {
+export function StockListContent() {
   const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [qInput, setQInput] = useState('');
@@ -123,7 +123,7 @@ export function StockListPage() {
   ];
 
   return (
-    <AppShell>
+    <>
       <div>
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-bold text-app-text">{tr.crm.stock.title}</h1>
@@ -172,6 +172,14 @@ export function StockListPage() {
           onNext={() => setPage((p) => p + 1)}
         />
       )}
+    </>
+  );
+}
+
+export function StockListPage() {
+  return (
+    <AppShell>
+      <StockListContent />
     </AppShell>
   );
 }

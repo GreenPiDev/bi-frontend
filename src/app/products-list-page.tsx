@@ -14,7 +14,7 @@ import { ApiError, type Product } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
-export function ProductsListPage() {
+export function ProductsListContent() {
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);
@@ -124,7 +124,7 @@ export function ProductsListPage() {
   ];
 
   return (
-    <AppShell>
+    <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -184,6 +184,14 @@ export function ProductsListPage() {
           onCancel={() => setDeletingProduct(undefined)}
         />
       )}
+    </>
+  );
+}
+
+export function ProductsListPage() {
+  return (
+    <AppShell>
+      <ProductsListContent />
     </AppShell>
   );
 }

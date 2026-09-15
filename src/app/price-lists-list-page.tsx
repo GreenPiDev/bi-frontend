@@ -35,7 +35,7 @@ const columns: TableColumn<PriceList>[] = [
   },
 ];
 
-export function PriceListsListPage() {
+export function PriceListsListContent() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const meQuery = useMeQuery();
@@ -43,7 +43,7 @@ export function PriceListsListPage() {
   const priceListsQuery = usePriceListsQuery({ page, pageSize });
 
   return (
-    <AppShell>
+    <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -75,6 +75,14 @@ export function PriceListsListPage() {
           onNext={() => setPage((p) => p + 1)}
         />
       )}
+    </>
+  );
+}
+
+export function PriceListsListPage() {
+  return (
+    <AppShell>
+      <PriceListsListContent />
     </AppShell>
   );
 }

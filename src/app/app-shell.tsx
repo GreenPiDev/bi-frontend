@@ -4,7 +4,6 @@ import {
   CalendarDays,
   Contact2,
   FileText,
-  FolderTree,
   HeartHandshake,
   LayoutDashboard,
   Layers,
@@ -12,11 +11,9 @@ import {
   type LucideIcon,
   Mail,
   MessageCircle,
-  Package,
   Search,
   Settings,
   Table2,
-  Tags,
   Target,
   Truck,
   User,
@@ -175,17 +172,11 @@ export function AppShell({ children, print = false }: AppShellProps) {
     ...(canAccessPage('purchase-orders')
       ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
       : []),
-    ...(canAccessPage('stock')
-      ? [{ label: tr.shell.nav.stock, icon: Warehouse, path: '/stok' }]
-      : []),
-    ...(canAccessPage('product-lists')
-      ? [{ label: tr.shell.nav.productLists, icon: FolderTree, path: '/urun-listeleri' }]
-      : []),
-    ...(canAccessPage('products')
-      ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]
-      : []),
-    ...(canAccessPage('price-lists')
-      ? [{ label: tr.shell.nav.priceLists, icon: Tags, path: '/fiyat-listeleri' }]
+    ...(canAccessPage('stock') ||
+    canAccessPage('product-lists') ||
+    canAccessPage('products') ||
+    canAccessPage('price-lists')
+      ? [{ label: tr.shell.nav.inventory, icon: Warehouse, path: '/envanter' }]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     ...(canAccessPage('settings')

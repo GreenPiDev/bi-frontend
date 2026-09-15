@@ -18,6 +18,7 @@ import { DatasetsListPage } from './app/datasets-list-page';
 import { InteractionDetailPage } from './app/interaction-detail-page';
 import { InteractionFormPage } from './app/interaction-form-page';
 import { InteractionsListPage } from './app/interactions-list-page';
+import { InventoryManagementPage } from './app/inventory-management-page';
 import { LoginPage } from './app/login-page';
 import { NewCustomerPage } from './app/new-customer-page';
 import { OnboardingPage } from './app/onboarding-page';
@@ -96,10 +97,10 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'post-sale-cases', path: '/satis-sonrasi' },
   { pageKey: 'projects', path: '/projeler' },
   { pageKey: 'purchase-orders', path: '/siparisler' },
-  { pageKey: 'stock', path: '/stok' },
-  { pageKey: 'product-lists', path: '/urun-listeleri' },
-  { pageKey: 'products', path: '/urunler' },
-  { pageKey: 'price-lists', path: '/fiyat-listeleri' },
+  { pageKey: 'products', path: '/envanter' },
+  { pageKey: 'product-lists', path: '/envanter' },
+  { pageKey: 'price-lists', path: '/envanter' },
+  { pageKey: 'stock', path: '/envanter' },
   { pageKey: 'messages', path: '/mesajlar' },
   { pageKey: 'settings', path: '/settings' },
 ];
@@ -488,6 +489,14 @@ function App() {
             <TenantPageRoute pageKey="purchase-orders">
               <PurchaseOrderDetailPage />
             </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/envanter"
+          element={
+            <ProtectedRoute>
+              <InventoryManagementPage />
+            </ProtectedRoute>
           }
         />
         <Route

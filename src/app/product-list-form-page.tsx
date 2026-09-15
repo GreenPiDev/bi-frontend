@@ -7,6 +7,7 @@ import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Switch } from '../components/ui/switch';
+import { Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -14,9 +15,30 @@ import {
   useProductListQuery,
   useUpdateProductListMutation,
 } from '../features/crm/use-product-lists';
+import { useProductsQuery } from '../features/crm/use-products';
 import { productListFormSchema, type ProductListFormValues } from '../features/crm/schemas';
-import { ApiError, type ProductListInput } from '../lib/api';
+import { ApiError, type Product, type ProductListInput } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+const productColumns: TableColumn<Product>[] = [
+  {
+    key: 'name',
+    header: tr.crm.products.nameColumn,
+    render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
+  },
+  {
+    key: 'sku',
+    header: tr.crm.products.skuColumn,
+    className: 'text-app-muted',
+    render: (p) => p.sku ?? '—',
+  },
+  {
+    key: 'unit',
+    header: tr.crm.products.unitColumn,
+    className: 'text-app-muted',
+    render: (p) => p.unit,
+  },
+];
 
 export function ProductListFormPage() {
   const { id } = useParams();
@@ -27,6 +49,7 @@ export function ProductListFormPage() {
   const createMutation = useCreateProductListMutation();
   const updateMutation = useUpdateProductListMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
+  const productsQuery = useProductsQuery({ productListId: id, pageSize: 100 }, { enabled: isEdit });
 
   const {
     register,
@@ -115,6 +138,30 @@ export function ProductListFormPage() {
             </Button>
           </div>
         </form>
+
+        {isEdit && (
+          <div className="mt-6 border-t border-app-border pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-base font-bold text-app-text">
+                {tr.crm.productLists.productsSection.title}
+              </h2>
+              <Button type="button" variant="secondary" onClick={() => navigate('/urunler/yeni')}>
+                {tr.crm.productLists.productsSection.addButton}
+              </Button>
+            </div>
+            <div className="mt-3">
+              <Table
+                columns={productColumns}
+                data={productsQuery.data?.data ?? []}
+                keyField={(product) => product.id}
+                onRowClick={(product) => navigate(`/urunler/${product.id}`)}
+                isLoading={productsQuery.isPending}
+                loadingMessage={tr.crm.productLists.productsSection.loading}
+                emptyMessage={tr.crm.productLists.productsSection.empty}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

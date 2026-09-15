@@ -14,10 +14,12 @@ export const PRODUCTS_QUERY_KEY = ['products'];
 
 export function useProductsQuery(
   params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...PRODUCTS_QUERY_KEY, params],
     queryFn: () => listProducts(params),
+    enabled: options.enabled ?? true,
   });
 }
 
