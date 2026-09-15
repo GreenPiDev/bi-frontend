@@ -1,6 +1,6 @@
-import { ArrowLeft } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { TextField } from '../components/ui/text-field';
@@ -49,13 +49,7 @@ export function NewCustomerPage() {
 
   return (
     <AppShell>
-      <Link
-        to="/platform-admin"
-        className="inline-flex items-center gap-1 text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {strings.backLink}
-      </Link>
+      <BackLink to="/platform-admin" label={strings.backLink} />
 
       <div className="mx-auto mt-6 max-w-xl p-8">
         {result ? (

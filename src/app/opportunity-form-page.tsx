@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Select } from '../components/ui/select';
@@ -85,13 +86,7 @@ export function OpportunityFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/firsatlar')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.opportunities.title}
-      </button>
+      <BackLink to={'/firsatlar'} label={tr.crm.opportunities.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">

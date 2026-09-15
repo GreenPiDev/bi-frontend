@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { TextField } from '../components/ui/text-field';
@@ -55,13 +56,7 @@ export function DatasetUploadPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/datasets')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.datasets.upload.back}
-      </button>
+      <BackLink to={'/datasets'} label={tr.datasets.upload.back} />
 
       <div className="mx-auto mt-6 max-w-xl p-8">
         <h1 className="text-lg font-bold text-app-text">{tr.datasets.upload.title}</h1>

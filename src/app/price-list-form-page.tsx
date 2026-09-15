@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Select } from '../components/ui/select';
@@ -99,13 +100,7 @@ export function PriceListFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/fiyat-listeleri')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.priceLists.title}
-      </button>
+      <BackLink to={'/fiyat-listeleri'} label={tr.crm.priceLists.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">

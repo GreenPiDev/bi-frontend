@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
@@ -180,13 +181,7 @@ export function ProductFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/urunler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.products.title}
-      </button>
+      <BackLink to={'/urunler'} label={tr.crm.products.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">

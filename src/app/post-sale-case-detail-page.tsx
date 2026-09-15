@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
@@ -33,7 +34,6 @@ function formatDate(value: string | null): string {
 
 export function PostSaleCaseDetailPage() {
   const { id = '' } = useParams();
-  const navigate = useNavigate();
   const toast = useToast();
   const caseQuery = usePostSaleCaseQuery(id);
   const contactsQuery = useContactsQuery();
@@ -85,13 +85,7 @@ export function PostSaleCaseDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/satis-sonrasi')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.postSaleCases.detail.back}
-      </button>
+      <BackLink to={'/satis-sonrasi'} label={tr.crm.postSaleCases.detail.back} />
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <h1 className="text-xl font-bold text-app-text">{postSaleCase.quote.quoteNumber}</h1>

@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react';
 import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -155,13 +156,7 @@ export function QuoteFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/teklifler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.quotes.title}
-      </button>
+      <BackLink to={'/teklifler'} label={tr.crm.quotes.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">{tr.crm.quotes.form.newTitle}</h1>

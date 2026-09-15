@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
@@ -26,7 +27,6 @@ function toEdit(field: DatasetField): FieldEdit {
 
 export function DatasetDetailPage() {
   const { id = '' } = useParams();
-  const navigate = useNavigate();
   const datasetQuery = useDatasetQuery(id);
   const previewQuery = useDatasetPreviewQuery(id);
   const updateMutation = useUpdateDatasetFieldsMutation(id);
@@ -73,13 +73,7 @@ export function DatasetDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/datasets')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.datasets.detail.backToList}
-      </button>
+      <BackLink to={'/datasets'} label={tr.datasets.detail.backToList} />
 
       {datasetQuery.data && (
         <div className="mt-4 flex items-center gap-2">

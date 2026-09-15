@@ -1,12 +1,12 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { PageHelp } from '../components/ui/page-help';
 import { useProductQuery } from '../features/crm/use-products';
 import { tr } from '../i18n/tr';
 
 export function ProductDetailPage() {
   const { id = '' } = useParams();
-  const navigate = useNavigate();
   const productQuery = useProductQuery(id);
 
   if (productQuery.isPending) {
@@ -43,13 +43,7 @@ export function ProductDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/urunler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.products.detail.back}
-      </button>
+      <BackLink to={'/urunler'} label={tr.crm.products.detail.back} />
 
       <div className="mt-6 flex items-start gap-4">
         {product.imageUrl ? (

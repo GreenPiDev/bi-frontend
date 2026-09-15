@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Autocomplete } from '../components/ui/autocomplete';
 import { Button } from '../components/ui/button';
 import { DateTimeField } from '../components/ui/date-time-field';
@@ -139,23 +140,15 @@ export function InteractionFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/gorusmeler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.interactions.detail.back}
-      </button>
+      <BackLink to={'/gorusmeler'} label={tr.crm.interactions.detail.back} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">{tr.crm.interactions.form.newTitle}</h1>
 
-        <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2" noValidate>
-          <div className="lg:col-span-2">
-            <FormError message={apiErrorMessage} />
-          </div>
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6" noValidate>
+          <FormError message={apiErrorMessage} />
 
-          <div className="grid grid-cols-1 gap-4 lg:col-span-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Controller
               name="accountName"
               control={control}
@@ -226,7 +219,7 @@ export function InteractionFormPage() {
             />
           </div>
 
-          <div className="rounded-lg border border-app-border p-4">
+          <div className="rounded-lg border border-app-border bg-app-surface p-4">
             <Controller
               name="hasOpportunity"
               control={control}
@@ -265,7 +258,7 @@ export function InteractionFormPage() {
             )}
           </div>
 
-          <div className="rounded-lg border border-app-border p-4">
+          <div className="rounded-lg border border-app-border bg-app-surface p-4">
             <span className="text-sm font-semibold text-app-text">
               {tr.crm.interactions.form.participantsSectionTitle}
             </span>
@@ -323,7 +316,7 @@ export function InteractionFormPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-app-border p-4">
+          <div className="rounded-lg border border-app-border bg-app-surface p-4">
             <Controller
               name="hasReminder"
               control={control}
@@ -380,7 +373,7 @@ export function InteractionFormPage() {
             )}
           </div>
 
-          <div className="flex gap-2 lg:col-span-2">
+          <div className="flex gap-2">
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending
                 ? tr.crm.interactions.form.submitting

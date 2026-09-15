@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Switch } from '../components/ui/switch';
@@ -73,13 +74,7 @@ export function ProductListFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/urun-listeleri')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.productLists.title}
-      </button>
+      <BackLink to={'/urun-listeleri'} label={tr.crm.productLists.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
@@ -38,13 +39,7 @@ export function OpportunityDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/firsatlar')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.opportunities.detail.back}
-      </button>
+      <BackLink to={'/firsatlar'} label={tr.crm.opportunities.detail.back} />
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { GridLayout, useContainerWidth, type Layout } from 'react-grid-layout';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
@@ -37,7 +38,6 @@ function isSameLayout(a: LayoutItem[], b: LayoutItem[]): boolean {
 
 export function DashboardEditPage() {
   const { id = '' } = useParams();
-  const navigate = useNavigate();
   const toast = useToast();
   const dashboardQuery = useDashboardQuery(id);
   const updateDashboardMutation = useUpdateDashboardMutation(id);
@@ -136,13 +136,7 @@ export function DashboardEditPage() {
   return (
     <AppShell>
       <div className="flex items-start justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => navigate(`/dashboards/${id}`)}
-          className="text-sm font-semibold text-app-muted hover:text-app-text"
-        >
-          {'←'} {tr.dashboards.editor.backToView}
-        </button>
+        <BackLink to={`/dashboards/${id}`} label={tr.dashboards.editor.backToView} />
         <div className="flex items-center gap-3">
           {isDirty && (
             <span className="text-sm text-app-muted">{tr.dashboards.editor.unsavedChanges}</span>

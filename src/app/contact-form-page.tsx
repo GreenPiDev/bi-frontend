@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { DateField } from '../components/ui/date-field';
 import { FormError } from '../components/ui/form-error';
@@ -92,13 +93,7 @@ export function ContactFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/kisiler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.accounts.detail.back}
-      </button>
+      <BackLink to={'/kisiler'} label={tr.crm.accounts.detail.back} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">

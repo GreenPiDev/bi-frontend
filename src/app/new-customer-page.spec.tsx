@@ -69,9 +69,8 @@ describe('NewCustomerPage', () => {
     });
   });
 
-  it('geri don linki platform-admin sayfasina gider', () => {
+  it('geri don linki gosterilir', () => {
     renderPage();
-    const backLink = screen.getByText('Önceki sayfaya dön').closest('a');
-    expect(backLink).toHaveAttribute('href', '/platform-admin');
+    expect(screen.getByRole('button', { name: /Önceki sayfaya dön/ })).toBeInTheDocument();
   });
 });

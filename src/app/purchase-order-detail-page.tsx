@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -120,13 +121,7 @@ export function PurchaseOrderDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/siparisler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.purchaseOrders.detail.back}
-      </button>
+      <BackLink to={'/siparisler'} label={tr.crm.purchaseOrders.detail.back} />
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { usePreviewImportMutation, useRunImportMutation } from '../features/crm/use-imports';
@@ -68,13 +69,7 @@ export function CrmImportPage({ entity }: { entity: ImportEntity }) {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate(ENTITY_LIST_PATH[entity])}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.import.back}
-      </button>
+      <BackLink to={ENTITY_LIST_PATH[entity]} label={tr.crm.import.back} />
 
       <div className="mx-auto mt-6 max-w-2xl p-8">
         <h1 className="text-lg font-bold text-app-text">{tr.crm.import.title}</h1>

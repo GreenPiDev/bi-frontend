@@ -1,6 +1,7 @@
 import { AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
@@ -65,13 +66,7 @@ export function AccountDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/firmalar')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.accounts.detail.back}
-      </button>
+      <BackLink to={'/firmalar'} label={tr.crm.accounts.detail.back} />
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { useDeleteProjectMutation, useProjectQuery } from '../features/crm/use-projects';
@@ -41,13 +42,7 @@ export function ProjectDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/projeler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.projects.detail.back}
-      </button>
+      <BackLink to={'/projeler'} label={tr.crm.projects.detail.back} />
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>

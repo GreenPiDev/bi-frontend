@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
@@ -105,15 +106,7 @@ export function QuoteDetailPage() {
 
   return (
     <AppShell print={isPrintMode}>
-      {!isPrintMode && (
-        <button
-          type="button"
-          onClick={() => navigate('/teklifler')}
-          className="text-sm font-semibold text-app-muted hover:text-app-text"
-        >
-          {'←'} {tr.crm.quotes.detail.back}
-        </button>
-      )}
+      {!isPrintMode && <BackLink to={'/teklifler'} label={tr.crm.quotes.detail.back} />}
 
       <div
         className={clsx('flex flex-wrap items-start justify-between gap-4', !isPrintMode && 'mt-6')}

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Autocomplete } from '../components/ui/autocomplete';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -22,6 +23,7 @@ import {
 } from '../features/crm/use-accounts';
 import { useSectorOptionsQuery } from '../features/crm/use-sector-options';
 import { ApiError, type AccountType } from '../lib/api';
+import { TURKISH_CITIES } from '../lib/turkish-cities';
 import { tr } from '../i18n/tr';
 
 const ACCOUNT_TYPE_OPTIONS: { value: AccountType; label: string }[] = [
@@ -94,13 +96,7 @@ export function AccountFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/firmalar')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.accounts.detail.back}
-      </button>
+      <BackLink to={'/firmalar'} label={tr.crm.accounts.detail.back} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
@@ -198,11 +194,19 @@ export function AccountFormPage() {
               {...register('address')}
             />
           </div>
-          <TextField
-            label={tr.crm.accounts.form.cityLabel}
-            error={errors.city?.message}
-            hint={tr.crm.accounts.form.cityHint}
-            {...register('city')}
+          <Controller
+            name="city"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={tr.crm.accounts.form.cityLabel}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                options={TURKISH_CITIES}
+                error={errors.city?.message}
+                hint={tr.crm.accounts.form.cityHint}
+              />
+            )}
           />
           <div className="mt-1 flex gap-2 sm:col-span-2">
             <Button type="submit" disabled={mutation.isPending}>

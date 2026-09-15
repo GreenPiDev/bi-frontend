@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { GridLayout, useContainerWidth } from 'react-grid-layout';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
@@ -63,15 +64,7 @@ export function DashboardViewPage() {
 
   return (
     <AppShell print={isPrintMode}>
-      {!isPrintMode && (
-        <button
-          type="button"
-          onClick={() => navigate('/dashboards')}
-          className="text-sm font-semibold text-app-muted hover:text-app-text"
-        >
-          {'←'} {tr.dashboards.viewer.backToList}
-        </button>
-      )}
+      {!isPrintMode && <BackLink to={'/dashboards'} label={tr.dashboards.viewer.backToList} />}
 
       <div className={clsx('flex items-start justify-between gap-4', !isPrintMode && 'mt-4')}>
         {dashboardQuery.data && (

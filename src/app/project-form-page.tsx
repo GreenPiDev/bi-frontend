@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Select } from '../components/ui/select';
@@ -93,13 +94,7 @@ export function ProjectFormPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/projeler')}
-        className="text-sm font-semibold text-app-muted hover:text-app-text"
-      >
-        {'←'} {tr.crm.projects.title}
-      </button>
+      <BackLink to={'/projeler'} label={tr.crm.projects.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
