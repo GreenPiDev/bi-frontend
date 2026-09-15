@@ -190,7 +190,7 @@ export function QuoteDetailPage() {
             {quote.items.map((item) => (
               <tr
                 key={item.id}
-                className="bg-app-surface border-t border-app-border hover:bg-app-brand/10"
+                className="bg-app-surface border-t border-app-border hover:bg-blue-50"
               >
                 <td className="py-2 pr-3 text-app-text">
                   {item.product.name}

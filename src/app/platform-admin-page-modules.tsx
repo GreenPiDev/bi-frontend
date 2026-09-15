@@ -50,7 +50,7 @@ export function PlatformAdminPageModules() {
           {pageModulesQuery.data?.map((assignment) => (
             <tr
               key={assignment.pageKey}
-              className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+              className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
             >
               <td className="px-4 py-3 font-semibold text-app-text">{assignment.label}</td>
               {modules.map((module) => (

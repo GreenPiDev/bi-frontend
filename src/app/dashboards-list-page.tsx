@@ -113,7 +113,7 @@ export function DashboardsListPage() {
                 <tr
                   key={dashboard.id}
                   onClick={() => navigate(`/dashboards/${dashboard.id}`)}
-                  className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                  className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-blue-50"
                 >
                   <td className="px-4 py-3 font-semibold text-app-text">{dashboard.name}</td>
                   <td className="px-4 py-3 text-app-muted">

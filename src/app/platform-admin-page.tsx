@@ -52,7 +52,7 @@ export function PlatformAdminPage() {
               {tenantsQuery.data.map((tenant) => (
                 <tr
                   key={tenant.id}
-                  className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                  className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
                 >
                   <td className="px-4 py-3 font-semibold text-app-text">{tenant.name}</td>
                   <td className="px-4 py-3 text-app-muted">{tenant.adminEmail ?? '—'}</td>

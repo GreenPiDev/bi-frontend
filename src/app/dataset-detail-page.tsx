@@ -109,7 +109,7 @@ export function DatasetDetailPage() {
                   return (
                     <tr
                       key={field.id}
-                      className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                      className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
                     >
                       <td className="px-3 py-2">
                         <input
@@ -203,7 +203,7 @@ export function DatasetDetailPage() {
                 {previewQuery.data.rows.map((row, rowIndex) => (
                   <tr
                     key={rowIndex}
-                    className="bg-app-surface border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                    className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
                   >
                     {row.map((value, cellIndex) => (
                       <td key={cellIndex} className="whitespace-nowrap px-3 py-2 text-app-muted">

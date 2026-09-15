@@ -145,7 +145,7 @@ export function PageAccessMatrixSection() {
                     <tr
                       className={clsx(
                         'border-b border-app-border last:border-0',
-                        hasTabs && 'cursor-pointer hover:bg-app-brand/10',
+                        hasTabs && 'cursor-pointer hover:bg-blue-50',
                       )}
                       onClick={hasTabs ? () => toggleExpanded(page.key) : undefined}
                     >

@@ -62,7 +62,7 @@ export function Table<T>({
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={clsx(
                 'bg-app-surface border-b border-app-border last:border-0',
-                onRowClick && 'cursor-pointer hover:bg-app-brand/10',
+                onRowClick && 'cursor-pointer hover:bg-blue-50',
               )}
             >
               {columns.map((column) => (

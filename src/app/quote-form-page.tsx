@@ -196,101 +196,125 @@ export function QuoteFormPage() {
               />
             </div>
 
-            <div className="rounded-lg border border-app-border p-4">
+            <div className="rounded-lg border border-app-border bg-app-surface p-4">
               <span className="text-sm font-semibold text-app-text">
                 {tr.crm.quotes.form.itemsSectionTitle}
               </span>
               <FormError message={errors.items?.message} />
-              <div className="mt-3 flex flex-col gap-3">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex flex-wrap items-start gap-3 rounded-lg border border-app-border p-3"
-                  >
-                    <div className="w-full min-w-[180px] flex-1 sm:w-auto">
-                      <Select
-                        label={tr.crm.quotes.form.productLabel}
-                        required
-                        options={productOptions}
-                        error={errors.items?.[index]?.productId?.message}
-                        {...register(`items.${index}.productId` as const, {
-                          onChange: (event: ChangeEvent<HTMLSelectElement>) => {
-                            const listPrice = priceListUnitPriceByProductId.get(event.target.value);
-                            setValue(
-                              `items.${index}.unitPrice`,
-                              listPrice !== undefined ? String(listPrice) : '',
-                            );
-                          },
-                        })}
-                      />
-                    </div>
-                    <div className="w-24">
-                      <TextField
-                        type="text"
-                        inputMode="decimal"
-                        label={tr.crm.quotes.form.quantityLabel}
-                        required
-                        error={errors.items?.[index]?.quantity?.message}
-                        {...decimalOnly(register(`items.${index}.quantity` as const))}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <TextField
-                        type="text"
-                        inputMode="decimal"
-                        label={tr.crm.quotes.form.unitPriceLabel}
-                        hint={tr.crm.quotes.form.unitPriceHint}
-                        {...decimalOnly(register(`items.${index}.unitPrice` as const))}
-                      />
-                    </div>
-                    <div className="w-24">
-                      <TextField
-                        type="text"
-                        inputMode="decimal"
-                        label={tr.crm.quotes.form.discountPctLabel}
-                        {...decimalOnly(register(`items.${index}.discountPct` as const))}
-                      />
-                    </div>
-                    <div className="w-24">
-                      <TextField
-                        type="text"
-                        inputMode="decimal"
-                        label={tr.crm.quotes.form.vatPctLabel}
-                        {...decimalOnly(register(`items.${index}.vatPct` as const))}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <span
-                        className="select-none text-sm font-semibold text-transparent"
-                        aria-hidden="true"
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead className="text-xs font-semibold uppercase text-app-muted">
+                    <tr>
+                      <th className="w-56 py-2 pr-3">{tr.crm.quotes.form.productLabel}</th>
+                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.quantityLabel}</th>
+                      <th className="w-32 py-2 pr-3">{tr.crm.quotes.form.unitPriceLabel}</th>
+                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.discountPctLabel}</th>
+                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.vatPctLabel}</th>
+                      <th className="w-10 py-2" aria-hidden="true" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fields.map((field, index) => (
+                      <tr
+                        key={field.id}
+                        className="border-t border-app-border [&_label]:sr-only [&_p]:mt-0.5"
                       >
-                        &nbsp;
-                      </span>
-                      <Button type="button" variant="secondary" onClick={() => remove(index)}>
-                        {tr.crm.quotes.form.removeItem}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() =>
-                    append({
-                      productId: '',
-                      quantity: '1',
-                      unitPrice: '',
-                      discountPct: '0',
-                      vatPct: '0',
-                    })
-                  }
-                >
-                  {tr.crm.quotes.form.addItem}
-                </Button>
+                        <td className="py-2 pr-3 align-top">
+                          <Select
+                            label={tr.crm.quotes.form.productLabel}
+                            required
+                            options={productOptions}
+                            error={errors.items?.[index]?.productId?.message}
+                            {...register(`items.${index}.productId` as const, {
+                              onChange: (event: ChangeEvent<HTMLSelectElement>) => {
+                                const listPrice = priceListUnitPriceByProductId.get(
+                                  event.target.value,
+                                );
+                                setValue(
+                                  `items.${index}.unitPrice`,
+                                  listPrice !== undefined ? String(listPrice) : '',
+                                );
+                              },
+                            })}
+                          />
+                        </td>
+                        <td className="py-2 pr-3 align-top">
+                          <TextField
+                            type="text"
+                            inputMode="decimal"
+                            label={tr.crm.quotes.form.quantityLabel}
+                            required
+                            error={errors.items?.[index]?.quantity?.message}
+                            {...decimalOnly(register(`items.${index}.quantity` as const))}
+                          />
+                        </td>
+                        <td className="py-2 pr-3 align-top">
+                          <TextField
+                            type="text"
+                            inputMode="decimal"
+                            label={tr.crm.quotes.form.unitPriceLabel}
+                            {...decimalOnly(register(`items.${index}.unitPrice` as const))}
+                          />
+                        </td>
+                        <td className="py-2 pr-3 align-top">
+                          <TextField
+                            type="text"
+                            inputMode="decimal"
+                            label={tr.crm.quotes.form.discountPctLabel}
+                            {...decimalOnly(register(`items.${index}.discountPct` as const))}
+                          />
+                        </td>
+                        <td className="py-2 pr-3 align-top">
+                          <TextField
+                            type="text"
+                            inputMode="decimal"
+                            label={tr.crm.quotes.form.vatPctLabel}
+                            {...decimalOnly(register(`items.${index}.vatPct` as const))}
+                          />
+                        </td>
+                        <td className="py-2 align-top">
+                          <button
+                            type="button"
+                            onClick={() => remove(index)}
+                            aria-label={tr.crm.quotes.form.removeItem}
+                            className="rounded-lg p-2 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              className="h-4 w-4"
+                            >
+                              <path d="M18 6 6 18M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-3"
+                onClick={() =>
+                  append({
+                    productId: '',
+                    quantity: '1',
+                    unitPrice: '',
+                    discountPct: '0',
+                    vatPct: '0',
+                  })
+                }
+              >
+                {tr.crm.quotes.form.addItem}
+              </Button>
             </div>
 
-            <div className="rounded-lg border border-app-border p-4">
+            <div className="rounded-lg border border-app-border bg-app-surface p-4">
               <Controller
                 name="hasOpportunity"
                 control={control}

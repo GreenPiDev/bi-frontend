@@ -151,7 +151,7 @@ function AuditLogTab() {
                   <Fragment key={log.id}>
                     <tr
                       onClick={() => setExpandedId(isExpanded ? null : log.id)}
-                      className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-app-brand/10"
+                      className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-blue-50"
                     >
                       <td className="px-3 py-2 text-app-muted">
                         <button

@@ -264,7 +264,7 @@ export function ActionPermissionsSection() {
                           <tr
                             className={clsx(
                               'border-b border-app-border last:border-0',
-                              group.hasTabs && 'cursor-pointer hover:bg-app-brand/10',
+                              group.hasTabs && 'cursor-pointer hover:bg-blue-50',
                             )}
                             onClick={
                               group.hasTabs ? () => toggleExpanded(group.pageKey) : undefined
