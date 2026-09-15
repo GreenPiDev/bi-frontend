@@ -259,23 +259,31 @@ export function AppShell({ children, print = false }: AppShellProps) {
                   type="button"
                   onClick={() => navigate(path)}
                   className={clsx(
-                    'flex h-12 w-full cursor-pointer items-center gap-3 whitespace-nowrap transition-colors duration-200 hover:bg-app-brand/10 hover:text-app-text',
-                    hasUnread && 'text-app-danger',
-                    !hasUnread && (isActive ? 'bg-app-bg text-app-brand' : 'text-app-muted'),
+                    'flex h-12 w-full cursor-pointer items-center whitespace-nowrap transition-colors duration-200',
+                    !isActive && 'hover:bg-app-brand/10 hover:text-app-text',
+                    !isActive && hasUnread && 'text-app-danger',
+                    !isActive && !hasUnread && 'text-app-muted',
                   )}
                 >
-                  <span className="relative inline-flex w-16 shrink-0 items-center justify-center">
-                    <Icon size={20} />
-                    {hasUnread && (
-                      <span
-                        className="absolute top-1 right-3 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-app-danger px-1 text-[10px] font-bold text-white"
-                        aria-label={tr.crm.messages.unreadCountAria(unreadCount)}
-                      >
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
+                  <span
+                    className={clsx(
+                      'ml-2 inline-flex h-9 items-center gap-3 rounded-lg transition-colors duration-200',
+                      isActive && 'bg-app-brand text-white',
                     )}
+                  >
+                    <span className="relative inline-flex w-14 shrink-0 items-center justify-center">
+                      <Icon size={20} />
+                      {hasUnread && (
+                        <span
+                          className="absolute top-1 right-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-app-danger px-1 text-[10px] font-bold text-white"
+                          aria-label={tr.crm.messages.unreadCountAria(unreadCount)}
+                        >
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </span>
+                    <span className="pr-3 text-sm font-semibold">{label}</span>
                   </span>
-                  <span className="text-sm font-semibold">{label}</span>
                 </button>
               </li>
             );
