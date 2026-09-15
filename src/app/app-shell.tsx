@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Contact2,
   FileText,
+  FolderTree,
   HeartHandshake,
   LayoutDashboard,
   Layers,
@@ -73,6 +74,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
     calendar: useIsPageModuleAccessible('calendar'),
     interactions: useIsPageModuleAccessible('interactions'),
     opportunities: useIsPageModuleAccessible('opportunities'),
+    'product-lists': useIsPageModuleAccessible('product-lists'),
     products: useIsPageModuleAccessible('products'),
     'price-lists': useIsPageModuleAccessible('price-lists'),
     quotes: useIsPageModuleAccessible('quotes'),
@@ -133,6 +135,9 @@ export function AppShell({ children, print = false }: AppShellProps) {
       : []),
     ...(canAccessPage('stock')
       ? [{ label: tr.shell.nav.stock, icon: Warehouse, path: '/stok' }]
+      : []),
+    ...(canAccessPage('product-lists')
+      ? [{ label: tr.shell.nav.productLists, icon: FolderTree, path: '/urun-listeleri' }]
       : []),
     ...(canAccessPage('products')
       ? [{ label: tr.shell.nav.products, icon: Package, path: '/urunler' }]

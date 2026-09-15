@@ -21,6 +21,12 @@ const columns: TableColumn<PriceList>[] = [
     ),
   },
   {
+    key: 'productList',
+    header: tr.crm.priceLists.productListColumn,
+    className: 'text-app-muted',
+    render: (p) => p.productList.name,
+  },
+  {
     key: 'itemCount',
     header: tr.crm.priceLists.itemCountColumn,
     className: 'text-app-muted',

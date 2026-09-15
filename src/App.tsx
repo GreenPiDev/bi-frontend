@@ -33,6 +33,8 @@ import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { PriceListFormPage } from './app/price-list-form-page';
 import { PriceListsListPage } from './app/price-lists-list-page';
+import { ProductListFormPage } from './app/product-list-form-page';
+import { ProductListsListPage } from './app/product-lists-list-page';
 import { ProductDetailPage } from './app/product-detail-page';
 import { ProductFormPage } from './app/product-form-page';
 import { ProductsListPage } from './app/products-list-page';
@@ -95,6 +97,7 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'projects', path: '/projeler' },
   { pageKey: 'purchase-orders', path: '/siparisler' },
   { pageKey: 'stock', path: '/stok' },
+  { pageKey: 'product-lists', path: '/urun-listeleri' },
   { pageKey: 'products', path: '/urunler' },
   { pageKey: 'price-lists', path: '/fiyat-listeleri' },
   { pageKey: 'messages', path: '/mesajlar' },
@@ -492,6 +495,30 @@ function App() {
           element={
             <TenantPageRoute pageKey="stock">
               <StockListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/urun-listeleri"
+          element={
+            <TenantPageRoute pageKey="product-lists">
+              <ProductListsListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/urun-listeleri/yeni"
+          element={
+            <TenantPageRoute pageKey="product-lists">
+              <ProductListFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/urun-listeleri/:id/duzenle"
+          element={
+            <TenantPageRoute pageKey="product-lists">
+              <ProductListFormPage />
             </TenantPageRoute>
           }
         />

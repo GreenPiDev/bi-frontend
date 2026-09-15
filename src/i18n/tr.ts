@@ -44,6 +44,8 @@ export const tr = {
       'Satış fırsatlarınızın listesi, aşamalarına göre filtrelenebilir. Fırsatlar bir görüşmeden veya teklif oluştururken otomatik de doğabilir.',
     opportunityDetail:
       'Bu fırsatın aşamasını, tahmini değerini ve bağlı kayıtlarını görüntüleyip güncelleyin.',
+    productLists:
+      'Ürünlerinizi ayrı kataloglarda (ürün listelerinde) gruplayın - örneğin "2026 Kataloğu" ve "Bayi Ürünleri" gibi. Her ürün tam olarak bir listeye ait olur, her liste kendi fiyat listelerini taşır.',
     products:
       'Sattığınız/ürettiğiniz ürünlerin kataloğu. Ürün ekleyip düzenleyebilir, görsel yükleyebilir, azami iskonto oranı ve minimum stok seviyesi tanımlayabilirsiniz.',
     productDetail: 'Bu ürünün tüm bilgilerini (açıklama, kategori, maliyet, görsel) görüntüleyin.',
@@ -116,6 +118,7 @@ export const tr = {
       calendar: 'Ajanda',
       interactions: 'Görüşmeler',
       opportunities: 'Fırsatlar',
+      productLists: 'Ürün Listeleri',
       products: 'Ürünler',
       priceLists: 'Fiyat Listeleri',
       quotes: 'Teklifler',
@@ -948,6 +951,27 @@ export const tr = {
         updateSuccess: 'Fırsat güncellendi.',
       },
     },
+    productLists: {
+      title: 'Ürün Listeleri',
+      subtitle:
+        'Ürünlerinizi ayrı kataloglarda gruplayın; her katalog kendi fiyat listelerini taşır.',
+      newButton: 'Yeni Ürün Listesi',
+      loading: 'Ürün listeleri yükleniyor...',
+      empty: 'Henüz ürün listesi yok.',
+      nameColumn: 'Ad',
+      defaultBadge: 'Varsayılan',
+      form: {
+        newTitle: 'Yeni Ürün Listesi',
+        editTitle: 'Ürün Listesini Düzenle',
+        nameLabel: 'Liste Adı',
+        isDefaultLabel: 'Varsayılan ürün listesi',
+        submit: 'Kaydet',
+        submitting: 'Kaydediliyor...',
+        cancel: 'Vazgeç',
+        createSuccess: 'Ürün listesi oluşturuldu.',
+        updateSuccess: 'Ürün listesi güncellendi.',
+      },
+    },
     products: {
       title: 'Ürünler',
       subtitle: 'Teklif ve fiyat listelerinde kullanılan ürün kataloğu.',
@@ -955,6 +979,7 @@ export const tr = {
       loading: 'Ürünler yükleniyor...',
       empty: 'Henüz ürün kaydı yok.',
       nameColumn: 'Ürün',
+      productListColumn: 'Ürün Listesi',
       skuColumn: 'SKU',
       unitColumn: 'Birim',
       categoryColumn: 'Kategori',
@@ -994,6 +1019,8 @@ export const tr = {
       form: {
         newTitle: 'Yeni Ürün',
         editTitle: 'Ürünü Düzenle',
+        productListLabel: 'Ürün Listesi',
+        productListHint: 'Bu ürünün ait olduğu katalog.',
         nameLabel: 'Ürün Adı',
         nameHint: 'En az 2 karakter olmalı.',
         skuLabel: 'SKU',
@@ -1026,6 +1053,7 @@ export const tr = {
       loading: 'Fiyat listeleri yükleniyor...',
       empty: 'Henüz fiyat listesi yok.',
       nameColumn: 'Ad',
+      productListColumn: 'Ürün Listesi',
       itemCountColumn: 'Ürün Sayısı',
       defaultBadge: 'Varsayılan',
       deleteConfirm: 'Bu fiyat listesini silmek istediğinize emin misiniz?',
@@ -1039,6 +1067,9 @@ export const tr = {
       form: {
         newTitle: 'Yeni Fiyat Listesi',
         editTitle: 'Fiyat Listesini Düzenle',
+        productListLabel: 'Ürün Listesi',
+        productListHint:
+          'Bu fiyat listesinin ait olduğu katalog - oluşturulduktan sonra değiştirilemez.',
         nameLabel: 'Liste Adı',
         isDefaultLabel: 'Varsayılan fiyat listesi',
         itemsSectionTitle: 'Ürün Satırları',
@@ -1105,6 +1136,8 @@ export const tr = {
         contactLabel: 'Muhatap Kişi (opsiyonel)',
         contactPlaceholder: 'Seçilmedi',
         contactHint: 'Opsiyonel. Sadece seçilen firmaya bağlı kişiler listelenir.',
+        productListLabel: 'Ürün Listesi',
+        productListHint: 'Zorunlu. Hangi katalogdan teklif hazırlanacağını belirler.',
         priceListLabel: 'Fiyat Listesi',
         priceListHint: 'Zorunlu. Ürün birim fiyatları bu listeden gelir, satır bazında ezilebilir.',
         itemsSectionTitle: 'Ürün Satırları',

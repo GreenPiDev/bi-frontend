@@ -6,9 +6,11 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
+import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
   useCreateProductMutation,
   useDeleteProductImageMutation,
@@ -35,6 +37,7 @@ export function ProductFormPage() {
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
   const [pendingImagePreviewUrl, setPendingImagePreviewUrl] = useState<string | null>(null);
   const productQuery = useProductQuery(id ?? '');
+  const productListsQuery = useProductListsQuery();
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const uploadImageMutation = useUploadProductImageMutation();
@@ -58,6 +61,7 @@ export function ProductFormPage() {
   useEffect(() => {
     if (productQuery.data) {
       reset({
+        productListId: productQuery.data.productListId,
         name: productQuery.data.name,
         sku: productQuery.data.sku ?? undefined,
         unit: productQuery.data.unit,
@@ -89,6 +93,7 @@ export function ProductFormPage() {
 
   const onSubmit = handleSubmit(async (values) => {
     const input: ProductInput = {
+      productListId: values.productListId,
       name: values.name,
       sku: values.sku || undefined,
       unit: values.unit,
@@ -239,6 +244,17 @@ export function ProductFormPage() {
           <div className="sm:col-span-2">
             <FormError message={apiErrorMessage} />
           </div>
+          <Select
+            label={tr.crm.products.form.productListLabel}
+            required
+            hint={tr.crm.products.form.productListHint}
+            error={errors.productListId?.message}
+            options={(productListsQuery.data?.data ?? []).map((productList) => ({
+              value: productList.id,
+              label: productList.name,
+            }))}
+            {...register('productListId')}
+          />
           <TextField
             label={tr.crm.products.form.nameLabel}
             required

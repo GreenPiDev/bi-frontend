@@ -12,6 +12,7 @@ import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { usePriceListsQuery } from '../features/crm/use-price-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
@@ -43,8 +44,8 @@ export function QuoteFormPage() {
   const toast = useToast();
   const accountsQuery = useAccountsQuery();
   const contactsQuery = useContactsQuery();
+  const productListsQuery = useProductListsQuery();
   const priceListsQuery = usePriceListsQuery();
-  const productsQuery = useProductsQuery();
   const createMutation = useCreateQuoteMutation();
 
   const {
@@ -61,17 +62,22 @@ export function QuoteFormPage() {
       hasOpportunity: false,
     },
   });
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, replace } = useFieldArray({ control, name: 'items' });
   const hasOpportunity = watch('hasOpportunity');
   const selectedAccountId = watch('accountId');
+  const selectedProductListId = watch('productListId');
   const selectedPriceListId = watch('priceListId');
   const watchedItems = watch('items');
 
+  const productsQuery = useProductsQuery({ productListId: selectedProductListId || undefined });
   const products = productsQuery.data?.data ?? [];
   const productOptions = products.map((product) => ({ value: product.id, label: product.name }));
   const productNameById = new Map(products.map((product) => [product.id, product.name]));
 
-  const selectedPriceList = (priceListsQuery.data?.data ?? []).find(
+  const priceListOptions = (priceListsQuery.data?.data ?? []).filter(
+    (priceList) => !selectedProductListId || priceList.productListId === selectedProductListId,
+  );
+  const selectedPriceList = priceListOptions.find(
     (priceList) => priceList.id === selectedPriceListId,
   );
   const priceListUnitPriceByProductId = new Map(
@@ -164,7 +170,7 @@ export function QuoteFormPage() {
           <div className="flex flex-col gap-6 border-t border-app-border p-8">
             <FormError message={apiErrorMessage} />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Select
                 label={tr.crm.quotes.form.accountLabel}
                 required
@@ -177,11 +183,36 @@ export function QuoteFormPage() {
                 {...register('accountId')}
               />
               <Select
+                label={tr.crm.quotes.form.productListLabel}
+                required
+                hint={tr.crm.quotes.form.productListHint}
+                error={errors.productListId?.message}
+                options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                  value: productList.id,
+                  label: productList.name,
+                }))}
+                {...register('productListId', {
+                  onChange: () => {
+                    setValue('priceListId', '');
+                    replace([
+                      {
+                        productId: '',
+                        quantity: '1',
+                        unitPrice: '',
+                        discountPct: '0',
+                        vatPct: '0',
+                      },
+                    ]);
+                  },
+                })}
+              />
+              <Select
                 label={tr.crm.quotes.form.priceListLabel}
                 required
                 hint={tr.crm.quotes.form.priceListHint}
+                disabled={!selectedProductListId}
                 error={errors.priceListId?.message}
-                options={(priceListsQuery.data?.data ?? []).map((priceList) => ({
+                options={priceListOptions.map((priceList) => ({
                   value: priceList.id,
                   label: priceList.name,
                 }))}

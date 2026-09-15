@@ -1218,8 +1218,52 @@ export function deleteOpportunity(id: string): Promise<void> {
   return request(`/opportunities/${id}`, { method: 'DELETE' });
 }
 
+export interface ProductList {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductListInput {
+  name: string;
+  isDefault?: boolean;
+}
+
+export function listProductLists(
+  params: { page?: number; q?: string } = {},
+): Promise<PagedResult<ProductList>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/product-lists${qs ? `?${qs}` : ''}`);
+}
+
+export function getProductList(id: string): Promise<ProductList> {
+  return request(`/product-lists/${id}`);
+}
+
+export function createProductList(input: ProductListInput): Promise<ProductList> {
+  return request('/product-lists', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateProductList(
+  id: string,
+  input: Partial<ProductListInput>,
+): Promise<ProductList> {
+  return request(`/product-lists/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteProductList(id: string): Promise<void> {
+  return request(`/product-lists/${id}`, { method: 'DELETE' });
+}
+
 export interface Product {
   id: string;
+  productListId: string;
+  productList: { id: string; name: string };
   name: string;
   sku: string | null;
   unit: string;
@@ -1234,6 +1278,7 @@ export interface Product {
 }
 
 export interface ProductInput {
+  productListId: string;
   name: string;
   sku?: string;
   unit?: string;
@@ -1245,11 +1290,12 @@ export interface ProductInput {
 }
 
 export function listProducts(
-  params: { page?: number; q?: string } = {},
+  params: { page?: number; q?: string; productListId?: string } = {},
 ): Promise<PagedResult<Product>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.q) query.set('q', params.q);
+  if (params.productListId) query.set('productListId', params.productListId);
   const qs = query.toString();
   return request(`/products${qs ? `?${qs}` : ''}`);
 }
@@ -1290,6 +1336,8 @@ export interface PriceListItem {
 
 export interface PriceList {
   id: string;
+  productListId: string;
+  productList: { id: string; name: string };
   name: string;
   isDefault: boolean;
   items: PriceListItem[];
@@ -1303,17 +1351,19 @@ export interface PriceListItemInput {
 }
 
 export interface PriceListInput {
+  productListId: string;
   name: string;
   isDefault?: boolean;
   items: PriceListItemInput[];
 }
 
 export function listPriceLists(
-  params: { page?: number; q?: string } = {},
+  params: { page?: number; q?: string; productListId?: string } = {},
 ): Promise<PagedResult<PriceList>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.q) query.set('q', params.q);
+  if (params.productListId) query.set('productListId', params.productListId);
   const qs = query.toString();
   return request(`/price-lists${qs ? `?${qs}` : ''}`);
 }

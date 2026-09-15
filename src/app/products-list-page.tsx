@@ -67,6 +67,12 @@ export function ProductsListPage() {
       ),
     },
     {
+      key: 'productList',
+      header: tr.crm.products.productListColumn,
+      className: 'text-app-muted',
+      render: (p) => p.productList.name,
+    },
+    {
       key: 'sku',
       header: tr.crm.products.skuColumn,
       className: 'text-app-muted',

@@ -136,7 +136,15 @@ export const projectFormSchema = z.object({
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
+export const productListFormSchema = z.object({
+  name: z.string().min(2, 'Ürün listesi adı en az 2 karakter olmalı.').max(200),
+  isDefault: z.boolean().optional(),
+});
+
+export type ProductListFormValues = z.infer<typeof productListFormSchema>;
+
 export const productFormSchema = z.object({
+  productListId: z.string().min(1, 'Ürün listesi gerekli.'),
   name: z.string().min(2, 'Ürün adı en az 2 karakter olmalı.').max(200),
   sku: z.string().max(100).optional(),
   unit: z.string().min(1, 'Birim gerekli.').max(50),
@@ -150,6 +158,7 @@ export const productFormSchema = z.object({
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export const priceListFormSchema = z.object({
+  productListId: z.string().min(1, 'Ürün listesi gerekli.'),
   name: z.string().min(2, 'Fiyat listesi adı en az 2 karakter olmalı.').max(200),
   isDefault: z.boolean().optional(),
   items: z
@@ -168,6 +177,7 @@ export const quoteFormSchema = z
   .object({
     accountId: z.string().min(1, 'Firma gerekli.'),
     contactId: z.string().optional(),
+    productListId: z.string().min(1, 'Ürün listesi gerekli.'),
     priceListId: z.string().min(1, 'Fiyat listesi gerekli.'),
     items: z
       .array(

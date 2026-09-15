@@ -54,6 +54,8 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     priceListId: 'pl-1',
     priceList: {
       id: 'pl-1',
+      productListId: 'prl-1',
+      productList: { id: 'prl-1', name: 'Genel' },
       name: 'Genel',
       isDefault: true,
       items: [],

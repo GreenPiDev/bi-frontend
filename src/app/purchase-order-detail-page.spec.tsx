@@ -50,6 +50,8 @@ const quote: api.Quote = {
   priceListId: 'pl-1',
   priceList: {
     id: 'pl-1',
+    productListId: 'prl-1',
+    productList: { id: 'prl-1', name: 'Genel' },
     name: 'Genel',
     isDefault: true,
     items: [],
@@ -68,6 +70,8 @@ const quote: api.Quote = {
 
 const product: api.Product = {
   id: 'p1',
+  productListId: 'prl-1',
+  productList: { id: 'prl-1', name: 'Genel' },
   name: 'Widget',
   sku: 'W-1',
   unit: 'adet',

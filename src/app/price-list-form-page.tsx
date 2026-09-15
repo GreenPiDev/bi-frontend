@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
@@ -9,6 +9,7 @@ import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import {
   useCreatePriceListMutation,
@@ -24,7 +25,7 @@ export function PriceListFormPage() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const toast = useToast();
-  const productsQuery = useProductsQuery();
+  const productListsQuery = useProductListsQuery();
   const priceListQuery = usePriceListQuery(id ?? '');
   const createMutation = useCreatePriceListMutation();
   const updateMutation = useUpdatePriceListMutation(id ?? '');
@@ -41,10 +42,13 @@ export function PriceListFormPage() {
     defaultValues: { items: [{ productId: '', unitPrice: '' }] },
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const selectedProductListId = useWatch({ control, name: 'productListId' });
+  const productsQuery = useProductsQuery({ productListId: selectedProductListId || undefined });
 
   useEffect(() => {
     if (priceListQuery.data) {
       reset({
+        productListId: priceListQuery.data.productListId,
         name: priceListQuery.data.name,
         isDefault: priceListQuery.data.isDefault,
         items: priceListQuery.data.items.map((item) => ({
@@ -70,6 +74,7 @@ export function PriceListFormPage() {
 
   const onSubmit = handleSubmit((values) => {
     const input: PriceListInput = {
+      productListId: values.productListId,
       name: values.name,
       isDefault: values.isDefault,
       items: values.items.map((item) => ({
@@ -111,6 +116,18 @@ export function PriceListFormPage() {
           <FormError message={apiErrorMessage} />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
+            <Select
+              label={tr.crm.priceLists.form.productListLabel}
+              required
+              hint={tr.crm.priceLists.form.productListHint}
+              disabled={isEdit}
+              error={errors.productListId?.message}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+              {...register('productListId')}
+            />
             <TextField
               label={tr.crm.priceLists.form.nameLabel}
               error={errors.name?.message}
