@@ -23,7 +23,7 @@ import {
   Warehouse,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FloatingWidgetsDock } from '../components/ui/floating-widgets-dock';
@@ -50,13 +50,55 @@ interface AppShellProps {
   print?: boolean;
 }
 
+// AppShell paylasilan/kalici bir layout degil - her sayfa kendi icinde <AppShell>
+// render eder (bkz. App.tsx route tanimlari, Outlet kullanilmiyor). Yani sidebar nav
+// oguna tiklanip navigate() cagrildiginda eski sayfa unmount, yenisi mount olur ve
+// AppShell'in kendi state'i sifirlanir - fare hala sidebar uzerindeyken bile sidebar
+// kapaniyormus gibi gorunur. Acik/kapali durumu React state'inin disinda, modul
+// seviyesinde tutup yeni instance'in baslangic degeri olarak kullanmak bu remount'u
+// "atlatir": fare gercekten ayrilmadiysa yeni mouseenter/mouseleave hic tetiklenmez,
+// deger true olarak kalir.
+let persistedSidebarOpen = false;
+
 export function AppShell({ children, print = false }: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpenState] = useState(persistedSidebarOpen);
+  const setSidebarOpen = (value: boolean) => {
+    persistedSidebarOpen = value;
+    setSidebarOpenState(value);
+  };
   const [navSearch, setNavSearch] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  const closeSidebarTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeSidebarTimeoutRef.current) {
+        window.clearTimeout(closeSidebarTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  function handleSidebarMouseEnter() {
+    if (closeSidebarTimeoutRef.current) {
+      window.clearTimeout(closeSidebarTimeoutRef.current);
+      closeSidebarTimeoutRef.current = null;
+    }
+    setSidebarOpen(true);
+  }
+
+  function handleSidebarMouseLeave() {
+    // Sayfa navigasyonu sirasinda DOM yeniden render olurken tarayici bazen
+    // imlec hic hareket etmemisken de bir mouseleave tetikliyor (hit-test'in
+    // yeniden hesaplanmasi) - kisa bir gecikmeyle kapatip, bu sure icinde
+    // gercek bir mouseenter gelirse iptal ederek yanlis kapanmayi onluyoruz.
+    closeSidebarTimeoutRef.current = window.setTimeout(() => {
+      setSidebarOpen(false);
+      setNavSearch('');
+    }, 150);
+  }
 
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -214,11 +256,8 @@ export function AppShell({ children, print = false }: AppShellProps) {
       </header>
 
       <nav
-        onMouseEnter={() => setSidebarOpen(true)}
-        onMouseLeave={() => {
-          setSidebarOpen(false);
-          setNavSearch('');
-        }}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
         className={clsx(
           'fixed top-16 bottom-0 left-0 z-[90] hidden flex-col overflow-hidden border-r border-app-border bg-app-surface transition-[width] duration-200 md:flex',
           sidebarOpen ? 'w-60' : 'w-16',
@@ -267,11 +306,17 @@ export function AppShell({ children, print = false }: AppShellProps) {
                 >
                   <span
                     className={clsx(
-                      'ml-2 inline-flex h-9 items-center gap-3 rounded-lg transition-colors duration-200',
+                      'inline-flex h-9 items-center gap-3 overflow-hidden rounded-lg transition-colors duration-200',
+                      sidebarOpen ? 'mr-2 ml-2 flex-1' : 'mx-auto w-10 shrink-0',
                       isActive && 'bg-app-brand text-white',
                     )}
                   >
-                    <span className="relative inline-flex w-14 shrink-0 items-center justify-center">
+                    <span
+                      className={clsx(
+                        'relative inline-flex shrink-0 items-center justify-center',
+                        sidebarOpen ? 'w-14' : 'w-10',
+                      )}
+                    >
                       <Icon size={20} />
                       {hasUnread && (
                         <span
