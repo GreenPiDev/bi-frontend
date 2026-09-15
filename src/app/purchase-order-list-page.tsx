@@ -4,6 +4,7 @@ import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { usePurchaseOrdersQuery } from '../features/crm/use-purchase-orders';
 import type { PurchaseOrder, PurchaseOrderStatus } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -57,7 +58,9 @@ export function PurchaseOrderListPage() {
   const [page, setPage] = useState(1);
   const quoteId = searchParams.get('quoteId') ?? undefined;
   const projectId = searchParams.get('projectId') ?? undefined;
-  const purchaseOrdersQuery = usePurchaseOrdersQuery({ page, quoteId, projectId });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const purchaseOrdersQuery = usePurchaseOrdersQuery({ page, pageSize, quoteId, projectId });
 
   return (
     <AppShell>

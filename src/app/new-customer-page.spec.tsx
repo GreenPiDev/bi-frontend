@@ -29,6 +29,7 @@ beforeEach(() => {
     roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
     isPlatformAdmin: true,
     avatarUrl: null,
+    defaultPageSize: 25,
     permissions: { isCompanyAdmin: true, permissions: [] },
   });
 });

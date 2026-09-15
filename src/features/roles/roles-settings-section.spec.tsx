@@ -53,6 +53,7 @@ const USERS: api.SafeUser[] = [
     roles: [{ id: 'role-sales', name: 'Satış' }],
     isPlatformAdmin: false,
     avatarUrl: null,
+    defaultPageSize: 25,
   },
 ];
 

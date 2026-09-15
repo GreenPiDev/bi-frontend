@@ -5,8 +5,10 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
+import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
 import { PasswordField } from '../components/ui/password-field';
+import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -47,48 +49,83 @@ export function ProfilePage() {
       {profileQuery.isPending && <p className="mt-4 text-sm text-app-muted">{tr.common.loading}</p>}
 
       {profileQuery.data && (
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <AvatarSection avatarUrl={profileQuery.data.avatarUrl} name={profileQuery.data.name} />
+        <div className="mt-6">
+          <HorizontalTabPanel
+            queryParam="tab"
+            tabs={
+              [
+                {
+                  key: 'general',
+                  label: tr.profile.tabs.general,
+                  content: (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                      <AvatarSection
+                        avatarUrl={profileQuery.data.avatarUrl}
+                        name={profileQuery.data.name}
+                      />
 
-          <section className="border-t border-app-border p-4">
-            <h2 className="mb-4 text-base font-bold text-app-text">
-              {tr.profile.infoSection.title}
-            </h2>
-            <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-app-muted">{tr.profile.infoSection.roleLabel}</dt>
-                <dd className="font-semibold text-app-text">
-                  {profileQuery.data.roles.map((role) => role.name).join(', ')}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-app-muted">{tr.profile.infoSection.statusLabel}</dt>
-                <dd className="font-semibold text-app-text">
-                  {profileQuery.data.isActive
-                    ? tr.profile.infoSection.statusActive
-                    : tr.profile.infoSection.statusInactive}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-app-muted">{tr.profile.infoSection.createdAtLabel}</dt>
-                <dd className="font-semibold text-app-text">
-                  {dateFormatter.format(new Date(profileQuery.data.createdAt))}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-app-muted">{tr.profile.infoSection.lastLoginLabel}</dt>
-                <dd className="font-semibold text-app-text">
-                  {profileQuery.data.lastLoginAt
-                    ? dateFormatter.format(new Date(profileQuery.data.lastLoginAt))
-                    : tr.profile.infoSection.never}
-                </dd>
-              </div>
-            </dl>
-          </section>
+                      <section className="border-t border-app-border p-4">
+                        <h2 className="mb-4 text-base font-bold text-app-text">
+                          {tr.profile.infoSection.title}
+                        </h2>
+                        <dl className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                          <div>
+                            <dt className="text-app-muted">{tr.profile.infoSection.roleLabel}</dt>
+                            <dd className="font-semibold text-app-text">
+                              {profileQuery.data.roles.map((role) => role.name).join(', ')}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-app-muted">{tr.profile.infoSection.statusLabel}</dt>
+                            <dd className="font-semibold text-app-text">
+                              {profileQuery.data.isActive
+                                ? tr.profile.infoSection.statusActive
+                                : tr.profile.infoSection.statusInactive}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-app-muted">
+                              {tr.profile.infoSection.createdAtLabel}
+                            </dt>
+                            <dd className="font-semibold text-app-text">
+                              {dateFormatter.format(new Date(profileQuery.data.createdAt))}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-app-muted">
+                              {tr.profile.infoSection.lastLoginLabel}
+                            </dt>
+                            <dd className="font-semibold text-app-text">
+                              {profileQuery.data.lastLoginAt
+                                ? dateFormatter.format(new Date(profileQuery.data.lastLoginAt))
+                                : tr.profile.infoSection.never}
+                            </dd>
+                          </div>
+                        </dl>
+                      </section>
 
-          <ProfileEditForm name={profileQuery.data.name} email={profileQuery.data.email} />
-
-          <ChangePasswordForm />
+                      <ProfileEditForm
+                        name={profileQuery.data.name}
+                        email={profileQuery.data.email}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: 'listSettings',
+                  label: tr.profile.tabs.listSettings,
+                  content: (
+                    <ListSettingsSection defaultPageSize={profileQuery.data.defaultPageSize} />
+                  ),
+                },
+                {
+                  key: 'security',
+                  label: tr.profile.tabs.security,
+                  content: <ChangePasswordForm />,
+                },
+              ] satisfies HorizontalTabItem[]
+            }
+          />
         </div>
       )}
     </AppShell>
@@ -188,6 +225,47 @@ function AvatarSection({ avatarUrl, name }: { avatarUrl: string | null; name: st
           onCancel={() => setRemoving(false)}
         />
       )}
+    </section>
+  );
+}
+
+const PAGE_SIZE_OPTIONS = [
+  { value: '10', label: '10' },
+  { value: '25', label: '25' },
+  { value: '50', label: '50' },
+];
+
+function ListSettingsSection({ defaultPageSize }: { defaultPageSize: number }) {
+  const toast = useToast();
+  const strings = tr.profile.listSettingsSection;
+  const updateMutation = useUpdateProfileMutation();
+
+  function handleChange(event: ChangeEvent<HTMLSelectElement>) {
+    const value = Number(event.target.value) as 10 | 25 | 50;
+    updateMutation.mutate(
+      { defaultPageSize: value },
+      {
+        onSuccess: () => toast.success(strings.updateSuccess),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
+  return (
+    <section className="border-t border-app-border p-4">
+      <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
+      <div className="max-w-xs">
+        <Select
+          label={strings.pageSizeLabel}
+          hint={strings.pageSizeHint}
+          options={PAGE_SIZE_OPTIONS}
+          value={String(defaultPageSize)}
+          onChange={handleChange}
+          disabled={updateMutation.isPending}
+        />
+      </div>
     </section>
   );
 }

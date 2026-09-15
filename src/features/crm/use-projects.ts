@@ -11,7 +11,7 @@ import {
 export const PROJECTS_QUERY_KEY = ['projects'];
 
 export function useProjectsQuery(
-  params: { page?: number; accountId?: string } = {},
+  params: { page?: number; pageSize?: number; accountId?: string } = {},
   options: { enabled?: boolean } = {},
 ) {
   return useQuery({

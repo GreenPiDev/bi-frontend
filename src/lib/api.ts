@@ -20,6 +20,7 @@ export interface SafeUser {
   roles: SafeUserRole[];
   isPlatformAdmin: boolean;
   avatarUrl: string | null;
+  defaultPageSize: number;
 }
 
 export interface EffectivePermission {
@@ -161,6 +162,7 @@ export function getProfile(): Promise<UserProfile> {
 export interface UpdateProfileInput {
   name?: string;
   email?: string;
+  defaultPageSize?: 10 | 25 | 50;
 }
 
 export function updateProfile(input: UpdateProfileInput): Promise<UserProfile> {
@@ -753,10 +755,11 @@ export interface AccountInput {
 }
 
 export function listAccounts(
-  params: { page?: number; q?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string } = {},
 ): Promise<PagedResult<Account>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/accounts${qs ? `?${qs}` : ''}`);
@@ -808,10 +811,11 @@ export interface ContactInput {
 }
 
 export function listContacts(
-  params: { page?: number; q?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string } = {},
 ): Promise<PagedResult<Contact>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/contacts${qs ? `?${qs}` : ''}`);
@@ -1155,10 +1159,11 @@ export interface CreateInteractionResult {
 }
 
 export function listInteractions(
-  params: { page?: number; accountId?: string; status?: InteractionStatus } = {},
+  params: { page?: number; pageSize?: number; accountId?: string; status?: InteractionStatus } = {},
 ): Promise<PagedResult<Interaction>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   const qs = query.toString();
@@ -1189,10 +1194,11 @@ export interface OpportunityInput {
 }
 
 export function listOpportunities(
-  params: { page?: number; accountId?: string; stage?: OpportunityStage } = {},
+  params: { page?: number; pageSize?: number; accountId?: string; stage?: OpportunityStage } = {},
 ): Promise<PagedResult<Opportunity>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.stage) query.set('stage', params.stage);
   const qs = query.toString();
@@ -1232,10 +1238,11 @@ export interface ProductListInput {
 }
 
 export function listProductLists(
-  params: { page?: number; q?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string } = {},
 ): Promise<PagedResult<ProductList>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/product-lists${qs ? `?${qs}` : ''}`);
@@ -1290,10 +1297,11 @@ export interface ProductInput {
 }
 
 export function listProducts(
-  params: { page?: number; q?: string; productListId?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
 ): Promise<PagedResult<Product>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   if (params.productListId) query.set('productListId', params.productListId);
   const qs = query.toString();
@@ -1358,10 +1366,11 @@ export interface PriceListInput {
 }
 
 export function listPriceLists(
-  params: { page?: number; q?: string; productListId?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
 ): Promise<PagedResult<PriceList>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   if (params.productListId) query.set('productListId', params.productListId);
   const qs = query.toString();
@@ -1439,10 +1448,11 @@ export interface UpdateQuoteInput {
 }
 
 export function listQuotes(
-  params: { page?: number; accountId?: string; status?: QuoteStatus } = {},
+  params: { page?: number; pageSize?: number; accountId?: string; status?: QuoteStatus } = {},
 ): Promise<PagedResult<Quote>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   const qs = query.toString();
@@ -1491,10 +1501,11 @@ export interface ProjectInput {
 }
 
 export function listProjects(
-  params: { page?: number; accountId?: string } = {},
+  params: { page?: number; pageSize?: number; accountId?: string } = {},
 ): Promise<PagedResult<Project>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   const qs = query.toString();
   return request(`/projects${qs ? `?${qs}` : ''}`);
@@ -1556,12 +1567,14 @@ export interface PostSaleCase {
 export function listPostSaleCases(
   params: {
     page?: number;
+    pageSize?: number;
     accountId?: string;
     status?: PostSaleCaseStatus;
   } = {},
 ): Promise<PagedResult<PostSaleCase>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   const qs = query.toString();
@@ -1636,10 +1649,11 @@ export interface UpdatePurchaseOrderInput {
 }
 
 export function listPurchaseOrders(
-  params: { page?: number; quoteId?: string; projectId?: string } = {},
+  params: { page?: number; pageSize?: number; quoteId?: string; projectId?: string } = {},
 ): Promise<PagedResult<PurchaseOrder>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.quoteId) query.set('quoteId', params.quoteId);
   if (params.projectId) query.set('projectId', params.projectId);
   const qs = query.toString();
@@ -1675,10 +1689,11 @@ export interface StockItem {
 }
 
 export function listStockItems(
-  params: { page?: number; q?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string } = {},
 ): Promise<PagedResult<StockItem>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/stock-items${qs ? `?${qs}` : ''}`);
@@ -1746,6 +1761,7 @@ export interface CreateMessageInput {
 export function listMessages(
   params: {
     page?: number;
+    pageSize?: number;
     q?: string;
     box?: 'inbox' | 'sent';
     relatedEntity?: MessageRelatedEntity;
@@ -1754,6 +1770,7 @@ export function listMessages(
 ): Promise<PagedResult<ConversationSummary>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   if (params.box) query.set('box', params.box);
   if (params.relatedEntity) query.set('relatedEntity', params.relatedEntity);

@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { usePriceListsQuery } from '../features/crm/use-price-lists';
 import type { PriceList } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -37,7 +38,9 @@ const columns: TableColumn<PriceList>[] = [
 export function PriceListsListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const priceListsQuery = usePriceListsQuery({ page });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const priceListsQuery = usePriceListsQuery({ page, pageSize });
 
   return (
     <AppShell>

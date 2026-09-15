@@ -13,7 +13,7 @@ import {
 export const PRODUCTS_QUERY_KEY = ['products'];
 
 export function useProductsQuery(
-  params: { page?: number; q?: string; productListId?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
 ) {
   return useQuery({
     queryKey: [...PRODUCTS_QUERY_KEY, params],

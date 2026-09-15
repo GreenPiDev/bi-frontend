@@ -39,7 +39,8 @@ export function QuotesListPage() {
   const meQuery = useMeQuery();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<QuoteStatus | ''>('');
-  const quotesQuery = useQuotesQuery({ page, status: status || undefined });
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const quotesQuery = useQuotesQuery({ page, pageSize, status: status || undefined });
   const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const canCreatePurchaseOrder = hasPermission(
     meQuery.data?.permissions,

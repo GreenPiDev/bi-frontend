@@ -11,7 +11,7 @@ import {
 export const PURCHASE_ORDERS_QUERY_KEY = ['purchase-orders'];
 
 export function usePurchaseOrdersQuery(
-  params: { page?: number; quoteId?: string; projectId?: string } = {},
+  params: { page?: number; pageSize?: number; quoteId?: string; projectId?: string } = {},
 ) {
   return useQuery({
     queryKey: [...PURCHASE_ORDERS_QUERY_KEY, params],

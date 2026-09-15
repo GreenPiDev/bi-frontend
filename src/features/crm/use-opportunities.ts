@@ -12,7 +12,7 @@ import {
 export const OPPORTUNITIES_QUERY_KEY = ['opportunities'];
 
 export function useOpportunitiesQuery(
-  params: { page?: number; accountId?: string; stage?: OpportunityStage } = {},
+  params: { page?: number; pageSize?: number; accountId?: string; stage?: OpportunityStage } = {},
 ) {
   return useQuery({
     queryKey: [...OPPORTUNITIES_QUERY_KEY, params],

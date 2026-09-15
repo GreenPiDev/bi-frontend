@@ -60,7 +60,12 @@ export function useUpdateProfileMutation() {
     mutationFn: (input: UpdateProfileInput) => updateProfile(input),
     onSuccess: (profile) => {
       queryClient.setQueryData(PROFILE_QUERY_KEY, profile);
-      queryClient.setQueryData(AUTH_QUERY_KEY, profile);
+      // UserProfile'da `permissions` yok - AUTH_QUERY_KEY'i dogrudan bununla
+      // degistirmek nav filtrelemesini (G1) kullanan `permissions` alanini siler.
+      // Mevcut AuthenticatedUser'in ustune sadece degisen alanlari birlestir.
+      queryClient.setQueryData<AuthenticatedUser | null>(AUTH_QUERY_KEY, (old) =>
+        old ? { ...old, ...profile } : old,
+      );
     },
   });
 }

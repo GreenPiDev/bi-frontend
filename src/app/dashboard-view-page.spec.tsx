@@ -55,6 +55,7 @@ describe('DashboardViewPage', () => {
       roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     const widget: api.Widget = {
@@ -111,6 +112,7 @@ describe('DashboardViewPage', () => {
       roles: [{ id: 'r1', name: 'Goruntuleyici' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: false, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -139,6 +141,7 @@ describe('DashboardViewPage', () => {
       roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -177,6 +180,7 @@ describe('DashboardViewPage', () => {
       roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({

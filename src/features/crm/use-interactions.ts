@@ -13,7 +13,7 @@ import {
 export const INTERACTIONS_QUERY_KEY = ['interactions'];
 
 export function useInteractionsQuery(
-  params: { page?: number; accountId?: string; status?: InteractionStatus } = {},
+  params: { page?: number; pageSize?: number; accountId?: string; status?: InteractionStatus } = {},
   options: { enabled?: boolean } = {},
 ) {
   return useQuery({

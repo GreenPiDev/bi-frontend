@@ -6,12 +6,14 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useMeQuery } from '../features/auth/use-auth';
 import {
   useLowStockItemsQuery,
   useStockItemsQuery,
   useUpsertStockItemMutation,
 } from '../features/crm/use-stock-items';
 import { ApiError, type StockItem } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 function isLowStock(item: StockItem): boolean {
@@ -61,23 +63,13 @@ function QuantityEditor({ item, onDone }: { item: StockItem; onDone: () => void 
 export function StockListPage() {
   const [page, setPage] = useState(1);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [q, setQ] = useState('');
   const [qInput, setQInput] = useState('');
-  const stockItemsQuery = useStockItemsQuery({ page, q: q || undefined });
+  const q = useDebouncedValue(qInput.trim());
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const stockItemsQuery = useStockItemsQuery({ page, pageSize, q: q || undefined });
   const lowStockQuery = useLowStockItemsQuery();
   const lowStockIds = new Set((lowStockQuery.data ?? []).map((item) => item.id));
-
-  function handleSearchSubmit(event: FormEvent) {
-    event.preventDefault();
-    setPage(1);
-    setQ(qInput.trim());
-  }
-
-  function handleSearchReset() {
-    setPage(1);
-    setQInput('');
-    setQ('');
-  }
 
   const columns: TableColumn<StockItem>[] = [
     {
@@ -140,27 +132,22 @@ export function StockListPage() {
         <p className="mt-1 text-sm text-app-muted">{tr.crm.stock.subtitle}</p>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mt-6 flex w-full items-center gap-2">
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-          />
-          <input
-            type="search"
-            value={qInput}
-            onChange={(event) => setQInput(event.target.value)}
-            placeholder={tr.crm.stock.searchPlaceholder}
-            className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-          />
-        </div>
-        <Button type="submit" variant="secondary">
-          {tr.common.search}
-        </Button>
-        <Button type="button" variant="secondary" onClick={handleSearchReset}>
-          {tr.common.reset}
-        </Button>
-      </form>
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.stock.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
 
       <p className="mt-4 text-sm text-app-muted">
         {(lowStockQuery.data?.length ?? 0) > 0

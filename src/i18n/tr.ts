@@ -146,6 +146,11 @@ export const tr = {
   profile: {
     title: 'Profil',
     subtitle: 'Hesap bilgilerini görüntüle ve düzenle.',
+    tabs: {
+      general: 'Genel',
+      listSettings: 'Liste Ayarları',
+      security: 'Güvenlik',
+    },
     avatarSection: {
       title: 'Profil Fotoğrafı',
       alt: 'Profil fotoğrafı',
@@ -187,6 +192,12 @@ export const tr = {
       submit: 'Şifreyi Değiştir',
       submitting: 'Değiştiriliyor...',
       success: 'Şifren değiştirildi.',
+    },
+    listSettingsSection: {
+      title: 'Liste Ayarları',
+      pageSizeLabel: 'Varsayılan Sayfa Boyutu',
+      pageSizeHint: 'Tablolu sayfalarda bir seferde kaç kayıt gösterileceğini belirler.',
+      updateSuccess: 'Sayfa boyutu güncellendi.',
     },
   },
   datasets: {

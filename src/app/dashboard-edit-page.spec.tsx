@@ -66,6 +66,7 @@ describe('DashboardEditPage', () => {
       roles: [{ id: 'r1', name: 'Editor' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -136,6 +137,7 @@ describe('DashboardEditPage', () => {
       roles: [{ id: 'r1', name: 'Editor' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -177,6 +179,7 @@ describe('DashboardEditPage', () => {
       roles: [{ id: 'r1', name: 'Editor' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -214,6 +217,7 @@ describe('DashboardEditPage', () => {
       roles: [{ id: 'r1', name: 'Editor' }],
       isPlatformAdmin: false,
       avatarUrl: null,
+      defaultPageSize: 25,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({

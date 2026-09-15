@@ -10,7 +10,7 @@ import {
 
 export const PRICE_LISTS_QUERY_KEY = ['price-lists'];
 
-export function usePriceListsQuery(params: { page?: number; q?: string } = {}) {
+export function usePriceListsQuery(params: { page?: number; pageSize?: number; q?: string } = {}) {
   return useQuery({
     queryKey: [...PRICE_LISTS_QUERY_KEY, params],
     queryFn: () => listPriceLists(params),

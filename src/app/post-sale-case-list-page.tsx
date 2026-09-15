@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
+import { useMeQuery } from '../features/auth/use-auth';
 import { usePostSaleCasesQuery } from '../features/crm/use-post-sale-cases';
 import type { PostSaleCase, PostSaleCaseStatus } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -51,7 +52,9 @@ export function PostSaleCaseListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<PostSaleCaseStatus | ''>('');
-  const casesQuery = usePostSaleCasesQuery({ page, status: status || undefined });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const casesQuery = usePostSaleCasesQuery({ page, pageSize, status: status || undefined });
 
   return (
     <AppShell>

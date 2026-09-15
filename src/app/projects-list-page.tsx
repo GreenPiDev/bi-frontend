@@ -4,6 +4,7 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useProjectsQuery } from '../features/crm/use-projects';
 import type { Project } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -44,7 +45,9 @@ const columns: TableColumn<Project>[] = [
 export function ProjectsListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const projectsQuery = useProjectsQuery({ page });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const projectsQuery = useProjectsQuery({ page, pageSize });
 
   return (
     <AppShell>

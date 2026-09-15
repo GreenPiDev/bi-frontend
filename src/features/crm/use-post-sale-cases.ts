@@ -12,6 +12,7 @@ export const POST_SALE_CASES_QUERY_KEY = ['post-sale-cases'];
 export function usePostSaleCasesQuery(
   params: {
     page?: number;
+    pageSize?: number;
     accountId?: string;
     status?: PostSaleCaseStatus;
   } = {},

@@ -19,6 +19,7 @@ export const MESSAGES_QUERY_KEY = ['messages'];
 export function useMessagesQuery(
   params: {
     page?: number;
+    pageSize?: number;
     q?: string;
     box?: 'inbox' | 'sent';
     relatedEntity?: MessageRelatedEntity;

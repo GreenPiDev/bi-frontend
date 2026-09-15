@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import type { Interaction } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -48,7 +49,9 @@ const columns: TableColumn<Interaction>[] = [
 export function InteractionsListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const interactionsQuery = useInteractionsQuery({ page });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const interactionsQuery = useInteractionsQuery({ page, pageSize });
 
   return (
     <AppShell>

@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import type { ProductList } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -25,7 +26,9 @@ const columns: TableColumn<ProductList>[] = [
 export function ProductListsListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const productListsQuery = useProductListsQuery({ page });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const productListsQuery = useProductListsQuery({ page, pageSize });
 
   return (
     <AppShell>

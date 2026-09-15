@@ -10,7 +10,9 @@ import {
 
 export const PRODUCT_LISTS_QUERY_KEY = ['product-lists'];
 
-export function useProductListsQuery(params: { page?: number; q?: string } = {}) {
+export function useProductListsQuery(
+  params: { page?: number; pageSize?: number; q?: string } = {},
+) {
   return useQuery({
     queryKey: [...PRODUCT_LISTS_QUERY_KEY, params],
     queryFn: () => listProductLists(params),

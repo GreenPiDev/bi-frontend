@@ -1,14 +1,16 @@
 import { Search } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { downloadBlob } from '../lib/download';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import type { Contact } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -54,22 +56,12 @@ const columns: TableColumn<Contact>[] = [
 export function ContactsListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const [q, setQ] = useState('');
   const [qInput, setQInput] = useState('');
-  const contactsQuery = useContactsQuery({ page, q: q || undefined });
+  const q = useDebouncedValue(qInput.trim());
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const contactsQuery = useContactsQuery({ page, pageSize, q: q || undefined });
   const exportMutation = useExportEntityMutation('contacts');
-
-  function handleSearchSubmit(event: FormEvent) {
-    event.preventDefault();
-    setPage(1);
-    setQ(qInput.trim());
-  }
-
-  function handleSearchReset() {
-    setPage(1);
-    setQInput('');
-    setQ('');
-  }
 
   return (
     <AppShell>
@@ -103,27 +95,22 @@ export function ContactsListPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mt-6 flex w-full items-center gap-2">
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-          />
-          <input
-            type="search"
-            value={qInput}
-            onChange={(event) => setQInput(event.target.value)}
-            placeholder={tr.crm.contacts.searchPlaceholder}
-            className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-          />
-        </div>
-        <Button type="submit" variant="secondary">
-          {tr.common.search}
-        </Button>
-        <Button type="button" variant="secondary" onClick={handleSearchReset}>
-          {tr.common.reset}
-        </Button>
-      </form>
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.contacts.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
 
       <Table
         columns={columns}

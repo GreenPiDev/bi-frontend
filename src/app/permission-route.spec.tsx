@@ -24,6 +24,7 @@ function noPermissionsUser(): AuthenticatedUser {
     roles: [{ id: 'r1', name: 'Goruntuleyici' }],
     isPlatformAdmin: false,
     avatarUrl: null,
+    defaultPageSize: 25,
     permissions: { isCompanyAdmin: false, permissions: [] },
   };
 }
@@ -37,6 +38,7 @@ function companyAdminUser(): AuthenticatedUser {
     roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
     isPlatformAdmin: false,
     avatarUrl: null,
+    defaultPageSize: 25,
     permissions: { isCompanyAdmin: true, permissions: [] },
   };
 }

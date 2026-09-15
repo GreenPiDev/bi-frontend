@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
@@ -11,6 +11,7 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAssignableMessageUsersQuery, useMessagesQuery } from '../features/crm/use-messages';
 import type { ConversationSummary, MessageRelatedEntity } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 function UnreadCountBadge({ count }: { count: number }) {
@@ -29,14 +30,15 @@ export function MessagesListPage() {
   const navigate = useNavigate();
   const meQuery = useMeQuery();
   const [page, setPage] = useState(1);
-  const [q, setQ] = useState('');
   const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [box, setBox] = useState<'inbox' | 'sent' | undefined>(undefined);
   const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
-  const messagesQuery = useMessagesQuery({ page, q: q || undefined, box, relatedEntity });
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const messagesQuery = useMessagesQuery({ page, pageSize, q: q || undefined, box, relatedEntity });
   const usersQuery = useAssignableMessageUsersQuery();
 
   const userNameById = useMemo(() => {
@@ -52,18 +54,6 @@ export function MessagesListPage() {
   function displayUserName(userId: string): string {
     if (userId === currentUserId) return tr.crm.messages.you;
     return userNameById.get(userId) ?? userId;
-  }
-
-  function handleSearchSubmit(event: FormEvent) {
-    event.preventDefault();
-    setPage(1);
-    setQ(qInput.trim());
-  }
-
-  function handleSearchReset() {
-    setPage(1);
-    setQInput('');
-    setQ('');
   }
 
   const columns: TableColumn<ConversationSummary>[] = [
@@ -125,27 +115,22 @@ export function MessagesListPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSearchSubmit} className="mt-6 flex w-full items-center gap-2">
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-          />
-          <input
-            type="search"
-            value={qInput}
-            onChange={(event) => setQInput(event.target.value)}
-            placeholder={tr.crm.messages.searchPlaceholder}
-            className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-          />
-        </div>
-        <Button type="submit" variant="secondary">
-          {tr.common.search}
-        </Button>
-        <Button type="button" variant="secondary" onClick={handleSearchReset}>
-          {tr.common.reset}
-        </Button>
-      </form>
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.messages.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
 
       <Table
         columns={columns}

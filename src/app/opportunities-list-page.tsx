@@ -5,6 +5,7 @@ import { Button } from '../components/ui/button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { PageHelp } from '../components/ui/page-help';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import type { Opportunity, OpportunityStage } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -41,7 +42,9 @@ export function OpportunitiesListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [stage, setStage] = useState<OpportunityStage | ''>('');
-  const opportunitiesQuery = useOpportunitiesQuery({ page, stage: stage || undefined });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const opportunitiesQuery = useOpportunitiesQuery({ page, pageSize, stage: stage || undefined });
 
   return (
     <AppShell>
