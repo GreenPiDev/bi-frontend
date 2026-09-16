@@ -733,6 +733,8 @@ export const tr = {
         fromLabel: 'Şu tarihten itibaren eklenenler',
         lastNDaysLabel: 'Son kaç gün içinde eklenenler',
         lastNDaysPlaceholder: 'Örn. 10',
+        notContactedDaysLabel: 'Son kaç gündür görüşme yapılmayanlar',
+        notContactedDaysPlaceholder: 'Örn. 7',
         apply: 'Uygula',
         reset: 'Sıfırla',
       },

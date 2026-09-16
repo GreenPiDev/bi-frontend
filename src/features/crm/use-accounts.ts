@@ -11,7 +11,14 @@ import {
 export const ACCOUNTS_QUERY_KEY = ['accounts'];
 
 export function useAccountsQuery(
-  params: { page?: number; pageSize?: number; q?: string; sort?: string; from?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    sort?: string;
+    from?: string;
+    notContactedDays?: number;
+  } = {},
 ) {
   return useQuery({
     queryKey: [...ACCOUNTS_QUERY_KEY, params],

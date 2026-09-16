@@ -217,4 +217,18 @@ describe('AccountsListPage', () => {
     });
     expect(screen.queryByText('Istanbul')).not.toBeInTheDocument();
   });
+
+  it('"son kac gundur gorusme yapilmayanlar" filtresi girilince notContactedDays parametresiyle sorgular', async () => {
+    const listSpy = vi.spyOn(api, 'listAccounts').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    const user = userEvent.setup();
+    renderAccountsListPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Filtrele' }));
+    await user.type(screen.getByPlaceholderText('Örn. 7'), '7');
+
+    expect(listSpy).toHaveBeenLastCalledWith(expect.objectContaining({ notContactedDays: 7 }));
+  });
 });

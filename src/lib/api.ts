@@ -769,7 +769,14 @@ export interface AccountInput {
 }
 
 export function listAccounts(
-  params: { page?: number; pageSize?: number; q?: string; sort?: string; from?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    sort?: string;
+    from?: string;
+    notContactedDays?: number;
+  } = {},
 ): Promise<PagedResult<Account>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
@@ -777,6 +784,7 @@ export function listAccounts(
   if (params.q) query.set('q', params.q);
   if (params.sort) query.set('sort', params.sort);
   if (params.from) query.set('from', params.from);
+  if (params.notContactedDays) query.set('notContactedDays', String(params.notContactedDays));
   const qs = query.toString();
   return request(`/accounts${qs ? `?${qs}` : ''}`);
 }

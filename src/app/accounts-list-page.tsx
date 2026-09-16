@@ -36,19 +36,22 @@ export function AccountsListPage() {
   const q = useDebouncedValue(qInput.trim());
   const [from, setFrom] = useState('');
   const [lastNDaysInput, setLastNDaysInput] = useState('');
+  const [notContactedDaysInput, setNotContactedDaysInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState<Account | undefined>(undefined);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const notContactedDays = notContactedDaysInput ? Number(notContactedDaysInput) : undefined;
   const accountsQuery = useAccountsQuery({
     page,
     pageSize,
     q: q || undefined,
     from: from || undefined,
+    notContactedDays,
   });
   const exportMutation = useExportEntityMutation('accounts');
   const deleteMutation = useDeleteAccountMutation();
-  const hasActiveFilter = Boolean(from);
+  const hasActiveFilter = Boolean(from) || Boolean(notContactedDays);
 
   function handleConfirmDelete() {
     if (!deletingAccount) return;
@@ -176,6 +179,7 @@ export function AccountsListPage() {
     setPage(1);
     setFrom('');
     setLastNDaysInput('');
+    setNotContactedDaysInput('');
   }
 
   return (
@@ -280,6 +284,17 @@ export function AccountsListPage() {
               placeholder={tr.crm.accounts.filterDrawer.lastNDaysPlaceholder}
               value={lastNDaysInput}
               onChange={(event) => applyLastNDays(event.target.value.replace(/[^0-9]/g, ''))}
+            />
+            <TextField
+              type="text"
+              inputMode="numeric"
+              label={tr.crm.accounts.filterDrawer.notContactedDaysLabel}
+              placeholder={tr.crm.accounts.filterDrawer.notContactedDaysPlaceholder}
+              value={notContactedDaysInput}
+              onChange={(event) => {
+                setPage(1);
+                setNotContactedDaysInput(event.target.value.replace(/[^0-9]/g, ''));
+              }}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>
               {tr.crm.accounts.filterDrawer.reset}
