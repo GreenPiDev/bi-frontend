@@ -21,6 +21,10 @@ function formatDateDisplay(dateStr: string): string {
   return `${day}.${month}.${year}`;
 }
 
+/** Calendar'in yaklasik yuksekligi (w-72 govde + ay/yil satiri + "Bugun" satiri) -
+ * asagida yer yoksa yukari acmaya karar vermek icin kullanilir. */
+const CALENDAR_HEIGHT = 380;
+
 /** Saat tasimayan tarih alanlari icin ozel Calendar acilir penceresi - datetime-local
  * icin ayni deseni kullanan DateTimeField'in saatsiz eslenigi.
  *
@@ -50,7 +54,12 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
     function updateRect() {
       const rect = buttonRef.current?.getBoundingClientRect();
       if (!rect) return;
-      setMenuRect({ top: rect.bottom + 4, left: rect.left });
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const openUp = spaceBelow < CALENDAR_HEIGHT + 8 && rect.top > CALENDAR_HEIGHT + 8;
+      setMenuRect({
+        top: openUp ? Math.max(8, rect.top - CALENDAR_HEIGHT - 4) : rect.bottom + 4,
+        left: rect.left,
+      });
     }
     updateRect();
     window.addEventListener('resize', updateRect);
@@ -93,8 +102,13 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
       </button>
       {open && menuRect && (
         <div
-          style={{ position: 'fixed', top: menuRect.top, left: menuRect.left }}
-          className="z-[200]"
+          style={{
+            position: 'fixed',
+            top: menuRect.top,
+            left: menuRect.left,
+            maxHeight: 'calc(100vh - 16px)',
+          }}
+          className="z-[200] overflow-auto"
         >
           <Calendar value={value} onSelect={handleSelectDate} />
         </div>
