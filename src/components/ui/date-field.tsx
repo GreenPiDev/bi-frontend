@@ -28,7 +28,9 @@ function formatDateDisplay(dateStr: string): string {
  * `overflow-auto` oldugu icin (bkz. modal.tsx), `absolute` konumlandirma listeyi kirpardi
  * (ayni gerekce icin bkz. multi-select.tsx). Takvim her zaman butonun altinda acilir;
  * sayfanin altina tasarsa (sayfa zaten kendi sonuna kadar scroll edilmisse), gecici bir
- * spacer eklenip otomatik asagi scroll edilir ki tasan kisim gorunur olsun. */
+ * spacer eklenip otomatik asagi scroll edilir ki tasan kisim gorunur olsun. menuRect,
+ * her kapanista sifirlanir - aksi halde bir sonraki acilista onceki (zaten scroll ile
+ * duzeltilmis) konum kullanilir ve tasma tekrar hesaplanmadigi icin scroll calismaz. */
 export function DateField({ label, value, onChange, required, hint, error }: DateFieldProps) {
   const buttonId = useId();
   const [open, setOpen] = useState(false);
@@ -39,10 +41,18 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
   const spacerRef = useRef<HTMLDivElement | null>(null);
   const hasAdjustedScrollRef = useRef(false);
 
+  function closeMenu() {
+    setOpen(false);
+    setMenuRect(null);
+    hasAdjustedScrollRef.current = false;
+    spacerRef.current?.remove();
+    spacerRef.current = null;
+  }
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        closeMenu();
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -64,14 +74,6 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect, true);
     };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
-      hasAdjustedScrollRef.current = false;
-      spacerRef.current?.remove();
-      spacerRef.current = null;
-    }
   }, [open]);
 
   useEffect(() => {
@@ -97,7 +99,7 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
 
   function handleSelectDate(isoDate: string) {
     onChange(isoDate);
-    setOpen(false);
+    closeMenu();
   }
 
   return (
@@ -115,7 +117,7 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
         id={buttonId}
         type="button"
         aria-label={label}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => (open ? closeMenu() : setOpen(true))}
         className={clsx(
           'flex w-full items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:ring-2 focus:ring-app-primary',
           error && 'border-app-danger',
