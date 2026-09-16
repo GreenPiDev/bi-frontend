@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAssignableMessageUsersQuery, useMessagesQuery } from '../features/crm/use-messages';
 import type { ConversationSummary, MessageRelatedEntity } from '../lib/api';
@@ -56,16 +58,18 @@ export function MessagesListPage() {
     return userNameById.get(userId) ?? userId;
   }
 
-  const columns: TableColumn<ConversationSummary>[] = [
+  const ALL_COLUMNS: TableColumn<ConversationSummary>[] = [
     {
       key: 'unread',
       header: '',
       className: 'w-8',
+      required: true,
       render: (conversation) => <UnreadCountBadge count={conversation.unreadCount} />,
     },
     {
       key: 'sender',
       header: tr.crm.messages.senderColumn,
+      required: true,
       render: (conversation) => (
         <span className="font-semibold text-app-text">
           {displayUserName(conversation.lastMessage.senderId)}
@@ -94,6 +98,13 @@ export function MessagesListPage() {
       render: (conversation) => new Date(conversation.lastMessage.sentAt).toLocaleString('tr-TR'),
     },
   ];
+
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'messages',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -129,6 +140,14 @@ export function MessagesListPage() {
           }}
           placeholder={tr.crm.messages.searchPlaceholder}
           className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 

@@ -3,17 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { usePriceListsQuery } from '../features/crm/use-price-lists';
 import type { PriceList } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-const columns: TableColumn<PriceList>[] = [
+const ALL_COLUMNS: TableColumn<PriceList>[] = [
   {
     key: 'name',
     header: tr.crm.priceLists.nameColumn,
+    required: true,
     render: (p) => (
       <span className="flex items-center gap-2 font-semibold text-app-text">
         {p.name}
@@ -41,6 +44,12 @@ export function PriceListsListContent() {
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const priceListsQuery = usePriceListsQuery({ page, pageSize });
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'price-lists',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <>
@@ -55,6 +64,14 @@ export function PriceListsListContent() {
         <Button type="button" onClick={() => navigate('/fiyat-listeleri/yeni')}>
           {tr.crm.priceLists.newButton}
         </Button>
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
+        />
       </div>
 
       <Table

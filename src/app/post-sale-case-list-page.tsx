@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { usePostSaleCasesQuery } from '../features/crm/use-post-sale-cases';
 import type { PostSaleCase, PostSaleCaseStatus } from '../lib/api';
@@ -20,15 +22,17 @@ const STATUS_BADGE_VARIANT: Record<PostSaleCaseStatus, 'success' | 'warning' | '
   GERI_BILDIRIM_ALINDI: 'success',
 };
 
-const columns: TableColumn<PostSaleCase>[] = [
+const ALL_COLUMNS: TableColumn<PostSaleCase>[] = [
   {
     key: 'quote',
     header: tr.crm.postSaleCases.quoteColumn,
+    required: true,
     render: (c) => <span className="font-semibold text-app-text">{c.quote.quoteNumber}</span>,
   },
   {
     key: 'account',
     header: tr.crm.postSaleCases.accountColumn,
+    required: true,
     render: (c) => c.account.name,
   },
   {
@@ -55,6 +59,12 @@ export function PostSaleCaseListPage() {
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const casesQuery = usePostSaleCasesQuery({ page, pageSize, status: status || undefined });
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'post-sale-cases',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -76,6 +86,14 @@ export function PostSaleCaseListPage() {
           }}
           placeholder={tr.crm.postSaleCases.allStatuses}
           options={STATUS_OPTIONS}
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 

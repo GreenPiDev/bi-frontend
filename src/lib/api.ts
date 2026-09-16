@@ -21,6 +21,7 @@ export interface SafeUser {
   isPlatformAdmin: boolean;
   avatarUrl: string | null;
   defaultPageSize: number;
+  columnPreferences: Record<string, string[]> | null;
 }
 
 export interface EffectivePermission {
@@ -163,6 +164,7 @@ export interface UpdateProfileInput {
   name?: string;
   email?: string;
   defaultPageSize?: 10 | 25 | 50;
+  columnPreferences?: Record<string, string[]>;
 }
 
 export function updateProfile(input: UpdateProfileInput): Promise<UserProfile> {

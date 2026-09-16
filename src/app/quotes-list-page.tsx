@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { useToast } from '../components/ui/toast-context';
 import { hasPermission } from '../features/auth/permissions';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useQuotesQuery } from '../features/crm/use-quotes';
 import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
@@ -60,10 +62,11 @@ export function QuotesListPage() {
     });
   }
 
-  const columns: TableColumn<Quote>[] = [
+  const ALL_COLUMNS: TableColumn<Quote>[] = [
     {
       key: 'quoteNumber',
       header: tr.crm.quotes.numberColumn,
+      required: true,
       render: (q) => <span className="font-semibold text-app-text">{q.quoteNumber}</span>,
     },
     {
@@ -94,6 +97,7 @@ export function QuotesListPage() {
           {
             key: 'actions',
             header: '',
+            required: true,
             render: (q: Quote) =>
               q.status === 'APPROVED' ? (
                 <Button
@@ -114,6 +118,13 @@ export function QuotesListPage() {
         ]
       : []),
   ];
+
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'quotes',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -140,6 +151,14 @@ export function QuotesListPage() {
           }}
           placeholder={tr.crm.quotes.allStatuses}
           options={STATUS_OPTIONS}
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 

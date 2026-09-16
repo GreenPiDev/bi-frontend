@@ -27,6 +27,7 @@ describe('PlatformAdminPage', () => {
       isPlatformAdmin: true,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getPlatformTenants').mockResolvedValue([]);

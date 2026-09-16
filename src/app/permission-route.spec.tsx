@@ -25,6 +25,7 @@ function noPermissionsUser(): AuthenticatedUser {
     isPlatformAdmin: false,
     avatarUrl: null,
     defaultPageSize: 25,
+    columnPreferences: null,
     permissions: { isCompanyAdmin: false, permissions: [] },
   };
 }
@@ -39,6 +40,7 @@ function companyAdminUser(): AuthenticatedUser {
     isPlatformAdmin: false,
     avatarUrl: null,
     defaultPageSize: 25,
+    columnPreferences: null,
     permissions: { isCompanyAdmin: true, permissions: [] },
   };
 }

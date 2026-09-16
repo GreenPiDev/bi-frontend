@@ -54,6 +54,7 @@ const USERS: api.SafeUser[] = [
     isPlatformAdmin: false,
     avatarUrl: null,
     defaultPageSize: 25,
+    columnPreferences: null,
   },
 ];
 

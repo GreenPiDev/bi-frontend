@@ -25,6 +25,7 @@ describe('PlatformAdminRoute', () => {
       isPlatformAdmin: false,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     renderAppAt('/platform-admin');
@@ -44,6 +45,7 @@ describe('PlatformAdminRoute', () => {
       isPlatformAdmin: true,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getPlatformTenants').mockResolvedValue([]);

@@ -56,6 +56,7 @@ describe('DashboardViewPage', () => {
       isPlatformAdmin: false,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     const widget: api.Widget = {
@@ -113,6 +114,7 @@ describe('DashboardViewPage', () => {
       isPlatformAdmin: false,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: false, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -142,6 +144,7 @@ describe('DashboardViewPage', () => {
       isPlatformAdmin: false,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({
@@ -181,6 +184,7 @@ describe('DashboardViewPage', () => {
       isPlatformAdmin: false,
       avatarUrl: null,
       defaultPageSize: 25,
+      columnPreferences: null,
       permissions: { isCompanyAdmin: true, permissions: [] },
     });
     vi.spyOn(api, 'getDashboard').mockResolvedValue({

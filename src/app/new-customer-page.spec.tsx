@@ -30,6 +30,7 @@ beforeEach(() => {
     isPlatformAdmin: true,
     avatarUrl: null,
     defaultPageSize: 25,
+    columnPreferences: null,
     permissions: { isCompanyAdmin: true, permissions: [] },
   });
 });

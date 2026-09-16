@@ -85,6 +85,7 @@ const companyAdminUser: api.AuthenticatedUser = {
   isPlatformAdmin: false,
   avatarUrl: null,
   defaultPageSize: 25,
+  columnPreferences: null,
   permissions: { isCompanyAdmin: true, permissions: [] },
 };
 

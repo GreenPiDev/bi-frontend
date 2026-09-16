@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
@@ -10,6 +11,7 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAccountsQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
@@ -61,10 +63,11 @@ export function AccountsListPage() {
     });
   }
 
-  const columns: TableColumn<Account>[] = [
+  const ALL_COLUMNS: TableColumn<Account>[] = [
     {
       key: 'name',
       header: tr.crm.accounts.nameColumn,
+      required: true,
       render: (a) => (
         <span className="flex items-center gap-1.5 font-semibold text-app-text">
           {a.name}
@@ -104,6 +107,7 @@ export function AccountsListPage() {
       key: 'actions',
       header: tr.crm.accounts.actionsColumn,
       className: 'w-px',
+      required: true,
       render: (a) => (
         <div className="flex items-center gap-1">
           <Tooltip content={tr.crm.accounts.editTooltip}>
@@ -134,6 +138,13 @@ export function AccountsListPage() {
       ),
     },
   ];
+
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'accounts',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   function applyLastNDays(value: string) {
     setLastNDaysInput(value);
@@ -204,6 +215,14 @@ export function AccountsListPage() {
           }}
           placeholder={tr.crm.accounts.searchPlaceholder}
           className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 

@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useProjectsQuery } from '../features/crm/use-projects';
 import type { Project } from '../lib/api';
@@ -16,16 +18,18 @@ function formatCurrency(value: string | null): string {
   );
 }
 
-const columns: TableColumn<Project>[] = [
+const ALL_COLUMNS: TableColumn<Project>[] = [
   {
     key: 'projectNumber',
     header: tr.crm.projects.numberColumn,
     className: 'font-semibold text-app-text',
+    required: true,
     render: (p) => p.projectNumber,
   },
   {
     key: 'name',
     header: tr.crm.projects.nameColumn,
+    required: true,
     render: (p) => p.name,
   },
   {
@@ -48,6 +52,12 @@ export function ProjectsListPage() {
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const projectsQuery = useProjectsQuery({ page, pageSize });
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'projects',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -62,6 +72,14 @@ export function ProjectsListPage() {
         <Button type="button" onClick={() => navigate('/projeler/yeni')}>
           {tr.crm.projects.newButton}
         </Button>
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
+        />
       </div>
 
       <Table

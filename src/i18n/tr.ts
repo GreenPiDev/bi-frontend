@@ -15,6 +15,10 @@ export const tr = {
       hide: 'Şifreyi gizle',
     },
     pageHelp: 'Yardım',
+    columnPicker: {
+      label: 'Gösterilecek Kolonlar',
+      placeholder: 'Kolon seçin',
+    },
   },
   help: {
     dashboards:

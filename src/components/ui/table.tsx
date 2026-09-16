@@ -8,6 +8,10 @@ export interface TableColumn<T> {
   header: string;
   render: (row: T) => ReactNode;
   className?: string;
+  /** "Gosterilecek kolonlar" secicisinde (bkz. features/auth/use-column-visibility)
+   * her zaman gorunur sayilir ve secici listesinde sunulmaz - Table'in kendisi bu
+   * alani okumaz, sadece sayfalarin kolon listesini filtrelemesi icin tasinir. */
+  required?: boolean;
 }
 
 interface TableProps<T> {

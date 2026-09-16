@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { usePurchaseOrdersQuery } from '../features/crm/use-purchase-orders';
 import type { PurchaseOrder, PurchaseOrderStatus } from '../lib/api';
@@ -18,11 +20,12 @@ function formatDate(value: string): string {
   return new Intl.DateTimeFormat('tr-TR').format(new Date(value));
 }
 
-const columns: TableColumn<PurchaseOrder>[] = [
+const ALL_COLUMNS: TableColumn<PurchaseOrder>[] = [
   {
     key: 'orderNumber',
     header: tr.crm.purchaseOrders.numberColumn,
     className: 'font-semibold text-app-text',
+    required: true,
     render: (order) => order.orderNumber,
   },
   {
@@ -61,6 +64,12 @@ export function PurchaseOrderListPage() {
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const purchaseOrdersQuery = usePurchaseOrdersQuery({ page, pageSize, quoteId, projectId });
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'purchase-orders',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -72,6 +81,14 @@ export function PurchaseOrderListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.purchaseOrders.subtitle}</p>
         </div>
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
+        />
       </div>
 
       <Table

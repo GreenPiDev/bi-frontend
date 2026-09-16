@@ -2,10 +2,12 @@ import { AlertTriangle, Pencil, Search } from 'lucide-react';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   useLowStockItemsQuery,
@@ -71,11 +73,12 @@ export function StockListContent() {
   const lowStockQuery = useLowStockItemsQuery();
   const lowStockIds = new Set((lowStockQuery.data ?? []).map((item) => item.id));
 
-  const columns: TableColumn<StockItem>[] = [
+  const ALL_COLUMNS: TableColumn<StockItem>[] = [
     {
       key: 'product',
       header: tr.crm.stock.productColumn,
       className: 'font-semibold text-app-text',
+      required: true,
       render: (item) => (
         <span className="flex items-center gap-1.5">
           {(lowStockIds.has(item.id) || isLowStock(item)) && (
@@ -90,6 +93,7 @@ export function StockListContent() {
     {
       key: 'quantity',
       header: tr.crm.stock.quantityColumn,
+      required: true,
       render: (item) =>
         editingId === item.id ? (
           <QuantityEditor item={item} onDone={() => setEditingId(null)} />
@@ -107,6 +111,7 @@ export function StockListContent() {
       key: 'actions',
       header: tr.crm.stock.actionsColumn,
       className: 'w-px',
+      required: true,
       render: (item) => (
         <Tooltip content={tr.crm.stock.editTooltip}>
           <button
@@ -121,6 +126,13 @@ export function StockListContent() {
       ),
     },
   ];
+
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'stock',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <>
@@ -154,6 +166,14 @@ export function StockListContent() {
           ? tr.crm.stock.lowStockSummary(lowStockQuery.data?.length ?? 0)
           : tr.crm.stock.noLowStock}
       </p>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
+        />
+      </div>
 
       <Table
         columns={columns}

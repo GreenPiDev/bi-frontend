@@ -3,23 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import type { Interaction } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-const columns: TableColumn<Interaction>[] = [
+const ALL_COLUMNS: TableColumn<Interaction>[] = [
   {
     key: 'occurredAt',
     header: tr.crm.interactions.dateColumn,
     className: 'text-app-muted',
+    required: true,
     render: (i) => new Date(i.occurredAt).toLocaleDateString('tr-TR'),
   },
   {
     key: 'account',
     header: tr.crm.interactions.accountColumn,
+    required: true,
     render: (i) => (
       <span className="font-semibold text-app-text">{i.account ? i.account.name : '—'}</span>
     ),
@@ -52,6 +56,12 @@ export function InteractionsListPage() {
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const interactionsQuery = useInteractionsQuery({ page, pageSize });
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'interactions',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -66,6 +76,14 @@ export function InteractionsListPage() {
         <Button type="button" onClick={() => navigate('/gorusmeler/yeni')}>
           {tr.crm.interactions.newButton}
         </Button>
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
+        />
       </div>
 
       <Table

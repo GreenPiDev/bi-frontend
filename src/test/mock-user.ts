@@ -12,6 +12,7 @@ export function createMockUser(overrides: Partial<AuthenticatedUser> = {}): Auth
     isPlatformAdmin: false,
     avatarUrl: null,
     defaultPageSize: 25,
+    columnPreferences: null,
     permissions: { isCompanyAdmin: true, permissions: [] },
     ...overrides,
   };

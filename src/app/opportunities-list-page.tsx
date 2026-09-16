@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { PageHelp } from '../components/ui/page-help';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import type { Opportunity, OpportunityStage } from '../lib/api';
@@ -14,10 +16,11 @@ const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
 
-const columns: TableColumn<Opportunity>[] = [
+const ALL_COLUMNS: TableColumn<Opportunity>[] = [
   {
     key: 'name',
     header: tr.crm.opportunities.nameColumn,
+    required: true,
     render: (o) => <span className="font-semibold text-app-text">{o.name}</span>,
   },
   {
@@ -45,6 +48,12 @@ export function OpportunitiesListPage() {
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const opportunitiesQuery = useOpportunitiesQuery({ page, pageSize, stage: stage || undefined });
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'opportunities',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -71,6 +80,14 @@ export function OpportunitiesListPage() {
           }}
           placeholder={tr.crm.opportunities.allStages}
           options={STAGE_OPTIONS}
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 

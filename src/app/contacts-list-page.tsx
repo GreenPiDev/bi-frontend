@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useContactsQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
@@ -43,10 +45,11 @@ export function ContactsListPage() {
     });
   }
 
-  const columns: TableColumn<Contact>[] = [
+  const ALL_COLUMNS: TableColumn<Contact>[] = [
     {
       key: 'name',
       header: tr.crm.contacts.nameColumn,
+      required: true,
       render: (c) => (
         <span className="font-semibold text-app-text">
           {c.firstName} {c.lastName}
@@ -84,6 +87,7 @@ export function ContactsListPage() {
       key: 'actions',
       header: tr.crm.contacts.actionsColumn,
       className: 'w-px',
+      required: true,
       render: (c) => (
         <div className="flex items-center gap-1">
           <Tooltip content={tr.crm.contacts.editTooltip}>
@@ -114,6 +118,13 @@ export function ContactsListPage() {
       ),
     },
   ];
+
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'contacts',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
     <AppShell>
@@ -161,6 +172,14 @@ export function ContactsListPage() {
           }}
           placeholder={tr.crm.contacts.searchPlaceholder}
           className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 

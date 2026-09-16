@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useDeleteProductMutation, useProductsQuery } from '../features/crm/use-products';
 import { ApiError, type Product } from '../lib/api';
@@ -39,10 +41,11 @@ export function ProductsListContent() {
     });
   }
 
-  const columns: TableColumn<Product>[] = [
+  const ALL_COLUMNS: TableColumn<Product>[] = [
     {
       key: 'name',
       header: tr.crm.products.nameColumn,
+      required: true,
       render: (p) => (
         <div className="flex items-center gap-2.5">
           {p.imageUrl ? (
@@ -92,6 +95,7 @@ export function ProductsListContent() {
       key: 'actions',
       header: tr.crm.products.actionsColumn,
       className: 'w-px',
+      required: true,
       render: (p) => (
         <div className="flex items-center gap-1">
           <Tooltip content={tr.crm.products.editTooltip}>
@@ -123,6 +127,13 @@ export function ProductsListContent() {
     },
   ];
 
+  const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
+    useColumnVisibility(
+      'products',
+      ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    );
+  const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
+
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -152,6 +163,14 @@ export function ProductsListContent() {
           }}
           placeholder={tr.crm.products.searchPlaceholder}
           className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <ColumnVisibilityPicker
+          columns={optionalColumns}
+          value={visibleOptionalKeys}
+          onChange={setVisibleOptionalKeys}
         />
       </div>
 
