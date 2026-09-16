@@ -862,6 +862,15 @@ export const tr = {
       statusInactive: 'Pasif',
       statusUpdateSuccess: 'Durum güncellendi.',
       statusUpdateError: 'Durum güncellenemedi.',
+      filterButton: 'Filtrele',
+      filterDrawer: {
+        title: 'Kişileri Filtrele',
+        accountLabel: 'Firma',
+        accountPlaceholder: 'Tüm firmalar',
+        statusLabel: 'Durum',
+        statusPlaceholder: 'Tüm durumlar',
+        reset: 'Sıfırla',
+      },
       form: {
         newTitle: 'Yeni Kişi',
         editTitle: 'Kişiyi Düzenle',

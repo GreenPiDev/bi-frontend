@@ -839,12 +839,20 @@ export interface ContactInput {
 }
 
 export function listContacts(
-  params: { page?: number; pageSize?: number; q?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    accountId?: string;
+    status?: ContactStatus;
+  } = {},
 ): Promise<PagedResult<Contact>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
   const qs = query.toString();
   return request(`/contacts${qs ? `?${qs}` : ''}`);
 }

@@ -5,10 +5,13 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useAccountsQuery } from '../features/crm/use-accounts';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
@@ -17,7 +20,7 @@ import {
   useUpdateContactMutation,
 } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
-import { ApiError, type Contact } from '../lib/api';
+import { ApiError, type Contact, type ContactStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -60,11 +63,28 @@ export function ContactsListPage() {
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const [deletingContact, setDeletingContact] = useState<Contact | undefined>(undefined);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [accountId, setAccountId] = useState('');
+  const [status, setStatus] = useState<ContactStatus | ''>('');
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const contactsQuery = useContactsQuery({ page, pageSize, q: q || undefined });
+  const contactsQuery = useContactsQuery({
+    page,
+    pageSize,
+    q: q || undefined,
+    accountId: accountId || undefined,
+    status: status || undefined,
+  });
+  const accountsQuery = useAccountsQuery({ pageSize: 1000 });
   const exportMutation = useExportEntityMutation('contacts');
   const deleteMutation = useDeleteContactMutation();
+  const hasActiveFilter = Boolean(accountId) || Boolean(status);
+
+  function resetFilters() {
+    setPage(1);
+    setAccountId('');
+    setStatus('');
+  }
 
   function handleConfirmDelete() {
     if (!deletingContact) return;
@@ -167,6 +187,12 @@ export function ContactsListPage() {
           <p className="mt-1 text-sm text-app-muted">{tr.crm.contacts.subtitle}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" type="button" onClick={() => setDrawerOpen(true)}>
+            {tr.crm.contacts.filterButton}
+            {hasActiveFilter && (
+              <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-app-primary" />
+            )}
+          </Button>
           <Button
             variant="secondary"
             type="button"
@@ -230,6 +256,42 @@ export function ContactsListPage() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.contacts.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.contacts.filterDrawer.accountLabel}
+              placeholder={tr.crm.contacts.filterDrawer.accountPlaceholder}
+              value={accountId}
+              onChange={(event) => {
+                setPage(1);
+                setAccountId(event.target.value);
+              }}
+              options={(accountsQuery.data?.data ?? []).map((account) => ({
+                value: account.id,
+                label: account.name,
+              }))}
+            />
+            <Select
+              label={tr.crm.contacts.filterDrawer.statusLabel}
+              placeholder={tr.crm.contacts.filterDrawer.statusPlaceholder}
+              value={status}
+              onChange={(event) => {
+                setPage(1);
+                setStatus(event.target.value as ContactStatus | '');
+              }}
+              options={[
+                { value: 'ACTIVE', label: tr.crm.contacts.statusActive },
+                { value: 'INACTIVE', label: tr.crm.contacts.statusInactive },
+              ]}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.contacts.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
 
       {deletingContact && (

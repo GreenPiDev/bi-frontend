@@ -6,11 +6,20 @@ import {
   listContacts,
   updateContact,
   type ContactInput,
+  type ContactStatus,
 } from '../../lib/api';
 
 export const CONTACTS_QUERY_KEY = ['contacts'];
 
-export function useContactsQuery(params: { page?: number; pageSize?: number; q?: string } = {}) {
+export function useContactsQuery(
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    accountId?: string;
+    status?: ContactStatus;
+  } = {},
+) {
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, params],
     queryFn: () => listContacts(params),
