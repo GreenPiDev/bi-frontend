@@ -260,6 +260,7 @@ export function ProductFormPage() {
           <TextField
             label={tr.crm.products.form.skuLabel}
             hint={tr.crm.products.form.skuHint}
+            error={errors.sku?.message}
             {...register('sku')}
           />
           <TextField
@@ -272,12 +273,14 @@ export function ProductFormPage() {
           <TextField
             label={tr.crm.products.form.categoryLabel}
             hint={tr.crm.products.form.categoryHint}
+            error={errors.category?.message}
             {...register('category')}
           />
           <div className="sm:col-span-2">
             <TextareaField
               label={tr.crm.products.form.descriptionLabel}
               hint={tr.crm.products.form.descriptionHint}
+              error={errors.description?.message}
               {...register('description')}
             />
           </div>
@@ -286,6 +289,7 @@ export function ProductFormPage() {
             inputMode="decimal"
             label={tr.crm.products.form.costPriceLabel}
             hint={tr.crm.products.form.costPriceHint}
+            error={errors.costPrice?.message}
             {...costPriceField}
             onChange={(event) => {
               event.target.value = event.target.value.replace(/[^0-9.]/g, '');
@@ -297,6 +301,7 @@ export function ProductFormPage() {
             inputMode="numeric"
             label={tr.crm.products.form.minStockLevelLabel}
             hint={tr.crm.products.form.minStockLevelHint}
+            error={errors.minStockLevel?.message}
             {...minStockLevelField}
             onChange={(event) => {
               event.target.value = event.target.value.replace(/[^0-9]/g, '');

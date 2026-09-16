@@ -128,6 +128,7 @@ export function OpportunityFormPage() {
             label={tr.crm.opportunities.form.stageLabel}
             hint={tr.crm.opportunities.form.stageHint}
             options={STAGE_OPTIONS}
+            error={errors.stage?.message}
             {...register('stage')}
           />
           <TextField

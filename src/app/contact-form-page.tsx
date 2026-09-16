@@ -137,6 +137,7 @@ export function ContactFormPage() {
               value: account.id,
               label: account.name,
             }))}
+            error={errors.accountId?.message}
             {...register('accountId')}
           />
           <Controller
@@ -207,6 +208,7 @@ export function ContactFormPage() {
             label={tr.crm.contacts.form.statusLabel}
             hint={tr.crm.contacts.form.statusHint}
             options={STATUS_OPTIONS}
+            error={errors.status?.message}
             {...register('status')}
           />
           <Controller

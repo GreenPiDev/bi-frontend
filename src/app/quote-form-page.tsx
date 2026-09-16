@@ -221,6 +221,7 @@ export function QuoteFormPage() {
                 placeholder={tr.crm.quotes.form.contactPlaceholder}
                 hint={tr.crm.quotes.form.contactHint}
                 options={contactOptions}
+                error={errors.contactId?.message}
                 {...register('contactId')}
               />
             </div>
@@ -282,6 +283,7 @@ export function QuoteFormPage() {
                             type="text"
                             inputMode="decimal"
                             label={tr.crm.quotes.form.unitPriceLabel}
+                            error={errors.items?.[index]?.unitPrice?.message}
                             {...decimalOnly(register(`items.${index}.unitPrice` as const))}
                           />
                         </td>
@@ -290,6 +292,7 @@ export function QuoteFormPage() {
                             type="text"
                             inputMode="decimal"
                             label={tr.crm.quotes.form.discountPctLabel}
+                            error={errors.items?.[index]?.discountPct?.message}
                             {...decimalOnly(register(`items.${index}.discountPct` as const))}
                           />
                         </td>
@@ -298,6 +301,7 @@ export function QuoteFormPage() {
                             type="text"
                             inputMode="decimal"
                             label={tr.crm.quotes.form.vatPctLabel}
+                            error={errors.items?.[index]?.vatPct?.message}
                             {...decimalOnly(register(`items.${index}.vatPct` as const))}
                           />
                         </td>
@@ -369,6 +373,7 @@ export function QuoteFormPage() {
                     label={tr.crm.quotes.form.opportunityStageLabel}
                     hint={tr.crm.quotes.form.opportunityStageHint}
                     options={STAGE_OPTIONS}
+                    error={errors.opportunityStage?.message}
                     {...register('opportunityStage')}
                   />
                   <TextField
@@ -376,6 +381,7 @@ export function QuoteFormPage() {
                     step="0.01"
                     label={tr.crm.quotes.form.opportunityValueLabel}
                     hint={tr.crm.quotes.form.opportunityValueHint}
+                    error={errors.opportunityValue?.message}
                     {...register('opportunityValue')}
                   />
                 </div>

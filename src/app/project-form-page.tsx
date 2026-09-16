@@ -130,6 +130,7 @@ export function ProjectFormPage() {
             placeholder={tr.crm.projects.form.quotePlaceholder}
             hint={tr.crm.projects.form.quoteHint}
             options={quoteOptions}
+            error={errors.quoteId?.message}
             {...register('quoteId')}
           />
           <TextField

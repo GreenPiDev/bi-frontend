@@ -5,6 +5,7 @@ import { DateTimeField } from '../components/ui/date-time-field';
 import { Modal } from '../components/ui/modal';
 import { MultiSelect } from '../components/ui/multi-select';
 import { Switch } from '../components/ui/switch';
+import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { calendarEventFormSchema, type CalendarEventFormValues } from '../features/crm/schemas';
@@ -117,16 +118,12 @@ export function CalendarEventFormModal({
           error={errors.title?.message}
           {...register('title')}
         />
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-app-muted">
-            {tr.crm.calendar.form.descriptionLabel}
-          </label>
-          <textarea
-            rows={3}
-            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-            {...register('description')}
-          />
-        </div>
+        <TextareaField
+          label={tr.crm.calendar.form.descriptionLabel}
+          rows={3}
+          error={errors.description?.message}
+          {...register('description')}
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Controller
             name="startAt"
@@ -180,6 +177,7 @@ export function CalendarEventFormModal({
                 value: user.id,
                 label: user.name,
               }))}
+              error={errors.attendeeUserIds?.message}
             />
           )}
         />

@@ -11,6 +11,7 @@ import { FormError } from '../components/ui/form-error';
 import { MultiSelect } from '../components/ui/multi-select';
 import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
+import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { useAccountsQuery } from '../features/crm/use-accounts';
@@ -187,6 +188,7 @@ export function InteractionFormPage() {
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   options={contactSuggestions}
+                  error={errors.contactName?.message}
                 />
               )}
             />
@@ -195,25 +197,18 @@ export function InteractionFormPage() {
               required
               hint={tr.crm.interactions.form.typeHint}
               options={TYPE_OPTIONS}
+              error={errors.type?.message}
               {...register('type')}
             />
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label className="text-sm font-semibold text-app-muted">
-                {tr.crm.interactions.form.notesLabel}
-                <span className="ml-0.5 text-app-danger" aria-hidden="true">
-                  *
-                </span>
-              </label>
-              <textarea
+            <div className="sm:col-span-2">
+              <TextareaField
+                label={tr.crm.interactions.form.notesLabel}
+                required
                 rows={4}
-                className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                hint={tr.crm.interactions.form.notesHint}
+                error={errors.notes?.message}
                 {...register('notes')}
               />
-              {errors.notes ? (
-                <FormError message={errors.notes.message} />
-              ) : (
-                <p className="text-xs text-app-muted">{tr.crm.interactions.form.notesHint}</p>
-              )}
             </div>
             <Controller
               name="occurredAt"
@@ -257,6 +252,7 @@ export function InteractionFormPage() {
                   label={tr.crm.interactions.form.opportunityStageLabel}
                   hint={tr.crm.interactions.form.opportunityStageHint}
                   options={STAGE_OPTIONS}
+                  error={errors.opportunityStage?.message}
                   {...register('opportunityStage')}
                 />
                 <TextField
@@ -264,6 +260,7 @@ export function InteractionFormPage() {
                   step="0.01"
                   label={tr.crm.interactions.form.opportunityValueLabel}
                   hint={tr.crm.interactions.form.opportunityValueHint}
+                  error={errors.opportunityValue?.message}
                   {...register('opportunityValue')}
                 />
               </div>
@@ -379,6 +376,7 @@ export function InteractionFormPage() {
                 <TextField
                   label={tr.crm.interactions.form.reminderNoteLabel}
                   hint={tr.crm.interactions.form.reminderNoteHint}
+                  error={errors.reminderNote?.message}
                   {...register('reminderNote')}
                 />
               </div>
