@@ -104,6 +104,21 @@ export function AccountsListPage() {
       render: (a) => a.email ?? '—',
     },
     {
+      key: 'sector',
+      header: tr.crm.accounts.sectorColumn,
+      className: 'text-app-muted',
+      render: (a) => a.sector ?? '—',
+    },
+    {
+      key: 'accountTypes',
+      header: tr.crm.accounts.accountTypesColumn,
+      className: 'text-app-muted',
+      render: (a) =>
+        a.accountTypes.length > 0
+          ? a.accountTypes.map((type) => tr.crm.accounts.accountTypeOptions[type]).join(', ')
+          : '—',
+    },
+    {
       key: 'actions',
       header: tr.crm.accounts.actionsColumn,
       className: 'w-px',

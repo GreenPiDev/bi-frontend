@@ -717,6 +717,8 @@ export const tr = {
       cityColumn: 'Şehir',
       phoneColumn: 'Telefon',
       emailColumn: 'E-posta',
+      sectorColumn: 'Sektör',
+      accountTypesColumn: 'Firma Türü',
       deleteConfirm: 'Bu firmayı silmek istediğinize emin misiniz?',
       deleteError: 'Firma silinemedi.',
       deleteSuccess: 'Firma silindi.',

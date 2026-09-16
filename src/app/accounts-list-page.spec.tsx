@@ -213,7 +213,7 @@ describe('AccountsListPage', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Şehir' }));
 
     expect(updateProfileSpy).toHaveBeenCalledWith({
-      columnPreferences: { accounts: ['phone', 'email'] },
+      columnPreferences: { accounts: ['phone', 'email', 'sector', 'accountTypes'] },
     });
     expect(screen.queryByText('Istanbul')).not.toBeInTheDocument();
   });
