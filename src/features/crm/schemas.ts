@@ -1,34 +1,60 @@
 import { z } from 'zod';
 
-export const accountFormSchema = z.object({
-  name: z.string().min(2, 'Firma adı en az 2 karakter olmalı.').max(200),
-  taxNumber: z.string().max(20).optional(),
-  taxOffice: z.string().max(200).optional(),
-  sector: z.string().max(200).optional(),
-  accountTypes: z
-    .array(z.enum(['CUSTOMER', 'SUPPLIER']))
-    .max(2)
-    .optional(),
-  website: z
-    .string()
-    .max(300)
-    .optional()
-    .refine(
-      (value) => !value || /^https?:\/\//.test(value),
-      'Web sitesi http(s):// ile başlamalı.',
-    ),
-  phone: z.string().max(50).optional(),
-  email: z
-    .string()
-    .max(255)
-    .optional()
-    .refine(
-      (value) => !value || z.string().email().safeParse(value).success,
-      'Geçerli bir e-posta adresi girin.',
-    ),
-  address: z.string().max(500).optional(),
-  city: z.string().max(200).optional(),
-});
+export const accountFormSchema = z
+  .object({
+    name: z.string().min(2, 'Firma adı en az 2 karakter olmalı.').max(200),
+    taxNumber: z
+      .string()
+      .max(11, 'Vergi/TC kimlik no en fazla 11 haneli olabilir.')
+      .regex(/^\d*$/, 'Sadece rakam girilebilir.')
+      .optional(),
+    taxOffice: z.string().max(200).optional(),
+    sector: z.string().max(200).optional(),
+    accountTypes: z
+      .array(z.enum(['CUSTOMER', 'SUPPLIER', 'CONTRACTOR', 'SUBCONTRACTOR']))
+      .max(4)
+      .optional(),
+    website: z
+      .string()
+      .max(300)
+      .optional()
+      .refine(
+        (value) => !value || /^https?:\/\//.test(value),
+        'Web sitesi http(s):// ile başlamalı.',
+      ),
+    phone: z.string().max(50).optional(),
+    landlinePhone: z
+      .string()
+      .max(11)
+      .regex(/^0?\d*$/, 'Sadece rakam girilebilir.')
+      .optional(),
+    email: z
+      .string()
+      .max(255)
+      .optional()
+      .refine(
+        (value) => !value || z.string().email().safeParse(value).success,
+        'Geçerli bir e-posta adresi girin.',
+      ),
+    address: z.string().max(500).optional(),
+    city: z.string().max(200).optional(),
+    district: z.string().max(200).optional(),
+    hasContact: z.boolean().optional(),
+    contactFirstName: z.string().max(120).optional(),
+    contactLastName: z.string().max(120).optional(),
+    contactDepartment: z.string().max(200).optional(),
+    contactTitle: z.string().max(200).optional(),
+    contactPhone: z.string().max(50).optional(),
+    contactExtension: z.string().max(20).optional(),
+  })
+  .refine((values) => !values.hasContact || (values.contactFirstName ?? '').trim().length > 0, {
+    message: 'Ad gerekli.',
+    path: ['contactFirstName'],
+  })
+  .refine((values) => !values.hasContact || (values.contactLastName ?? '').trim().length > 0, {
+    message: 'Soyad gerekli.',
+    path: ['contactLastName'],
+  });
 
 export type AccountFormValues = z.infer<typeof accountFormSchema>;
 
@@ -36,6 +62,7 @@ export const contactFormSchema = z.object({
   firstName: z.string().min(1, 'Ad gerekli.').max(120),
   lastName: z.string().min(1, 'Soyad gerekli.').max(120),
   accountId: z.string().max(100).optional(),
+  department: z.string().max(200).optional(),
   title: z.string().max(200).optional(),
   email: z
     .string()
@@ -46,6 +73,7 @@ export const contactFormSchema = z.object({
       'Geçerli bir e-posta adresi girin.',
     ),
   phone: z.string().max(50).optional(),
+  extension: z.string().max(20).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
   lastContactedAt: z.string().optional(),
 });

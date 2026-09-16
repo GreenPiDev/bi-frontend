@@ -20,6 +20,8 @@ function renderSection() {
 describe('CrmSettingsSection', () => {
   it('sektor yokken bos durum gosterir', async () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -35,6 +37,8 @@ describe('CrmSettingsSection', () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([
       { id: 's1', label: 'Yazılım', createdAt: '2026-08-01T00:00:00.000Z' },
     ]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -49,14 +53,46 @@ describe('CrmSettingsSection', () => {
 
     expect(await screen.findByText('Yazılım')).toBeInTheDocument();
 
-    await user.type(screen.getByPlaceholderText('Yeni sektör adı'), 'Tarım');
-    await user.click(screen.getByRole('button', { name: 'Ekle' }));
+    const sectorInput = screen.getByPlaceholderText('Yeni sektör adı');
+    await user.type(sectorInput, 'Tarım');
+    const sectorSection = within(sectorInput.parentElement!.parentElement!);
+    await user.click(sectorSection.getByRole('button', { name: 'Ekle' }));
 
     await waitFor(() => expect(createSpy).toHaveBeenCalledWith('Tarım'));
   });
 
+  it('mevcut departmanlari listeler ve yenisini ekler', async () => {
+    vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([
+      { id: 'd1', label: 'Muhasebe', createdAt: '2026-08-01T00:00:00.000Z' },
+    ]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
+      { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
+    ]);
+    const createSpy = vi.spyOn(api, 'createDepartmentOption').mockResolvedValue({
+      id: 'd2',
+      label: 'Satış',
+      createdAt: '2026-08-02T00:00:00.000Z',
+    });
+
+    const user = userEvent.setup();
+    renderSection();
+
+    expect(await screen.findByText('Muhasebe')).toBeInTheDocument();
+
+    const departmentInput = screen.getByPlaceholderText('Yeni departman adı');
+    await user.type(departmentInput, 'Satış');
+    const departmentSection = within(departmentInput.parentElement!.parentElement!);
+    await user.click(departmentSection.getByRole('button', { name: 'Ekle' }));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalledWith('Satış'));
+  });
+
   it('esik degerini varsayilan olarak gosterir ve kaydetmeyi tetikler', async () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -84,6 +120,8 @@ describe('CrmSettingsSection', () => {
 
   it('satis sonrasi hatirlatma esigini varsayilan olarak gosterir ve kaydetmeyi tetikler', async () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.postSaleFollowUpDays', value: 14, isDefault: true },
     ]);

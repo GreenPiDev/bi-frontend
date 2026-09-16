@@ -276,7 +276,7 @@ function App() {
           }
         />
         <Route
-          path="/firmalar/:id/duzenle"
+          path="/firmalar/duzenle/:id"
           element={
             <TenantPageRoute pageKey="accounts">
               <AccountFormPage />
@@ -316,7 +316,7 @@ function App() {
           }
         />
         <Route
-          path="/kisiler/:id/duzenle"
+          path="/kisiler/duzenle/:id"
           element={
             <TenantPageRoute pageKey="contacts">
               <ContactFormPage />

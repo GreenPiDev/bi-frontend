@@ -55,6 +55,8 @@ describe('AccountsListPage', () => {
           email: null,
           address: null,
           city: 'Istanbul',
+          landlinePhone: null,
+          district: null,
           ownerId: null,
           missingCriticalFields: [],
           createdAt: '2026-08-01T00:00:00.000Z',

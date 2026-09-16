@@ -717,7 +717,7 @@ export interface PagedResult<T> {
   meta: { page: number; pageSize: number; total: number; totalPages: number };
 }
 
-export type AccountType = 'CUSTOMER' | 'SUPPLIER';
+export type AccountType = 'CUSTOMER' | 'SUPPLIER' | 'CONTRACTOR' | 'SUBCONTRACTOR';
 
 export interface Account {
   id: string;
@@ -728,9 +728,11 @@ export interface Account {
   accountTypes: AccountType[];
   website: string | null;
   phone: string | null;
+  landlinePhone: string | null;
   email: string | null;
   address: string | null;
   city: string | null;
+  district: string | null;
   ownerId: string | null;
   missingCriticalFields: string[];
   createdAt: string;
@@ -749,9 +751,19 @@ export interface AccountInput {
   accountTypes?: AccountType[];
   website?: string;
   phone?: string;
+  landlinePhone?: string;
   email?: string;
   address?: string;
   city?: string;
+  district?: string;
+  contact?: {
+    firstName: string;
+    lastName: string;
+    department?: string;
+    title?: string;
+    phone?: string;
+    extension?: string;
+  };
 }
 
 export function listAccounts(
@@ -789,9 +801,11 @@ export interface Contact {
   lastName: string;
   accountId: string | null;
   account?: { id: string; name: string } | null;
+  department: string | null;
   title: string | null;
   email: string | null;
   phone: string | null;
+  extension: string | null;
   ownerId: string | null;
   status: ContactStatus;
   lastContactedAt: string | null;
@@ -803,9 +817,11 @@ export interface ContactInput {
   firstName: string;
   lastName: string;
   accountId?: string;
+  department?: string;
   title?: string;
   email?: string;
   phone?: string;
+  extension?: string;
   status?: ContactStatus;
   lastContactedAt?: string;
 }
@@ -853,6 +869,42 @@ export function createSectorOption(label: string): Promise<SectorOption> {
 
 export function deleteSectorOption(id: string): Promise<void> {
   return request(`/sector-options/${id}`, { method: 'DELETE' });
+}
+
+export interface DepartmentOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listDepartmentOptions(): Promise<DepartmentOption[]> {
+  return request('/department-options');
+}
+
+export function createDepartmentOption(label: string): Promise<DepartmentOption> {
+  return request('/department-options', { method: 'POST', body: JSON.stringify({ label }) });
+}
+
+export function deleteDepartmentOption(id: string): Promise<void> {
+  return request(`/department-options/${id}`, { method: 'DELETE' });
+}
+
+export interface TitleOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listTitleOptions(): Promise<TitleOption[]> {
+  return request('/title-options');
+}
+
+export function createTitleOption(label: string): Promise<TitleOption> {
+  return request('/title-options', { method: 'POST', body: JSON.stringify({ label }) });
+}
+
+export function deleteTitleOption(id: string): Promise<void> {
+  return request(`/title-options/${id}`, { method: 'DELETE' });
 }
 
 export interface TenantSetting {

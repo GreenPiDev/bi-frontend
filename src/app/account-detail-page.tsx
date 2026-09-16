@@ -59,9 +59,11 @@ export function AccountDetailPage() {
     { label: tr.crm.accounts.form.sectorLabel, value: account.sector ?? '—' },
     { label: tr.crm.accounts.form.websiteLabel, value: account.website ?? '—' },
     { label: tr.crm.accounts.form.phoneLabel, value: account.phone ?? '—' },
+    { label: tr.crm.accounts.form.landlinePhoneLabel, value: account.landlinePhone ?? '—' },
     { label: tr.crm.accounts.form.emailLabel, value: account.email ?? '—' },
     { label: tr.crm.accounts.form.addressLabel, value: account.address ?? '—' },
     { label: tr.crm.accounts.form.cityLabel, value: account.city ?? '—' },
+    { label: tr.crm.accounts.form.districtLabel, value: account.district ?? '—' },
   ];
 
   return (
@@ -94,7 +96,7 @@ export function AccountDetailPage() {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => navigate(`/firmalar/${id}/duzenle`)}
+            onClick={() => navigate(`/firmalar/duzenle/${id}`)}
           >
             {tr.crm.accounts.detail.editButton}
           </Button>

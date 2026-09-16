@@ -29,6 +29,7 @@ export function Autocomplete({
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const filtered = options.filter((option) =>
     option.toLowerCase().includes(value.trim().toLowerCase()),
@@ -79,6 +80,7 @@ export function Autocomplete({
       </label>
       <div className="relative">
         <input
+          ref={inputRef}
           type="text"
           value={value}
           placeholder={placeholder}
@@ -88,6 +90,11 @@ export function Autocomplete({
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
+          onMouseDown={() => {
+            if (document.activeElement === inputRef.current) {
+              setOpen((prev) => !prev);
+            }
+          }}
           onKeyDown={handleKeyDown}
           className={clsx(
             'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 pr-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
@@ -99,25 +106,25 @@ export function Autocomplete({
           size={16}
           className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-muted"
         />
+        {open && filtered.length > 0 && (
+          <div className="absolute top-full z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-app-border bg-app-surface p-1 shadow-lg">
+            {filtered.map((option, index) => (
+              <button
+                key={option}
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectOption(option)}
+                className={clsx(
+                  'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
+                  index === highlighted && 'bg-app-bg',
+                )}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-      {open && filtered.length > 0 && (
-        <div className="absolute top-full z-20 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-app-border bg-app-surface p-1 shadow-lg">
-          {filtered.map((option, index) => (
-            <button
-              key={option}
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => selectOption(option)}
-              className={clsx(
-                'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
-                index === highlighted && 'bg-app-bg',
-              )}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      )}
       {error ? (
         <p className="text-xs text-app-danger">{error}</p>
       ) : (

@@ -37,9 +37,11 @@ export function ContactDetailPage() {
   }
 
   const fields: { label: string; value: string }[] = [
+    { label: tr.crm.contacts.form.departmentLabel, value: contact.department ?? '—' },
     { label: tr.crm.contacts.form.titleLabel, value: contact.title ?? '—' },
     { label: tr.crm.contacts.form.emailLabel, value: contact.email ?? '—' },
     { label: tr.crm.contacts.form.phoneLabel, value: contact.phone ?? '—' },
+    { label: tr.crm.contacts.form.extensionLabel, value: contact.extension ?? '—' },
     {
       label: tr.crm.contacts.form.lastContactedAtLabel,
       value: contact.lastContactedAt
@@ -79,7 +81,7 @@ export function ContactDetailPage() {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => navigate(`/kisiler/${id}/duzenle`)}
+            onClick={() => navigate(`/kisiler/duzenle/${id}`)}
           >
             {tr.crm.accounts.detail.editButton}
           </Button>

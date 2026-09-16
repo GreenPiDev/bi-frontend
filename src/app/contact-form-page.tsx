@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Autocomplete } from '../components/ui/autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { DateField } from '../components/ui/date-field';
@@ -22,6 +23,8 @@ import {
   useCreateContactMutation,
   useUpdateContactMutation,
 } from '../features/crm/use-contacts';
+import { useDepartmentOptionsQuery } from '../features/crm/use-department-options';
+import { useTitleOptionsQuery } from '../features/crm/use-title-options';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -37,6 +40,8 @@ export function ContactFormPage() {
   const toast = useToast();
   const contactQuery = useContactQuery(id ?? '');
   const accountsQuery = useAccountsQuery();
+  const departmentOptionsQuery = useDepartmentOptionsQuery();
+  const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateContactMutation();
   const updateMutation = useUpdateContactMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -58,9 +63,11 @@ export function ContactFormPage() {
         firstName: contactQuery.data.firstName,
         lastName: contactQuery.data.lastName,
         accountId: contactQuery.data.accountId ?? undefined,
+        department: contactQuery.data.department ?? undefined,
         title: contactQuery.data.title ?? undefined,
         email: contactQuery.data.email ?? undefined,
         phone: contactQuery.data.phone ?? undefined,
+        extension: contactQuery.data.extension ?? undefined,
         status: contactQuery.data.status,
         lastContactedAt: contactQuery.data.lastContactedAt?.slice(0, 10) ?? undefined,
       });
@@ -132,11 +139,43 @@ export function ContactFormPage() {
             }))}
             {...register('accountId')}
           />
-          <TextField
-            label={tr.crm.contacts.form.titleLabel}
-            hint={tr.crm.contacts.form.titleHint}
-            error={errors.title?.message}
-            {...register('title')}
+          <Controller
+            name="department"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={tr.crm.contacts.form.departmentLabel}
+                placeholder={tr.crm.contacts.form.departmentPlaceholder}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                options={(departmentOptionsQuery.data ?? []).map((option) => option.label)}
+                error={errors.department?.message}
+                hint={
+                  (departmentOptionsQuery.data?.length ?? 0) > 0
+                    ? tr.crm.contacts.form.departmentHintRestricted
+                    : tr.crm.contacts.form.departmentHintFree
+                }
+              />
+            )}
+          />
+          <Controller
+            name="title"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={tr.crm.contacts.form.titleLabel}
+                placeholder={tr.crm.contacts.form.titlePlaceholder}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                options={(titleOptionsQuery.data ?? []).map((option) => option.label)}
+                error={errors.title?.message}
+                hint={
+                  (titleOptionsQuery.data?.length ?? 0) > 0
+                    ? tr.crm.contacts.form.titleHintRestricted
+                    : tr.crm.contacts.form.titleHintFree
+                }
+              />
+            )}
           />
           <TextField
             label={tr.crm.contacts.form.emailLabel}
@@ -157,6 +196,12 @@ export function ContactFormPage() {
                 error={errors.phone?.message}
               />
             )}
+          />
+          <TextField
+            label={tr.crm.contacts.form.extensionLabel}
+            hint={tr.crm.contacts.form.extensionHint}
+            error={errors.extension?.message}
+            {...register('extension')}
           />
           <Select
             label={tr.crm.contacts.form.statusLabel}

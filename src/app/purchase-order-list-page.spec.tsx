@@ -36,6 +36,8 @@ const quote: api.Quote = {
     email: null,
     address: null,
     city: null,
+    landlinePhone: null,
+    district: null,
     ownerId: null,
     missingCriticalFields: [],
     createdAt: '2026-08-01T00:00:00.000Z',

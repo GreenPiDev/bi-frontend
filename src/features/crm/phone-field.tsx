@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 
 const COUNTRY_CODES = [
   { code: '+90', flag: '🇹🇷', label: 'Türkiye' },
@@ -17,6 +17,17 @@ function splitPhone(value: string): { code: string; number: string } {
   return { code: COUNTRY_CODES[0].code, number: value };
 }
 
+/** Girilen ham rakamlardan "5xx xxx xx xx" goruntu/kayit metnini uretir -
+ * Sabit Hat alanindaki formatlama deseniyle ayni yaklasim. */
+function formatNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 10);
+  const p1 = digits.slice(0, 3);
+  const p2 = digits.slice(3, 6);
+  const p3 = digits.slice(6, 8);
+  const p4 = digits.slice(8, 10);
+  return [p1, p2, p3, p4].filter(Boolean).join(' ');
+}
+
 interface PhoneFieldProps {
   label: string;
   value: string;
@@ -32,7 +43,7 @@ interface PhoneFieldProps {
 export function PhoneField({ label, value, onChange, error, required, hint }: PhoneFieldProps) {
   const [prevValue, setPrevValue] = useState(value);
   const [code, setCode] = useState(() => splitPhone(value).code);
-  const [number, setNumber] = useState(() => splitPhone(value).number);
+  const [number, setNumber] = useState(() => splitPhone(value).number.replace(/\D/g, ''));
 
   // Dışarıdan (form reset) gelen değer değiştiğinde yerel state'i senkronize eder -
   // effect yerine render sırasında yapılır (React'in "adjusting state on prop
@@ -41,11 +52,26 @@ export function PhoneField({ label, value, onChange, error, required, hint }: Ph
     setPrevValue(value);
     const split = splitPhone(value);
     setCode(split.code);
-    setNumber(split.number);
+    setNumber(split.number.replace(/\D/g, ''));
   }
 
-  function emit(nextCode: string, nextNumber: string) {
-    onChange(nextNumber.trim() ? `${nextCode} ${nextNumber}`.trim() : '');
+  const displayNumber = formatNumber(number);
+
+  function emit(nextCode: string, nextNumberDigits: string) {
+    const formatted = formatNumber(nextNumberDigits);
+    onChange(formatted ? `${nextCode} ${formatted}`.trim() : '');
+  }
+
+  function handleNumberChange(event: ChangeEvent<HTMLInputElement>) {
+    let newDigits = event.target.value.replace(/\D/g, '').slice(0, 10);
+    // Sabit Hat alanindakiyle ayni zincirleme silme duzeltmesi: sadece
+    // bicimlendirme bosluğu silindiyse (rakam sayisi degismediyse) son
+    // rakami da dusur, aksi halde backspace hicbir sey silmiyormus gibi gorunur.
+    if (newDigits.length === number.length && event.target.value.length < displayNumber.length) {
+      newDigits = newDigits.slice(0, -1);
+    }
+    setNumber(newDigits);
+    emit(code, newDigits);
   }
 
   return (
@@ -75,11 +101,8 @@ export function PhoneField({ label, value, onChange, error, required, hint }: Ph
         </select>
         <input
           type="tel"
-          value={number}
-          onChange={(event) => {
-            setNumber(event.target.value);
-            emit(code, event.target.value);
-          }}
+          value={displayNumber}
+          onChange={handleNumberChange}
           placeholder="5xx xxx xx xx"
           className={clsx(
             'flex-1 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',

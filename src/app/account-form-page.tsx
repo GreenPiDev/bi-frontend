@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
@@ -8,6 +8,7 @@ import { Autocomplete } from '../components/ui/autocomplete';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { MultiSelect } from '../components/ui/multi-select';
+import { Switch } from '../components/ui/switch';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { PhoneField } from '../features/crm/phone-field';
@@ -21,14 +22,22 @@ import {
   useCreateAccountMutation,
   useUpdateAccountMutation,
 } from '../features/crm/use-accounts';
+import { useCreateContactMutation } from '../features/crm/use-contacts';
+import { useDepartmentOptionsQuery } from '../features/crm/use-department-options';
 import { useSectorOptionsQuery } from '../features/crm/use-sector-options';
-import { ApiError, type AccountType } from '../lib/api';
+import { useTitleOptionsQuery } from '../features/crm/use-title-options';
+import { LandlineField } from '../features/crm/landline-field';
+import { ApiError, type AccountInput, type AccountType } from '../lib/api';
 import { TURKISH_CITIES } from '../lib/turkish-cities';
+import { TURKISH_DISTRICTS_BY_CITY } from '../lib/turkish-districts';
+import { TURKISH_TAX_OFFICES_BY_CITY } from '../lib/turkish-tax-offices';
 import { tr } from '../i18n/tr';
 
 const ACCOUNT_TYPE_OPTIONS: { value: AccountType; label: string }[] = [
   { value: 'CUSTOMER', label: tr.crm.accounts.accountTypeOptions.CUSTOMER },
   { value: 'SUPPLIER', label: tr.crm.accounts.accountTypeOptions.SUPPLIER },
+  { value: 'CONTRACTOR', label: tr.crm.accounts.accountTypeOptions.CONTRACTOR },
+  { value: 'SUBCONTRACTOR', label: tr.crm.accounts.accountTypeOptions.SUBCONTRACTOR },
 ];
 
 export function AccountFormPage() {
@@ -38,20 +47,30 @@ export function AccountFormPage() {
   const toast = useToast();
   const accountQuery = useAccountQuery(id ?? '');
   const sectorOptionsQuery = useSectorOptionsQuery();
+  const departmentOptionsQuery = useDepartmentOptionsQuery();
+  const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateAccountMutation();
   const updateMutation = useUpdateAccountMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
+  const createContactMutation = useCreateContactMutation();
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: { accountTypes: [] },
   });
+
+  const taxNumberRegistration = register('taxNumber');
+  const selectedCity = useWatch({ control, name: 'city' });
+  const districtOptions = selectedCity ? (TURKISH_DISTRICTS_BY_CITY[selectedCity] ?? []) : [];
+  const taxOfficeOptions = selectedCity ? (TURKISH_TAX_OFFICES_BY_CITY[selectedCity] ?? []) : [];
+  const hasContact = useWatch({ control, name: 'hasContact' });
 
   useEffect(() => {
     if (accountQuery.data) {
@@ -63,9 +82,11 @@ export function AccountFormPage() {
         accountTypes: accountQuery.data.accountTypes,
         website: accountQuery.data.website ?? undefined,
         phone: accountQuery.data.phone ?? undefined,
+        landlinePhone: accountQuery.data.landlinePhone ?? undefined,
         email: accountQuery.data.email ?? undefined,
         address: accountQuery.data.address ?? undefined,
         city: accountQuery.data.city ?? undefined,
+        district: accountQuery.data.district ?? undefined,
       });
     }
   }, [accountQuery.data, reset]);
@@ -79,12 +100,63 @@ export function AccountFormPage() {
   }
 
   const onSubmit = handleSubmit((values) => {
-    mutation.mutate(cleanEmptyStrings(values), {
+    const {
+      hasContact: submitHasContact,
+      contactFirstName,
+      contactLastName,
+      contactDepartment,
+      contactTitle,
+      contactPhone,
+      contactExtension,
+      ...accountValues
+    } = values;
+
+    const contactPayload = submitHasContact
+      ? {
+          firstName: contactFirstName ?? '',
+          lastName: contactLastName ?? '',
+          department: contactDepartment || undefined,
+          title: contactTitle || undefined,
+          phone: contactPhone || undefined,
+          extension: contactExtension || undefined,
+        }
+      : undefined;
+
+    const payload: AccountInput = {
+      ...cleanEmptyStrings(accountValues),
+      // Duzenleme modunda backend'in nested-create'i yok (sadece hesap
+      // olusturulurken calisir) - bu yuzden edit'te yetkili kisi ayri bir
+      // POST /contacts istegiyle, hesap kaydedildikten sonra eklenir.
+      ...(!isEdit && contactPayload ? { contact: contactPayload } : {}),
+    };
+
+    mutation.mutate(payload, {
       onSuccess: (account) => {
-        toast.success(
-          isEdit ? tr.crm.accounts.form.updateSuccess : tr.crm.accounts.form.createSuccess,
-        );
-        navigate(`/firmalar/${account.id}`);
+        const finish = () => {
+          toast.success(
+            isEdit ? tr.crm.accounts.form.updateSuccess : tr.crm.accounts.form.createSuccess,
+          );
+          navigate(`/firmalar/${account.id}`);
+        };
+
+        if (isEdit && contactPayload) {
+          createContactMutation.mutate(
+            { ...contactPayload, accountId: account.id },
+            {
+              onSuccess: finish,
+              onError: (error) => {
+                toast.error(
+                  error instanceof ApiError
+                    ? error.message
+                    : tr.crm.accounts.form.contactCreateError,
+                );
+                navigate(`/firmalar/${account.id}`);
+              },
+            },
+          );
+        } else {
+          finish();
+        }
       },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
@@ -118,17 +190,20 @@ export function AccountFormPage() {
             hint={tr.crm.accounts.form.nameHint}
             {...register('name')}
           />
-          <TextField
-            label={tr.crm.accounts.form.taxNumberLabel}
-            error={errors.taxNumber?.message}
-            hint={tr.crm.accounts.form.taxNumberHint}
-            {...register('taxNumber')}
-          />
-          <TextField
-            label={tr.crm.accounts.form.taxOfficeLabel}
-            error={errors.taxOffice?.message}
-            hint={tr.crm.accounts.form.taxOfficeHint}
-            {...register('taxOffice')}
+          <Controller
+            name="accountTypes"
+            control={control}
+            render={({ field }) => (
+              <MultiSelect
+                label={tr.crm.accounts.form.accountTypesLabel}
+                placeholder={tr.crm.accounts.form.accountTypesPlaceholder}
+                value={field.value ?? []}
+                onChange={(value) => field.onChange(value as AccountType[])}
+                options={ACCOUNT_TYPE_OPTIONS}
+                error={errors.accountTypes?.message}
+                hint={tr.crm.accounts.form.accountTypesHint}
+              />
+            )}
           />
           <Controller
             name="sector"
@@ -141,30 +216,89 @@ export function AccountFormPage() {
                 onChange={field.onChange}
                 options={(sectorOptionsQuery.data ?? []).map((option) => option.label)}
                 error={errors.sector?.message}
-                hint={tr.crm.accounts.form.sectorHint}
+                hint={
+                  (sectorOptionsQuery.data?.length ?? 0) > 0
+                    ? tr.crm.accounts.form.sectorHintRestricted
+                    : tr.crm.accounts.form.sectorHintFree
+                }
               />
             )}
           />
-          <Controller
-            name="accountTypes"
-            control={control}
-            render={({ field }) => (
-              <MultiSelect
-                label={tr.crm.accounts.form.accountTypesLabel}
-                placeholder={tr.crm.accounts.form.accountTypesPlaceholder}
-                value={field.value ?? []}
-                onChange={(value) => field.onChange(value as AccountType[])}
-                options={ACCOUNT_TYPE_OPTIONS}
-                hint={tr.crm.accounts.form.accountTypesHint}
-              />
-            )}
+          <TextField
+            label={tr.crm.accounts.form.taxNumberLabel}
+            error={errors.taxNumber?.message}
+            hint={tr.crm.accounts.form.taxNumberHint}
+            inputMode="numeric"
+            maxLength={11}
+            {...taxNumberRegistration}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/\D/g, '').slice(0, 11);
+              taxNumberRegistration.onChange(event);
+            }}
           />
+          <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-3">
+            <Controller
+              name="city"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  label={tr.crm.accounts.form.cityLabel}
+                  value={field.value ?? ''}
+                  onChange={(value) => {
+                    field.onChange(value);
+                    setValue('district', '');
+                    setValue('taxOffice', '');
+                  }}
+                  options={TURKISH_CITIES}
+                  error={errors.city?.message}
+                  hint={tr.crm.accounts.form.cityHint}
+                />
+              )}
+            />
+            <Controller
+              name="district"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  label={tr.crm.accounts.form.districtLabel}
+                  placeholder={selectedCity ? undefined : tr.crm.accounts.form.districtPlaceholder}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  options={districtOptions}
+                  error={errors.district?.message}
+                  hint={tr.crm.accounts.form.districtHint}
+                />
+              )}
+            />
+            <Controller
+              name="taxOffice"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  label={tr.crm.accounts.form.taxOfficeLabel}
+                  placeholder={selectedCity ? undefined : tr.crm.accounts.form.taxOfficePlaceholder}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  options={taxOfficeOptions}
+                  error={errors.taxOffice?.message}
+                  hint={tr.crm.accounts.form.taxOfficeHint}
+                />
+              )}
+            />
+          </div>
           <TextField
             label={tr.crm.accounts.form.websiteLabel}
             placeholder="https://"
             error={errors.website?.message}
             hint={tr.crm.accounts.form.websiteHint}
             {...register('website')}
+          />
+          <TextField
+            label={tr.crm.accounts.form.emailLabel}
+            type="email"
+            error={errors.email?.message}
+            hint={tr.crm.accounts.form.emailHint}
+            {...register('email')}
           />
           <Controller
             name="phone"
@@ -179,12 +313,18 @@ export function AccountFormPage() {
               />
             )}
           />
-          <TextField
-            label={tr.crm.accounts.form.emailLabel}
-            type="email"
-            error={errors.email?.message}
-            hint={tr.crm.accounts.form.emailHint}
-            {...register('email')}
+          <Controller
+            name="landlinePhone"
+            control={control}
+            render={({ field }) => (
+              <LandlineField
+                label={tr.crm.accounts.form.landlinePhoneLabel}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.landlinePhone?.message}
+                hint={tr.crm.accounts.form.landlinePhoneHint}
+              />
+            )}
           />
           <div className="sm:col-span-2">
             <TextField
@@ -194,22 +334,95 @@ export function AccountFormPage() {
               {...register('address')}
             />
           </div>
-          <Controller
-            name="city"
-            control={control}
-            render={({ field }) => (
-              <Autocomplete
-                label={tr.crm.accounts.form.cityLabel}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                options={TURKISH_CITIES}
-                error={errors.city?.message}
-                hint={tr.crm.accounts.form.cityHint}
-              />
+          <div className="rounded-lg border border-app-border bg-app-surface p-4 sm:col-span-2">
+            <Controller
+              name="hasContact"
+              control={control}
+              render={({ field }) => (
+                <div className="flex items-center gap-2">
+                  <Switch checked={field.value ?? false} onChange={field.onChange} />
+                  <span className="text-sm font-semibold text-app-text">
+                    {tr.crm.accounts.form.contactCheckboxLabel}
+                  </span>
+                </div>
+              )}
+            />
+            {hasContact && (
+              <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                <TextField
+                  label={tr.crm.accounts.form.contactFirstNameLabel}
+                  required
+                  error={errors.contactFirstName?.message}
+                  {...register('contactFirstName')}
+                />
+                <TextField
+                  label={tr.crm.accounts.form.contactLastNameLabel}
+                  required
+                  error={errors.contactLastName?.message}
+                  {...register('contactLastName')}
+                />
+                <Controller
+                  name="contactDepartment"
+                  control={control}
+                  render={({ field }) => (
+                    <Autocomplete
+                      label={tr.crm.accounts.form.contactDepartmentLabel}
+                      placeholder={tr.crm.accounts.form.contactDepartmentPlaceholder}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      options={(departmentOptionsQuery.data ?? []).map((option) => option.label)}
+                      error={errors.contactDepartment?.message}
+                      hint={
+                        (departmentOptionsQuery.data?.length ?? 0) > 0
+                          ? tr.crm.accounts.form.contactDepartmentHintRestricted
+                          : tr.crm.accounts.form.contactDepartmentHintFree
+                      }
+                    />
+                  )}
+                />
+                <Controller
+                  name="contactTitle"
+                  control={control}
+                  render={({ field }) => (
+                    <Autocomplete
+                      label={tr.crm.accounts.form.contactTitleLabel}
+                      placeholder={tr.crm.accounts.form.contactTitlePlaceholder}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      options={(titleOptionsQuery.data ?? []).map((option) => option.label)}
+                      error={errors.contactTitle?.message}
+                      hint={
+                        (titleOptionsQuery.data?.length ?? 0) > 0
+                          ? tr.crm.accounts.form.contactTitleHintRestricted
+                          : tr.crm.accounts.form.contactTitleHintFree
+                      }
+                    />
+                  )}
+                />
+                <Controller
+                  name="contactPhone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneField
+                      label={tr.crm.accounts.form.contactPhoneLabel}
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
+                      error={errors.contactPhone?.message}
+                      hint={tr.crm.accounts.form.contactPhoneHint}
+                    />
+                  )}
+                />
+                <TextField
+                  label={tr.crm.accounts.form.contactExtensionLabel}
+                  hint={tr.crm.accounts.form.contactExtensionHint}
+                  error={errors.contactExtension?.message}
+                  {...register('contactExtension')}
+                />
+              </div>
             )}
-          />
+          </div>
           <div className="mt-1 flex gap-2 sm:col-span-2">
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" disabled={mutation.isPending || createContactMutation.isPending}>
               {mutation.isPending ? tr.crm.accounts.form.submitting : tr.crm.accounts.form.submit}
             </Button>
             <Button type="button" variant="secondary" onClick={() => navigate('/firmalar')}>
