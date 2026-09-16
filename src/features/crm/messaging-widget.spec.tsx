@@ -43,6 +43,7 @@ describe('MessagingWidget', () => {
       id: 'msg-1',
       conversationId: 'conv-1',
       senderId: 'user-other',
+      subject: 'Teklif hakkinda',
       body: 'Merhaba, teklifi inceledin mi?',
       sentAt: '2026-01-01T10:00:00.000Z',
       relatedEntity: null,

@@ -164,6 +164,8 @@ export function MessageDetailPage() {
         {tr.crm.messages.detail.back}
       </button>
 
+      <h1 className="mt-4 text-lg font-bold text-app-text">{messages[0]!.subject}</h1>
+
       {conversation.relatedEntity && conversation.relatedEntityId && (
         <div className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-app-primary/30 bg-app-primary/10 px-4 py-3 text-sm">
           <span className="flex items-center gap-2 text-app-text">

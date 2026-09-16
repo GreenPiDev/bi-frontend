@@ -77,19 +77,11 @@ export function MessagesListPage() {
       ),
     },
     {
-      key: 'recipients',
-      header: tr.crm.messages.recipientsColumn,
-      className: 'text-app-muted',
-      render: (conversation) =>
-        conversation.lastMessage.recipients
-          .map((recipient) => displayUserName(recipient.userId))
-          .join(', '),
-    },
-    {
-      key: 'body',
-      header: tr.crm.messages.bodyColumn,
+      key: 'subject',
+      header: tr.crm.messages.subjectColumn,
       className: 'max-w-xs truncate text-app-muted',
-      render: (conversation) => conversation.lastMessage.body,
+      required: true,
+      render: (conversation) => conversation.lastMessage.subject,
     },
     {
       key: 'sentAt',

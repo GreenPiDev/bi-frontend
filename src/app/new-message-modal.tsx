@@ -6,6 +6,7 @@ import { Modal } from '../components/ui/modal';
 import { MultiSelect } from '../components/ui/multi-select';
 import { Select, type SelectOption } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
+import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { messageFormSchema, type MessageFormValues } from '../features/crm/schemas';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
@@ -36,7 +37,7 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
     formState: { errors },
   } = useForm<MessageFormValues>({
     resolver: zodResolver(messageFormSchema),
-    defaultValues: { body: '', toUserIds: [], ccUserIds: [] },
+    defaultValues: { subject: '', body: '', toUserIds: [], ccUserIds: [] },
   });
 
   const relatedEntity = watch('relatedEntity');
@@ -84,6 +85,7 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
   function onSubmit(values: MessageFormValues) {
     createMutation.mutate(
       {
+        subject: values.subject,
         body: values.body,
         toUserIds: values.toUserIds,
         ccUserIds: values.ccUserIds ?? [],
@@ -146,6 +148,13 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
               options={userOptions}
             />
           )}
+        />
+        <TextField
+          label={tr.crm.messages.form.subjectLabel}
+          placeholder={tr.crm.messages.form.subjectPlaceholder}
+          required
+          error={errors.subject?.message}
+          {...register('subject')}
         />
         <TextareaField
           label={tr.crm.messages.form.bodyLabel}

@@ -246,6 +246,7 @@ export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
 
 export const messageFormSchema = z
   .object({
+    subject: z.string().min(1, 'Konu gerekli.').max(200),
     body: z.string().min(1, 'Mesaj metni gerekli.').max(5000),
     toUserIds: z.array(z.string()).min(1, 'En az bir alıcı seçilmelidir.'),
     ccUserIds: z.array(z.string()).max(50).optional(),

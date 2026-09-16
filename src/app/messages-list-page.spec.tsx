@@ -54,6 +54,7 @@ describe('MessagesListPage', () => {
             id: 'msg-1',
             conversationId: 'conv-1',
             senderId: 'user-1',
+            subject: 'Teklif hakkinda',
             body: 'Merhaba, teklif hakkinda konusalim.',
             sentAt: '2026-01-01T10:00:00.000Z',
             relatedEntity: null,

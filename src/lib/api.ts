@@ -1796,6 +1796,7 @@ export interface Message {
   id: string;
   conversationId: string;
   senderId: string;
+  subject: string;
   body: string;
   sentAt: string;
   relatedEntity: MessageRelatedEntity | null;
@@ -1822,6 +1823,9 @@ export interface ConversationDetail {
 }
 
 export interface CreateMessageInput {
+  /** Yeni konusma baslatirken zorunlu; conversationId ile yanit atarken
+   * gonderilse bile yok sayilir - konu ilk mesajdan miras alinir. */
+  subject?: string;
   body: string;
   toUserIds: string[];
   ccUserIds?: string[];

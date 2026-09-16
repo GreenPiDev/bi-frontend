@@ -1452,7 +1452,7 @@ export const tr = {
       empty: 'Henüz mesaj yok.',
       senderColumn: 'Gönderen',
       recipientsColumn: 'Alıcılar',
-      bodyColumn: 'Mesaj',
+      subjectColumn: 'Konu',
       sentAtColumn: 'Tarih',
       unreadCountAria: (count: number) => `${count} okunmamış mesaj`,
       you: 'Sen',
@@ -1474,6 +1474,8 @@ export const tr = {
         reset: 'Sıfırla',
       },
       form: {
+        subjectLabel: 'Konu',
+        subjectPlaceholder: 'Konu başlığı...',
         bodyLabel: 'Mesaj',
         bodyPlaceholder: 'Mesajınızı yazın...',
         toLabel: 'Kime',
