@@ -860,6 +860,8 @@ export const tr = {
       noAccount: 'Firma yok',
       statusActive: 'Aktif',
       statusInactive: 'Pasif',
+      statusUpdateSuccess: 'Durum güncellendi.',
+      statusUpdateError: 'Durum güncellenemedi.',
       form: {
         newTitle: 'Yeni Kişi',
         editTitle: 'Kişiyi Düzenle',

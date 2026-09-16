@@ -2,7 +2,6 @@ import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
@@ -12,12 +11,47 @@ import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useContactsQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
+import {
+  useContactsQuery,
+  useDeleteContactMutation,
+  useUpdateContactMutation,
+} from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { ApiError, type Contact } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
+
+function ContactStatusSelect({ contact }: { contact: Contact }) {
+  const toast = useToast();
+  const updateMutation = useUpdateContactMutation(contact.id);
+
+  return (
+    <select
+      value={contact.status}
+      onClick={(event) => event.stopPropagation()}
+      onChange={(event) => {
+        const status = event.target.value as Contact['status'];
+        updateMutation.mutate(
+          { status },
+          {
+            onSuccess: () => toast.success(tr.crm.contacts.statusUpdateSuccess),
+            onError: (error) => {
+              toast.error(
+                error instanceof ApiError ? error.message : tr.crm.contacts.statusUpdateError,
+              );
+            },
+          },
+        );
+      }}
+      disabled={updateMutation.isPending}
+      className="cursor-pointer rounded-md border-none bg-transparent p-0 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50"
+    >
+      <option value="ACTIVE">{tr.crm.contacts.statusActive}</option>
+      <option value="INACTIVE">{tr.crm.contacts.statusInactive}</option>
+    </select>
+  );
+}
 
 export function ContactsListPage() {
   const navigate = useNavigate();
@@ -77,11 +111,7 @@ export function ContactsListPage() {
     {
       key: 'status',
       header: tr.crm.contacts.statusColumn,
-      render: (c) => (
-        <Badge variant={c.status === 'ACTIVE' ? 'success' : 'neutral'}>
-          {c.status === 'ACTIVE' ? tr.crm.contacts.statusActive : tr.crm.contacts.statusInactive}
-        </Badge>
-      ),
+      render: (c) => <ContactStatusSelect contact={c} />,
     },
     {
       key: 'actions',
