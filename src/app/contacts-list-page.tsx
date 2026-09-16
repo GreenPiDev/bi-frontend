@@ -1,67 +1,119 @@
-import { Search } from 'lucide-react';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Tooltip } from '../components/ui/tooltip';
+import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useContactsQuery } from '../features/crm/use-contacts';
+import { useContactsQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
+import { ApiError, type Contact } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
-import type { Contact } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const columns: TableColumn<Contact>[] = [
-  {
-    key: 'name',
-    header: tr.crm.contacts.nameColumn,
-    render: (c) => (
-      <span className="font-semibold text-app-text">
-        {c.firstName} {c.lastName}
-      </span>
-    ),
-  },
-  {
-    key: 'account',
-    header: tr.crm.contacts.accountColumn,
-    className: 'text-app-muted',
-    render: (c) => c.account?.name ?? tr.crm.contacts.noAccount,
-  },
-  {
-    key: 'phone',
-    header: tr.crm.contacts.phoneColumn,
-    className: 'text-app-muted',
-    render: (c) => c.phone ?? '—',
-  },
-  {
-    key: 'email',
-    header: tr.crm.contacts.emailColumn,
-    className: 'text-app-muted',
-    render: (c) => c.email ?? '—',
-  },
-  {
-    key: 'status',
-    header: tr.crm.contacts.statusColumn,
-    render: (c) => (
-      <Badge variant={c.status === 'ACTIVE' ? 'success' : 'neutral'}>
-        {c.status === 'ACTIVE' ? tr.crm.contacts.statusActive : tr.crm.contacts.statusInactive}
-      </Badge>
-    ),
-  },
-];
 
 export function ContactsListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
+  const [deletingContact, setDeletingContact] = useState<Contact | undefined>(undefined);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const contactsQuery = useContactsQuery({ page, pageSize, q: q || undefined });
   const exportMutation = useExportEntityMutation('contacts');
+  const deleteMutation = useDeleteContactMutation();
+
+  function handleConfirmDelete() {
+    if (!deletingContact) return;
+    deleteMutation.mutate(deletingContact.id, {
+      onSuccess: () => {
+        toast.success(tr.crm.contacts.deleteSuccess);
+        setDeletingContact(undefined);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.contacts.deleteError);
+      },
+    });
+  }
+
+  const columns: TableColumn<Contact>[] = [
+    {
+      key: 'name',
+      header: tr.crm.contacts.nameColumn,
+      render: (c) => (
+        <span className="font-semibold text-app-text">
+          {c.firstName} {c.lastName}
+        </span>
+      ),
+    },
+    {
+      key: 'account',
+      header: tr.crm.contacts.accountColumn,
+      className: 'text-app-muted',
+      render: (c) => c.account?.name ?? tr.crm.contacts.noAccount,
+    },
+    {
+      key: 'phone',
+      header: tr.crm.contacts.phoneColumn,
+      className: 'text-app-muted',
+      render: (c) => c.phone ?? '—',
+    },
+    {
+      key: 'email',
+      header: tr.crm.contacts.emailColumn,
+      className: 'text-app-muted',
+      render: (c) => c.email ?? '—',
+    },
+    {
+      key: 'status',
+      header: tr.crm.contacts.statusColumn,
+      render: (c) => (
+        <Badge variant={c.status === 'ACTIVE' ? 'success' : 'neutral'}>
+          {c.status === 'ACTIVE' ? tr.crm.contacts.statusActive : tr.crm.contacts.statusInactive}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: tr.crm.contacts.actionsColumn,
+      className: 'w-px',
+      render: (c) => (
+        <div className="flex items-center gap-1">
+          <Tooltip content={tr.crm.contacts.editTooltip}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                navigate(`/kisiler/duzenle/${c.id}`);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
+            >
+              <Pencil size={16} />
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.contacts.deleteTooltip}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeletingContact(c);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
+            >
+              <Trash2 size={16} />
+            </button>
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <AppShell>
@@ -128,6 +180,17 @@ export function ContactsListPage() {
           totalPages={contactsQuery.data.meta.totalPages}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
+        />
+      )}
+
+      {deletingContact && (
+        <ConfirmModal
+          title={tr.crm.contacts.deleteConfirmTitle}
+          message={tr.crm.contacts.deleteConfirm}
+          confirmLabel={tr.crm.contacts.deleteTooltip}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingContact(undefined)}
         />
       )}
     </AppShell>

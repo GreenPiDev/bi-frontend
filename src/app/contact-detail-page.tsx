@@ -2,9 +2,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
-import { useContactQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
+import { useContactQuery } from '../features/crm/use-contacts';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short' });
@@ -13,7 +12,6 @@ export function ContactDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const contactQuery = useContactQuery(id);
-  const deleteMutation = useDeleteContactMutation();
 
   if (contactQuery.isPending) {
     return (
@@ -28,13 +26,6 @@ export function ContactDetailPage() {
   }
 
   const contact = contactQuery.data;
-
-  function handleDelete() {
-    if (!window.confirm(tr.crm.contacts.deleteConfirm)) {
-      return;
-    }
-    deleteMutation.mutate(id, { onSuccess: () => navigate('/kisiler') });
-  }
 
   const fields: { label: string; value: string }[] = [
     { label: tr.crm.contacts.form.departmentLabel, value: contact.department ?? '—' },
@@ -76,18 +67,6 @@ export function ContactDetailPage() {
               {contact.account.name}
             </button>
           )}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(`/kisiler/duzenle/${id}`)}
-          >
-            {tr.crm.accounts.detail.editButton}
-          </Button>
-          <Button type="button" variant="danger" onClick={handleDelete}>
-            {tr.crm.accounts.detail.deleteButton}
-          </Button>
         </div>
       </div>
 
