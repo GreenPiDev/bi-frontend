@@ -842,7 +842,7 @@ export const tr = {
       newButton: 'Yeni Kişi',
       importButton: 'İçe Aktar',
       exportButton: 'Dışa Aktar',
-      searchPlaceholder: 'Ad, e-posta veya telefon ara...',
+      searchPlaceholder: 'Ad, firma, e-posta veya telefon ara...',
       empty: "Henüz kişi yok. Excel/CSV'den içe aktarın veya yeni kişi ekleyin.",
       loading: 'Kişiler yükleniyor...',
       nameColumn: 'Ad Soyad',
