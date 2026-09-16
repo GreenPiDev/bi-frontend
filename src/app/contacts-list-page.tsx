@@ -75,7 +75,7 @@ export function ContactsListPage() {
     accountId: accountId || undefined,
     status: status || undefined,
   });
-  const accountsQuery = useAccountsQuery({ pageSize: 1000 });
+  const accountsQuery = useAccountsQuery({ pageSize: 100 });
   const exportMutation = useExportEntityMutation('contacts');
   const deleteMutation = useDeleteContactMutation();
   const hasActiveFilter = Boolean(accountId) || Boolean(status);
