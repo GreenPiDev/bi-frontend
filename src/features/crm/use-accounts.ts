@@ -10,7 +10,9 @@ import {
 
 export const ACCOUNTS_QUERY_KEY = ['accounts'];
 
-export function useAccountsQuery(params: { page?: number; pageSize?: number; q?: string } = {}) {
+export function useAccountsQuery(
+  params: { page?: number; pageSize?: number; q?: string; sort?: string; from?: string } = {},
+) {
   return useQuery({
     queryKey: [...ACCOUNTS_QUERY_KEY, params],
     queryFn: () => listAccounts(params),

@@ -716,6 +716,15 @@ export const tr = {
       deleteConfirm: 'Bu firmayı silmek istediğinize emin misiniz?',
       deleteError: 'Firma silinemedi.',
       missingFieldsWarning: (fields: string) => `Eksik bilgi: ${fields}`,
+      filterButton: 'Filtrele',
+      filterDrawer: {
+        title: 'Firmaları Filtrele',
+        fromLabel: 'Şu tarihten itibaren eklenenler',
+        lastNDaysLabel: 'Son kaç gün içinde eklenenler',
+        lastNDaysPlaceholder: 'Örn. 10',
+        apply: 'Uygula',
+        reset: 'Sıfırla',
+      },
       form: {
         newTitle: 'Yeni Firma',
         editTitle: 'Firmayı Düzenle',

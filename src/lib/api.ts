@@ -767,12 +767,14 @@ export interface AccountInput {
 }
 
 export function listAccounts(
-  params: { page?: number; pageSize?: number; q?: string } = {},
+  params: { page?: number; pageSize?: number; q?: string; sort?: string; from?: string } = {},
 ): Promise<PagedResult<Account>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
+  if (params.sort) query.set('sort', params.sort);
+  if (params.from) query.set('from', params.from);
   const qs = query.toString();
   return request(`/accounts${qs ? `?${qs}` : ''}`);
 }

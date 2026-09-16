@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { TextField } from '../components/ui/text-field';
 import { Tooltip } from '../components/ui/tooltip';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAccountsQuery } from '../features/crm/use-accounts';
@@ -57,15 +59,47 @@ const columns: TableColumn<Account>[] = [
   },
 ];
 
+function daysAgoIsoDate(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
 export function AccountsListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
+  const [from, setFrom] = useState('');
+  const [lastNDaysInput, setLastNDaysInput] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const accountsQuery = useAccountsQuery({ page, pageSize, q: q || undefined });
+  const accountsQuery = useAccountsQuery({
+    page,
+    pageSize,
+    q: q || undefined,
+    from: from || undefined,
+  });
   const exportMutation = useExportEntityMutation('accounts');
+  const hasActiveFilter = Boolean(from);
+
+  function applyLastNDays(value: string) {
+    setLastNDaysInput(value);
+    const days = Number(value);
+    setPage(1);
+    if (value && Number.isFinite(days) && days > 0) {
+      setFrom(daysAgoIsoDate(days));
+    } else {
+      setFrom('');
+    }
+  }
+
+  function resetFilters() {
+    setPage(1);
+    setFrom('');
+    setLastNDaysInput('');
+  }
 
   return (
     <AppShell>
@@ -78,6 +112,12 @@ export function AccountsListPage() {
           <p className="mt-1 text-sm text-app-muted">{tr.crm.accounts.subtitle}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" type="button" onClick={() => setDrawerOpen(true)}>
+            {tr.crm.accounts.filterButton}
+            {hasActiveFilter && (
+              <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-app-primary" />
+            )}
+          </Button>
           <Button
             variant="secondary"
             type="button"
@@ -133,6 +173,34 @@ export function AccountsListPage() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.accounts.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <TextField
+              type="date"
+              label={tr.crm.accounts.filterDrawer.fromLabel}
+              value={from}
+              onChange={(event) => {
+                setPage(1);
+                setLastNDaysInput('');
+                setFrom(event.target.value);
+              }}
+            />
+            <TextField
+              type="number"
+              min={1}
+              label={tr.crm.accounts.filterDrawer.lastNDaysLabel}
+              placeholder={tr.crm.accounts.filterDrawer.lastNDaysPlaceholder}
+              value={lastNDaysInput}
+              onChange={(event) => applyLastNDays(event.target.value)}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.accounts.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
     </AppShell>
   );
