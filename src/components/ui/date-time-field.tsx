@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { CalendarDays } from 'lucide-react';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Calendar } from './calendar';
 
 interface DateTimeFieldProps {
@@ -21,16 +21,14 @@ function formatDateDisplay(dateStr: string): string {
   return `${day}.${month}.${year}`;
 }
 
-/** Calendar'in yaklasik yuksekligi (w-72 govde + ay/yil satiri + "Bugun" satiri) -
- * asagida yer yoksa yukari acmaya karar vermek icin kullanilir. */
-const CALENDAR_HEIGHT = 380;
-
 /** Tarih kismi icin ozel Calendar acilir penceresi + saat icin native <input type="time">
  * - datetime-local'in tarayicidan tarayiciya degisen yerel takvim gorunumu yerine.
  *
  * Takvim `position: fixed` ile butonun ekran konumuna gore konumlanir - Modal icerigi
  * `overflow-auto` oldugu icin (bkz. modal.tsx), `absolute` konumlandirma listeyi kirpardi
- * (ayni gerekce icin bkz. multi-select.tsx). */
+ * (ayni gerekce icin bkz. multi-select.tsx). Takvim her zaman butonun altinda acilir;
+ * sayfanin altina tasarsa (sayfa zaten kendi sonuna kadar scroll edilmisse), gecici bir
+ * spacer eklenip otomatik asagi scroll edilir ki tasan kisim gorunur olsun. */
 export function DateTimeField({
   label,
   value,
@@ -44,6 +42,9 @@ export function DateTimeField({
   const [menuRect, setMenuRect] = useState<{ top: number; left: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const spacerRef = useRef<HTMLDivElement | null>(null);
+  const hasAdjustedScrollRef = useRef(false);
   const [datePart = '', timePart = ''] = value ? value.split('T') : [];
 
   useEffect(() => {
@@ -62,12 +63,7 @@ export function DateTimeField({
     function updateRect() {
       const rect = buttonRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const openUp = spaceBelow < CALENDAR_HEIGHT + 8 && rect.top > CALENDAR_HEIGHT + 8;
-      setMenuRect({
-        top: openUp ? Math.max(8, rect.top - CALENDAR_HEIGHT - 4) : rect.bottom + 4,
-        left: rect.left,
-      });
+      setMenuRect({ top: rect.bottom + 4, left: rect.left });
     }
     updateRect();
     window.addEventListener('resize', updateRect);
@@ -77,6 +73,35 @@ export function DateTimeField({
       window.removeEventListener('scroll', updateRect, true);
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open) {
+      hasAdjustedScrollRef.current = false;
+      spacerRef.current?.remove();
+      spacerRef.current = null;
+    }
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      spacerRef.current?.remove();
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open || !menuRect || hasAdjustedScrollRef.current) return;
+    const menu = menuRef.current;
+    if (!menu) return;
+    hasAdjustedScrollRef.current = true;
+    const overflow = menuRect.top + menu.offsetHeight - window.innerHeight;
+    if (overflow > 0) {
+      const spacer = document.createElement('div');
+      spacer.style.height = `${overflow + 16}px`;
+      document.body.appendChild(spacer);
+      spacerRef.current = spacer;
+      window.scrollBy({ top: overflow + 16, behavior: 'smooth' });
+    }
+  }, [open, menuRect]);
 
   function handleSelectDate(isoDate: string) {
     const defaultTime = timePart || new Date().toTimeString().slice(0, 5);
@@ -120,13 +145,9 @@ export function DateTimeField({
           </button>
           {open && menuRect && (
             <div
-              style={{
-                position: 'fixed',
-                top: menuRect.top,
-                left: menuRect.left,
-                maxHeight: 'calc(100vh - 16px)',
-              }}
-              className="z-[200] overflow-auto"
+              ref={menuRef}
+              style={{ position: 'fixed', top: menuRect.top, left: menuRect.left }}
+              className="z-[200]"
             >
               <Calendar value={datePart} onSelect={handleSelectDate} />
             </div>
