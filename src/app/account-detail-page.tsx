@@ -158,6 +158,15 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabInteractions,
               content: (
                 <div>
+                  <div className="mb-3 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => navigate(`/gorusmeler/yeni?accountId=${id}`)}
+                    >
+                      {tr.crm.interactions.newButton}
+                    </Button>
+                  </div>
                   {(interactionsQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">
                       {tr.crm.accounts.detail.noInteractions}
@@ -186,6 +195,15 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabOpportunities,
               content: (
                 <div>
+                  <div className="mb-3 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => navigate(`/firsatlar/yeni?accountId=${id}`)}
+                    >
+                      {tr.crm.opportunities.newButton}
+                    </Button>
+                  </div>
                   {(opportunitiesQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">
                       {tr.crm.accounts.detail.noOpportunities}
@@ -214,6 +232,15 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabQuotes,
               content: (
                 <div>
+                  <div className="mb-3 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => navigate(`/teklifler/yeni?accountId=${id}`)}
+                    >
+                      {tr.crm.quotes.newButton}
+                    </Button>
+                  </div>
                   {(quotesQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noQuotes}</p>
                   ) : (
@@ -242,6 +269,15 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabProjects,
               content: (
                 <div>
+                  <div className="mb-3 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => navigate(`/projeler/yeni?accountId=${id}`)}
+                    >
+                      {tr.crm.projects.newButton}
+                    </Button>
+                  </div>
                   {(projectsQuery.data?.data.length ?? 0) === 0 ? (
                     <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noProjects}</p>
                   ) : (

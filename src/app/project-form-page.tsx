@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
@@ -24,6 +24,8 @@ export function ProjectFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
   const accountsQuery = useAccountsQuery();
   const projectQuery = useProjectQuery(id ?? '');
@@ -37,7 +39,10 @@ export function ProjectFormPage() {
     reset,
     watch,
     formState: { errors },
-  } = useForm<ProjectFormValues>({ resolver: zodResolver(projectFormSchema) });
+  } = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: { accountId: prefillAccountId },
+  });
 
   const estimatedBudgetField = register('estimatedBudget');
   const actualCostField = register('actualCost');

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ChangeEvent } from 'react';
 import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
@@ -42,6 +42,8 @@ function decimalOnly(registration: UseFormRegisterReturn) {
 
 export function QuoteFormPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
   const accountsQuery = useAccountsQuery();
   const contactsQuery = useContactsQuery();
@@ -59,6 +61,7 @@ export function QuoteFormPage() {
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
+      accountId: prefillAccountId,
       items: [{ productId: '', quantity: '1', unitPrice: '', discountPct: '0', vatPct: '0' }],
       hasOpportunity: false,
     },

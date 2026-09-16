@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
@@ -27,6 +27,8 @@ export function OpportunityFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
   const accountsQuery = useAccountsQuery();
   const opportunityQuery = useOpportunityQuery(id ?? '');
@@ -39,7 +41,10 @@ export function OpportunityFormPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<OpportunityFormValues>({ resolver: zodResolver(opportunityFormSchema) });
+  } = useForm<OpportunityFormValues>({
+    resolver: zodResolver(opportunityFormSchema),
+    defaultValues: { accountId: prefillAccountId },
+  });
 
   useEffect(() => {
     if (opportunityQuery.data) {

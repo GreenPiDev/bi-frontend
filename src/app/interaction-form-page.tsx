@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Autocomplete } from '../components/ui/autocomplete';
@@ -31,6 +32,8 @@ const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
 
 export function InteractionFormPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefillAccountId = searchParams.get('accountId');
   const toast = useToast();
   const accountsQuery = useAccountsQuery();
   const contactsQuery = useContactsQuery();
@@ -42,6 +45,7 @@ export function InteractionFormPage() {
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<InteractionFormValues>({
     resolver: zodResolver(interactionFormSchema),
@@ -54,6 +58,14 @@ export function InteractionFormPage() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'participants' });
+
+  useEffect(() => {
+    if (!prefillAccountId) return;
+    const account = (accountsQuery.data?.data ?? []).find((a) => a.id === prefillAccountId);
+    if (account) {
+      setValue('accountName', account.name);
+    }
+  }, [prefillAccountId, accountsQuery.data, setValue]);
 
   const accountNameValue = watch('accountName') ?? '';
   const matchedAccount = (accountsQuery.data?.data ?? []).find(
