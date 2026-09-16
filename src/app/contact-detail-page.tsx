@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
-import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
 import { useContactQuery } from '../features/crm/use-contacts';
 import { tr } from '../i18n/tr';
@@ -28,6 +27,11 @@ export function ContactDetailPage() {
   const contact = contactQuery.data;
 
   const fields: { label: string; value: string }[] = [
+    {
+      label: tr.crm.contacts.statusColumn,
+      value:
+        contact.status === 'ACTIVE' ? tr.crm.contacts.statusActive : tr.crm.contacts.statusInactive,
+    },
     { label: tr.crm.contacts.form.departmentLabel, value: contact.department ?? '—' },
     { label: tr.crm.contacts.form.titleLabel, value: contact.title ?? '—' },
     { label: tr.crm.contacts.form.emailLabel, value: contact.email ?? '—' },
@@ -52,11 +56,6 @@ export function ContactDetailPage() {
               {contact.firstName} {contact.lastName}
             </h1>
             <PageHelp text={tr.help.contactDetail} />
-            <Badge variant={contact.status === 'ACTIVE' ? 'success' : 'neutral'}>
-              {contact.status === 'ACTIVE'
-                ? tr.crm.contacts.statusActive
-                : tr.crm.contacts.statusInactive}
-            </Badge>
           </div>
           {contact.account && (
             <button
