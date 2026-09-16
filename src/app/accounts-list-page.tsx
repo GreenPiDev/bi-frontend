@@ -1,63 +1,24 @@
-import { AlertTriangle, Search } from 'lucide-react';
+import { AlertTriangle, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { Tooltip } from '../components/ui/tooltip';
+import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useAccountsQuery } from '../features/crm/use-accounts';
+import { useAccountsQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
+import { ApiError, type Account } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
-import type { Account } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
-
-const columns: TableColumn<Account>[] = [
-  {
-    key: 'name',
-    header: tr.crm.accounts.nameColumn,
-    render: (a) => (
-      <span className="flex items-center gap-1.5 font-semibold text-app-text">
-        {a.name}
-        {a.missingCriticalFields.length > 0 && (
-          <Tooltip
-            content={tr.crm.accounts.missingFieldsWarning(
-              a.missingCriticalFields
-                .map((field) => CRITICAL_FIELD_LABELS[field] ?? field)
-                .join(', '),
-            )}
-          >
-            <AlertTriangle size={14} className="shrink-0 text-amber-500" />
-          </Tooltip>
-        )}
-      </span>
-    ),
-  },
-  {
-    key: 'city',
-    header: tr.crm.accounts.cityColumn,
-    className: 'text-app-muted',
-    render: (a) => a.city ?? '—',
-  },
-  {
-    key: 'phone',
-    header: tr.crm.accounts.phoneColumn,
-    className: 'text-app-muted',
-    render: (a) => a.phone ?? '—',
-  },
-  {
-    key: 'email',
-    header: tr.crm.accounts.emailColumn,
-    className: 'text-app-muted',
-    render: (a) => a.email ?? '—',
-  },
-];
 
 function daysAgoIsoDate(days: number): string {
   const date = new Date();
@@ -67,12 +28,14 @@ function daysAgoIsoDate(days: number): string {
 
 export function AccountsListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const [from, setFrom] = useState('');
   const [lastNDaysInput, setLastNDaysInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState<Account | undefined>(undefined);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const accountsQuery = useAccountsQuery({
@@ -82,7 +45,95 @@ export function AccountsListPage() {
     from: from || undefined,
   });
   const exportMutation = useExportEntityMutation('accounts');
+  const deleteMutation = useDeleteAccountMutation();
   const hasActiveFilter = Boolean(from);
+
+  function handleConfirmDelete() {
+    if (!deletingAccount) return;
+    deleteMutation.mutate(deletingAccount.id, {
+      onSuccess: () => {
+        toast.success(tr.crm.accounts.deleteSuccess);
+        setDeletingAccount(undefined);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.accounts.deleteError);
+      },
+    });
+  }
+
+  const columns: TableColumn<Account>[] = [
+    {
+      key: 'name',
+      header: tr.crm.accounts.nameColumn,
+      render: (a) => (
+        <span className="flex items-center gap-1.5 font-semibold text-app-text">
+          {a.name}
+          {a.missingCriticalFields.length > 0 && (
+            <Tooltip
+              content={tr.crm.accounts.missingFieldsWarning(
+                a.missingCriticalFields
+                  .map((field) => CRITICAL_FIELD_LABELS[field] ?? field)
+                  .join(', '),
+              )}
+            >
+              <AlertTriangle size={14} className="shrink-0 text-amber-500" />
+            </Tooltip>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: 'city',
+      header: tr.crm.accounts.cityColumn,
+      className: 'text-app-muted',
+      render: (a) => a.city ?? '—',
+    },
+    {
+      key: 'phone',
+      header: tr.crm.accounts.phoneColumn,
+      className: 'text-app-muted',
+      render: (a) => a.phone ?? '—',
+    },
+    {
+      key: 'email',
+      header: tr.crm.accounts.emailColumn,
+      className: 'text-app-muted',
+      render: (a) => a.email ?? '—',
+    },
+    {
+      key: 'actions',
+      header: tr.crm.accounts.actionsColumn,
+      className: 'w-px',
+      render: (a) => (
+        <div className="flex items-center gap-1">
+          <Tooltip content={tr.crm.accounts.editTooltip}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                navigate(`/firmalar/duzenle/${a.id}`);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
+            >
+              <Pencil size={16} />
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.accounts.deleteTooltip}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeletingAccount(a);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
+            >
+              <Trash2 size={16} />
+            </button>
+          </Tooltip>
+        </div>
+      ),
+    },
+  ];
 
   function applyLastNDays(value: string) {
     setLastNDaysInput(value);
@@ -201,6 +252,17 @@ export function AccountsListPage() {
             </Button>
           </div>
         </Drawer>
+      )}
+
+      {deletingAccount && (
+        <ConfirmModal
+          title={tr.crm.accounts.deleteConfirmTitle}
+          message={tr.crm.accounts.deleteConfirm}
+          confirmLabel={tr.crm.accounts.deleteTooltip}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingAccount(undefined)}
+        />
       )}
     </AppShell>
   );

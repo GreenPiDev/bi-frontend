@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
-import { useAccountQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
+import { useAccountQuery } from '../features/crm/use-accounts';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import { useProjectsQuery } from '../features/crm/use-projects';
@@ -26,7 +26,6 @@ export function AccountDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const accountQuery = useAccountQuery(id);
-  const deleteMutation = useDeleteAccountMutation();
   const interactionsQuery = useInteractionsQuery({ accountId: id });
   const opportunitiesQuery = useOpportunitiesQuery({ accountId: id });
   const quotesQuery = useQuotesQuery({ accountId: id });
@@ -45,13 +44,6 @@ export function AccountDetailPage() {
   }
 
   const account = accountQuery.data;
-
-  function handleDelete() {
-    if (!window.confirm(tr.crm.accounts.deleteConfirm)) {
-      return;
-    }
-    deleteMutation.mutate(id, { onSuccess: () => navigate('/firmalar') });
-  }
 
   const fields: { label: string; value: string }[] = [
     { label: tr.crm.accounts.form.taxNumberLabel, value: account.taxNumber ?? '—' },
@@ -91,18 +83,6 @@ export function AccountDetailPage() {
               )}
             </p>
           )}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(`/firmalar/duzenle/${id}`)}
-          >
-            {tr.crm.accounts.detail.editButton}
-          </Button>
-          <Button type="button" variant="danger" onClick={handleDelete}>
-            {tr.crm.accounts.detail.deleteButton}
-          </Button>
         </div>
       </div>
 

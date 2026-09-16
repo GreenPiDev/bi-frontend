@@ -715,6 +715,11 @@ export const tr = {
       emailColumn: 'E-posta',
       deleteConfirm: 'Bu firmayı silmek istediğinize emin misiniz?',
       deleteError: 'Firma silinemedi.',
+      deleteSuccess: 'Firma silindi.',
+      actionsColumn: 'İşlemler',
+      editTooltip: 'Düzenle',
+      deleteTooltip: 'Sil',
+      deleteConfirmTitle: 'Firmayı sil',
       missingFieldsWarning: (fields: string) => `Eksik bilgi: ${fields}`,
       filterButton: 'Filtrele',
       filterDrawer: {

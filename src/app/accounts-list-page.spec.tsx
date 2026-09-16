@@ -4,19 +4,22 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AccountsListPage } from './accounts-list-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderAccountsListPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/firmalar']}>
-        <Routes>
-          <Route path="/firmalar" element={<AccountsListPage />} />
-          <Route path="/firmalar/yeni" element={<div>new-page</div>} />
-          <Route path="/firmalar/:id" element={<div>detail-page</div>} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/firmalar']}>
+          <Routes>
+            <Route path="/firmalar" element={<AccountsListPage />} />
+            <Route path="/firmalar/yeni" element={<div>new-page</div>} />
+            <Route path="/firmalar/:id" element={<div>detail-page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -83,5 +86,88 @@ describe('AccountsListPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Yeni Firma' }));
     expect(await screen.findByText('new-page')).toBeInTheDocument();
+  });
+
+  it('islemler kolonundaki duzenle ikonu duzenleme sayfasina gider', async () => {
+    vi.spyOn(api, 'listAccounts').mockResolvedValue({
+      data: [
+        {
+          id: 'acc-1',
+          name: 'Acme A.S.',
+          taxNumber: null,
+          taxOffice: null,
+          sector: null,
+          accountTypes: [],
+          website: null,
+          phone: null,
+          email: null,
+          address: null,
+          city: 'Istanbul',
+          landlinePhone: null,
+          district: null,
+          ownerId: null,
+          missingCriticalFields: [],
+          createdAt: '2026-08-01T00:00:00.000Z',
+          updatedAt: '2026-08-01T00:00:00.000Z',
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+    const user = userEvent.setup();
+    const queryClient = new QueryClient();
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/firmalar']}>
+            <Routes>
+              <Route path="/firmalar" element={<AccountsListPage />} />
+              <Route path="/firmalar/duzenle/:id" element={<div>edit-page</div>} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText('Acme A.S.')).toBeInTheDocument();
+    const actionButtons = container.querySelectorAll('table tbody button');
+    expect(actionButtons).toHaveLength(2);
+    await user.click(actionButtons[0]);
+    expect(await screen.findByText('edit-page')).toBeInTheDocument();
+  });
+
+  it('islemler kolonundaki sil ikonu onay sonrasi firmayi siler', async () => {
+    vi.spyOn(api, 'listAccounts').mockResolvedValue({
+      data: [
+        {
+          id: 'acc-1',
+          name: 'Acme A.S.',
+          taxNumber: null,
+          taxOffice: null,
+          sector: null,
+          accountTypes: [],
+          website: null,
+          phone: null,
+          email: null,
+          address: null,
+          city: 'Istanbul',
+          landlinePhone: null,
+          district: null,
+          ownerId: null,
+          missingCriticalFields: [],
+          createdAt: '2026-08-01T00:00:00.000Z',
+          updatedAt: '2026-08-01T00:00:00.000Z',
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+    const deleteSpy = vi.spyOn(api, 'deleteAccount').mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    const { container } = renderAccountsListPage();
+
+    expect(await screen.findByText('Acme A.S.')).toBeInTheDocument();
+    const actionButtons = container.querySelectorAll('table tbody button');
+    await user.click(actionButtons[1]);
+    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+    expect(deleteSpy).toHaveBeenCalledWith('acc-1');
   });
 });

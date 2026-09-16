@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import App from '../App';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 import { createMockUser } from '../test/mock-user';
 
@@ -10,7 +11,9 @@ function renderAppAt(path: string) {
   const queryClient = new QueryClient();
   render(
     <QueryClientProvider client={queryClient}>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
