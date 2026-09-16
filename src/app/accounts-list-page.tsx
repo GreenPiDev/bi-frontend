@@ -274,12 +274,12 @@ export function AccountsListPage() {
               }}
             />
             <TextField
-              type="number"
-              min={1}
+              type="text"
+              inputMode="numeric"
               label={tr.crm.accounts.filterDrawer.lastNDaysLabel}
               placeholder={tr.crm.accounts.filterDrawer.lastNDaysPlaceholder}
               value={lastNDaysInput}
-              onChange={(event) => applyLastNDays(event.target.value)}
+              onChange={(event) => applyLastNDays(event.target.value.replace(/[^0-9]/g, ''))}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>
               {tr.crm.accounts.filterDrawer.reset}
