@@ -72,6 +72,18 @@ describe('MessagingWidget', () => {
       messages: [message],
     });
     vi.spyOn(api, 'markConversationRead').mockResolvedValue(undefined);
+    vi.spyOn(api, 'listQuotes').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    vi.spyOn(api, 'listProjects').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    vi.spyOn(api, 'listInteractions').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
   });
 
   it('varsayilan olarak daralti durumdadir, baslik gorunur ama liste gorunmez', async () => {
@@ -107,6 +119,20 @@ describe('MessagingWidget', () => {
 
     await user.click(screen.getByRole('button', { name: 'Kapat' }));
     await waitForElementToBeRemoved(() => screen.queryByRole('button', { name: 'Kapat' }));
+  });
+
+  it('filtre butonu /mesajlar sayfasiyla ayni cekmeceyi acar (kompozit filtreler dahil)', async () => {
+    const user = userEvent.setup();
+    renderWidget();
+    await user.click(await screen.findByRole('button', { name: 'Genişlet' }));
+    await user.click(screen.getByRole('button', { name: 'Filtrele' }));
+
+    expect(screen.getByRole('dialog', { name: 'Mesajları Filtrele' })).toBeInTheDocument();
+    expect(screen.getByText('İlişkili Kayıt Türü')).toBeInTheDocument();
+    expect(screen.getByText('Teklif')).toBeInTheDocument();
+    expect(screen.getByText('Proje')).toBeInTheDocument();
+    expect(screen.getByText('Görüşme')).toBeInTheDocument();
+    expect(screen.getByText('Kime Gönderildi')).toBeInTheDocument();
   });
 
   it('yeni mesaj butonu formu acar', async () => {

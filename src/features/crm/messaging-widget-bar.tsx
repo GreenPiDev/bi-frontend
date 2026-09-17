@@ -1,11 +1,11 @@
 import { clsx } from 'clsx';
 import { PenSquare, Search, SlidersHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { Drawer } from '../../components/ui/drawer';
-import { Select } from '../../components/ui/select';
+import { MessagesFilterDrawer } from './messages-filter-drawer';
+import type { MessagesFilterState } from './use-messages-filter-state';
 import { useMeQuery } from '../auth/use-auth';
 import { tr } from '../../i18n/tr';
-import type { ConversationSummary, MessageRelatedEntity } from '../../lib/api';
+import type { ConversationSummary } from '../../lib/api';
 
 interface MessagingWidgetBarProps {
   expanded: boolean;
@@ -20,10 +20,7 @@ interface MessagingWidgetBarProps {
   selectedConversationId: string | null;
   q: string;
   onQChange: (value: string) => void;
-  box: 'inbox' | 'sent' | undefined;
-  onBoxChange: (value: 'inbox' | 'sent' | undefined) => void;
-  relatedEntity: MessageRelatedEntity | undefined;
-  onRelatedEntityChange: (value: MessageRelatedEntity | undefined) => void;
+  filters: MessagesFilterState;
 }
 
 /** LinkedIn'deki gibi sag-alt "Mesajlasma" cubugu: kapaliyken sadece baslik+aksiyonlar,
@@ -42,10 +39,7 @@ export function MessagingWidgetBar({
   selectedConversationId,
   q,
   onQChange,
-  box,
-  onBoxChange,
-  relatedEntity,
-  onRelatedEntityChange,
+  filters,
 }: MessagingWidgetBarProps) {
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
@@ -179,38 +173,7 @@ export function MessagingWidgetBar({
       )}
 
       {filterDrawerOpen && (
-        <Drawer
-          title={tr.crm.messages.filterDrawer.title}
-          onClose={() => setFilterDrawerOpen(false)}
-        >
-          <div className="flex flex-col gap-4">
-            <Select
-              label={tr.crm.messages.filterDrawer.boxLabel}
-              value={box ?? ''}
-              onChange={(event) =>
-                onBoxChange((event.target.value || undefined) as 'inbox' | 'sent' | undefined)
-              }
-              options={[
-                { value: 'inbox', label: tr.crm.messages.filterDrawer.boxInboxOption },
-                { value: 'sent', label: tr.crm.messages.filterDrawer.boxSentOption },
-              ]}
-              placeholder={tr.crm.messages.filterDrawer.boxAllOption}
-            />
-            <Select
-              label={tr.crm.messages.filterDrawer.relatedEntityLabel}
-              value={relatedEntity ?? ''}
-              onChange={(event) =>
-                onRelatedEntityChange(
-                  (event.target.value || undefined) as MessageRelatedEntity | undefined,
-                )
-              }
-              options={Object.entries(tr.crm.messages.relatedEntityOptions).map(
-                ([value, label]) => ({ value, label }),
-              )}
-              placeholder={tr.crm.messages.filterDrawer.relatedEntityAllOption}
-            />
-          </div>
-        </Drawer>
+        <MessagesFilterDrawer filters={filters} onClose={() => setFilterDrawerOpen(false)} />
       )}
     </div>
   );

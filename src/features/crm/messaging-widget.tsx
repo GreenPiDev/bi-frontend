@@ -7,7 +7,7 @@ import {
   useMessagesQuery,
   useUnreadConversationsTotal,
 } from './use-messages';
-import type { MessageRelatedEntity } from '../../lib/api';
+import { useMessagesFilterState } from './use-messages-filter-state';
 
 const EXIT_ANIMATION_MS = 160;
 
@@ -23,14 +23,12 @@ export function MessagingWidget() {
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const [q, setQ] = useState('');
-  const [box, setBox] = useState<'inbox' | 'sent' | undefined>(undefined);
-  const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity | undefined>(undefined);
+  const filters = useMessagesFilterState();
 
   const messagesQuery = useMessagesQuery({
     page: 1,
     q: q || undefined,
-    box,
-    relatedEntity: relatedEntity ? [relatedEntity] : undefined,
+    ...filters.queryParams,
   });
   // Baslikta gosterilen kumulatif sayac, kullanicinin cubuk icindeki filtrelerinden
   // (q/box/relatedEntity) bagimsiz olmali - tum konusmalar icin ayri, filtresiz bir sorgu.
@@ -94,10 +92,7 @@ export function MessagingWidget() {
         selectedConversationId={openConversationId}
         q={q}
         onQChange={setQ}
-        box={box}
-        onBoxChange={setBox}
-        relatedEntity={relatedEntity}
-        onRelatedEntityChange={setRelatedEntity}
+        filters={filters}
       />
       {newMessageOpen && <NewMessageModal onClose={() => setNewMessageOpen(false)} />}
     </div>
