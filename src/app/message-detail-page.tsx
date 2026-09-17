@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronDown, ChevronUp, Link2, MailOpen, Send, Star } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Link2, Send, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -166,40 +166,25 @@ export function MessageDetailPage() {
         {tr.crm.messages.detail.back}
       </button>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => starMutation.mutate({ conversationId, starred: !conversation.starred })}
+          disabled={starMutation.isPending}
+          aria-label={
+            conversation.starred
+              ? tr.crm.messages.detail.unstarAria
+              : tr.crm.messages.detail.starAria
+          }
+          aria-pressed={conversation.starred}
+          className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+        >
+          <Star
+            size={18}
+            className={conversation.starred ? 'fill-yellow-400 text-yellow-400' : undefined}
+          />
+        </button>
         <h1 className="text-lg font-bold text-app-text">{messages[0]!.subject}</h1>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => starMutation.mutate({ conversationId, starred: !conversation.starred })}
-            disabled={starMutation.isPending}
-            aria-label={
-              conversation.starred
-                ? tr.crm.messages.detail.unstarAria
-                : tr.crm.messages.detail.starAria
-            }
-            aria-pressed={conversation.starred}
-            className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
-          >
-            <Star
-              size={18}
-              className={conversation.starred ? 'fill-yellow-400 text-yellow-400' : undefined}
-            />
-          </button>
-          {!hasUnread && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => readMutation.mutate({ conversationId, read: false })}
-              disabled={readMutation.isPending}
-            >
-              <span className="flex items-center gap-1.5">
-                <MailOpen size={15} />
-                {tr.crm.messages.detail.markUnread}
-              </span>
-            </Button>
-          )}
-        </div>
       </div>
 
       {conversation.relatedEntity && conversation.relatedEntityId && (

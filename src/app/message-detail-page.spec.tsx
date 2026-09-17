@@ -59,24 +59,7 @@ describe('MessageDetailPage', () => {
     vi.spyOn(api, 'setConversationStar').mockResolvedValue(undefined);
   });
 
-  it('tum mesajlar okunmussa "Okunmadı yap" butonu gorunur, tiklaninca setConversationRead(false) cagirir', async () => {
-    vi.spyOn(api, 'getConversation').mockResolvedValue({
-      conversationId: 'conv-1',
-      relatedEntity: null,
-      relatedEntityId: null,
-      messages: [MESSAGE],
-      starred: false,
-    });
-    const user = userEvent.setup();
-    renderDetailPage();
-
-    const markUnreadButton = await screen.findByRole('button', { name: 'Okunmadı yap' });
-    await user.click(markUnreadButton);
-
-    expect(api.setConversationRead).toHaveBeenCalledWith('conv-1', false);
-  });
-
-  it('okunmamis mesaj varsa "Okunmadı yap" butonu gorunmez ve otomatik okundu isaretlenir', async () => {
+  it('okunmamis mesaj varsa otomatik okundu isaretlenir', async () => {
     vi.spyOn(api, 'getConversation').mockResolvedValue({
       conversationId: 'conv-1',
       relatedEntity: null,
@@ -87,7 +70,6 @@ describe('MessageDetailPage', () => {
     renderDetailPage();
 
     await screen.findByText(MESSAGE.subject);
-    expect(screen.queryByRole('button', { name: 'Okunmadı yap' })).not.toBeInTheDocument();
     expect(api.setConversationRead).toHaveBeenCalledWith('conv-1', true);
   });
 
