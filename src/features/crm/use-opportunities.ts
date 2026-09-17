@@ -5,6 +5,7 @@ import {
   getOpportunity,
   listOpportunities,
   updateOpportunity,
+  type CreateOpportunityInput,
   type OpportunityInput,
   type OpportunityStage,
 } from '../../lib/api';
@@ -31,7 +32,7 @@ export function useOpportunityQuery(id: string) {
 export function useCreateOpportunityMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: OpportunityInput) => createOpportunity(input),
+    mutationFn: (input: CreateOpportunityInput) => createOpportunity(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: OPPORTUNITIES_QUERY_KEY });
     },

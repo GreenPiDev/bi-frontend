@@ -50,9 +50,10 @@ export function OpportunityDetailPage() {
           </div>
           {opportunity.estimatedValue && (
             <p className="mt-1 text-sm text-app-muted">
-              {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
-                Number(opportunity.estimatedValue),
-              )}
+              {new Intl.NumberFormat('tr-TR', {
+                style: 'currency',
+                currency: opportunity.estimatedValueCurrency,
+              }).format(Number(opportunity.estimatedValue))}
             </p>
           )}
         </div>
@@ -69,6 +70,17 @@ export function OpportunityDetailPage() {
           </Button>
         </div>
       </div>
+
+      {opportunity.description && (
+        <div className="mt-6 border-t border-app-border pt-6">
+          <h2 className="text-sm font-semibold text-app-text">
+            {tr.crm.opportunities.form.descriptionLabel}
+          </h2>
+          <p className="mt-1 text-sm whitespace-pre-wrap text-app-muted">
+            {opportunity.description}
+          </p>
+        </div>
+      )}
 
       {opportunity.interactionId && (
         <div className="mt-6 border-t border-app-border p-6">

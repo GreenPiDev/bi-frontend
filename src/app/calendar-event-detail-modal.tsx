@@ -2,6 +2,7 @@ import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import type { CalendarEvent } from '../lib/api';
+import { displayEventTitle } from '../lib/calendar-event-title';
 import { tr } from '../i18n/tr';
 
 function formatRange(event: CalendarEvent): string {
@@ -34,7 +35,7 @@ export function CalendarEventDetailModal({
 
   return (
     <Modal
-      title={event.title}
+      title={displayEventTitle(event.title)}
       subtitle={formatRange(event)}
       onClose={onClose}
       footer={

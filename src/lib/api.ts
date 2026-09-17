@@ -1158,6 +1158,7 @@ export function deleteCalendarEvent(id: string): Promise<void> {
 export type InteractionType = 'CALL' | 'VISIT' | 'MEETING' | 'EMAIL' | 'OTHER';
 export type InteractionStatus = 'OPEN' | 'CLOSED';
 export type OpportunityStage = 'NEW' | 'QUALIFIED' | 'PROPOSAL' | 'WON' | 'LOST';
+export type CurrencyCode = 'TRY' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'JPY';
 
 export interface Opportunity {
   id: string;
@@ -1167,6 +1168,9 @@ export interface Opportunity {
   name: string;
   stage: OpportunityStage;
   estimatedValue: string | null;
+  estimatedValueCurrency: CurrencyCode;
+  description: string | null;
+  occurredAt: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -1263,6 +1267,22 @@ export interface OpportunityInput {
   name: string;
   stage?: OpportunityStage;
   estimatedValue?: number;
+  estimatedValueCurrency?: CurrencyCode;
+  description?: string;
+  occurredAt?: string;
+}
+
+export interface CreateOpportunityInput extends OpportunityInput {
+  reminder?: {
+    startAt: string;
+    title?: string;
+    assignees: { userId: string; note?: string }[];
+  };
+}
+
+export interface CreateOpportunityResult {
+  opportunity: Opportunity;
+  reminderConflicts: ReminderConflict[];
 }
 
 export function listOpportunities(
@@ -1281,7 +1301,7 @@ export function getOpportunity(id: string): Promise<Opportunity> {
   return request(`/opportunities/${id}`);
 }
 
-export function createOpportunity(input: OpportunityInput): Promise<Opportunity> {
+export function createOpportunity(input: CreateOpportunityInput): Promise<CreateOpportunityResult> {
   return request('/opportunities', { method: 'POST', body: JSON.stringify(input) });
 }
 

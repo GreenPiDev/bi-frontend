@@ -145,12 +145,28 @@ export const interactionFormSchema = z
 
 export type InteractionFormValues = z.infer<typeof interactionFormSchema>;
 
-export const opportunityFormSchema = z.object({
-  accountId: z.string().min(1, 'Firma gerekli.'),
-  name: z.string().min(2, 'Fırsat adı en az 2 karakter olmalı.').max(200),
-  stage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
-  estimatedValue: z.string().optional(),
-});
+export const opportunityFormSchema = z
+  .object({
+    accountId: z.string().min(1, 'Firma gerekli.'),
+    name: z.string().min(2, 'Fırsat adı en az 2 karakter olmalı.').max(200),
+    stage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
+    estimatedValue: z.string().optional(),
+    estimatedValueCurrency: z.enum(['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY']).optional(),
+    description: z.string().max(2000, 'Açıklama en fazla 2000 karakter olabilir.').optional(),
+    occurredAt: z.string().min(1, 'Tarih gerekli.'),
+    hasReminder: z.boolean().optional(),
+    reminderStartAt: z.string().optional(),
+    reminderAssigneeUserIds: z.array(z.string()).max(50).optional(),
+    reminderNote: z.string().max(1000).optional(),
+  })
+  .refine((values) => !values.hasReminder || (values.reminderStartAt ?? '').length > 0, {
+    message: 'Hatırlatma tarihi gerekli.',
+    path: ['reminderStartAt'],
+  })
+  .refine((values) => !values.hasReminder || (values.reminderAssigneeUserIds ?? []).length > 0, {
+    message: 'En az bir kişi seçin.',
+    path: ['reminderAssigneeUserIds'],
+  });
 
 export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;
 

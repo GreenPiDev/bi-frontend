@@ -12,6 +12,7 @@ import {
   useDeleteCalendarEventMutation,
 } from '../features/crm/use-calendar-events';
 import { ApiError, type CalendarEvent } from '../lib/api';
+import { displayEventTitle } from '../lib/calendar-event-title';
 import { tr } from '../i18n/tr';
 
 type ViewMode = 'month' | 'list';
@@ -207,7 +208,7 @@ export function CalendarPage() {
                       }}
                       className="truncate rounded bg-app-brand/10 px-1.5 py-0.5 text-[11px] font-semibold text-app-brand hover:bg-app-brand/20"
                     >
-                      {event.title}
+                      {displayEventTitle(event.title)}
                     </span>
                   ))}
                   {overflow > 0 && (
@@ -236,7 +237,9 @@ export function CalendarPage() {
               className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-3 text-left hover:bg-app-bg-muted"
             >
               <div>
-                <p className="text-sm font-semibold text-app-text">{event.title}</p>
+                <p className="text-sm font-semibold text-app-text">
+                  {displayEventTitle(event.title)}
+                </p>
                 <p className="text-xs text-app-muted">
                   {new Intl.DateTimeFormat('tr-TR', {
                     dateStyle: 'medium',

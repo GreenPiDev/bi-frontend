@@ -6,15 +6,59 @@ import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picke
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { PageHelp } from '../components/ui/page-help';
+import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
-import type { Opportunity, OpportunityStage } from '../lib/api';
+import {
+  useOpportunitiesQuery,
+  useUpdateOpportunityMutation,
+} from '../features/crm/use-opportunities';
+import { ApiError, type Opportunity, type OpportunityStage } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
+
+const DESCRIPTION_TRUNCATE_LENGTH = 40;
+
+function truncate(text: string, maxLength: number): string {
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}
+
+function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
+  const toast = useToast();
+  const updateMutation = useUpdateOpportunityMutation(opportunity.id);
+
+  return (
+    <select
+      value={opportunity.stage}
+      onClick={(event) => event.stopPropagation()}
+      onChange={(event) => {
+        const stage = event.target.value as OpportunityStage;
+        updateMutation.mutate(
+          { stage },
+          {
+            onSuccess: () => toast.success(tr.crm.opportunities.stageUpdateSuccess),
+            onError: (error) => {
+              toast.error(
+                error instanceof ApiError ? error.message : tr.crm.opportunities.stageUpdateError,
+              );
+            },
+          },
+        );
+      }}
+      disabled={updateMutation.isPending}
+      className="cursor-pointer rounded-md border-none bg-transparent p-0 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50"
+    >
+      {STAGE_OPTIONS.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 const ALL_COLUMNS: TableColumn<Opportunity>[] = [
   {
@@ -26,7 +70,7 @@ const ALL_COLUMNS: TableColumn<Opportunity>[] = [
   {
     key: 'stage',
     header: tr.crm.opportunities.stageColumn,
-    render: (o) => tr.crm.opportunities.stageOptions[o.stage],
+    render: (o) => <OpportunityStageSelect opportunity={o} />,
   },
   {
     key: 'estimatedValue',
@@ -34,10 +78,23 @@ const ALL_COLUMNS: TableColumn<Opportunity>[] = [
     className: 'text-app-muted',
     render: (o) =>
       o.estimatedValue
-        ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
-            Number(o.estimatedValue),
-          )
+        ? new Intl.NumberFormat('tr-TR', {
+            style: 'currency',
+            currency: o.estimatedValueCurrency,
+          }).format(Number(o.estimatedValue))
         : '—',
+  },
+  {
+    key: 'description',
+    header: tr.crm.opportunities.descriptionColumn,
+    className: 'text-app-muted',
+    render: (o) => (o.description ? truncate(o.description, DESCRIPTION_TRUNCATE_LENGTH) : '—'),
+  },
+  {
+    key: 'occurredAt',
+    header: tr.crm.opportunities.occurredAtColumn,
+    className: 'text-app-muted',
+    render: (o) => new Date(o.occurredAt).toLocaleDateString('tr-TR'),
   },
 ];
 
