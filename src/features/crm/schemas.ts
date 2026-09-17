@@ -244,21 +244,28 @@ export const purchaseOrderFormSchema = z.object({
 
 export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
 
-export const messageFormSchema = z
+/** Hem "Yeni Mesaj" modali hem `/mesajlar/:id`'deki satir-ici yanit karti icin ortak
+ * sema (bkz. features/crm/message-compose-form.tsx). Konu, sadece yeni bir konusma
+ * baslatilirken (yeni mesaj modali her zaman, yanit kartinda "Yeni konusma olarak
+ * olustur" isaretliyken) zorunludur - bu kosullu kural Zod semasi yerine bilesenin
+ * kendi submit fonksiyonunda kontrol edilir (mode/checkbox durumuna gore degistigi
+ * icin statik semaya gomulmez). */
+export const messageComposeSchema = z
   .object({
-    subject: z.string().min(1, 'Konu gerekli.').max(200),
+    subject: z.string().max(200).optional(),
     body: z.string().min(1, 'Mesaj metni gerekli.').max(5000),
     toUserIds: z.array(z.string()).min(1, 'En az bir alıcı seçilmelidir.'),
     ccUserIds: z.array(z.string()).max(50).optional(),
     relatedEntity: z.enum(['PROJECT', 'QUOTE', 'INTERACTION']).optional(),
     relatedEntityId: z.string().optional(),
+    isNewConversation: z.boolean().optional(),
   })
   .refine((values) => !values.relatedEntity || Boolean(values.relatedEntityId), {
     message: 'Kayıt türü seçildiyse kayıt kimliği de girilmelidir.',
     path: ['relatedEntityId'],
   });
 
-export type MessageFormValues = z.infer<typeof messageFormSchema>;
+export type MessageComposeFormValues = z.infer<typeof messageComposeSchema>;
 
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */

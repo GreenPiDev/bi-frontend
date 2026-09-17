@@ -2,21 +2,15 @@ import { clsx } from 'clsx';
 import { Link2, Send, Star, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMeQuery } from '../auth/use-auth';
+import { RELATED_ENTITY_PATH } from './message-related-entity-paths';
 import {
   useConversationQuery,
   useCreateMessageMutation,
   useSetConversationReadMutation,
   useSetConversationStarMutation,
 } from './use-messages';
-import type { MessageRelatedEntity } from '../../lib/api';
+import { useMeQuery } from '../auth/use-auth';
 import { tr } from '../../i18n/tr';
-
-const RELATED_ENTITY_PATH: Record<MessageRelatedEntity, string> = {
-  PROJECT: '/projeler',
-  QUOTE: '/teklifler',
-  INTERACTION: '/gorusmeler',
-};
 
 interface MessagingChatPanelProps {
   conversationId: string;

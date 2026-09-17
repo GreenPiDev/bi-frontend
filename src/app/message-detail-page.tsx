@@ -1,25 +1,19 @@
-import { ArrowLeft, ChevronDown, ChevronUp, Link2, Send, Star } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Link2, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
-import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
+import { MessageComposeForm } from '../features/crm/message-compose-form';
+import { RELATED_ENTITY_PATH } from '../features/crm/message-related-entity-paths';
 import {
   useAssignableMessageUsersQuery,
   useConversationQuery,
-  useCreateMessageMutation,
   useSetConversationReadMutation,
   useSetConversationStarMutation,
 } from '../features/crm/use-messages';
-import { ApiError, type Message, type MessageRelatedEntity } from '../lib/api';
+import type { Message, MessageRelatedEntity } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const RELATED_ENTITY_PATH: Record<MessageRelatedEntity, string> = {
-  PROJECT: '/projeler',
-  QUOTE: '/teklifler',
-  INTERACTION: '/gorusmeler',
-};
 
 interface ConversationMessageItemProps {
   message: Message;
@@ -74,14 +68,12 @@ export function MessageDetailPage() {
   const { id } = useParams<{ id: string }>();
   const conversationId = id ?? '';
   const navigate = useNavigate();
-  const toast = useToast();
   const meQuery = useMeQuery();
   const conversationQuery = useConversationQuery(conversationId);
   const usersQuery = useAssignableMessageUsersQuery();
   const readMutation = useSetConversationReadMutation();
   const starMutation = useSetConversationStarMutation();
-  const createMutation = useCreateMessageMutation();
-  const [replyBody, setReplyBody] = useState('');
+  const [replyMode, setReplyMode] = useState<'reply' | 'replyAll' | null>(null);
 
   const currentUserId = meQuery.data?.id;
   const conversation = conversationQuery.data;
@@ -111,6 +103,7 @@ export function MessageDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUnread, conversationId]);
 
+  // Tumune Yanitla: konusma boyunca gecen TUM katilimcilar (kendisi haric).
   const otherParticipantIds = useMemo(() => {
     const ids = new Set<string>();
     for (const message of messages) {
@@ -123,23 +116,17 @@ export function MessageDetailPage() {
     return Array.from(ids);
   }, [messages, currentUserId]);
 
-  function handleReplySubmit() {
-    const body = replyBody.trim();
-    if (!body || otherParticipantIds.length === 0 || createMutation.isPending) return;
-
-    createMutation.mutate(
-      { body, toUserIds: otherParticipantIds, conversationId },
-      {
-        onSuccess: () => {
-          setReplyBody('');
-          toast.success(tr.crm.messages.detail.replySuccess);
-        },
-        onError: (error) => {
-          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-        },
-      },
-    );
-  }
+  // Yanitla: sadece son mesajin "karsi tarafi" - gonderen ben degilsem gonderen,
+  // bensem son mesajin alicilari (mail'deki "Reply" ile ayni mantik).
+  const replyToUserIds = useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) return [];
+    if (lastMessage.senderId !== currentUserId) return [lastMessage.senderId];
+    const others = lastMessage.recipients
+      .map((recipient) => recipient.userId)
+      .filter((userId) => userId !== currentUserId);
+    return others.length > 0 ? others : otherParticipantIds;
+  }, [messages, currentUserId, otherParticipantIds]);
 
   if (conversationQuery.isPending) {
     return (
@@ -213,6 +200,38 @@ export function MessageDetailPage() {
         {tr.crm.messages.detail.messageCount(messages.length)}
       </p>
 
+      {otherParticipantIds.length > 0 && (
+        <div className="mt-3 flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setReplyMode(replyMode === 'reply' ? null : 'reply')}
+          >
+            {tr.crm.messages.detail.replyButton}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setReplyMode(replyMode === 'replyAll' ? null : 'replyAll')}
+          >
+            {tr.crm.messages.detail.replyAllButton}
+          </Button>
+        </div>
+      )}
+
+      {replyMode && (
+        <div className="mt-3 rounded-xl border border-app-border bg-app-surface p-4">
+          <MessageComposeForm
+            key={replyMode}
+            mode="reply"
+            conversationId={conversationId}
+            defaultToUserIds={replyMode === 'replyAll' ? otherParticipantIds : replyToUserIds}
+            onCancel={() => setReplyMode(null)}
+            onSuccess={() => setReplyMode(null)}
+          />
+        </div>
+      )}
+
       <div className="mt-2 flex flex-col gap-2">
         {messages.map((message, index) => (
           <ConversationMessageItem
@@ -224,32 +243,6 @@ export function MessageDetailPage() {
           />
         ))}
       </div>
-
-      {otherParticipantIds.length > 0 && (
-        <form
-          className="mt-4 flex items-center gap-2 border-t border-app-border p-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleReplySubmit();
-          }}
-        >
-          <input
-            type="text"
-            value={replyBody}
-            onChange={(event) => setReplyBody(event.target.value)}
-            placeholder={tr.crm.messages.detail.replyPlaceholder}
-            className="flex-1 rounded-lg border border-app-border bg-app-bg px-3 py-2 text-sm text-app-text outline-none focus:border-app-brand"
-          />
-          <Button type="submit" disabled={createMutation.isPending || !replyBody.trim()}>
-            <span className="flex items-center gap-1.5">
-              <Send size={15} />
-              {createMutation.isPending
-                ? tr.crm.messages.detail.replySending
-                : tr.crm.messages.detail.replySend}
-            </span>
-          </Button>
-        </form>
-      )}
     </AppShell>
   );
 }
