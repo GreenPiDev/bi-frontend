@@ -26,7 +26,12 @@ export function MessagingWidget() {
   const [box, setBox] = useState<'inbox' | 'sent' | undefined>(undefined);
   const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity | undefined>(undefined);
 
-  const messagesQuery = useMessagesQuery({ page: 1, q: q || undefined, box, relatedEntity });
+  const messagesQuery = useMessagesQuery({
+    page: 1,
+    q: q || undefined,
+    box,
+    relatedEntity: relatedEntity ? [relatedEntity] : undefined,
+  });
   // Baslikta gosterilen kumulatif sayac, kullanicinin cubuk icindeki filtrelerinden
   // (q/box/relatedEntity) bagimsiz olmali - tum konusmalar icin ayri, filtresiz bir sorgu.
   // Sidebar'daki "Mesajlar" ogesiyle ayni hook/query key'i paylasir.

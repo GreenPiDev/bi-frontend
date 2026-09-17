@@ -1840,8 +1840,10 @@ export function listMessages(
     pageSize?: number;
     q?: string;
     box?: 'inbox' | 'sent';
-    relatedEntity?: MessageRelatedEntity;
-    relatedEntityId?: string;
+    relatedEntity?: MessageRelatedEntity[];
+    quoteIds?: string[];
+    projectIds?: string[];
+    interactionIds?: string[];
     recipientUserId?: string;
   } = {},
 ): Promise<PagedResult<ConversationSummary>> {
@@ -1850,8 +1852,10 @@ export function listMessages(
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   if (params.box) query.set('box', params.box);
-  if (params.relatedEntity) query.set('relatedEntity', params.relatedEntity);
-  if (params.relatedEntityId) query.set('relatedEntityId', params.relatedEntityId);
+  for (const type of params.relatedEntity ?? []) query.append('relatedEntity', type);
+  for (const id of params.quoteIds ?? []) query.append('quoteIds', id);
+  for (const id of params.projectIds ?? []) query.append('projectIds', id);
+  for (const id of params.interactionIds ?? []) query.append('interactionIds', id);
   if (params.recipientUserId) query.set('recipientUserId', params.recipientUserId);
   const qs = query.toString();
   return request(`/messages${qs ? `?${qs}` : ''}`);

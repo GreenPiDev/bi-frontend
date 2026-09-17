@@ -22,8 +22,10 @@ export function useMessagesQuery(
     pageSize?: number;
     q?: string;
     box?: 'inbox' | 'sent';
-    relatedEntity?: MessageRelatedEntity;
-    relatedEntityId?: string;
+    relatedEntity?: MessageRelatedEntity[];
+    quoteIds?: string[];
+    projectIds?: string[];
+    interactionIds?: string[];
     recipientUserId?: string;
   } = {},
   options: { enabled?: boolean } = {},

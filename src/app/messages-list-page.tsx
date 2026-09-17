@@ -6,12 +6,16 @@ import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
+import { MultiSelect } from '../components/ui/multi-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useAssignableMessageUsersQuery, useMessagesQuery } from '../features/crm/use-messages';
+import { useProjectsQuery } from '../features/crm/use-projects';
+import { useQuotesQuery } from '../features/crm/use-quotes';
 import type { ConversationSummary, MessageRelatedEntity } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -35,7 +39,10 @@ export function MessagesListPage() {
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const [box, setBox] = useState<'inbox' | 'sent' | undefined>(undefined);
-  const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity | undefined>(undefined);
+  const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity[]>([]);
+  const [quoteIds, setQuoteIds] = useState<string[]>([]);
+  const [projectIds, setProjectIds] = useState<string[]>([]);
+  const [interactionIds, setInteractionIds] = useState<string[]>([]);
   const [recipientUserId, setRecipientUserId] = useState<string | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
@@ -46,10 +53,29 @@ export function MessagesListPage() {
     pageSize,
     q: q || undefined,
     box,
-    relatedEntity,
+    relatedEntity: relatedEntity.length ? relatedEntity : undefined,
+    quoteIds: quoteIds.length ? quoteIds : undefined,
+    projectIds: projectIds.length ? projectIds : undefined,
+    interactionIds: interactionIds.length ? interactionIds : undefined,
     recipientUserId,
   });
   const usersQuery = useAssignableMessageUsersQuery();
+  const quotesQuery = useQuotesQuery({}, { enabled: drawerOpen });
+  const projectsQuery = useProjectsQuery({}, { enabled: drawerOpen });
+  const interactionsQuery = useInteractionsQuery({}, { enabled: drawerOpen });
+
+  const quoteOptions = (quotesQuery.data?.data ?? []).map((quote) => ({
+    value: quote.id,
+    label: `${quote.quoteNumber} — ${quote.account.name}`,
+  }));
+  const projectOptions = (projectsQuery.data?.data ?? []).map((project) => ({
+    value: project.id,
+    label: `${project.projectNumber} — ${project.name}`,
+  }));
+  const interactionOptions = (interactionsQuery.data?.data ?? []).map((interaction) => ({
+    value: interaction.id,
+    label: `${interaction.account?.name ?? tr.crm.interactions.detail.noAccountFallback} — ${tr.crm.interactions.typeOptions[interaction.type]} (${new Date(interaction.occurredAt).toLocaleDateString('tr-TR')})`,
+  }));
 
   const userNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -185,18 +211,35 @@ export function MessagesListPage() {
               ]}
               placeholder={tr.crm.messages.filterDrawer.boxAllOption}
             />
-            <Select
+            <MultiSelect
               label={tr.crm.messages.filterDrawer.relatedEntityLabel}
-              value={relatedEntity ?? ''}
-              onChange={(event) =>
-                setRelatedEntity(
-                  (event.target.value || undefined) as MessageRelatedEntity | undefined,
-                )
-              }
+              value={relatedEntity}
+              onChange={(value) => setRelatedEntity(value as MessageRelatedEntity[])}
               options={Object.entries(tr.crm.messages.relatedEntityOptions).map(
                 ([value, label]) => ({ value, label }),
               )}
               placeholder={tr.crm.messages.filterDrawer.relatedEntityAllOption}
+            />
+            <MultiSelect
+              label={tr.crm.messages.filterDrawer.quoteLabel}
+              value={quoteIds}
+              onChange={setQuoteIds}
+              options={quoteOptions}
+              placeholder={tr.crm.messages.filterDrawer.quoteAllOption}
+            />
+            <MultiSelect
+              label={tr.crm.messages.filterDrawer.projectLabel}
+              value={projectIds}
+              onChange={setProjectIds}
+              options={projectOptions}
+              placeholder={tr.crm.messages.filterDrawer.projectAllOption}
+            />
+            <MultiSelect
+              label={tr.crm.messages.filterDrawer.interactionLabel}
+              value={interactionIds}
+              onChange={setInteractionIds}
+              options={interactionOptions}
+              placeholder={tr.crm.messages.filterDrawer.interactionAllOption}
             />
             <Select
               id="messages-filter-recipient"
@@ -214,7 +257,10 @@ export function MessagesListPage() {
               variant="secondary"
               onClick={() => {
                 setBox(undefined);
-                setRelatedEntity(undefined);
+                setRelatedEntity([]);
+                setQuoteIds([]);
+                setProjectIds([]);
+                setInteractionIds([]);
                 setRecipientUserId(undefined);
               }}
             >
