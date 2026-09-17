@@ -161,6 +161,116 @@ describe('MessagesListPage', () => {
     );
   });
 
+  it('satir checkboxlari ile secim yapinca toplu islem barı gorunur ve okundu/okunmadi isaretler', async () => {
+    vi.spyOn(api, 'listMessages').mockResolvedValue({
+      data: [
+        {
+          conversationId: 'conv-1',
+          relatedEntity: null,
+          relatedEntityId: null,
+          messageCount: 1,
+          unreadCount: 1,
+          starred: false,
+          lastMessage: {
+            id: 'msg-1',
+            conversationId: 'conv-1',
+            senderId: 'user-1',
+            subject: 'Birinci konu',
+            body: 'Merhaba.',
+            sentAt: '2026-01-01T10:00:00.000Z',
+            relatedEntity: null,
+            relatedEntityId: null,
+            recipients: [{ id: 'rec-1', userId: 'user-2', kind: 'TO', readAt: null }],
+            createdAt: '2026-01-01T10:00:00.000Z',
+            updatedAt: '2026-01-01T10:00:00.000Z',
+          },
+        },
+        {
+          conversationId: 'conv-2',
+          relatedEntity: null,
+          relatedEntityId: null,
+          messageCount: 1,
+          unreadCount: 0,
+          starred: false,
+          lastMessage: {
+            id: 'msg-2',
+            conversationId: 'conv-2',
+            senderId: 'user-1',
+            subject: 'Ikinci konu',
+            body: 'Merhaba tekrar.',
+            sentAt: '2026-01-02T10:00:00.000Z',
+            relatedEntity: null,
+            relatedEntityId: null,
+            recipients: [
+              { id: 'rec-2', userId: 'user-2', kind: 'TO', readAt: '2026-01-02T11:00:00.000Z' },
+            ],
+            createdAt: '2026-01-02T10:00:00.000Z',
+            updatedAt: '2026-01-02T10:00:00.000Z',
+          },
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 2, totalPages: 1 },
+    });
+    const setConversationReadSpy = vi
+      .spyOn(api, 'setConversationRead')
+      .mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderMessagesListPage();
+
+    await screen.findByText('Birinci konu');
+    expect(screen.queryByText('2 mesaj seçili')).not.toBeInTheDocument();
+
+    const checkboxes = screen.getAllByRole('checkbox', { name: 'Mesajı seç' });
+    expect(checkboxes).toHaveLength(2);
+    await user.click(checkboxes[0]!);
+    await user.click(checkboxes[1]!);
+
+    expect(screen.getByText('2 mesaj seçili')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Okundu olarak işaretle' }));
+
+    expect(setConversationReadSpy).toHaveBeenCalledWith('conv-1', true);
+    expect(setConversationReadSpy).toHaveBeenCalledWith('conv-2', true);
+    // Basarili toplu islemden sonra secim temizlenir.
+    expect(screen.queryByText('2 mesaj seçili')).not.toBeInTheDocument();
+  });
+
+  it('sayfadaki tumunu sec checkboxu tum satirlari secer', async () => {
+    vi.spyOn(api, 'listMessages').mockResolvedValue({
+      data: [
+        {
+          conversationId: 'conv-1',
+          relatedEntity: null,
+          relatedEntityId: null,
+          messageCount: 1,
+          unreadCount: 0,
+          starred: false,
+          lastMessage: {
+            id: 'msg-1',
+            conversationId: 'conv-1',
+            senderId: 'user-1',
+            subject: 'Birinci konu',
+            body: 'Merhaba.',
+            sentAt: '2026-01-01T10:00:00.000Z',
+            relatedEntity: null,
+            relatedEntityId: null,
+            recipients: [{ id: 'rec-1', userId: 'user-2', kind: 'TO', readAt: null }],
+            createdAt: '2026-01-01T10:00:00.000Z',
+            updatedAt: '2026-01-01T10:00:00.000Z',
+          },
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+    const user = userEvent.setup();
+    renderMessagesListPage();
+
+    await screen.findByText('Birinci konu');
+    await user.click(screen.getByRole('checkbox', { name: 'Sayfadaki tüm mesajları seç' }));
+
+    expect(screen.getByText('1 mesaj seçili')).toBeInTheDocument();
+  });
+
   it('yeni mesaj butonu formu acar', async () => {
     vi.spyOn(api, 'listMessages').mockResolvedValue({
       data: [],

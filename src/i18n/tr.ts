@@ -1456,8 +1456,16 @@ export const tr = {
       sentAtColumn: 'Tarih',
       unreadCountAria: (count: number) => `${count} okunmamış mesaj`,
       markReadAria: 'Okundu yap',
+      selectRowAria: 'Mesajı seç',
+      selectAllAria: 'Sayfadaki tüm mesajları seç',
       you: 'Sen',
       filterButton: 'Filtrele',
+      bulkBar: {
+        selectedCount: (count: number) => `${count} mesaj seçili`,
+        markRead: 'Okundu olarak işaretle',
+        markUnread: 'Okunmadı olarak işaretle',
+        clearSelection: 'Seçimi temizle',
+      },
       relatedEntityOptions: {
         PROJECT: 'Proje',
         QUOTE: 'Teklif',

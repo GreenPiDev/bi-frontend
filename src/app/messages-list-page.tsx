@@ -53,6 +53,49 @@ export function MessagesListPage() {
   const usersQuery = useAssignableMessageUsersQuery();
   const starMutation = useSetConversationStarMutation();
   const readMutation = useSetConversationReadMutation();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+
+  const rows = messagesQuery.data?.data ?? [];
+
+  // Secim sadece o an gorunen sayfaya ait - sayfa degistiren her yerde temizlenir.
+  function goToPage(newPage: number) {
+    setSelectedIds(new Set());
+    setPage(newPage);
+  }
+
+  function toggleSelected(conversationId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(conversationId)) {
+        next.delete(conversationId);
+      } else {
+        next.add(conversationId);
+      }
+      return next;
+    });
+  }
+
+  const allOnPageSelected =
+    rows.length > 0 && rows.every((row) => selectedIds.has(row.conversationId));
+
+  function toggleSelectAllOnPage() {
+    setSelectedIds(allOnPageSelected ? new Set() : new Set(rows.map((row) => row.conversationId)));
+  }
+
+  async function handleBulkRead(read: boolean) {
+    setBulkPending(true);
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((conversationId) =>
+          readMutation.mutateAsync({ conversationId, read }),
+        ),
+      );
+      setSelectedIds(new Set());
+    } finally {
+      setBulkPending(false);
+    }
+  }
 
   const userNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -70,6 +113,22 @@ export function MessagesListPage() {
   }
 
   const ALL_COLUMNS: TableColumn<ConversationSummary>[] = [
+    {
+      key: 'select',
+      header: '',
+      className: 'w-8',
+      required: true,
+      render: (conversation) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(conversation.conversationId)}
+          onChange={() => toggleSelected(conversation.conversationId)}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={tr.crm.messages.selectRowAria}
+          className="accent-app-primary"
+        />
+      ),
+    },
     {
       key: 'star',
       header: '',
@@ -195,7 +254,7 @@ export function MessagesListPage() {
           type="search"
           value={qInput}
           onChange={(event) => {
-            setPage(1);
+            goToPage(1);
             setQInput(event.target.value);
           }}
           placeholder={tr.crm.messages.searchPlaceholder}
@@ -203,7 +262,19 @@ export function MessagesListPage() {
         />
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex items-center justify-between">
+        {rows.length > 0 && (
+          <label className="flex items-center gap-2 text-sm text-app-muted">
+            <input
+              type="checkbox"
+              checked={allOnPageSelected}
+              onChange={toggleSelectAllOnPage}
+              aria-label={tr.crm.messages.selectAllAria}
+              className="accent-app-primary"
+            />
+            {tr.crm.messages.selectAllAria}
+          </label>
+        )}
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}
@@ -211,9 +282,43 @@ export function MessagesListPage() {
         />
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="mt-3 flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-2.5">
+          <span className="text-sm text-app-text">
+            {tr.crm.messages.bulkBar.selectedCount(selectedIds.size)}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleBulkRead(true)}
+              disabled={bulkPending}
+            >
+              {tr.crm.messages.bulkBar.markRead}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleBulkRead(false)}
+              disabled={bulkPending}
+            >
+              {tr.crm.messages.bulkBar.markUnread}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setSelectedIds(new Set())}
+              disabled={bulkPending}
+            >
+              {tr.crm.messages.bulkBar.clearSelection}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Table
         columns={columns}
-        data={messagesQuery.data?.data ?? []}
+        data={rows}
         keyField={(conversation) => conversation.conversationId}
         onRowClick={(conversation) => navigate(`/mesajlar/${conversation.conversationId}`)}
         isLoading={messagesQuery.isPending}
@@ -225,8 +330,8 @@ export function MessagesListPage() {
         <Pagination
           page={messagesQuery.data.meta.page}
           totalPages={messagesQuery.data.meta.totalPages}
-          onPrevious={() => setPage((p) => p - 1)}
-          onNext={() => setPage((p) => p + 1)}
+          onPrevious={() => goToPage(page - 1)}
+          onNext={() => goToPage(page + 1)}
         />
       )}
 
