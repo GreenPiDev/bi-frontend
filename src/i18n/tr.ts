@@ -1470,6 +1470,8 @@ export const tr = {
         boxSentOption: 'Gönderilen',
         relatedEntityLabel: 'İlişkili Kayıt Türü',
         relatedEntityAllOption: 'Tümü',
+        recipientLabel: 'Kime Gönderildi',
+        recipientAllOption: 'Tümü',
         apply: 'Uygula',
         reset: 'Sıfırla',
       },

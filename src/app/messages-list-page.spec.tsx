@@ -87,6 +87,22 @@ describe('MessagesListPage', () => {
     expect(screen.getByRole('dialog', { name: 'Mesajları Filtrele' })).toBeInTheDocument();
   });
 
+  it('kime gonderildi filtresi secilince listMessages recipientUserId ile cagirilir', async () => {
+    const listMessagesSpy = vi.spyOn(api, 'listMessages').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    const user = userEvent.setup();
+    renderMessagesListPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Filtrele' }));
+    await user.selectOptions(await screen.findByLabelText('Kime Gönderildi'), 'user-1');
+
+    expect(listMessagesSpy).toHaveBeenLastCalledWith(
+      expect.objectContaining({ recipientUserId: 'user-1' }),
+    );
+  });
+
   it('yeni mesaj butonu formu acar', async () => {
     vi.spyOn(api, 'listMessages').mockResolvedValue({
       data: [],

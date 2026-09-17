@@ -36,11 +36,19 @@ export function MessagesListPage() {
   const q = useDebouncedValue(qInput.trim());
   const [box, setBox] = useState<'inbox' | 'sent' | undefined>(undefined);
   const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity | undefined>(undefined);
+  const [recipientUserId, setRecipientUserId] = useState<string | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const messagesQuery = useMessagesQuery({ page, pageSize, q: q || undefined, box, relatedEntity });
+  const messagesQuery = useMessagesQuery({
+    page,
+    pageSize,
+    q: q || undefined,
+    box,
+    relatedEntity,
+    recipientUserId,
+  });
   const usersQuery = useAssignableMessageUsersQuery();
 
   const userNameById = useMemo(() => {
@@ -190,12 +198,24 @@ export function MessagesListPage() {
               )}
               placeholder={tr.crm.messages.filterDrawer.relatedEntityAllOption}
             />
+            <Select
+              id="messages-filter-recipient"
+              label={tr.crm.messages.filterDrawer.recipientLabel}
+              value={recipientUserId ?? ''}
+              onChange={(event) => setRecipientUserId(event.target.value || undefined)}
+              options={(usersQuery.data ?? []).map((user) => ({
+                value: user.id,
+                label: user.name,
+              }))}
+              placeholder={tr.crm.messages.filterDrawer.recipientAllOption}
+            />
             <Button
               type="button"
               variant="secondary"
               onClick={() => {
                 setBox(undefined);
                 setRelatedEntity(undefined);
+                setRecipientUserId(undefined);
               }}
             >
               {tr.crm.messages.filterDrawer.reset}

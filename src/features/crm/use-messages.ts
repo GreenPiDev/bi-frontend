@@ -24,6 +24,7 @@ export function useMessagesQuery(
     box?: 'inbox' | 'sent';
     relatedEntity?: MessageRelatedEntity;
     relatedEntityId?: string;
+    recipientUserId?: string;
   } = {},
   options: { enabled?: boolean } = {},
 ) {

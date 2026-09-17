@@ -1842,6 +1842,7 @@ export function listMessages(
     box?: 'inbox' | 'sent';
     relatedEntity?: MessageRelatedEntity;
     relatedEntityId?: string;
+    recipientUserId?: string;
   } = {},
 ): Promise<PagedResult<ConversationSummary>> {
   const query = new URLSearchParams();
@@ -1851,6 +1852,7 @@ export function listMessages(
   if (params.box) query.set('box', params.box);
   if (params.relatedEntity) query.set('relatedEntity', params.relatedEntity);
   if (params.relatedEntityId) query.set('relatedEntityId', params.relatedEntityId);
+  if (params.recipientUserId) query.set('recipientUserId', params.recipientUserId);
   const qs = query.toString();
   return request(`/messages${qs ? `?${qs}` : ''}`);
 }
