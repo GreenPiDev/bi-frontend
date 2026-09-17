@@ -22,6 +22,15 @@ interface ConversationMessageItemProps {
   displayUserName: (userId: string) => string;
 }
 
+function initialsFor(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return '?';
+  const parts = trimmed.split(/\s+/);
+  const first = parts[0]?.[0] ?? '';
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
+  return (first + last).toUpperCase();
+}
+
 function ConversationMessageItem({
   message,
   defaultOpen,
@@ -32,19 +41,23 @@ function ConversationMessageItem({
   const isUnread = message.recipients.some(
     (recipient) => recipient.userId === currentUserId && !recipient.readAt,
   );
+  const senderName = displayUserName(message.senderId);
 
   return (
-    <div className="border-t border-app-border">
+    <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-3 text-left"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left"
       >
-        <span className="flex min-w-0 items-center gap-2 text-sm">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-app-primary/15 text-xs font-semibold text-app-primary">
+          {initialsFor(senderName)}
+        </span>
+        <span className="flex min-w-0 flex-1 items-baseline gap-2">
           <span className={isUnread ? 'font-bold text-app-text' : 'font-semibold text-app-text'}>
-            {displayUserName(message.senderId)}
+            {senderName}
           </span>
-          {!open && <span className="truncate text-app-muted">{message.body}</span>}
+          {!open && <span className="truncate text-sm text-app-muted">{message.body}</span>}
         </span>
         <span className="flex shrink-0 items-center gap-2 text-xs text-app-muted">
           {new Date(message.sentAt).toLocaleString('tr-TR')}
@@ -52,12 +65,14 @@ function ConversationMessageItem({
         </span>
       </button>
       {open && (
-        <div className="border-t border-app-border px-5 py-4">
-          <p className="text-sm text-app-muted">
-            <span className="font-semibold text-app-text">{tr.crm.messages.recipientsColumn}:</span>{' '}
+        <div className="px-4 pb-4 pl-[3.25rem]">
+          <p className="text-xs text-app-muted">
+            <span className="font-medium text-app-text">{tr.crm.messages.recipientsColumn}:</span>{' '}
             {message.recipients.map((recipient) => displayUserName(recipient.userId)).join(', ')}
           </p>
-          <p className="mt-3 whitespace-pre-wrap text-sm text-app-text">{message.body}</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-app-text">
+            {message.body}
+          </p>
         </div>
       )}
     </div>
@@ -144,104 +159,111 @@ export function MessageDetailPage() {
 
   return (
     <AppShell>
-      <button
-        type="button"
-        onClick={() => navigate('/mesajlar')}
-        className="flex cursor-pointer items-center gap-1.5 text-sm text-app-brand underline transition-transform hover:translate-y-0.5"
-      >
-        <ArrowLeft size={16} />
-        {tr.crm.messages.detail.back}
-      </button>
-
-      <div className="mt-4 flex items-center gap-2">
+      <div className="flex flex-col gap-4">
         <button
           type="button"
-          onClick={() => starMutation.mutate({ conversationId, starred: !conversation.starred })}
-          disabled={starMutation.isPending}
-          aria-label={
-            conversation.starred
-              ? tr.crm.messages.detail.unstarAria
-              : tr.crm.messages.detail.starAria
-          }
-          aria-pressed={conversation.starred}
-          className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+          onClick={() => navigate('/mesajlar')}
+          className="flex w-fit cursor-pointer items-center gap-1.5 text-sm text-app-brand transition-transform hover:translate-y-0.5"
         >
-          <Star
-            size={18}
-            className={conversation.starred ? 'fill-yellow-400 text-yellow-400' : undefined}
-          />
+          <ArrowLeft size={16} />
+          {tr.crm.messages.detail.back}
         </button>
-        <h1 className="text-lg font-bold text-app-text">{messages[0]!.subject}</h1>
-      </div>
 
-      {conversation.relatedEntity && conversation.relatedEntityId && (
-        <div className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-app-primary/30 bg-app-primary/10 px-4 py-3 text-sm">
-          <span className="flex items-center gap-2 text-app-text">
-            <Link2 size={16} />
-            {tr.crm.messages.detail.relatedBanner(
-              tr.crm.messages.relatedEntityOptions[conversation.relatedEntity],
-            )}
-          </span>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() =>
-              navigate(
-                `${RELATED_ENTITY_PATH[conversation.relatedEntity as MessageRelatedEntity]}/${conversation.relatedEntityId}`,
-              )
-            }
-          >
-            {tr.crm.messages.detail.goToRecord}
-          </Button>
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-sm">
+          <div className="flex items-start gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                starMutation.mutate({ conversationId, starred: !conversation.starred })
+              }
+              disabled={starMutation.isPending}
+              aria-label={
+                conversation.starred
+                  ? tr.crm.messages.detail.unstarAria
+                  : tr.crm.messages.detail.starAria
+              }
+              aria-pressed={conversation.starred}
+              className="mt-0.5 cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+            >
+              <Star
+                size={18}
+                className={conversation.starred ? 'fill-yellow-400 text-yellow-400' : undefined}
+              />
+            </button>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg font-bold text-app-text">{messages[0]!.subject}</h1>
+              <p className="mt-0.5 text-xs text-app-muted">
+                {tr.crm.messages.detail.messageCount(messages.length)}
+              </p>
+            </div>
+          </div>
+
+          {conversation.relatedEntity && conversation.relatedEntityId && (
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-app-primary/30 bg-app-primary/10 px-4 py-3 text-sm">
+              <span className="flex items-center gap-2 text-app-text">
+                <Link2 size={16} />
+                {tr.crm.messages.detail.relatedBanner(
+                  tr.crm.messages.relatedEntityOptions[conversation.relatedEntity],
+                )}
+              </span>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() =>
+                  navigate(
+                    `${RELATED_ENTITY_PATH[conversation.relatedEntity as MessageRelatedEntity]}/${conversation.relatedEntityId}`,
+                  )
+                }
+              >
+                {tr.crm.messages.detail.goToRecord}
+              </Button>
+            </div>
+          )}
+
+          {otherParticipantIds.length > 0 && (
+            <div className="mt-4 flex gap-2 border-t border-app-border pt-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setReplyMode(replyMode === 'reply' ? null : 'reply')}
+              >
+                {tr.crm.messages.detail.replyButton}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setReplyMode(replyMode === 'replyAll' ? null : 'replyAll')}
+              >
+                {tr.crm.messages.detail.replyAllButton}
+              </Button>
+            </div>
+          )}
         </div>
-      )}
 
-      <p className="mt-4 text-xs text-app-muted">
-        {tr.crm.messages.detail.messageCount(messages.length)}
-      </p>
+        {replyMode && (
+          <div className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
+            <MessageComposeForm
+              key={replyMode}
+              mode="reply"
+              conversationId={conversationId}
+              defaultToUserIds={replyMode === 'replyAll' ? otherParticipantIds : replyToUserIds}
+              onCancel={() => setReplyMode(null)}
+              onSuccess={() => setReplyMode(null)}
+            />
+          </div>
+        )}
 
-      {otherParticipantIds.length > 0 && (
-        <div className="mt-3 flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setReplyMode(replyMode === 'reply' ? null : 'reply')}
-          >
-            {tr.crm.messages.detail.replyButton}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setReplyMode(replyMode === 'replyAll' ? null : 'replyAll')}
-          >
-            {tr.crm.messages.detail.replyAllButton}
-          </Button>
+        <div className="flex flex-col gap-3">
+          {messages.map((message, index) => (
+            <ConversationMessageItem
+              key={message.id}
+              message={message}
+              defaultOpen={index === lastIndex}
+              currentUserId={currentUserId}
+              displayUserName={displayUserName}
+            />
+          ))}
         </div>
-      )}
-
-      {replyMode && (
-        <div className="mt-3 rounded-xl border border-app-border bg-app-surface p-4">
-          <MessageComposeForm
-            key={replyMode}
-            mode="reply"
-            conversationId={conversationId}
-            defaultToUserIds={replyMode === 'replyAll' ? otherParticipantIds : replyToUserIds}
-            onCancel={() => setReplyMode(null)}
-            onSuccess={() => setReplyMode(null)}
-          />
-        </div>
-      )}
-
-      <div className="mt-2 flex flex-col gap-2">
-        {messages.map((message, index) => (
-          <ConversationMessageItem
-            key={message.id}
-            message={message}
-            defaultOpen={index === lastIndex}
-            currentUserId={currentUserId}
-            displayUserName={displayUserName}
-          />
-        ))}
       </div>
     </AppShell>
   );
