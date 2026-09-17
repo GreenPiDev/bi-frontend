@@ -1487,6 +1487,7 @@ export const tr = {
         relatedEntityIdLabel: 'İlişkili Kayıt',
         relatedEntityIdPlaceholder: 'Kayıt seçin...',
         relatedEntityIdEmptyOption: 'Kayıt bulunamadı',
+        viewDetailTooltip: 'Kaydın detaylarını yeni sekmede incele',
         submit: 'Gönder',
         submitting: 'Gönderiliyor...',
         cancel: 'Vazgeç',

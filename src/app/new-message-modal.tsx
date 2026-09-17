@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { ExternalLink } from 'lucide-react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../components/ui/button';
@@ -7,8 +8,10 @@ import { MultiSelect } from '../components/ui/multi-select';
 import { Select, type SelectOption } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
+import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { messageFormSchema, type MessageFormValues } from '../features/crm/schemas';
+import type { MessageRelatedEntity } from '../lib/api';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import {
   useAssignableMessageUsersQuery,
@@ -21,6 +24,23 @@ import { tr } from '../i18n/tr';
 
 interface NewMessageModalProps {
   onClose: () => void;
+}
+
+function getRelatedEntityDetailPath(
+  relatedEntity: MessageRelatedEntity | undefined,
+  relatedEntityId: string | undefined,
+): string | undefined {
+  if (!relatedEntity || !relatedEntityId) return undefined;
+  switch (relatedEntity) {
+    case 'PROJECT':
+      return `/projeler/${relatedEntityId}`;
+    case 'QUOTE':
+      return `/teklifler/${relatedEntityId}`;
+    case 'INTERACTION':
+      return `/gorusmeler/${relatedEntityId}`;
+    default:
+      return undefined;
+  }
 }
 
 export function NewMessageModal({ onClose }: NewMessageModalProps) {
@@ -81,6 +101,9 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
     !relatedEntityOptionsLoading && relatedEntityOptions.length === 0
       ? tr.crm.messages.form.relatedEntityIdEmptyOption
       : tr.crm.messages.form.relatedEntityIdPlaceholder;
+
+  const relatedEntityId = watch('relatedEntityId');
+  const relatedEntityDetailPath = getRelatedEntityDetailPath(relatedEntity, relatedEntityId);
 
   function onSubmit(values: MessageFormValues) {
     createMutation.mutate(
@@ -176,20 +199,38 @@ export function NewMessageModal({ onClose }: NewMessageModalProps) {
           })}
         />
         {relatedEntity && (
-          <Controller
-            name="relatedEntityId"
-            control={control}
-            render={({ field }) => (
-              <Select
-                label={tr.crm.messages.form.relatedEntityIdLabel}
-                placeholder={relatedEntityIdPlaceholder}
-                options={relatedEntityOptions}
-                error={errors.relatedEntityId?.message}
-                value={field.value ?? ''}
-                onChange={field.onChange}
+          <div className="flex items-end gap-2">
+            <div className="flex-1">
+              <Controller
+                name="relatedEntityId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    id="new-message-related-entity-id"
+                    label={tr.crm.messages.form.relatedEntityIdLabel}
+                    placeholder={relatedEntityIdPlaceholder}
+                    options={relatedEntityOptions}
+                    error={errors.relatedEntityId?.message}
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                  />
+                )}
               />
+            </div>
+            {relatedEntityDetailPath && (
+              <Tooltip content={tr.crm.messages.form.viewDetailTooltip}>
+                <a
+                  href={relatedEntityDetailPath}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={tr.crm.messages.form.viewDetailTooltip}
+                  className="flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-app-border bg-app-surface text-app-muted hover:text-app-text"
+                >
+                  <ExternalLink size={16} />
+                </a>
+              </Tooltip>
             )}
-          />
+          </div>
         )}
       </form>
     </Modal>
