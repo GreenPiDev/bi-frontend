@@ -58,6 +58,7 @@ describe('MessagingWidget', () => {
           conversationId: 'conv-1',
           relatedEntity: null,
           relatedEntityId: null,
+          relatedEntityLabel: null,
           messageCount: 1,
           unreadCount: 1,
           starred: false,
@@ -70,6 +71,7 @@ describe('MessagingWidget', () => {
       conversationId: 'conv-1',
       relatedEntity: null,
       relatedEntityId: null,
+      relatedEntityLabel: null,
       messages: [message],
       starred: false,
     });
@@ -92,7 +94,7 @@ describe('MessagingWidget', () => {
   it('varsayilan olarak daralti durumdadir, baslik gorunur ama liste gorunmez', async () => {
     renderWidget();
     expect(await screen.findByText('Mesajlaşma')).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Mesaj ara...')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('Mesaj veya kişi ara...')).not.toBeInTheDocument();
   });
 
   it('genislet butonuna tiklayinca mesaj listesi gorunur', async () => {
@@ -136,6 +138,43 @@ describe('MessagingWidget', () => {
     expect(screen.getByText('Proje')).toBeInTheDocument();
     expect(screen.getByText('Görüşme')).toBeInTheDocument();
     expect(screen.getByText('Kime Gönderildi')).toBeInTheDocument();
+  });
+
+  it('konusma bir kayda bagliysa satirda kayit turu ve adi gorunur', async () => {
+    const message = {
+      id: 'msg-2',
+      conversationId: 'conv-2',
+      senderId: 'user-other',
+      subject: 'Teklif hakkinda',
+      body: 'Fiyat listesini güncelledim.',
+      sentAt: '2026-01-02T10:00:00.000Z',
+      relatedEntity: 'QUOTE' as const,
+      relatedEntityId: 'quote-1',
+      recipients: [{ id: 'rec-2', userId: 'user-me', kind: 'TO' as const, readAt: null }],
+      createdAt: '2026-01-02T10:00:00.000Z',
+      updatedAt: '2026-01-02T10:00:00.000Z',
+    } satisfies api.Message;
+    vi.spyOn(api, 'listMessages').mockResolvedValue({
+      data: [
+        {
+          conversationId: 'conv-2',
+          relatedEntity: 'QUOTE',
+          relatedEntityId: 'quote-1',
+          relatedEntityLabel: 'TEK-2026-01-02-001',
+          messageCount: 1,
+          unreadCount: 0,
+          starred: false,
+          lastMessage: message,
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+
+    const user = userEvent.setup();
+    renderWidget();
+    await user.click(await screen.findByRole('button', { name: 'Genişlet' }));
+
+    expect(await screen.findByText('Teklif · TEK-2026-01-02-001')).toBeInTheDocument();
   });
 
   it('yeni mesaj butonu formu acar', async () => {

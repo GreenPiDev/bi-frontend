@@ -165,6 +165,12 @@ export function MessagingWidgetBar({
                   <span className="truncate text-xs text-app-muted">
                     {conversation.lastMessage.body}
                   </span>
+                  {conversation.relatedEntity && conversation.relatedEntityLabel && (
+                    <span className="truncate text-[10px] text-app-primary">
+                      {tr.crm.messages.relatedEntityOptions[conversation.relatedEntity]} ·{' '}
+                      {conversation.relatedEntityLabel}
+                    </span>
+                  )}
                 </button>
               );
             })}

@@ -84,6 +84,7 @@ export function MessagingChatPanel({
 
   const relatedEntity = conversationQuery.data?.relatedEntity;
   const relatedEntityId = conversationQuery.data?.relatedEntityId;
+  const relatedEntityLabel = conversationQuery.data?.relatedEntityLabel ?? null;
 
   const lastMessage = messages[messages.length - 1];
   const counterpartName = lastMessage
@@ -133,12 +134,14 @@ export function MessagingChatPanel({
           <button
             type="button"
             onClick={() => navigate(`${RELATED_ENTITY_PATH[relatedEntity]}/${relatedEntityId}`)}
-            className="flex w-full items-center gap-1.5 rounded-lg border border-app-primary/30 bg-app-primary/10 px-2.5 py-1.5 text-left text-xs text-app-text hover:bg-app-primary/15"
+            className="flex w-full cursor-pointer items-center gap-1.5 rounded-lg border border-app-primary/30 bg-app-primary/10 px-2.5 py-1.5 text-left text-xs text-app-text hover:bg-app-primary/15"
           >
             <Link2 size={13} className="shrink-0" />
             <span className="truncate">
               {tr.crm.messages.detail.relatedBanner(
                 tr.crm.messages.relatedEntityOptions[relatedEntity],
+                tr.crm.messages.relatedEntitySuffix[relatedEntity],
+                relatedEntityLabel,
               )}
             </span>
           </button>

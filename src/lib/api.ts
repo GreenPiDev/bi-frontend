@@ -1810,6 +1810,7 @@ export interface ConversationSummary {
   conversationId: string;
   relatedEntity: MessageRelatedEntity | null;
   relatedEntityId: string | null;
+  relatedEntityLabel: string | null;
   lastMessage: Message;
   messageCount: number;
   unreadCount: number;
@@ -1820,6 +1821,7 @@ export interface ConversationDetail {
   conversationId: string;
   relatedEntity: MessageRelatedEntity | null;
   relatedEntityId: string | null;
+  relatedEntityLabel: string | null;
   messages: Message[];
   starred: boolean;
 }

@@ -79,6 +79,7 @@ describe('MessagesListPage', () => {
           conversationId: 'conv-1',
           relatedEntity: null,
           relatedEntityId: null,
+          relatedEntityLabel: null,
           messageCount: 1,
           unreadCount: 0,
           starred: false,
@@ -105,6 +106,62 @@ describe('MessagesListPage', () => {
     expect(await screen.findByText('Ali Veli')).toBeInTheDocument();
     await user.click(screen.getByText('Ali Veli'));
     expect(await screen.findByText('detail-page')).toBeInTheDocument();
+  });
+
+  it('konusma bir kayda bagliysa Kayit kolonunda kayit turu ve adi gorunur, bagli degilse tire gorunur', async () => {
+    vi.spyOn(api, 'listMessages').mockResolvedValue({
+      data: [
+        {
+          conversationId: 'conv-1',
+          relatedEntity: 'QUOTE',
+          relatedEntityId: 'quote-1',
+          relatedEntityLabel: 'TEK-2026-01-01-001',
+          messageCount: 1,
+          unreadCount: 0,
+          starred: false,
+          lastMessage: {
+            id: 'msg-1',
+            conversationId: 'conv-1',
+            senderId: 'user-1',
+            subject: 'Teklif hakkinda',
+            body: 'Merhaba, teklif hakkinda konusalim.',
+            sentAt: '2026-01-01T10:00:00.000Z',
+            relatedEntity: 'QUOTE',
+            relatedEntityId: 'quote-1',
+            recipients: [{ id: 'rec-1', userId: 'user-2', kind: 'TO', readAt: null }],
+            createdAt: '2026-01-01T10:00:00.000Z',
+            updatedAt: '2026-01-01T10:00:00.000Z',
+          },
+        },
+        {
+          conversationId: 'conv-2',
+          relatedEntity: null,
+          relatedEntityId: null,
+          relatedEntityLabel: null,
+          messageCount: 1,
+          unreadCount: 0,
+          starred: false,
+          lastMessage: {
+            id: 'msg-2',
+            conversationId: 'conv-2',
+            senderId: 'user-1',
+            subject: 'Genel',
+            body: 'Ilgisiz mesaj.',
+            sentAt: '2026-01-02T10:00:00.000Z',
+            relatedEntity: null,
+            relatedEntityId: null,
+            recipients: [{ id: 'rec-2', userId: 'user-2', kind: 'TO', readAt: null }],
+            createdAt: '2026-01-02T10:00:00.000Z',
+            updatedAt: '2026-01-02T10:00:00.000Z',
+          },
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 2, totalPages: 1 },
+    });
+    renderMessagesListPage();
+
+    expect(await screen.findByText('Teklif · TEK-2026-01-01-001')).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   it('filtre butonuna tiklayinca cekmece acilir', async () => {
@@ -168,6 +225,7 @@ describe('MessagesListPage', () => {
           conversationId: 'conv-1',
           relatedEntity: null,
           relatedEntityId: null,
+          relatedEntityLabel: null,
           messageCount: 1,
           unreadCount: 1,
           starred: false,
@@ -189,6 +247,7 @@ describe('MessagesListPage', () => {
           conversationId: 'conv-2',
           relatedEntity: null,
           relatedEntityId: null,
+          relatedEntityLabel: null,
           messageCount: 1,
           unreadCount: 0,
           starred: false,
@@ -242,6 +301,7 @@ describe('MessagesListPage', () => {
           conversationId: 'conv-1',
           relatedEntity: null,
           relatedEntityId: null,
+          relatedEntityLabel: null,
           messageCount: 1,
           unreadCount: 0,
           starred: false,

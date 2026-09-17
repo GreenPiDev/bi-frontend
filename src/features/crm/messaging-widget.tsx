@@ -8,6 +8,7 @@ import {
   useUnreadConversationsTotal,
 } from './use-messages';
 import { useMessagesFilterState } from './use-messages-filter-state';
+import { useDebouncedValue } from '../../lib/use-debounced-value';
 
 const EXIT_ANIMATION_MS = 160;
 
@@ -23,11 +24,12 @@ export function MessagingWidget() {
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const [q, setQ] = useState('');
+  const debouncedQ = useDebouncedValue(q);
   const filters = useMessagesFilterState();
 
   const messagesQuery = useMessagesQuery({
     page: 1,
-    q: q || undefined,
+    q: debouncedQ || undefined,
     ...filters.queryParams,
   });
   // Baslikta gosterilen kumulatif sayac, kullanicinin cubuk icindeki filtrelerinden

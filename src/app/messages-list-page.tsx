@@ -1,4 +1,4 @@
-import { Mail, MailOpen, Search, Star } from 'lucide-react';
+import { Search, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -185,36 +185,24 @@ export function MessagesListPage() {
       render: (conversation) => conversation.lastMessage.subject,
     },
     {
+      key: 'record',
+      header: tr.crm.messages.recordColumn,
+      className: 'text-app-muted',
+      render: (conversation) =>
+        conversation.relatedEntity && conversation.relatedEntityLabel ? (
+          <span className="text-app-text">
+            {tr.crm.messages.relatedEntityOptions[conversation.relatedEntity]} ·{' '}
+            {conversation.relatedEntityLabel}
+          </span>
+        ) : (
+          '—'
+        ),
+    },
+    {
       key: 'sentAt',
       header: tr.crm.messages.sentAtColumn,
       className: 'text-app-muted',
       render: (conversation) => new Date(conversation.lastMessage.sentAt).toLocaleString('tr-TR'),
-    },
-    {
-      key: 'readToggle',
-      header: '',
-      className: 'w-8',
-      required: true,
-      render: (conversation) => {
-        const isUnread = conversation.unreadCount > 0;
-        return (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              readMutation.mutate({
-                conversationId: conversation.conversationId,
-                read: isUnread,
-              });
-            }}
-            disabled={readMutation.isPending}
-            aria-label={isUnread ? tr.crm.messages.markReadAria : tr.crm.messages.detail.markUnread}
-            className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
-          >
-            {isUnread ? <MailOpen size={16} /> : <Mail size={16} />}
-          </button>
-        );
-      },
     },
   ];
 

@@ -78,6 +78,7 @@ describe('MessageDetailPage', () => {
       conversationId: 'conv-1',
       relatedEntity: null,
       relatedEntityId: null,
+      relatedEntityLabel: null,
       messages: [{ ...MESSAGE, recipients: [{ ...MESSAGE.recipients[0]!, readAt: null }] }],
       starred: false,
     });
@@ -92,6 +93,7 @@ describe('MessageDetailPage', () => {
       conversationId: 'conv-1',
       relatedEntity: null,
       relatedEntityId: null,
+      relatedEntityLabel: null,
       messages: [MESSAGE],
       starred: false,
     });
@@ -109,6 +111,7 @@ describe('MessageDetailPage', () => {
       conversationId: 'conv-1',
       relatedEntity: null,
       relatedEntityId: null,
+      relatedEntityLabel: null,
       messages: [MESSAGE],
       starred: true,
     });
@@ -136,6 +139,7 @@ describe('MessageDetailPage', () => {
         conversationId: 'conv-1',
         relatedEntity: null,
         relatedEntityId: null,
+        relatedEntityLabel: null,
         messages: [MESSAGE_TWO_PARTICIPANTS],
         starred: false,
       });

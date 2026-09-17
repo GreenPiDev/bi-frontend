@@ -1447,12 +1447,13 @@ export const tr = {
       title: 'Mesajlar',
       subtitle: 'Şirket içi mesajlarınızın gelen/gönderilen kutusu.',
       newButton: 'Yeni Mesaj',
-      searchPlaceholder: 'Mesaj ara...',
+      searchPlaceholder: 'Mesaj veya kişi ara...',
       loading: 'Mesajlar yükleniyor...',
       empty: 'Henüz mesaj yok.',
       senderColumn: 'Gönderen',
       recipientsColumn: 'Alıcılar',
       subjectColumn: 'Konu',
+      recordColumn: 'Kayıt',
       sentAtColumn: 'Tarih',
       unreadCountAria: (count: number) => `${count} okunmamış mesaj`,
       markReadAria: 'Okundu yap',
@@ -1470,6 +1471,12 @@ export const tr = {
         PROJECT: 'Proje',
         QUOTE: 'Teklif',
         INTERACTION: 'Görüşme',
+      },
+      // relatedBanner icin iyelik eki almis hali: "bir <ad> <ek> kaydına bağlı."
+      relatedEntitySuffix: {
+        PROJECT: 'projesi',
+        QUOTE: 'teklifi',
+        INTERACTION: 'görüşmesi',
       },
       filterDrawer: {
         title: 'Mesajları Filtrele',
@@ -1511,8 +1518,14 @@ export const tr = {
       },
       detail: {
         back: 'Mesajlara dön',
-        relatedBanner: (label: string) => `Bu mesaj bir ${label} kaydına bağlı.`,
-        goToRecord: 'Kayda git',
+        relatedBanner: (typeLabel: string, suffixLabel: string, name: string | null) =>
+          name
+            ? `Bu mesaj ${name} ${suffixLabel} kaydına bağlı.`
+            : `Bu mesaj ${typeLabel} kaydına bağlı.`,
+        // relatedBanner'in tiklanabilir/alti cizili kayit adi icin bolunmus hali -
+        // sadece /mesajlar/:id sayfasinda kullanilir (bkz. message-detail-page.tsx).
+        relatedBannerPrefix: 'Bu mesaj',
+        relatedBannerSuffix: (suffixLabel: string) => `${suffixLabel} kaydına bağlı.`,
         messageCount: (count: number) => `${count} mesaj`,
         replyButton: 'Yanıtla',
         replyAllButton: 'Tümüne Yanıtla',

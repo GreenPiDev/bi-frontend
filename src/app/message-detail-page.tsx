@@ -199,24 +199,26 @@ export function MessageDetailPage() {
           </div>
 
           {conversation.relatedEntity && conversation.relatedEntityId && (
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-app-primary/30 bg-app-primary/10 px-4 py-3 text-sm">
-              <span className="flex items-center gap-2 text-app-text">
-                <Link2 size={16} />
-                {tr.crm.messages.detail.relatedBanner(
-                  tr.crm.messages.relatedEntityOptions[conversation.relatedEntity],
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-app-primary/30 bg-app-primary/10 px-4 py-3 text-base text-app-text">
+              <Link2 size={16} className="shrink-0" />
+              <span>
+                {tr.crm.messages.detail.relatedBannerPrefix}{' '}
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      `${RELATED_ENTITY_PATH[conversation.relatedEntity as MessageRelatedEntity]}/${conversation.relatedEntityId}`,
+                    )
+                  }
+                  className="cursor-pointer underline hover:text-app-primary"
+                >
+                  {conversation.relatedEntityLabel ??
+                    tr.crm.messages.relatedEntityOptions[conversation.relatedEntity]}
+                </button>{' '}
+                {tr.crm.messages.detail.relatedBannerSuffix(
+                  tr.crm.messages.relatedEntitySuffix[conversation.relatedEntity],
                 )}
               </span>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() =>
-                  navigate(
-                    `${RELATED_ENTITY_PATH[conversation.relatedEntity as MessageRelatedEntity]}/${conversation.relatedEntityId}`,
-                  )
-                }
-              >
-                {tr.crm.messages.detail.goToRecord}
-              </Button>
             </div>
           )}
 
