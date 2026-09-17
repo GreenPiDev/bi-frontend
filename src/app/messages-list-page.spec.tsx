@@ -81,6 +81,7 @@ describe('MessagesListPage', () => {
           relatedEntityId: null,
           messageCount: 1,
           unreadCount: 0,
+          starred: false,
           lastMessage: {
             id: 'msg-1',
             conversationId: 'conv-1',

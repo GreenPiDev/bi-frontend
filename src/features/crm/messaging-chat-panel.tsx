@@ -1,12 +1,13 @@
 import { clsx } from 'clsx';
-import { Link2, Send, X } from 'lucide-react';
+import { Link2, Send, Star, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeQuery } from '../auth/use-auth';
 import {
   useConversationQuery,
   useCreateMessageMutation,
-  useMarkConversationReadMutation,
+  useSetConversationReadMutation,
+  useSetConversationStarMutation,
 } from './use-messages';
 import type { MessageRelatedEntity } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -36,7 +37,8 @@ export function MessagingChatPanel({
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
   const conversationQuery = useConversationQuery(conversationId);
-  const markReadMutation = useMarkConversationReadMutation(conversationId);
+  const readMutation = useSetConversationReadMutation();
+  const starMutation = useSetConversationStarMutation();
   const createMutation = useCreateMessageMutation();
   const [replyBody, setReplyBody] = useState('');
 
@@ -52,11 +54,13 @@ export function MessagingChatPanel({
   );
 
   useEffect(() => {
-    if (hasUnread && !markReadMutation.isPending) {
-      markReadMutation.mutate();
+    if (hasUnread && !readMutation.isPending) {
+      readMutation.mutate({ conversationId });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUnread, conversationId]);
+
+  const starred = conversationQuery.data?.starred ?? false;
 
   const otherParticipantIds = useMemo(() => {
     const ids = new Set<string>();
@@ -103,14 +107,28 @@ export function MessagingChatPanel({
     >
       <div className="flex items-center justify-between gap-2 border-b border-app-border px-4 py-3">
         <span className="truncate text-sm font-semibold text-app-text">{counterpartName}</span>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={tr.crm.messages.widget.closeAria}
-          className="shrink-0 text-app-muted hover:text-app-text"
-        >
-          <X size={18} />
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => starMutation.mutate({ conversationId, starred: !starred })}
+            disabled={starMutation.isPending}
+            aria-label={
+              starred ? tr.crm.messages.detail.unstarAria : tr.crm.messages.detail.starAria
+            }
+            aria-pressed={starred}
+            className="text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+          >
+            <Star size={16} className={starred ? 'fill-yellow-400 text-yellow-400' : undefined} />
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={tr.crm.messages.widget.closeAria}
+            className="text-app-muted hover:text-app-text"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">

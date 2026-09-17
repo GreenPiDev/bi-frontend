@@ -5,7 +5,8 @@ import {
   getConversation,
   listAssignableMessageUsers,
   listMessages,
-  markConversationRead,
+  setConversationRead,
+  setConversationStar,
   type ConversationDetail,
   type ConversationSummary,
   type CreateMessageInput,
@@ -71,30 +72,35 @@ export function useCreateMessageMutation() {
   });
 }
 
-export function useMarkConversationReadMutation(conversationId: string) {
+/** Satir-bagimsiz: `mutate({ conversationId })` varsayilan okundu isaretler,
+ * `mutate({ conversationId, read: false })` tekrar okunmadi yapar - hem tek bir
+ * konusmaya bagli sayfalarda (detay, sohbet paneli) hem de bircok konusmayi ayni anda
+ * listeleyen `/mesajlar` tablosunda (her satir icin ayri hook cagirmadan) kullanilir. */
+export function useSetConversationReadMutation() {
   const queryClient = useQueryClient();
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
 
   return useMutation({
-    mutationFn: () => markConversationRead(conversationId),
+    mutationFn: ({ conversationId, read = true }: { conversationId: string; read?: boolean }) =>
+      setConversationRead(conversationId, read),
     // Sadece invalidateQueries'e guvenmek yerine (bazi durumlarda cagiran bilesenin
     // dogrudan gozlemlemedigi bir cache girdisini gecikmeli/hic guncellemiyordu),
     // ilgili konusmanin okunmamis durumunu her cache girdisinde senkron olarak yaziyoruz.
-    onSuccess: () => {
+    onSuccess: (_result, { conversationId, read = true }) => {
       const now = new Date().toISOString();
-      const markMessageRead = (message: Message): Message => ({
+      const applyReadState = (message: Message): Message => ({
         ...message,
         recipients: message.recipients.map((recipient) =>
-          recipient.userId === currentUserId && !recipient.readAt
-            ? { ...recipient, readAt: now }
+          recipient.userId === currentUserId
+            ? { ...recipient, readAt: read ? (recipient.readAt ?? now) : null }
             : recipient,
         ),
       });
 
       queryClient.setQueryData<ConversationDetail>(
         ['messages', 'conversation', conversationId],
-        (old) => old && { ...old, messages: old.messages.map(markMessageRead) },
+        (old) => old && { ...old, messages: old.messages.map(applyReadState) },
       );
 
       // setQueriesData bu prefix altindaki TUM cache girdilerini (liste, konusma detayi,
@@ -110,8 +116,10 @@ export function useMarkConversationReadMutation(conversationId: string) {
               conversation.conversationId === conversationId
                 ? {
                     ...conversation,
-                    unreadCount: 0,
-                    lastMessage: markMessageRead(conversation.lastMessage),
+                    // read=false icin kesin deger invalidateQueries'ten gelecek; bu arada
+                    // makul bir yaklasik deger olarak konusmadaki tum mesaj sayisi kullanilir.
+                    unreadCount: read ? 0 : conversation.messageCount,
+                    lastMessage: applyReadState(conversation.lastMessage),
                   }
                 : conversation,
             ),
@@ -119,6 +127,40 @@ export function useMarkConversationReadMutation(conversationId: string) {
         },
       );
 
+      void queryClient.invalidateQueries({ queryKey: MESSAGES_QUERY_KEY });
+      void queryClient.invalidateQueries({
+        queryKey: ['messages', 'conversation', conversationId],
+      });
+    },
+  });
+}
+
+/** Satir-bagimsiz kisisel yildizlama toggle'i - `mutate({ conversationId, starred })`. */
+export function useSetConversationStarMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ conversationId, starred }: { conversationId: string; starred: boolean }) =>
+      setConversationStar(conversationId, starred),
+    onSuccess: (_result, { conversationId, starred }) => {
+      queryClient.setQueryData<ConversationDetail>(
+        ['messages', 'conversation', conversationId],
+        (old) => old && { ...old, starred },
+      );
+      queryClient.setQueriesData<PagedResult<ConversationSummary>>(
+        { queryKey: MESSAGES_QUERY_KEY },
+        (old) => {
+          if (!old || !Array.isArray(old.data)) return old;
+          return {
+            ...old,
+            data: old.data.map((conversation) =>
+              conversation.conversationId === conversationId
+                ? { ...conversation, starred }
+                : conversation,
+            ),
+          };
+        },
+      );
       void queryClient.invalidateQueries({ queryKey: MESSAGES_QUERY_KEY });
       void queryClient.invalidateQueries({
         queryKey: ['messages', 'conversation', conversationId],

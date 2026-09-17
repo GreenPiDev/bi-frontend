@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react';
+import { Mail, MailOpen, Search, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -10,7 +10,12 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { MessagesFilterDrawer } from '../features/crm/messages-filter-drawer';
-import { useAssignableMessageUsersQuery, useMessagesQuery } from '../features/crm/use-messages';
+import {
+  useAssignableMessageUsersQuery,
+  useMessagesQuery,
+  useSetConversationReadMutation,
+  useSetConversationStarMutation,
+} from '../features/crm/use-messages';
 import { useMessagesFilterState } from '../features/crm/use-messages-filter-state';
 import type { ConversationSummary } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -46,6 +51,8 @@ export function MessagesListPage() {
     ...filters.queryParams,
   });
   const usersQuery = useAssignableMessageUsersQuery();
+  const starMutation = useSetConversationStarMutation();
+  const readMutation = useSetConversationReadMutation();
 
   const userNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -63,6 +70,37 @@ export function MessagesListPage() {
   }
 
   const ALL_COLUMNS: TableColumn<ConversationSummary>[] = [
+    {
+      key: 'star',
+      header: '',
+      className: 'w-8',
+      required: true,
+      render: (conversation) => (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            starMutation.mutate({
+              conversationId: conversation.conversationId,
+              starred: !conversation.starred,
+            });
+          }}
+          disabled={starMutation.isPending}
+          aria-label={
+            conversation.starred
+              ? tr.crm.messages.detail.unstarAria
+              : tr.crm.messages.detail.starAria
+          }
+          aria-pressed={conversation.starred}
+          className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+        >
+          <Star
+            size={16}
+            className={conversation.starred ? 'fill-yellow-400 text-yellow-400' : undefined}
+          />
+        </button>
+      ),
+    },
     {
       key: 'unread',
       header: '',
@@ -92,6 +130,32 @@ export function MessagesListPage() {
       header: tr.crm.messages.sentAtColumn,
       className: 'text-app-muted',
       render: (conversation) => new Date(conversation.lastMessage.sentAt).toLocaleString('tr-TR'),
+    },
+    {
+      key: 'readToggle',
+      header: '',
+      className: 'w-8',
+      required: true,
+      render: (conversation) => {
+        const isUnread = conversation.unreadCount > 0;
+        return (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              readMutation.mutate({
+                conversationId: conversation.conversationId,
+                read: isUnread,
+              });
+            }}
+            disabled={readMutation.isPending}
+            aria-label={isUnread ? tr.crm.messages.markReadAria : tr.crm.messages.detail.markUnread}
+            className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+          >
+            {isUnread ? <MailOpen size={16} /> : <Mail size={16} />}
+          </button>
+        );
+      },
     },
   ];
 

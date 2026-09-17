@@ -1813,6 +1813,7 @@ export interface ConversationSummary {
   lastMessage: Message;
   messageCount: number;
   unreadCount: number;
+  starred: boolean;
 }
 
 export interface ConversationDetail {
@@ -1820,6 +1821,7 @@ export interface ConversationDetail {
   relatedEntity: MessageRelatedEntity | null;
   relatedEntityId: string | null;
   messages: Message[];
+  starred: boolean;
 }
 
 export interface CreateMessageInput {
@@ -1869,8 +1871,18 @@ export function createMessage(input: CreateMessageInput): Promise<Message> {
   return request('/messages', { method: 'POST', body: JSON.stringify(input) });
 }
 
-export function markConversationRead(conversationId: string): Promise<void> {
-  return request(`/messages/${conversationId}/read`, { method: 'PATCH' });
+export function setConversationRead(conversationId: string, read = true): Promise<void> {
+  return request(`/messages/${conversationId}/read`, {
+    method: 'PATCH',
+    body: JSON.stringify({ read }),
+  });
+}
+
+export function setConversationStar(conversationId: string, starred: boolean): Promise<void> {
+  return request(`/messages/${conversationId}/star`, {
+    method: 'PATCH',
+    body: JSON.stringify({ starred }),
+  });
 }
 
 export function listAssignableMessageUsers(): Promise<AssignableUser[]> {

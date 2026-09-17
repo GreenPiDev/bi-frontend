@@ -1455,6 +1455,7 @@ export const tr = {
       subjectColumn: 'Konu',
       sentAtColumn: 'Tarih',
       unreadCountAria: (count: number) => `${count} okunmamış mesaj`,
+      markReadAria: 'Okundu yap',
       you: 'Sen',
       filterButton: 'Filtrele',
       relatedEntityOptions: {
@@ -1508,6 +1509,9 @@ export const tr = {
         replySend: 'Yanıtla',
         replySending: 'Gönderiliyor...',
         replySuccess: 'Yanıt gönderildi.',
+        markUnread: 'Okunmadı yap',
+        starAria: 'Yıldızla',
+        unstarAria: 'Yıldızı kaldır',
       },
       widget: {
         title: 'Mesajlaşma',

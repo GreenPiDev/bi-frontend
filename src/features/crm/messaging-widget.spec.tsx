@@ -60,6 +60,7 @@ describe('MessagingWidget', () => {
           relatedEntityId: null,
           messageCount: 1,
           unreadCount: 1,
+          starred: false,
           lastMessage: message,
         },
       ],
@@ -70,8 +71,10 @@ describe('MessagingWidget', () => {
       relatedEntity: null,
       relatedEntityId: null,
       messages: [message],
+      starred: false,
     });
-    vi.spyOn(api, 'markConversationRead').mockResolvedValue(undefined);
+    vi.spyOn(api, 'setConversationRead').mockResolvedValue(undefined);
+    vi.spyOn(api, 'setConversationStar').mockResolvedValue(undefined);
     vi.spyOn(api, 'listQuotes').mockResolvedValue({
       data: [],
       meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
@@ -106,7 +109,7 @@ describe('MessagingWidget', () => {
     await user.click(await screen.findByText('Diğer Kullanıcı'));
 
     expect(await screen.findAllByText('Merhaba, teklifi inceledin mi?')).toHaveLength(2);
-    expect(api.markConversationRead).toHaveBeenCalledWith('conv-1');
+    expect(api.setConversationRead).toHaveBeenCalledWith('conv-1', true);
   });
 
   it('sohbet penceresini kapat butonu kapatir', async () => {

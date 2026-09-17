@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronDown, ChevronUp, Link2, Send } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Link2, MailOpen, Send, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -9,7 +9,8 @@ import {
   useAssignableMessageUsersQuery,
   useConversationQuery,
   useCreateMessageMutation,
-  useMarkConversationReadMutation,
+  useSetConversationReadMutation,
+  useSetConversationStarMutation,
 } from '../features/crm/use-messages';
 import { ApiError, type Message, type MessageRelatedEntity } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -77,7 +78,8 @@ export function MessageDetailPage() {
   const meQuery = useMeQuery();
   const conversationQuery = useConversationQuery(conversationId);
   const usersQuery = useAssignableMessageUsersQuery();
-  const markReadMutation = useMarkConversationReadMutation(conversationId);
+  const readMutation = useSetConversationReadMutation();
+  const starMutation = useSetConversationStarMutation();
   const createMutation = useCreateMessageMutation();
   const [replyBody, setReplyBody] = useState('');
 
@@ -103,8 +105,8 @@ export function MessageDetailPage() {
   );
 
   useEffect(() => {
-    if (hasUnread && !markReadMutation.isPending) {
-      markReadMutation.mutate();
+    if (hasUnread && !readMutation.isPending) {
+      readMutation.mutate({ conversationId });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasUnread, conversationId]);
@@ -164,7 +166,41 @@ export function MessageDetailPage() {
         {tr.crm.messages.detail.back}
       </button>
 
-      <h1 className="mt-4 text-lg font-bold text-app-text">{messages[0]!.subject}</h1>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-lg font-bold text-app-text">{messages[0]!.subject}</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => starMutation.mutate({ conversationId, starred: !conversation.starred })}
+            disabled={starMutation.isPending}
+            aria-label={
+              conversation.starred
+                ? tr.crm.messages.detail.unstarAria
+                : tr.crm.messages.detail.starAria
+            }
+            aria-pressed={conversation.starred}
+            className="cursor-pointer text-app-muted hover:text-app-text disabled:cursor-not-allowed"
+          >
+            <Star
+              size={18}
+              className={conversation.starred ? 'fill-yellow-400 text-yellow-400' : undefined}
+            />
+          </button>
+          {!hasUnread && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => readMutation.mutate({ conversationId, read: false })}
+              disabled={readMutation.isPending}
+            >
+              <span className="flex items-center gap-1.5">
+                <MailOpen size={15} />
+                {tr.crm.messages.detail.markUnread}
+              </span>
+            </Button>
+          )}
+        </div>
+      </div>
 
       {conversation.relatedEntity && conversation.relatedEntityId && (
         <div className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-app-primary/30 bg-app-primary/10 px-4 py-3 text-sm">
