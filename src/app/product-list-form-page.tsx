@@ -20,26 +20,6 @@ import { productListFormSchema, type ProductListFormValues } from '../features/c
 import { ApiError, type Product, type ProductListInput } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-const productColumns: TableColumn<Product>[] = [
-  {
-    key: 'name',
-    header: tr.crm.products.nameColumn,
-    render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
-  },
-  {
-    key: 'sku',
-    header: tr.crm.products.skuColumn,
-    className: 'text-app-muted',
-    render: (p) => p.sku ?? '—',
-  },
-  {
-    key: 'unit',
-    header: tr.crm.products.unitColumn,
-    className: 'text-app-muted',
-    render: (p) => p.unit,
-  },
-];
-
 export function ProductListFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -50,6 +30,38 @@ export function ProductListFormPage() {
   const updateMutation = useUpdateProductListMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
   const productsQuery = useProductsQuery({ productListId: id, pageSize: 100 }, { enabled: isEdit });
+
+  // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar (Faz B) - bu listedeki
+  // ürünlerde görülen tüm anahtarların birleşimi kadar sütun eklenir; bir üründe o anahtar
+  // yoksa hücre boş kalır (bkz. docs/VARSAYIMLAR.md V40).
+  const attributeKeys = [
+    ...new Set((productsQuery.data?.data ?? []).flatMap((p) => Object.keys(p.attributes ?? {}))),
+  ].sort();
+  const productColumns: TableColumn<Product>[] = [
+    {
+      key: 'name',
+      header: tr.crm.products.nameColumn,
+      render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
+    },
+    {
+      key: 'sku',
+      header: tr.crm.products.skuColumn,
+      className: 'text-app-muted',
+      render: (p) => p.sku ?? '—',
+    },
+    {
+      key: 'unit',
+      header: tr.crm.products.unitColumn,
+      className: 'text-app-muted',
+      render: (p) => p.unit,
+    },
+    ...attributeKeys.map((key) => ({
+      key: `attr:${key}`,
+      header: key,
+      className: 'text-app-muted',
+      render: (p: Product) => p.attributes?.[key] ?? '—',
+    })),
+  ];
 
   const {
     register,
@@ -145,9 +157,18 @@ export function ProductListFormPage() {
               <h2 className="text-base font-bold text-app-text">
                 {tr.crm.productLists.productsSection.title}
               </h2>
-              <Button type="button" variant="secondary" onClick={() => navigate('/urunler/yeni')}>
-                {tr.crm.productLists.productsSection.addButton}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate(`/urun-listeleri/${id}/ice-aktar`)}
+                >
+                  {tr.crm.productLists.productsSection.importButton}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => navigate('/urunler/yeni')}>
+                  {tr.crm.productLists.productsSection.addButton}
+                </Button>
+              </div>
             </div>
             <div className="mt-3">
               <Table

@@ -52,12 +52,13 @@ export function ProductFormPage() {
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: { unit: 'adet' },
+    defaultValues: { unit: 'adet', currency: 'TRY' },
   });
 
   const minStockLevelField = register('minStockLevel');
   const maxDiscountPctField = register('maxDiscountPct');
   const costPriceField = register('costPrice');
+  const priceField = register('price');
 
   useEffect(() => {
     if (productQuery.data) {
@@ -68,6 +69,8 @@ export function ProductFormPage() {
         unit: productQuery.data.unit,
         minStockLevel: productQuery.data.minStockLevel?.toString() ?? undefined,
         maxDiscountPct: productQuery.data.maxDiscountPct ?? undefined,
+        price: productQuery.data.price ?? undefined,
+        currency: productQuery.data.currency,
         description: productQuery.data.description ?? undefined,
         category: productQuery.data.category ?? undefined,
         costPrice: productQuery.data.costPrice ?? undefined,
@@ -103,6 +106,8 @@ export function ProductFormPage() {
         values.maxDiscountPct === undefined || values.maxDiscountPct === ''
           ? null
           : Number(values.maxDiscountPct),
+      price: values.price === undefined || values.price === '' ? null : Number(values.price),
+      currency: values.currency,
       description: values.description || null,
       category: values.category || null,
       costPrice:
@@ -284,6 +289,29 @@ export function ProductFormPage() {
               {...register('description')}
             />
           </div>
+          <TextField
+            type="text"
+            inputMode="decimal"
+            label={tr.crm.products.form.priceLabel}
+            hint={tr.crm.products.form.priceHint}
+            error={errors.price?.message}
+            {...priceField}
+            onChange={(event) => {
+              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
+              priceField.onChange(event);
+            }}
+          />
+          <Select
+            label={tr.crm.products.form.currencyLabel}
+            required
+            error={errors.currency?.message}
+            options={[
+              { value: 'TRY', label: 'TRY' },
+              { value: 'EUR', label: 'EUR' },
+              { value: 'USD', label: 'USD' },
+            ]}
+            {...register('currency')}
+          />
           <TextField
             type="text"
             inputMode="decimal"

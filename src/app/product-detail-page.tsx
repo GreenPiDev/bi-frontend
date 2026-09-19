@@ -28,6 +28,10 @@ export function ProductDetailPage() {
     { label: tr.crm.products.detail.unitLabel, value: product.unit },
     { label: tr.crm.products.detail.categoryLabel, value: product.category ?? '—' },
     {
+      label: tr.crm.products.detail.priceLabel,
+      value: product.price ? `${product.price} ${product.currency}` : '—',
+    },
+    {
       label: tr.crm.products.detail.costPriceLabel,
       value: product.costPrice ? `₺${product.costPrice}` : '—',
     },
@@ -69,6 +73,24 @@ export function ProductDetailPage() {
           </div>
         ))}
       </dl>
+
+      <div className="border-t border-app-border p-6">
+        <h2 className="text-sm font-bold text-app-text">
+          {tr.crm.products.detail.attributesTitle}
+        </h2>
+        {product.attributes && Object.keys(product.attributes).length > 0 ? (
+          <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(product.attributes).map(([key, value]) => (
+              <div key={key}>
+                <dt className="text-xs font-semibold uppercase text-app-muted">{key}</dt>
+                <dd className="mt-1 text-sm text-app-text">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : (
+          <p className="mt-2 text-sm text-app-muted">{tr.crm.products.detail.attributesEmpty}</p>
+        )}
+      </div>
     </AppShell>
   );
 }

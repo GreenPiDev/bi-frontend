@@ -194,6 +194,8 @@ export const productFormSchema = z.object({
   unit: z.string().min(1, 'Birim gerekli.').max(50),
   minStockLevel: z.string().optional(),
   maxDiscountPct: z.string().optional(),
+  price: z.string().optional(),
+  currency: z.string().min(1, 'Para birimi gerekli.').max(3),
   description: z.string().max(2000).optional(),
   category: z.string().max(100).optional(),
   costPrice: z.string().optional(),
@@ -201,28 +203,11 @@ export const productFormSchema = z.object({
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
-export const priceListFormSchema = z.object({
-  productListId: z.string().min(1, 'Ürün listesi gerekli.'),
-  name: z.string().min(2, 'Fiyat listesi adı en az 2 karakter olmalı.').max(200),
-  isDefault: z.boolean().optional(),
-  items: z
-    .array(
-      z.object({
-        productId: z.string().min(1, 'Ürün gerekli.'),
-        unitPrice: z.string().min(1, 'Birim fiyat gerekli.'),
-      }),
-    )
-    .min(1, 'En az bir ürün eklenmelidir.'),
-});
-
-export type PriceListFormValues = z.infer<typeof priceListFormSchema>;
-
 export const quoteFormSchema = z
   .object({
     accountId: z.string().min(1, 'Firma gerekli.'),
     contactId: z.string().optional(),
     productListId: z.string().min(1, 'Ürün listesi gerekli.'),
-    priceListId: z.string().min(1, 'Fiyat listesi gerekli.'),
     items: z
       .array(
         z.object({

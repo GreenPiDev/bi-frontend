@@ -14,7 +14,6 @@ import { useToast } from '../components/ui/toast-context';
 import { useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
-import { usePriceListsQuery } from '../features/crm/use-price-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
@@ -48,7 +47,6 @@ export function QuoteFormPage() {
   const accountsQuery = useAccountsQuery();
   const contactsQuery = useContactsQuery();
   const productListsQuery = useProductListsQuery();
-  const priceListsQuery = usePriceListsQuery();
   const createMutation = useCreateQuoteMutation();
 
   const {
@@ -70,22 +68,16 @@ export function QuoteFormPage() {
   const hasOpportunity = watch('hasOpportunity');
   const selectedAccountId = watch('accountId');
   const selectedProductListId = watch('productListId');
-  const selectedPriceListId = watch('priceListId');
   const watchedItems = watch('items');
 
   const productsQuery = useProductsQuery({ productListId: selectedProductListId || undefined });
   const products = productsQuery.data?.data ?? [];
   const productOptions = products.map((product) => ({ value: product.id, label: product.name }));
   const productNameById = new Map(products.map((product) => [product.id, product.name]));
-
-  const priceListOptions = (priceListsQuery.data?.data ?? []).filter(
-    (priceList) => !selectedProductListId || priceList.productListId === selectedProductListId,
-  );
-  const selectedPriceList = priceListOptions.find(
-    (priceList) => priceList.id === selectedPriceListId,
-  );
-  const priceListUnitPriceByProductId = new Map(
-    (selectedPriceList?.items ?? []).map((item) => [item.productId, Number(item.unitPrice)]),
+  const productPriceById = new Map(
+    products
+      .filter((product) => product.price !== null)
+      .map((product) => [product.id, Number(product.price)]),
   );
 
   const contactOptions = (contactsQuery.data?.data ?? [])
@@ -98,9 +90,9 @@ export function QuoteFormPage() {
   const summaryRows = (watchedItems ?? []).map((item) => {
     const quantity = Number(item.quantity) || 0;
     const manualPrice = item.unitPrice ? Number(item.unitPrice) : undefined;
-    const listPrice = priceListUnitPriceByProductId.get(item.productId);
-    const unitPrice = manualPrice ?? listPrice ?? 0;
-    const isFromPriceList = manualPrice === undefined && listPrice !== undefined;
+    const productPrice = productPriceById.get(item.productId);
+    const unitPrice = manualPrice ?? productPrice ?? 0;
+    const isDefaultPrice = manualPrice === undefined && productPrice !== undefined;
     const discountPct = Number(item.discountPct) || 0;
     const vatPct = Number(item.vatPct) || 0;
     const lineSubtotal = quantity * unitPrice * (1 - discountPct / 100);
@@ -109,7 +101,7 @@ export function QuoteFormPage() {
       productName: productNameById.get(item.productId),
       quantity,
       unitPrice,
-      isFromPriceList,
+      isDefaultPrice,
       discountPct,
       vatPct,
       lineSubtotal,
@@ -124,7 +116,6 @@ export function QuoteFormPage() {
     const input: CreateQuoteInput = {
       accountId: values.accountId,
       contactId: values.contactId || undefined,
-      priceListId: values.priceListId,
       items: values.items.map((item) => ({
         productId: item.productId,
         quantity: Number(item.quantity),
@@ -191,7 +182,6 @@ export function QuoteFormPage() {
                 }))}
                 {...register('productListId', {
                   onChange: () => {
-                    setValue('priceListId', '');
                     replace([
                       {
                         productId: '',
@@ -203,18 +193,6 @@ export function QuoteFormPage() {
                     ]);
                   },
                 })}
-              />
-              <Select
-                label={tr.crm.quotes.form.priceListLabel}
-                required
-                hint={tr.crm.quotes.form.priceListHint}
-                disabled={!selectedProductListId}
-                error={errors.priceListId?.message}
-                options={priceListOptions.map((priceList) => ({
-                  value: priceList.id,
-                  label: priceList.name,
-                }))}
-                {...register('priceListId')}
               />
               <Select
                 label={tr.crm.quotes.form.contactLabel}
@@ -257,12 +235,10 @@ export function QuoteFormPage() {
                             error={errors.items?.[index]?.productId?.message}
                             {...register(`items.${index}.productId` as const, {
                               onChange: (event: ChangeEvent<HTMLSelectElement>) => {
-                                const listPrice = priceListUnitPriceByProductId.get(
-                                  event.target.value,
-                                );
+                                const productPrice = productPriceById.get(event.target.value);
                                 setValue(
                                   `items.${index}.unitPrice`,
-                                  listPrice !== undefined ? String(listPrice) : '',
+                                  productPrice !== undefined ? String(productPrice) : '',
                                 );
                               },
                             })}
@@ -421,7 +397,7 @@ export function QuoteFormPage() {
                         <span>
                           {row.quantity} × {currency.format(row.unitPrice)}
                         </span>
-                        {row.isFromPriceList && (
+                        {row.isDefaultPrice && (
                           <Badge variant="neutral">{tr.crm.quotes.form.summaryPriceFromList}</Badge>
                         )}
                         {row.discountPct > 0 && (

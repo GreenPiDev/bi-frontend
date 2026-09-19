@@ -43,7 +43,6 @@ const entityLabels: Record<string, string> = {
   Alert: 'Alarm',
   Role: 'Rol',
   Product: 'Ürün',
-  PriceList: 'Fiyat Listesi',
   StockItem: 'Stok',
   PurchaseOrder: 'Satın Alma Siparişi',
 };

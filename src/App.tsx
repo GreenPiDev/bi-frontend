@@ -32,8 +32,7 @@ import { MessageDetailPage } from './app/message-detail-page';
 import { MessagesListPage } from './app/messages-list-page';
 import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
-import { PriceListFormPage } from './app/price-list-form-page';
-import { PriceListsListPage } from './app/price-lists-list-page';
+import { ProductImportPage } from './app/product-import-page';
 import { ProductListFormPage } from './app/product-list-form-page';
 import { ProductListsListPage } from './app/product-lists-list-page';
 import { ProductDetailPage } from './app/product-detail-page';
@@ -99,7 +98,6 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'purchase-orders', path: '/siparisler' },
   { pageKey: 'products', path: '/envanter' },
   { pageKey: 'product-lists', path: '/envanter' },
-  { pageKey: 'price-lists', path: '/envanter' },
   { pageKey: 'stock', path: '/envanter' },
   { pageKey: 'messages', path: '/mesajlar' },
   { pageKey: 'settings', path: '/settings' },
@@ -532,6 +530,14 @@ function App() {
           }
         />
         <Route
+          path="/urun-listeleri/:id/ice-aktar"
+          element={
+            <TenantPageRoute pageKey="products">
+              <ProductImportPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
           path="/urunler"
           element={
             <TenantPageRoute pageKey="products">
@@ -560,30 +566,6 @@ function App() {
           element={
             <TenantPageRoute pageKey="products">
               <ProductDetailPage />
-            </TenantPageRoute>
-          }
-        />
-        <Route
-          path="/fiyat-listeleri"
-          element={
-            <TenantPageRoute pageKey="price-lists">
-              <PriceListsListPage />
-            </TenantPageRoute>
-          }
-        />
-        <Route
-          path="/fiyat-listeleri/yeni"
-          element={
-            <TenantPageRoute pageKey="price-lists">
-              <PriceListFormPage />
-            </TenantPageRoute>
-          }
-        />
-        <Route
-          path="/fiyat-listeleri/:id/duzenle"
-          element={
-            <TenantPageRoute pageKey="price-lists">
-              <PriceListFormPage />
             </TenantPageRoute>
           }
         />

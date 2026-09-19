@@ -41,6 +41,20 @@ export function ProductsListContent() {
     });
   }
 
+  // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar (Faz B) - farklı ürün
+  // listelerinde (markalarda) farklı anahtarlar olabilir, o yüzden sayfadaki ürünlerden
+  // görülen tüm anahtarların birleşimi kadar sütun eklenir; bir üründe o anahtar yoksa
+  // hücre boş kalır (bkz. docs/VARSAYIMLAR.md V40).
+  const attributeKeys = [
+    ...new Set((productsQuery.data?.data ?? []).flatMap((p) => Object.keys(p.attributes ?? {}))),
+  ].sort();
+  const attributeColumns: TableColumn<Product>[] = attributeKeys.map((key) => ({
+    key: `attr:${key}`,
+    header: key,
+    className: 'text-app-muted',
+    render: (p) => p.attributes?.[key] ?? '—',
+  }));
+
   const ALL_COLUMNS: TableColumn<Product>[] = [
     {
       key: 'name',
@@ -91,6 +105,7 @@ export function ProductsListContent() {
       className: 'text-app-muted',
       render: (p) => (p.maxDiscountPct ? `%${p.maxDiscountPct}` : '—'),
     },
+    ...attributeColumns,
     {
       key: 'actions',
       header: tr.crm.products.actionsColumn,

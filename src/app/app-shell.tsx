@@ -115,7 +115,6 @@ export function AppShell({ children, print = false }: AppShellProps) {
     opportunities: useIsPageModuleAccessible('opportunities'),
     'product-lists': useIsPageModuleAccessible('product-lists'),
     products: useIsPageModuleAccessible('products'),
-    'price-lists': useIsPageModuleAccessible('price-lists'),
     quotes: useIsPageModuleAccessible('quotes'),
     'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
     projects: useIsPageModuleAccessible('projects'),
@@ -172,10 +171,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
     ...(canAccessPage('purchase-orders')
       ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
       : []),
-    ...(canAccessPage('stock') ||
-    canAccessPage('product-lists') ||
-    canAccessPage('products') ||
-    canAccessPage('price-lists')
+    ...(canAccessPage('stock') || canAccessPage('product-lists') || canAccessPage('products')
       ? [{ label: tr.shell.nav.inventory, icon: Warehouse, path: '/envanter' }]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },

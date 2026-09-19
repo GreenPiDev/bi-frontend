@@ -984,6 +984,54 @@ export function exportEntity(entity: ImportEntity): Promise<Blob> {
   return requestBlob(`/imports/${entity}/export`, 'GET');
 }
 
+// --- Ürün İçe Aktarma (Faz B, marka bazlı heterojen liste import) ----------
+
+export interface ProductImportRawPreview {
+  rows: string[][];
+}
+
+export interface ProductImportPreview {
+  headers: string[];
+  sampleRows: Record<string, string>[];
+  totalRows: number;
+}
+
+export type ProductImportResult = ImportResult;
+export type NumberFormat = 'tr' | 'en';
+
+export function previewProductImportRaw(file: File): Promise<ProductImportRawPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/product-imports/preview', { method: 'POST', body: formData });
+}
+
+export function previewProductImportMapped(
+  file: File,
+  headerRowIndex: number,
+): Promise<ProductImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  return request('/product-imports/preview', { method: 'POST', body: formData });
+}
+
+export function runProductImport(
+  productListId: string,
+  file: File,
+  headerRowIndex: number,
+  mapping: Record<string, string>,
+  attributeColumns: string[],
+  numberFormat: NumberFormat,
+): Promise<ProductImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  formData.append('mapping', JSON.stringify(mapping));
+  formData.append('attributeColumns', JSON.stringify(attributeColumns));
+  formData.append('numberFormat', numberFormat);
+  return request(`/product-imports/${productListId}`, { method: 'POST', body: formData });
+}
+
 // --- Kullanicilar / Davetler -----------------------------------------------
 
 export function listUsers(): Promise<SafeUser[]> {
@@ -1368,6 +1416,9 @@ export interface Product {
   unit: string;
   minStockLevel: number | null;
   maxDiscountPct: string | null;
+  price: string | null;
+  currency: string;
+  attributes: Record<string, string> | null;
   description: string | null;
   category: string | null;
   costPrice: string | null;
@@ -1383,6 +1434,8 @@ export interface ProductInput {
   unit?: string;
   minStockLevel?: number;
   maxDiscountPct?: number | null;
+  price?: number | null;
+  currency?: string;
   description?: string | null;
   category?: string | null;
   costPrice?: number | null;
@@ -1426,65 +1479,6 @@ export function deleteProductImage(id: string): Promise<Product> {
   return request(`/products/${id}/image`, { method: 'DELETE' });
 }
 
-export interface PriceListItem {
-  id: string;
-  priceListId: string;
-  productId: string;
-  unitPrice: string;
-  product: Product;
-}
-
-export interface PriceList {
-  id: string;
-  productListId: string;
-  productList: { id: string; name: string };
-  name: string;
-  isDefault: boolean;
-  items: PriceListItem[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface PriceListItemInput {
-  productId: string;
-  unitPrice: number;
-}
-
-export interface PriceListInput {
-  productListId: string;
-  name: string;
-  isDefault?: boolean;
-  items: PriceListItemInput[];
-}
-
-export function listPriceLists(
-  params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
-): Promise<PagedResult<PriceList>> {
-  const query = new URLSearchParams();
-  if (params.page) query.set('page', String(params.page));
-  if (params.pageSize) query.set('pageSize', String(params.pageSize));
-  if (params.q) query.set('q', params.q);
-  if (params.productListId) query.set('productListId', params.productListId);
-  const qs = query.toString();
-  return request(`/price-lists${qs ? `?${qs}` : ''}`);
-}
-
-export function getPriceList(id: string): Promise<PriceList> {
-  return request(`/price-lists/${id}`);
-}
-
-export function createPriceList(input: PriceListInput): Promise<PriceList> {
-  return request('/price-lists', { method: 'POST', body: JSON.stringify(input) });
-}
-
-export function updatePriceList(id: string, input: Partial<PriceListInput>): Promise<PriceList> {
-  return request(`/price-lists/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
-}
-
-export function deletePriceList(id: string): Promise<void> {
-  return request(`/price-lists/${id}`, { method: 'DELETE' });
-}
-
 export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
 
 export interface QuoteItem {
@@ -1506,8 +1500,6 @@ export interface Quote {
   account: Account;
   contactId: string | null;
   contact: Contact | null;
-  priceListId: string;
-  priceList: PriceList;
   status: QuoteStatus;
   approvedAt: string | null;
   approvedById: string | null;
@@ -1529,13 +1521,11 @@ export interface QuoteItemInput {
 export interface CreateQuoteInput {
   accountId: string;
   contactId?: string;
-  priceListId: string;
   items: QuoteItemInput[];
   opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
 }
 
 export interface UpdateQuoteInput {
-  priceListId?: string;
   items?: QuoteItemInput[];
 }
 

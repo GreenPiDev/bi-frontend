@@ -1,5 +1,4 @@
 import { AppShell } from './app-shell';
-import { PriceListsListContent } from './price-lists-list-page';
 import { ProductListsListContent } from './product-lists-list-page';
 import { ProductsListContent } from './products-list-page';
 import { StockListContent } from './stock-list-page';
@@ -18,12 +17,10 @@ export function InventoryManagementPage() {
   // Hook'lar kosulsuz cagrilmali (Rules of Hooks) - canView ile birlestirme sonrasinda.
   const productsModuleOk = useIsPageModuleAccessible('products');
   const productListsModuleOk = useIsPageModuleAccessible('product-lists');
-  const priceListsModuleOk = useIsPageModuleAccessible('price-lists');
   const stockModuleOk = useIsPageModuleAccessible('stock');
 
   const productsAccessible = canView('products') && productsModuleOk;
   const productListsAccessible = canView('product-lists') && productListsModuleOk;
-  const priceListsAccessible = canView('price-lists') && priceListsModuleOk;
   const stockAccessible = canView('stock') && stockModuleOk;
 
   const tabs: HorizontalTabItem[] = [
@@ -42,15 +39,6 @@ export function InventoryManagementPage() {
             key: 'productLists',
             label: tr.inventory.tabs.productLists,
             content: <ProductListsListContent />,
-          },
-        ]
-      : []),
-    ...(priceListsAccessible
-      ? [
-          {
-            key: 'priceLists',
-            label: tr.inventory.tabs.priceLists,
-            content: <PriceListsListContent />,
           },
         ]
       : []),
