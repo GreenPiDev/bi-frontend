@@ -52,13 +52,6 @@ export function ProductDetailPage() {
       <BackLink to={backTo} label={tr.crm.products.detail.back} />
 
       <div className="mt-6 flex items-start gap-4">
-        {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={tr.crm.products.detail.imageAlt}
-            className="h-20 w-20 rounded-lg border border-app-border object-cover"
-          />
-        ) : null}
         <h1 className="text-xl font-bold text-app-text">{product.name}</h1>
         <PageHelp text={tr.help.productDetail} />
       </div>

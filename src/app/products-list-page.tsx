@@ -62,20 +62,7 @@ export function ProductsListContent() {
       key: 'name',
       header: tr.crm.products.nameColumn,
       required: true,
-      render: (p) => (
-        <div className="flex items-center gap-2.5">
-          {p.imageUrl ? (
-            <img
-              src={p.imageUrl}
-              alt=""
-              className="h-8 w-8 rounded-md border border-app-border object-cover"
-            />
-          ) : (
-            <div className="h-8 w-8 rounded-md border border-dashed border-app-border" />
-          )}
-          <span className="font-semibold text-app-text">{p.name}</span>
-        </div>
-      ),
+      render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
     },
     {
       key: 'productList',

@@ -1422,7 +1422,6 @@ export interface Product {
   description: string | null;
   category: string | null;
   costPrice: string | null;
-  imageUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1467,16 +1466,6 @@ export function updateProduct(id: string, input: Partial<ProductInput>): Promise
 
 export function deleteProduct(id: string): Promise<void> {
   return request(`/products/${id}`, { method: 'DELETE' });
-}
-
-export function uploadProductImage(id: string, file: File): Promise<Product> {
-  const formData = new FormData();
-  formData.append('file', file);
-  return request(`/products/${id}/image`, { method: 'POST', body: formData });
-}
-
-export function deleteProductImage(id: string): Promise<Product> {
-  return request(`/products/${id}/image`, { method: 'DELETE' });
 }
 
 export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';

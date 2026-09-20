@@ -2,11 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createProduct,
   deleteProduct,
-  deleteProductImage,
   getProduct,
   listProducts,
   updateProduct,
-  uploadProductImage,
   type ProductInput,
 } from '../../lib/api';
 
@@ -58,30 +56,6 @@ export function useDeleteProductMutation() {
     mutationFn: (id: string) => deleteProduct(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
-    },
-  });
-}
-
-/** id, mutate() cagrisinda verilir - "Yeni Ürün" formunda henuz id yokken hook kurulur,
- * urun kaydedildikten sonra donen id ile ayni mutation kullanilabilsin diye. */
-export function useUploadProductImageMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, file }: { id: string; file: File }) => uploadProductImage(id, file),
-    onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['products', variables.id] });
-    },
-  });
-}
-
-export function useDeleteProductImageMutation(id: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => deleteProductImage(id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
-      void queryClient.invalidateQueries({ queryKey: ['products', id] });
     },
   });
 }

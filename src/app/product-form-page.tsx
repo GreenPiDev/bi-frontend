@@ -1,11 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
-import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
@@ -14,17 +13,12 @@ import { useToast } from '../components/ui/toast-context';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
   useCreateProductMutation,
-  useDeleteProductImageMutation,
   useProductQuery,
   useUpdateProductMutation,
-  useUploadProductImageMutation,
 } from '../features/crm/use-products';
 import { productFormSchema, type ProductFormValues } from '../features/crm/schemas';
 import { ApiError, type ProductInput } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const MAX_IMAGE_SIZE_BYTES = 1.5 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export function ProductFormPage() {
   const { id } = useParams();
@@ -33,18 +27,10 @@ export function ProductFormPage() {
   const location = useLocation();
   const backTo = (location.state as { from?: string } | null)?.from ?? '/urunler';
   const toast = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [removingImage, setRemovingImage] = useState(false);
-  // Secilen dosya, "Kaydet"e basilana kadar R2'ye yuklenmez - sadece yerel bir
-  // onizleme URL'i gosterilir.
-  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
-  const [pendingImagePreviewUrl, setPendingImagePreviewUrl] = useState<string | null>(null);
   const productQuery = useProductQuery(id ?? '');
   const productListsQuery = useProductListsQuery();
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
-  const uploadImageMutation = useUploadProductImageMutation();
-  const deleteImageMutation = useDeleteProductImageMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
 
   const {
@@ -80,15 +66,6 @@ export function ProductFormPage() {
     }
   }, [productQuery.data, reset]);
 
-  // Onizleme URL'ini bilesen kapanirken / secim degisirken serbest birak.
-  useEffect(() => {
-    return () => {
-      if (pendingImagePreviewUrl) {
-        URL.revokeObjectURL(pendingImagePreviewUrl);
-      }
-    };
-  }, [pendingImagePreviewUrl]);
-
   if (isEdit && productQuery.isPending) {
     return (
       <AppShell>
@@ -116,75 +93,19 @@ export function ProductFormPage() {
         values.costPrice === undefined || values.costPrice === '' ? null : Number(values.costPrice),
     };
 
-    let product;
     try {
-      product = await mutation.mutateAsync(input);
+      await mutation.mutateAsync(input);
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       return;
-    }
-
-    if (pendingImageFile) {
-      try {
-        await uploadImageMutation.mutateAsync({ id: product.id, file: pendingImageFile });
-        setPendingImageFile(null);
-        setPendingImagePreviewUrl(null);
-      } catch (error) {
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-        // Urun bilgileri zaten kaydedildi - kullanici formda kalip gorseli tekrar deneyebilir.
-        toast.success(
-          isEdit ? tr.crm.products.form.updateSuccess : tr.crm.products.form.createSuccess,
-        );
-        return;
-      }
     }
 
     toast.success(isEdit ? tr.crm.products.form.updateSuccess : tr.crm.products.form.createSuccess);
     navigate(backTo);
   });
 
-  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      toast.error(tr.crm.products.detail.imageUnsupportedType);
-      return;
-    }
-    if (file.size > MAX_IMAGE_SIZE_BYTES) {
-      toast.error(tr.crm.products.detail.imageTooLarge);
-      return;
-    }
-    if (pendingImagePreviewUrl) {
-      URL.revokeObjectURL(pendingImagePreviewUrl);
-    }
-    setPendingImageFile(file);
-    setPendingImagePreviewUrl(URL.createObjectURL(file));
-  }
-
-  function handleCancelImageSelection() {
-    if (pendingImagePreviewUrl) {
-      URL.revokeObjectURL(pendingImagePreviewUrl);
-    }
-    setPendingImageFile(null);
-    setPendingImagePreviewUrl(null);
-  }
-
-  function handleConfirmRemoveImage() {
-    deleteImageMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success(tr.crm.products.detail.imageRemoveSuccess);
-        setRemovingImage(false);
-      },
-      onError: (error) => {
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-      },
-    });
-  }
-
   const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
-  const isSaving = mutation.isPending || uploadImageMutation.isPending;
-  const displayedImageUrl = pendingImagePreviewUrl ?? productQuery.data?.imageUrl ?? null;
+  const isSaving = mutation.isPending;
 
   return (
     <AppShell>
@@ -194,49 +115,6 @@ export function ProductFormPage() {
         <h1 className="text-lg font-bold text-app-text">
           {isEdit ? tr.crm.products.form.editTitle : tr.crm.products.form.newTitle}
         </h1>
-
-        <div className="mt-6 flex items-center gap-4">
-          {displayedImageUrl ? (
-            <img
-              src={displayedImageUrl}
-              alt={tr.crm.products.detail.imageAlt}
-              className="h-24 w-24 rounded-lg border border-app-border object-cover"
-            />
-          ) : (
-            <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-dashed border-app-border text-center text-xs text-app-muted">
-              {tr.crm.products.detail.noImage}
-            </div>
-          )}
-          <div className="flex flex-col gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            <Button type="button" variant="secondary" onClick={() => fileInputRef.current?.click()}>
-              {displayedImageUrl
-                ? tr.crm.products.detail.replaceImageButton
-                : tr.crm.products.detail.uploadImageButton}
-            </Button>
-            {pendingImageFile ? (
-              <Button type="button" variant="secondary" onClick={handleCancelImageSelection}>
-                {tr.crm.products.detail.cancelImageSelection}
-              </Button>
-            ) : (
-              isEdit &&
-              productQuery.data?.imageUrl && (
-                <Button type="button" variant="danger" onClick={() => setRemovingImage(true)}>
-                  {tr.crm.products.detail.removeImageButton}
-                </Button>
-              )
-            )}
-          </div>
-        </div>
-        {pendingImageFile && (
-          <p className="mt-2 text-xs text-app-muted">{tr.crm.products.detail.imagePendingLabel}</p>
-        )}
 
         <form
           onSubmit={onSubmit}
@@ -360,17 +238,6 @@ export function ProductFormPage() {
           </div>
         </form>
       </div>
-
-      {removingImage && (
-        <ConfirmModal
-          title={tr.crm.products.detail.removeImageConfirmTitle}
-          message={tr.crm.products.detail.removeImageConfirm}
-          confirmLabel={tr.crm.products.detail.removeImageButton}
-          isPending={deleteImageMutation.isPending}
-          onConfirm={handleConfirmRemoveImage}
-          onCancel={() => setRemovingImage(false)}
-        />
-      )}
     </AppShell>
   );
 }
