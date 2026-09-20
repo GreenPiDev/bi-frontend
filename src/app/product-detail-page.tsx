@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { PageHelp } from '../components/ui/page-help';
@@ -7,6 +7,8 @@ import { tr } from '../i18n/tr';
 
 export function ProductDetailPage() {
   const { id = '' } = useParams();
+  const location = useLocation();
+  const backTo = (location.state as { from?: string } | null)?.from ?? '/urunler';
   const productQuery = useProductQuery(id);
 
   if (productQuery.isPending) {
@@ -47,7 +49,7 @@ export function ProductDetailPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/urunler'} label={tr.crm.products.detail.back} />
+      <BackLink to={backTo} label={tr.crm.products.detail.back} />
 
       <div className="mt-6 flex items-start gap-4">
         {product.imageUrl ? (

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -25,6 +25,8 @@ const columns: TableColumn<ProductList>[] = [
 
 export function ProductListsListContent() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const backState = { from: `${location.pathname}${location.search}` };
   const [page, setPage] = useState(1);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
@@ -40,7 +42,10 @@ export function ProductListsListContent() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.productLists.subtitle}</p>
         </div>
-        <Button type="button" onClick={() => navigate('/urun-listeleri/yeni')}>
+        <Button
+          type="button"
+          onClick={() => navigate('/urun-listeleri/yeni', { state: backState })}
+        >
           {tr.crm.productLists.newButton}
         </Button>
       </div>
@@ -49,7 +54,9 @@ export function ProductListsListContent() {
         columns={columns}
         data={productListsQuery.data?.data ?? []}
         keyField={(productList) => productList.id}
-        onRowClick={(productList) => navigate(`/urun-listeleri/${productList.id}/duzenle`)}
+        onRowClick={(productList) =>
+          navigate(`/urun-listeleri/${productList.id}/duzenle`, { state: backState })
+        }
         isLoading={productListsQuery.isPending}
         loadingMessage={tr.crm.productLists.loading}
         emptyMessage={tr.crm.productLists.empty}

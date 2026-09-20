@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
@@ -30,6 +30,8 @@ export function ProductFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as { from?: string } | null)?.from ?? '/urunler';
   const toast = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [removingImage, setRemovingImage] = useState(false);
@@ -138,7 +140,7 @@ export function ProductFormPage() {
     }
 
     toast.success(isEdit ? tr.crm.products.form.updateSuccess : tr.crm.products.form.createSuccess);
-    navigate('/urunler');
+    navigate(backTo);
   });
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
@@ -186,7 +188,7 @@ export function ProductFormPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/urunler'} label={tr.crm.products.title} />
+      <BackLink to={backTo} label={tr.crm.products.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
@@ -352,7 +354,7 @@ export function ProductFormPage() {
             <Button type="submit" disabled={isSaving}>
               {isSaving ? tr.crm.products.form.submitting : tr.crm.products.form.submit}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/urunler')}>
+            <Button type="button" variant="secondary" onClick={() => navigate(backTo)}>
               {tr.crm.products.form.cancel}
             </Button>
           </div>

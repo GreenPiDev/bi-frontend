@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
@@ -24,6 +24,11 @@ export function ProductListFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as { from?: string } | null)?.from ?? '/urun-listeleri';
+  // Bu sayfadan /urunler/:id veya /urunler/yeni'ye gidilirse, oradaki "geri dön" bu
+  // formun kendi URL'ine dönmeli.
+  const productBackState = { from: `${location.pathname}${location.search}` };
   const toast = useToast();
   const productListQuery = useProductListQuery(id ?? '');
   const createMutation = useCreateProductListMutation();
@@ -97,7 +102,7 @@ export function ProductListFormPage() {
         toast.success(
           isEdit ? tr.crm.productLists.form.updateSuccess : tr.crm.productLists.form.createSuccess,
         );
-        navigate('/urun-listeleri');
+        navigate(backTo);
       },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
@@ -109,7 +114,7 @@ export function ProductListFormPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/urun-listeleri'} label={tr.crm.productLists.title} />
+      <BackLink to={backTo} label={tr.crm.productLists.title} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
@@ -145,7 +150,7 @@ export function ProductListFormPage() {
                 ? tr.crm.productLists.form.submitting
                 : tr.crm.productLists.form.submit}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate('/urun-listeleri')}>
+            <Button type="button" variant="secondary" onClick={() => navigate(backTo)}>
               {tr.crm.productLists.form.cancel}
             </Button>
           </div>
@@ -165,7 +170,11 @@ export function ProductListFormPage() {
                 >
                   {tr.crm.productLists.productsSection.importButton}
                 </Button>
-                <Button type="button" variant="secondary" onClick={() => navigate('/urunler/yeni')}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => navigate('/urunler/yeni', { state: productBackState })}
+                >
                   {tr.crm.productLists.productsSection.addButton}
                 </Button>
               </div>
@@ -175,7 +184,9 @@ export function ProductListFormPage() {
                 columns={productColumns}
                 data={productsQuery.data?.data ?? []}
                 keyField={(product) => product.id}
-                onRowClick={(product) => navigate(`/urunler/${product.id}`)}
+                onRowClick={(product) =>
+                  navigate(`/urunler/${product.id}`, { state: productBackState })
+                }
                 isLoading={productsQuery.isPending}
                 loadingMessage={tr.crm.productLists.productsSection.loading}
                 emptyMessage={tr.crm.productLists.productsSection.empty}

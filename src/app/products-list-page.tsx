@@ -1,6 +1,6 @@
 import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
@@ -18,6 +18,8 @@ import { tr } from '../i18n/tr';
 
 export function ProductsListContent() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const backState = { from: `${location.pathname}${location.search}` };
   const toast = useToast();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
@@ -118,7 +120,7 @@ export function ProductsListContent() {
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
-                navigate(`/urunler/duzenle/${p.id}`);
+                navigate(`/urunler/duzenle/${p.id}`, { state: backState });
               }}
               className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
             >
@@ -159,7 +161,7 @@ export function ProductsListContent() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.products.subtitle}</p>
         </div>
-        <Button type="button" onClick={() => navigate('/urunler/yeni')}>
+        <Button type="button" onClick={() => navigate('/urunler/yeni', { state: backState })}>
           {tr.crm.products.newButton}
         </Button>
       </div>
@@ -193,7 +195,7 @@ export function ProductsListContent() {
         columns={columns}
         data={productsQuery.data?.data ?? []}
         keyField={(product) => product.id}
-        onRowClick={(product) => navigate(`/urunler/${product.id}`)}
+        onRowClick={(product) => navigate(`/urunler/${product.id}`, { state: backState })}
         isLoading={productsQuery.isPending}
         loadingMessage={tr.crm.products.loading}
         emptyMessage={tr.crm.products.empty}
