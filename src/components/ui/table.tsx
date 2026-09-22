@@ -48,12 +48,12 @@ export function Table<T>({
   }
 
   return (
-    <div className="mt-6 overflow-hidden rounded-xl border border-app-border bg-app-surface">
+    <div className="mt-6 overflow-hidden border border-app-border bg-app-surface">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-app-border text-xs uppercase text-app-muted">
+        <thead className="border-b border-app-border bg-app-primary text-xs uppercase text-white">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className={clsx('px-4 py-3', column.className)}>
+              <th key={column.key} className={clsx('px-4 py-3 !text-white', column.className)}>
                 {column.header}
               </th>
             ))}
