@@ -11,6 +11,16 @@ interface DateTimeFieldProps {
   required?: boolean;
   hint?: string;
   error?: string;
+  /** true ise bugunden sonraki tarihler takvimde secilemez. */
+  disableFutureDates?: boolean;
+}
+
+function todayIso(): string {
+  const now = new Date();
+  const y = String(now.getFullYear()).padStart(4, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -43,6 +53,7 @@ export function DateTimeField({
   required,
   hint,
   error,
+  disableFutureDates,
 }: DateTimeFieldProps) {
   const buttonId = useId();
   const [open, setOpen] = useState(false);
@@ -158,7 +169,11 @@ export function DateTimeField({
               style={{ position: 'fixed', top: menuRect.top, left: menuRect.left }}
               className="z-[200]"
             >
-              <Calendar value={datePart} onSelect={handleSelectDate} />
+              <Calendar
+                value={datePart}
+                onSelect={handleSelectDate}
+                maxDate={disableFutureDates ? todayIso() : undefined}
+              />
             </div>
           )}
         </div>

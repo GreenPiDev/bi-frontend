@@ -233,6 +233,7 @@ export function InteractionFormPage() {
                   error={errors.occurredAt?.message}
                   value={field.value ?? ''}
                   onChange={field.onChange}
+                  disableFutureDates
                 />
               )}
             />

@@ -6,6 +6,8 @@ interface CalendarProps {
   /** 'YYYY-MM-DD' formatinda secili tarih, yoksa bos string. */
   value: string;
   onSelect: (isoDate: string) => void;
+  /** 'YYYY-MM-DD' formatinda ust sinir - bu tarihten sonraki gunler secilemez/tiklanamaz. */
+  maxDate?: string;
 }
 
 const YEAR_RANGE_PAST = 80;
@@ -37,12 +39,13 @@ function isSameDay(a: Date, b: Date): boolean {
 
 /** Ay/yil dropdown'lu, gun izgarali ozel takvim - tarayicinin yerel tarih secicisinin
  * tarayicidan tarayiciya tutarsiz gorunumu yerine kullanilir. */
-export function Calendar({ value, onSelect }: CalendarProps) {
+export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
   const selected = parseIso(value);
   const today = new Date();
   const initial = selected ?? today;
   const [viewYear, setViewYear] = useState(initial.getFullYear());
   const [viewMonth, setViewMonth] = useState(initial.getMonth());
+  const max = maxDate ? parseIso(maxDate) : null;
 
   const monthFormatter = new Intl.DateTimeFormat('tr-TR', { month: 'long' });
   const weekdayFormatter = new Intl.DateTimeFormat('tr-TR', { weekday: 'short' });
@@ -169,16 +172,19 @@ export function Calendar({ value, onSelect }: CalendarProps) {
           const cellDate = new Date(cell.year, cell.month, cell.day);
           const isSelected = selected ? isSameDay(cellDate, selected) : false;
           const isToday = isSameDay(cellDate, today);
+          const isDisabled = max ? cellDate.getTime() > max.getTime() : false;
           return (
             <button
               type="button"
               key={`${cell.year}-${cell.month}-${cell.day}`}
-              onClick={() => handleSelectDay(cell)}
+              onClick={() => !isDisabled && handleSelectDay(cell)}
+              disabled={isDisabled}
               className={clsx(
                 'rounded-md py-1.5 text-center text-sm text-app-text hover:bg-app-bg',
                 cell.outside && 'text-app-muted opacity-55',
                 isToday && !isSelected && 'border border-app-primary',
                 isSelected && 'bg-app-primary text-white hover:bg-app-primary',
+                isDisabled && 'cursor-not-allowed text-app-muted opacity-35 hover:bg-transparent',
               )}
             >
               {cell.day}
