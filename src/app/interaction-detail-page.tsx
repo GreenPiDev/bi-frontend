@@ -298,7 +298,7 @@ export function InteractionDetailPage() {
                   participants={externalParticipants}
                   avatarByName={avatarByName}
                 />
-                <div className="pl-6">
+                <div className="min-w-0 flex-1 pl-6">
                   <ParticipantColumn
                     title={tr.crm.interactions.form.participantInternalLabel}
                     participants={internalParticipants}
