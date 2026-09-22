@@ -997,6 +997,7 @@ export const tr = {
         contactPlaceholder: 'Kişi seçin veya yeni kişi adı yazın',
         contactHint:
           'Firma veya kişiden en az biri doldurulmalı. Seçilen firmaya bağlı kişiler listelenir; kayıtlı değilse yazdığınız isim otomatik olarak eklenir (firma boşsa kişi firmasız kaydedilir).',
+        newContactButton: '+ Yeni Kişi',
         typeLabel: 'Görüşme Türü',
         typeHint: 'Zorunlu.',
         notesLabel: 'Notlar',

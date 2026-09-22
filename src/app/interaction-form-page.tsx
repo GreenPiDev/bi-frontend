@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -14,6 +14,7 @@ import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { NewContactModal } from '../features/crm/new-contact-modal';
 import { useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
@@ -40,6 +41,7 @@ export function InteractionFormPage() {
   const contactsQuery = useContactsQuery();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const createMutation = useCreateInteractionMutation();
+  const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
 
   const {
     register,
@@ -189,6 +191,16 @@ export function InteractionFormPage() {
                   onChange={field.onChange}
                   options={contactSuggestions}
                   error={errors.contactName?.message}
+                  trailingAction={
+                    <Button
+                      type="button"
+                      variant="navy"
+                      className="shrink-0"
+                      onClick={() => setIsNewContactModalOpen(true)}
+                    >
+                      {tr.crm.interactions.form.newContactButton}
+                    </Button>
+                  }
                 />
               )}
             />
@@ -395,6 +407,20 @@ export function InteractionFormPage() {
           </div>
         </form>
       </div>
+
+      {isNewContactModalOpen && (
+        <NewContactModal
+          defaultFirstName={watch('contactName') ?? ''}
+          onClose={() => setIsNewContactModalOpen(false)}
+          onCreated={(contact) => {
+            setValue('contactName', `${contact.firstName} ${contact.lastName}`);
+            if (!accountNameValue && contact.account) {
+              setValue('accountName', contact.account.name);
+            }
+            setIsNewContactModalOpen(false);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

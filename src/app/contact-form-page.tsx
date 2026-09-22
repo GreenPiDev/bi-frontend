@@ -1,17 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
-import { Autocomplete } from '../components/ui/autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
-import { DateField } from '../components/ui/date-field';
 import { FormError } from '../components/ui/form-error';
-import { Select } from '../components/ui/select';
-import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
-import { PhoneField } from '../features/crm/phone-field';
+import { ContactFormFields } from '../features/crm/contact-form-fields';
 import {
   cleanEmptyStrings,
   contactFormSchema,
@@ -27,11 +23,6 @@ import { useDepartmentOptionsQuery } from '../features/crm/use-department-option
 import { useTitleOptionsQuery } from '../features/crm/use-title-options';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const STATUS_OPTIONS = [
-  { value: 'ACTIVE', label: tr.crm.contacts.statusActive },
-  { value: 'INACTIVE', label: tr.crm.contacts.statusInactive },
-];
 
 export function ContactFormPage() {
   const { id } = useParams();
@@ -107,124 +98,17 @@ export function ContactFormPage() {
           {isEdit ? tr.crm.contacts.form.editTitle : tr.crm.contacts.form.newTitle}
         </h1>
 
-        <form
-          onSubmit={onSubmit}
-          className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2"
-          noValidate
-        >
-          <div className="sm:col-span-2">
-            <FormError message={apiErrorMessage} />
-          </div>
-          <TextField
-            label={tr.crm.contacts.form.firstNameLabel}
-            required
-            hint={tr.crm.contacts.form.firstNameHint}
-            error={errors.firstName?.message}
-            {...register('firstName')}
-          />
-          <TextField
-            label={tr.crm.contacts.form.lastNameLabel}
-            required
-            hint={tr.crm.contacts.form.lastNameHint}
-            error={errors.lastName?.message}
-            {...register('lastName')}
-          />
-          <Select
-            label={tr.crm.contacts.form.accountLabel}
-            placeholder={tr.crm.contacts.form.accountPlaceholder}
-            hint={tr.crm.contacts.form.accountHint}
-            options={(accountsQuery.data?.data ?? []).map((account) => ({
-              value: account.id,
-              label: account.name,
-            }))}
-            error={errors.accountId?.message}
-            {...register('accountId')}
-          />
-          <Controller
-            name="department"
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4" noValidate>
+          <FormError message={apiErrorMessage} />
+          <ContactFormFields
+            register={register}
             control={control}
-            render={({ field }) => (
-              <Autocomplete
-                label={tr.crm.contacts.form.departmentLabel}
-                placeholder={tr.crm.contacts.form.departmentPlaceholder}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                options={(departmentOptionsQuery.data ?? []).map((option) => option.label)}
-                error={errors.department?.message}
-                hint={
-                  (departmentOptionsQuery.data?.length ?? 0) > 0
-                    ? tr.crm.contacts.form.departmentHintRestricted
-                    : tr.crm.contacts.form.departmentHintFree
-                }
-              />
-            )}
+            errors={errors}
+            accountsQuery={accountsQuery}
+            departmentOptionsQuery={departmentOptionsQuery}
+            titleOptionsQuery={titleOptionsQuery}
           />
-          <Controller
-            name="title"
-            control={control}
-            render={({ field }) => (
-              <Autocomplete
-                label={tr.crm.contacts.form.titleLabel}
-                placeholder={tr.crm.contacts.form.titlePlaceholder}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                options={(titleOptionsQuery.data ?? []).map((option) => option.label)}
-                error={errors.title?.message}
-                hint={
-                  (titleOptionsQuery.data?.length ?? 0) > 0
-                    ? tr.crm.contacts.form.titleHintRestricted
-                    : tr.crm.contacts.form.titleHintFree
-                }
-              />
-            )}
-          />
-          <TextField
-            label={tr.crm.contacts.form.emailLabel}
-            type="email"
-            hint={tr.crm.contacts.form.emailHint}
-            error={errors.email?.message}
-            {...register('email')}
-          />
-          <Controller
-            name="phone"
-            control={control}
-            render={({ field }) => (
-              <PhoneField
-                label={tr.crm.contacts.form.phoneLabel}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                hint={tr.crm.contacts.form.phoneHint}
-                error={errors.phone?.message}
-              />
-            )}
-          />
-          <TextField
-            label={tr.crm.contacts.form.extensionLabel}
-            hint={tr.crm.contacts.form.extensionHint}
-            error={errors.extension?.message}
-            {...register('extension')}
-          />
-          <Select
-            label={tr.crm.contacts.form.statusLabel}
-            hint={tr.crm.contacts.form.statusHint}
-            options={STATUS_OPTIONS}
-            error={errors.status?.message}
-            {...register('status')}
-          />
-          <Controller
-            name="lastContactedAt"
-            control={control}
-            render={({ field }) => (
-              <DateField
-                label={tr.crm.contacts.form.lastContactedAtLabel}
-                hint={tr.crm.contacts.form.lastContactedAtHint}
-                error={errors.lastContactedAt?.message}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <div className="mt-1 flex gap-2 sm:col-span-2">
+          <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? tr.crm.contacts.form.submitting : tr.crm.contacts.form.submit}
             </Button>

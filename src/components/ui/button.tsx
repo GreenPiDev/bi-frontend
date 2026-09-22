@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import type { ButtonHTMLAttributes } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'navy';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -11,6 +11,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: 'bg-app-brand text-white hover:bg-app-brand-dark',
   secondary: 'bg-transparent text-app-brand border border-app-brand hover:bg-app-brand/10',
   danger: 'bg-app-danger text-white hover:bg-app-danger-dark',
+  navy: 'bg-[#1e2a4a] text-white hover:bg-[#16203a]',
 };
 
 export function Button({ variant = 'primary', className, disabled, ...props }: ButtonProps) {
