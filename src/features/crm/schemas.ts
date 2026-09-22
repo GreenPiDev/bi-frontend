@@ -145,6 +145,17 @@ export const interactionFormSchema = z
 
 export type InteractionFormValues = z.infer<typeof interactionFormSchema>;
 
+// Backend PATCH /interactions/:id sadece type/notes/occurredAt/status gunceller (firma/kisi,
+// katilimci, firsat ve hatirlatma alanlari olusturma sonrasi degistirilemez) - bu yuzden
+// duzenleme formu, olusturma formunun (interactionFormSchema) bir alt kumesi.
+export const interactionEditFormSchema = z.object({
+  type: z.enum(['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER']),
+  notes: z.string().min(1, 'Notlar gerekli.').max(5000),
+  occurredAt: z.string().min(1, 'Tarih gerekli.'),
+});
+
+export type InteractionEditFormValues = z.infer<typeof interactionEditFormSchema>;
+
 export const opportunityFormSchema = z
   .object({
     accountId: z.string().min(1, 'Firma gerekli.'),

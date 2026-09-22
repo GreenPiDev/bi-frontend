@@ -16,6 +16,7 @@ import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
 import { DatasetsListPage } from './app/datasets-list-page';
 import { InteractionDetailPage } from './app/interaction-detail-page';
+import { InteractionEditPage } from './app/interaction-edit-page';
 import { InteractionFormPage } from './app/interaction-form-page';
 import { InteractionsListPage } from './app/interactions-list-page';
 import { InventoryManagementPage } from './app/inventory-management-page';
@@ -342,6 +343,14 @@ function App() {
           element={
             <TenantPageRoute pageKey="interactions">
               <InteractionFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/gorusmeler/duzenle/:id"
+          element={
+            <TenantPageRoute pageKey="interactions">
+              <InteractionEditPage />
             </TenantPageRoute>
           }
         />

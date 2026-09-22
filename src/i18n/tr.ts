@@ -961,6 +961,11 @@ export const tr = {
       statusColumn: 'Durum',
       deleteConfirm: 'Bu görüşmeyi silmek istediğinize emin misiniz?',
       deleteError: 'Görüşme silinemedi.',
+      deleteSuccess: 'Görüşme silindi.',
+      actionsColumn: 'İşlemler',
+      editTooltip: 'Düzenle',
+      deleteTooltip: 'Sil',
+      deleteConfirmTitle: 'Görüşmeyi sil',
       typeOptions: {
         CALL: 'Telefon',
         VISIT: 'Ziyaret',
