@@ -845,6 +845,7 @@ export function listContacts(
     q?: string;
     accountId?: string;
     status?: ContactStatus;
+    sort?: string;
   } = {},
 ): Promise<PagedResult<Contact>> {
   const query = new URLSearchParams();
@@ -853,6 +854,7 @@ export function listContacts(
   if (params.q) query.set('q', params.q);
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
+  if (params.sort) query.set('sort', params.sort);
   const qs = query.toString();
   return request(`/contacts${qs ? `?${qs}` : ''}`);
 }

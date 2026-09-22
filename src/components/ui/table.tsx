@@ -1,7 +1,14 @@
 import { clsx } from 'clsx';
+import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { tr } from '../../i18n/tr';
 import { Button } from './button';
+
+export type SortDirection = 'asc' | 'desc';
+export interface TableSort {
+  key: string;
+  direction: SortDirection;
+}
 
 export interface TableColumn<T> {
   key: string;
@@ -12,6 +19,11 @@ export interface TableColumn<T> {
    * her zaman gorunur sayilir ve secici listesinde sunulmaz - Table'in kendisi bu
    * alani okumaz, sadece sayfalarin kolon listesini filtrelemesi icin tasinir. */
   required?: boolean;
+  /** Verilirse bu kolon basligi tiklanabilir olur (asc -> desc -> varsayilan).
+   * Deger, backend'in ListQuerySchema `sort` parametresinde bekledigi alan adidir
+   * (bkz. bi-backend core/dto/list-query.dto.ts parseSort) - siralama sunucu
+   * tarafinda yapilir, sayfalama boyunca dogru sonuc verir. */
+  sortKey?: string;
 }
 
 interface TableProps<T> {
@@ -22,6 +34,9 @@ interface TableProps<T> {
   isLoading?: boolean;
   loadingMessage?: string;
   emptyMessage?: string;
+  /** Aktif siralama (server-side) - sortKey tasiyan kolonlarla birlikte kullanilir. */
+  sort?: TableSort | null;
+  onSortChange?: (sort: TableSort | null) => void;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -34,6 +49,8 @@ export function Table<T>({
   isLoading,
   loadingMessage = tr.common.loading,
   emptyMessage,
+  sort,
+  onSortChange,
 }: TableProps<T>) {
   if (isLoading) {
     return <p className="mt-6 text-sm text-app-muted">{loadingMessage}</p>;
@@ -47,16 +64,43 @@ export function Table<T>({
     );
   }
 
+  function handleSortClick(column: TableColumn<T>) {
+    if (!column.sortKey || !onSortChange) return;
+    if (sort?.key !== column.sortKey) {
+      onSortChange({ key: column.sortKey, direction: 'asc' });
+    } else if (sort.direction === 'asc') {
+      onSortChange({ key: column.sortKey, direction: 'desc' });
+    } else {
+      onSortChange(null);
+    }
+  }
+
   return (
     <div className="mt-6 overflow-hidden border border-app-border bg-app-surface">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-app-border bg-app-primary text-xs uppercase text-white">
+      <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+        <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
           <tr>
-            {columns.map((column) => (
-              <th key={column.key} className={clsx('px-4 py-3 !text-white', column.className)}>
-                {column.header}
-              </th>
-            ))}
+            {columns.map((column) => {
+              const isActive = Boolean(column.sortKey) && sort?.key === column.sortKey;
+              return (
+                <th key={column.key} className={clsx('px-4 py-3 !text-white', column.className)}>
+                  {column.sortKey ? (
+                    <button
+                      type="button"
+                      onClick={() => handleSortClick(column)}
+                      className="inline-flex items-center gap-1 uppercase hover:opacity-80"
+                    >
+                      {column.header}
+                      {isActive && sort?.direction === 'asc' && <ChevronUp size={14} />}
+                      {isActive && sort?.direction === 'desc' && <ChevronDown size={14} />}
+                      {!isActive && <ChevronsUpDown size={14} className="opacity-60" />}
+                    </button>
+                  ) : (
+                    column.header
+                  )}
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -70,7 +114,7 @@ export function Table<T>({
               )}
             >
               {columns.map((column) => (
-                <td key={column.key} className={clsx('px-4 py-3', column.className)}>
+                <td key={column.key} className={clsx('px-4 py-3 !text-app-text', column.className)}>
                   {column.render(row)}
                 </td>
               ))}

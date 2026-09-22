@@ -839,6 +839,7 @@ export const tr = {
     contacts: {
       title: 'Kişiler',
       subtitle: 'Müşteri firmalarınızdaki kişileri yönetin.',
+      back: 'Kişilere dön',
       newButton: 'Yeni Kişi',
       importButton: 'İçe Aktar',
       exportButton: 'Dışa Aktar',

@@ -100,7 +100,7 @@ export function ContactFormPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/kisiler'} label={tr.crm.accounts.detail.back} />
+      <BackLink to={'/kisiler'} label={tr.crm.contacts.back} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">

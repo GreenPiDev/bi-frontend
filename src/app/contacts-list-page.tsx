@@ -8,7 +8,7 @@ import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useAccountsQuery } from '../features/crm/use-accounts';
@@ -66,6 +66,7 @@ export function ContactsListPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountId, setAccountId] = useState('');
   const [status, setStatus] = useState<ContactStatus | ''>('');
+  const [sort, setSort] = useState<TableSort | null>(null);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const contactsQuery = useContactsQuery({
@@ -74,6 +75,7 @@ export function ContactsListPage() {
     q: q || undefined,
     accountId: accountId || undefined,
     status: status || undefined,
+    sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const accountsQuery = useAccountsQuery({ pageSize: 100 });
   const exportMutation = useExportEntityMutation('contacts');
@@ -104,6 +106,7 @@ export function ContactsListPage() {
       key: 'name',
       header: tr.crm.contacts.nameColumn,
       required: true,
+      sortKey: 'firstName',
       render: (c) => (
         <span className="font-semibold text-app-text">
           {c.firstName} {c.lastName}
@@ -247,6 +250,11 @@ export function ContactsListPage() {
         isLoading={contactsQuery.isPending}
         loadingMessage={tr.crm.contacts.loading}
         emptyMessage={tr.crm.contacts.empty}
+        sort={sort}
+        onSortChange={(next) => {
+          setSort(next);
+          setPage(1);
+        }}
       />
 
       {contactsQuery.data && contactsQuery.data.data.length > 0 && (
