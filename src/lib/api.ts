@@ -1166,6 +1166,7 @@ export interface CalendarEventInput {
 export interface AssignableUser {
   id: string;
   name: string;
+  avatarUrl: string | null;
 }
 
 export function listAssignableCalendarUsers(): Promise<AssignableUser[]> {

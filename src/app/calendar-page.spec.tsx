@@ -26,7 +26,7 @@ describe('CalendarPage', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
     vi.spyOn(api, 'listAssignableCalendarUsers').mockResolvedValue([
-      { id: 'user-1', name: 'Ayse Yilmaz' },
+      { id: 'user-1', name: 'Ayse Yilmaz', avatarUrl: null },
     ]);
   });
 

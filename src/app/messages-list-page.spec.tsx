@@ -40,7 +40,7 @@ describe('MessagesListPage', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
     vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
-      { id: 'user-1', name: 'Ali Veli' },
+      { id: 'user-1', name: 'Ali Veli', avatarUrl: null },
     ]);
     vi.spyOn(api, 'listQuotes').mockResolvedValue({
       data: [

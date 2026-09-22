@@ -37,7 +37,7 @@ describe('MessagingWidget', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockResolvedValue(ME);
     vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
-      { id: 'user-other', name: 'Diğer Kullanıcı' },
+      { id: 'user-other', name: 'Diğer Kullanıcı', avatarUrl: null },
     ]);
     const message = {
       id: 'msg-1',

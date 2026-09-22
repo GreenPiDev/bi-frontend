@@ -67,7 +67,7 @@ describe('MessageDetailPage', () => {
     vi.clearAllMocks();
     vi.spyOn(api, 'me').mockResolvedValue(ME);
     vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
-      { id: 'user-other', name: 'Diğer Kullanıcı' },
+      { id: 'user-other', name: 'Diğer Kullanıcı', avatarUrl: null },
     ]);
     vi.spyOn(api, 'setConversationRead').mockResolvedValue(undefined);
     vi.spyOn(api, 'setConversationStar').mockResolvedValue(undefined);
@@ -132,8 +132,8 @@ describe('MessageDetailPage', () => {
 
     beforeEach(() => {
       vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
-        { id: 'user-a', name: 'Ayşe' },
-        { id: 'user-b', name: 'Burak' },
+        { id: 'user-a', name: 'Ayşe', avatarUrl: null },
+        { id: 'user-b', name: 'Burak', avatarUrl: null },
       ]);
       vi.spyOn(api, 'getConversation').mockResolvedValue({
         conversationId: 'conv-1',

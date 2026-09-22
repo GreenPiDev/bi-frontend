@@ -955,6 +955,7 @@ export const tr = {
       loading: 'Görüşmeler yükleniyor...',
       empty: 'Henüz görüşme kaydı yok.',
       dateColumn: 'Tarih',
+      timeColumn: 'Saat',
       accountColumn: 'Firma',
       contactColumn: 'Kişi',
       typeColumn: 'Tür',
@@ -983,6 +984,7 @@ export const tr = {
         `Seçilen saatte bir çakışma var. Önerilen boş saat: ${suggested}. Kaydı yine de oluşturdunuz, dilerseniz hatırlatmayı düzenleyip saati değiştirebilirsiniz.`,
       detail: {
         back: 'Görüşmelere dön',
+        recordLabel: 'Görüşme Kaydı',
         deleteButton: 'Sil',
         closeButton: 'Görüşmeyi Kapat',
         reopenButton: 'Yeniden Aç',
@@ -1023,6 +1025,7 @@ export const tr = {
         participantsSectionTitle: 'Diğer Katılımcılar',
         participantNamePlaceholder: 'Ad Soyad',
         participantInternalLabel: 'Bizim taraf',
+        participantExternalLabel: 'Karşı taraf',
         participantNoteLabel: 'Not',
         addParticipant: 'Katılımcı Ekle',
         removeParticipant: 'Kaldır',

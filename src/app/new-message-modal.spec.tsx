@@ -22,7 +22,7 @@ function renderModal() {
 describe('NewMessageModal', () => {
   it('ilişkili kayıt türü/kaydı seçilmeden gönderim yapılabilir (serbest mesaj)', async () => {
     vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
-      { id: 'user-1', name: 'Ali Veli' },
+      { id: 'user-1', name: 'Ali Veli', avatarUrl: null },
     ]);
     renderModal();
 
@@ -32,7 +32,7 @@ describe('NewMessageModal', () => {
 
   it('teklif seçilince yanında detayı yeni sekmede açan bir bağlantı görünür', async () => {
     vi.spyOn(api, 'listAssignableMessageUsers').mockResolvedValue([
-      { id: 'user-1', name: 'Ali Veli' },
+      { id: 'user-1', name: 'Ali Veli', avatarUrl: null },
     ]);
     vi.spyOn(api, 'listQuotes').mockResolvedValue({
       data: [
