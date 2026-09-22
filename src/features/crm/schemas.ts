@@ -107,6 +107,7 @@ export const interactionFormSchema = z
     opportunityName: z.string().max(200).optional(),
     opportunityStage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
     opportunityValue: z.string().optional(),
+    opportunityValueCurrency: z.enum(['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY']).optional(),
     participants: z
       .array(
         z.object({

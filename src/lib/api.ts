@@ -1259,7 +1259,12 @@ export interface CreateInteractionInput {
   notes: string;
   occurredAt: string;
   participants?: { name: string; isInternal: boolean; note?: string }[];
-  opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
+  opportunity?: {
+    name: string;
+    stage?: OpportunityStage;
+    estimatedValue?: number;
+    estimatedValueCurrency?: CurrencyCode;
+  };
   reminder?: {
     startAt: string;
     title?: string;

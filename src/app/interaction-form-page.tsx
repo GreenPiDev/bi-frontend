@@ -20,7 +20,12 @@ import { useContactsQuery } from '../features/crm/use-contacts';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import { useCreateInteractionMutation } from '../features/crm/use-interactions';
 import { interactionFormSchema, type InteractionFormValues } from '../features/crm/schemas';
-import { ApiError, type CreateInteractionInput, type OpportunityStage } from '../lib/api';
+import {
+  ApiError,
+  type CreateInteractionInput,
+  type CurrencyCode,
+  type OpportunityStage,
+} from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const TYPE_OPTIONS = (['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const).map((type) => ({
@@ -31,6 +36,13 @@ const TYPE_OPTIONS = (['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const).m
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
+
+const CURRENCY_OPTIONS: { value: CurrencyCode; label: string }[] = (
+  ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY'] as const
+).map((currency) => ({
+  value: currency,
+  label: tr.crm.opportunities.form.currencyOptions[currency],
+}));
 
 export function InteractionFormPage() {
   const navigate = useNavigate();
@@ -56,6 +68,7 @@ export function InteractionFormPage() {
       type: 'CALL',
       participants: [],
       hasOpportunity: false,
+      opportunityValueCurrency: 'TRY',
       hasReminder: false,
     },
   });
@@ -106,6 +119,9 @@ export function InteractionFormPage() {
               name: values.opportunityName,
               stage: values.opportunityStage,
               estimatedValue: values.opportunityValue ? Number(values.opportunityValue) : undefined,
+              estimatedValueCurrency: values.opportunityValue
+                ? values.opportunityValueCurrency
+                : undefined,
             },
           }
         : {}),
@@ -268,14 +284,26 @@ export function InteractionFormPage() {
                   error={errors.opportunityStage?.message}
                   {...register('opportunityStage')}
                 />
-                <TextField
-                  type="number"
-                  step="0.01"
-                  label={tr.crm.interactions.form.opportunityValueLabel}
-                  hint={tr.crm.interactions.form.opportunityValueHint}
-                  error={errors.opportunityValue?.message}
-                  {...register('opportunityValue')}
-                />
+                <div className="flex items-start gap-2">
+                  <div className="flex-1">
+                    <TextField
+                      type="number"
+                      step="0.01"
+                      label={tr.crm.interactions.form.opportunityValueLabel}
+                      hint={tr.crm.interactions.form.opportunityValueHint}
+                      error={errors.opportunityValue?.message}
+                      {...register('opportunityValue')}
+                    />
+                  </div>
+                  <div className="w-32">
+                    <Select
+                      label={tr.crm.opportunities.form.currencyLabel}
+                      options={CURRENCY_OPTIONS}
+                      error={errors.opportunityValueCurrency?.message}
+                      {...register('opportunityValueCurrency')}
+                    />
+                  </div>
+                </div>
               </div>
             )}
           </div>

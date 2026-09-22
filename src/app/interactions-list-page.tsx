@@ -1,8 +1,8 @@
+import { clsx } from 'clsx';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
@@ -15,9 +15,44 @@ import { useMeQuery } from '../features/auth/use-auth';
 import {
   useDeleteInteractionMutation,
   useInteractionsQuery,
+  useUpdateInteractionMutation,
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+function InteractionStatusSelect({ interaction }: { interaction: Interaction }) {
+  const toast = useToast();
+  const updateMutation = useUpdateInteractionMutation(interaction.id);
+
+  return (
+    <select
+      value={interaction.status}
+      onClick={(event) => event.stopPropagation()}
+      onChange={(event) => {
+        const status = event.target.value as Interaction['status'];
+        updateMutation.mutate(
+          { status },
+          {
+            onSuccess: () => toast.success(tr.crm.interactions.statusUpdateSuccess),
+            onError: (error) => {
+              toast.error(
+                error instanceof ApiError ? error.message : tr.crm.interactions.statusUpdateError,
+              );
+            },
+          },
+        );
+      }}
+      disabled={updateMutation.isPending}
+      className={clsx(
+        'cursor-pointer rounded-md border-none bg-transparent p-0 text-sm font-semibold outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50',
+        interaction.status === 'OPEN' ? 'text-app-success' : 'text-app-danger',
+      )}
+    >
+      <option value="OPEN">{tr.crm.interactions.statusOptions.OPEN}</option>
+      <option value="CLOSED">{tr.crm.interactions.statusOptions.CLOSED}</option>
+    </select>
+  );
+}
 
 export function InteractionsListPage() {
   const navigate = useNavigate();
@@ -74,11 +109,7 @@ export function InteractionsListPage() {
     {
       key: 'status',
       header: tr.crm.interactions.statusColumn,
-      render: (i) => (
-        <Badge variant={i.status === 'OPEN' ? 'success' : 'neutral'}>
-          {tr.crm.interactions.statusOptions[i.status]}
-        </Badge>
-      ),
+      render: (i) => <InteractionStatusSelect interaction={i} />,
     },
     {
       key: 'actions',
