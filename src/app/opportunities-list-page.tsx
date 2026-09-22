@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { Drawer } from '../components/ui/drawer';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { DateField } from '../components/ui/date-field';
 import { Select } from '../components/ui/select';
+import { TextField } from '../components/ui/text-field';
 import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
@@ -13,6 +16,7 @@ import {
   useOpportunitiesQuery,
   useUpdateOpportunityMutation,
 } from '../features/crm/use-opportunities';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { ApiError, type Opportunity, type OpportunityStage } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -102,15 +106,50 @@ export function OpportunitiesListPage() {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [stage, setStage] = useState<OpportunityStage | ''>('');
+  const [minEstimatedValueInput, setMinEstimatedValueInput] = useState('');
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const debouncedMinEstimatedValueInput = useDebouncedValue(minEstimatedValueInput.trim());
+  const minEstimatedValue = debouncedMinEstimatedValueInput
+    ? Number(debouncedMinEstimatedValueInput)
+    : undefined;
+  // Iki tarih filtresi ayni occurredAt alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir.
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter =
+    Boolean(stage) || Boolean(minEstimatedValueInput.trim()) || Boolean(from) || Boolean(to);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const opportunitiesQuery = useOpportunitiesQuery({ page, pageSize, stage: stage || undefined });
+  const opportunitiesQuery = useOpportunitiesQuery({
+    page,
+    pageSize,
+    stage: stage || undefined,
+    minEstimatedValue:
+      minEstimatedValue !== undefined && !Number.isNaN(minEstimatedValue)
+        ? minEstimatedValue
+        : undefined,
+    from,
+    to,
+  });
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
     useColumnVisibility(
       'opportunities',
       ALL_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
+
+  function resetFilters() {
+    setPage(1);
+    setStage('');
+    setMinEstimatedValueInput('');
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
+  }
 
   return (
     <AppShell>
@@ -122,22 +161,17 @@ export function OpportunitiesListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.opportunities.subtitle}</p>
         </div>
-        <Button type="button" onClick={() => navigate('/firsatlar/yeni')}>
-          {tr.crm.opportunities.newButton}
-        </Button>
-      </div>
-
-      <div className="mt-6 max-w-xs">
-        <Select
-          label={tr.crm.opportunities.stageFilterLabel}
-          value={stage}
-          onChange={(event) => {
-            setPage(1);
-            setStage(event.target.value as OpportunityStage | '');
-          }}
-          placeholder={tr.crm.opportunities.allStages}
-          options={STAGE_OPTIONS}
-        />
+        <div className="flex gap-2">
+          <Button variant="secondary" type="button" onClick={() => setDrawerOpen(true)}>
+            {tr.crm.opportunities.filterButton}
+            {hasActiveFilter && (
+              <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-app-primary" />
+            )}
+          </Button>
+          <Button type="button" onClick={() => navigate('/firsatlar/yeni')}>
+            {tr.crm.opportunities.newButton}
+          </Button>
+        </div>
       </div>
 
       <div className="mt-4 flex justify-end">
@@ -165,6 +199,71 @@ export function OpportunitiesListPage() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer
+          title={tr.crm.opportunities.filterDrawer.title}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.opportunities.filterDrawer.stageLabel}
+              value={stage}
+              onChange={(event) => {
+                setPage(1);
+                setStage(event.target.value as OpportunityStage | '');
+              }}
+              placeholder={tr.crm.opportunities.filterDrawer.stageAllOption}
+              options={STAGE_OPTIONS}
+            />
+            <TextField
+              type="number"
+              min={0}
+              step="0.01"
+              label={tr.crm.opportunities.filterDrawer.minEstimatedValueLabel}
+              placeholder={tr.crm.opportunities.filterDrawer.minEstimatedValuePlaceholder}
+              value={minEstimatedValueInput}
+              onChange={(event) => {
+                setPage(1);
+                setMinEstimatedValueInput(event.target.value);
+              }}
+            />
+            <DateField
+              label={tr.crm.opportunities.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setPage(1);
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+            />
+            <div className="flex gap-3">
+              <DateField
+                label={tr.crm.opportunities.filterDrawer.rangeFromLabel}
+                value={rangeFromInput}
+                onChange={(value) => {
+                  setPage(1);
+                  setSinceInput('');
+                  setRangeFromInput(value);
+                }}
+              />
+              <DateField
+                label={tr.crm.opportunities.filterDrawer.rangeToLabel}
+                value={rangeToInput}
+                onChange={(value) => {
+                  setPage(1);
+                  setSinceInput('');
+                  setRangeToInput(value);
+                }}
+              />
+            </div>
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.opportunities.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
     </AppShell>
   );

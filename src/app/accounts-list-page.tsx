@@ -5,6 +5,7 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
@@ -267,14 +268,13 @@ export function AccountsListPage() {
       {drawerOpen && (
         <Drawer title={tr.crm.accounts.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
           <div className="flex flex-col gap-4">
-            <TextField
-              type="date"
+            <DateField
               label={tr.crm.accounts.filterDrawer.fromLabel}
               value={from}
-              onChange={(event) => {
+              onChange={(value) => {
                 setPage(1);
                 setLastNDaysInput('');
-                setFrom(event.target.value);
+                setFrom(value);
               }}
             />
             <TextField

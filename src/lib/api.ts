@@ -1334,13 +1334,26 @@ export interface CreateOpportunityResult {
 }
 
 export function listOpportunities(
-  params: { page?: number; pageSize?: number; accountId?: string; stage?: OpportunityStage } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    stage?: OpportunityStage;
+    minEstimatedValue?: number;
+    from?: string;
+    to?: string;
+  } = {},
 ): Promise<PagedResult<Opportunity>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.stage) query.set('stage', params.stage);
+  if (params.minEstimatedValue !== undefined) {
+    query.set('minEstimatedValue', String(params.minEstimatedValue));
+  }
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
   const qs = query.toString();
   return request(`/opportunities${qs ? `?${qs}` : ''}`);
 }

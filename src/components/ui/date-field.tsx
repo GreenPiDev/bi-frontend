@@ -21,6 +21,11 @@ function formatDateDisplay(dateStr: string): string {
   return `${day}.${month}.${year}`;
 }
 
+// Calendar bileseninin sabit genisligi (calendar.tsx'teki `w-72`) ile ayni - takvim ekranin
+// sag kenarindan tasarsa sola kaydirmak icin kullanilir.
+const CALENDAR_WIDTH = 288;
+const MENU_HORIZONTAL_MARGIN = 8;
+
 /** Saat tasimayan tarih alanlari icin ozel Calendar acilir penceresi - datetime-local
  * icin ayni deseni kullanan DateTimeField'in saatsiz eslenigi.
  *
@@ -65,7 +70,9 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
     function updateRect() {
       const rect = buttonRef.current?.getBoundingClientRect();
       if (!rect) return;
-      setMenuRect({ top: rect.bottom + 4, left: rect.left });
+      const maxLeft = window.innerWidth - CALENDAR_WIDTH - MENU_HORIZONTAL_MARGIN;
+      const left = Math.max(MENU_HORIZONTAL_MARGIN, Math.min(rect.left, maxLeft));
+      setMenuRect({ top: rect.bottom + 4, left });
     }
     updateRect();
     window.addEventListener('resize', updateRect);
