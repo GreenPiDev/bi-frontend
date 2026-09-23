@@ -44,6 +44,9 @@ interface TableProps<T> {
    * genelde onRowClick ile ayni id'yi toggle eder. */
   isRowExpanded?: (row: T, index: number) => boolean;
   renderExpandedRow?: (row: T, index: number) => ReactNode;
+  /** Satira ek class eklemek icin (orn. genisletilmis/secili satiri kalici olarak
+   * vurgulamak) - hover haricinde bir vurgu gerekmiyorsa gerek yok. */
+  rowClassName?: (row: T, index: number) => string | undefined;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -60,6 +63,7 @@ export function Table<T>({
   onSortChange,
   isRowExpanded,
   renderExpandedRow,
+  rowClassName,
 }: TableProps<T>) {
   if (isLoading) {
     return <p className="mt-6 text-sm text-app-muted">{loadingMessage}</p>;
@@ -123,6 +127,7 @@ export function Table<T>({
                     'bg-app-surface border-b border-app-border last:border-0',
                     onRowClick && 'cursor-pointer hover:bg-blue-50',
                     expanded && 'border-b-0',
+                    rowClassName?.(row, index),
                   )}
                 >
                   {columns.map((column) => (

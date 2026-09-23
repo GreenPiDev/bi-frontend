@@ -1,11 +1,11 @@
 import { Search, X } from 'lucide-react';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
-import { Pagination } from '../components/ui/table';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -164,7 +164,7 @@ export function QuoteEditPage() {
     setEditingIndex(null);
   }
 
-  const summaryRows = (items ?? []).map((item) => {
+  const summaryRows = (items ?? []).map((item, index) => {
     const quantity = Number(item.quantity) || 0;
     const unitPrice = Number(item.unitPrice) || 0;
     const discountPct = Number(item.discountPct) || 0;
@@ -172,6 +172,8 @@ export function QuoteEditPage() {
     const lineSubtotal = quantity * unitPrice * (1 - discountPct / 100);
     const lineTotal = lineSubtotal * (1 + vatPct / 100);
     return {
+      index,
+      productId: item.productId,
       productName: item.productName,
       quantity,
       discountPct,
@@ -180,6 +182,7 @@ export function QuoteEditPage() {
       lineTotal,
     };
   });
+  type SummaryRow = (typeof summaryRows)[number];
   const summarySubtotal = summaryRows.reduce((sum, row) => sum + row.lineSubtotal, 0);
   const summaryGrandTotal = summaryRows.reduce((sum, row) => sum + row.lineTotal, 0);
   const summaryVatTotal = summaryGrandTotal - summarySubtotal;
@@ -240,6 +243,175 @@ export function QuoteEditPage() {
 
   const apiErrorMessage =
     updateMutation.error instanceof ApiError ? updateMutation.error.message : undefined;
+
+  const pickerColumns: TableColumn<Product>[] = [
+    {
+      key: 'product',
+      header: tr.crm.quotes.form.pickerProductColumn,
+      render: (product) => (
+        <>
+          {product.name}
+          {product.sku && (
+            <span className="ml-1.5 font-normal text-app-muted">({product.sku})</span>
+          )}
+        </>
+      ),
+    },
+    {
+      key: 'unit',
+      header: tr.crm.quotes.form.pickerUnitColumn,
+      className: 'w-24 text-app-muted',
+      render: (product) => product.unit,
+    },
+    {
+      key: 'price',
+      header: tr.crm.quotes.form.pickerPriceColumn,
+      className: 'w-32 text-app-muted',
+      render: (product) =>
+        product.price !== null
+          ? `${plainNumber.format(Number(product.price))} ${product.currency}`
+          : '—',
+    },
+  ];
+
+  function renderAddPanel(product: Product) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.quantityLabel}
+          value={addQuantity}
+          onChange={(event) => setAddQuantity(sanitizeDecimalInput(event.target.value))}
+        />
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.unitPriceLabel}
+          value={addUnitPrice}
+          onChange={(event) => setAddUnitPrice(sanitizeDecimalInput(event.target.value))}
+        />
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.discountPctLabel}
+          value={addDiscountPct}
+          onChange={(event) => setAddDiscountPct(sanitizeDecimalInput(event.target.value))}
+        />
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.vatPctLabel}
+          value={addVatPct}
+          onChange={(event) => setAddVatPct(sanitizeDecimalInput(event.target.value))}
+        />
+        <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+          <Button type="button" className="w-full" onClick={() => handleAddItem(product)}>
+            {tr.crm.quotes.form.addToQuote}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const summaryColumns: TableColumn<SummaryRow>[] = [
+    {
+      key: 'product',
+      header: tr.crm.quotes.form.pickerProductColumn,
+      className: 'align-top',
+      render: (row) => (
+        <div className="font-semibold text-app-text">
+          {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
+        </div>
+      ),
+    },
+    {
+      key: 'quantity',
+      header: tr.crm.quotes.form.quantityLabel,
+      className: 'w-16 align-top text-app-muted',
+      render: (row) => row.quantity,
+    },
+    {
+      key: 'discountPct',
+      header: tr.crm.quotes.detail.discountColumn,
+      className: 'w-16 align-top font-semibold whitespace-nowrap text-app-success',
+      render: (row) => (row.discountPct > 0 ? `-%${row.discountPct}` : ''),
+    },
+    {
+      key: 'vatPct',
+      header: tr.crm.quotes.detail.vatColumn,
+      className: 'w-16 align-top font-semibold whitespace-nowrap text-app-danger',
+      render: (row) => (row.vatPct > 0 ? `+%${row.vatPct}` : ''),
+    },
+    {
+      key: 'lineTotal',
+      header: tr.crm.quotes.detail.lineTotalColumn,
+      className: 'w-24 align-top font-semibold whitespace-nowrap text-app-text',
+      render: (row) => currency.format(row.lineTotal),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-8 align-top',
+      render: (row) => (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            handleRemoveItem(row.index);
+          }}
+          aria-label={tr.crm.quotes.form.removeItem}
+          className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+        >
+          <X size={14} />
+        </button>
+      ),
+    },
+  ];
+
+  function renderEditPanel() {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.quantityLabel}
+          value={editQuantity}
+          onChange={(event) => setEditQuantity(sanitizeDecimalInput(event.target.value))}
+        />
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.unitPriceLabel}
+          value={editUnitPrice}
+          onChange={(event) => setEditUnitPrice(sanitizeDecimalInput(event.target.value))}
+        />
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.discountPctLabel}
+          value={editDiscountPct}
+          onChange={(event) => setEditDiscountPct(sanitizeDecimalInput(event.target.value))}
+        />
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.vatPctLabel}
+          value={editVatPct}
+          onChange={(event) => setEditVatPct(sanitizeDecimalInput(event.target.value))}
+        />
+        <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+          <Button
+            type="button"
+            className="w-full"
+            onClick={() => handleSaveEditRow(editingIndex as number)}
+          >
+            {tr.crm.quotes.edit.saveRow}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AppShell>
@@ -314,97 +486,17 @@ export function QuoteEditPage() {
                 />
               </div>
 
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full min-w-[480px] text-left text-sm">
-                  <thead className="text-xs font-semibold uppercase text-app-muted">
-                    <tr>
-                      <th className="py-2 pr-3">{tr.crm.quotes.form.pickerProductColumn}</th>
-                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.pickerUnitColumn}</th>
-                      <th className="w-32 py-2 pr-3">{tr.crm.quotes.form.pickerPriceColumn}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pickerProducts.map((product) => (
-                      <Fragment key={product.id}>
-                        <tr
-                          onClick={() => handleToggleAdd(product)}
-                          className={`cursor-pointer border-t border-app-border hover:bg-blue-50 ${
-                            addingProductId === product.id ? 'bg-blue-50' : ''
-                          }`}
-                        >
-                          <td className="py-2 pr-3 font-semibold text-app-text">
-                            {product.name}
-                            {product.sku && (
-                              <span className="ml-1.5 font-normal text-app-muted">
-                                ({product.sku})
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 pr-3 text-app-muted">{product.unit}</td>
-                          <td className="py-2 pr-3 text-app-muted">
-                            {product.price !== null
-                              ? `${plainNumber.format(Number(product.price))} ${product.currency}`
-                              : '—'}
-                          </td>
-                        </tr>
-                        {addingProductId === product.id && (
-                          <tr className="border-t border-app-border bg-app-bg">
-                            <td colSpan={3} className="p-4">
-                              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
-                                <TextField
-                                  type="text"
-                                  inputMode="decimal"
-                                  label={tr.crm.quotes.form.quantityLabel}
-                                  value={addQuantity}
-                                  onChange={(event) =>
-                                    setAddQuantity(sanitizeDecimalInput(event.target.value))
-                                  }
-                                />
-                                <TextField
-                                  type="text"
-                                  inputMode="decimal"
-                                  label={tr.crm.quotes.form.unitPriceLabel}
-                                  value={addUnitPrice}
-                                  onChange={(event) =>
-                                    setAddUnitPrice(sanitizeDecimalInput(event.target.value))
-                                  }
-                                />
-                                <TextField
-                                  type="text"
-                                  inputMode="decimal"
-                                  label={tr.crm.quotes.form.discountPctLabel}
-                                  value={addDiscountPct}
-                                  onChange={(event) =>
-                                    setAddDiscountPct(sanitizeDecimalInput(event.target.value))
-                                  }
-                                />
-                                <TextField
-                                  type="text"
-                                  inputMode="decimal"
-                                  label={tr.crm.quotes.form.vatPctLabel}
-                                  value={addVatPct}
-                                  onChange={(event) =>
-                                    setAddVatPct(sanitizeDecimalInput(event.target.value))
-                                  }
-                                />
-                                <div className="col-span-2 sm:col-span-4 lg:col-span-1">
-                                  <Button
-                                    type="button"
-                                    className="w-full"
-                                    onClick={() => handleAddItem(product)}
-                                  >
-                                    {tr.crm.quotes.form.addToQuote}
-                                  </Button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <Table
+                columns={pickerColumns}
+                data={pickerProducts}
+                keyField={(product) => product.id}
+                onRowClick={handleToggleAdd}
+                isRowExpanded={(product) => addingProductId === product.id}
+                renderExpandedRow={(product) => renderAddPanel(product)}
+                rowClassName={(product) =>
+                  addingProductId === product.id ? 'bg-blue-50' : undefined
+                }
+              />
 
               {productsQuery.isPending && (
                 <p className="mt-3 text-center text-sm text-app-muted">
@@ -443,114 +535,15 @@ export function QuoteEditPage() {
                 {summaryRows.length === 0 ? (
                   <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[280px] text-left text-sm">
-                      <thead className="text-xs font-semibold uppercase text-app-muted">
-                        <tr>
-                          <th className="py-2 pr-3">{tr.crm.quotes.form.pickerProductColumn}</th>
-                          <th className="w-16 py-2 pr-3">{tr.crm.quotes.form.quantityLabel}</th>
-                          <th className="w-16 py-2 pr-3">{tr.crm.quotes.detail.discountColumn}</th>
-                          <th className="w-16 py-2 pr-3">{tr.crm.quotes.detail.vatColumn}</th>
-                          <th className="w-24 py-2 pr-3">{tr.crm.quotes.detail.lineTotalColumn}</th>
-                          <th className="w-8 py-2" aria-hidden="true" />
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {summaryRows.map((row, index) => (
-                          <Fragment key={`${items?.[index]?.productId ?? 'row'}-${index}`}>
-                            <tr
-                              onClick={() => handleToggleEditRow(index)}
-                              className={`cursor-pointer border-t border-app-border hover:bg-blue-50 ${
-                                editingIndex === index ? 'bg-blue-50' : ''
-                              }`}
-                            >
-                              <td className="py-2 pr-3 align-top">
-                                <div className="font-semibold text-app-text">
-                                  {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
-                                </div>
-                              </td>
-                              <td className="py-2 pr-3 align-top text-app-muted">{row.quantity}</td>
-                              <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-success">
-                                {row.discountPct > 0 ? `-%${row.discountPct}` : ''}
-                              </td>
-                              <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-danger">
-                                {row.vatPct > 0 ? `+%${row.vatPct}` : ''}
-                              </td>
-                              <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-text">
-                                {currency.format(row.lineTotal)}
-                              </td>
-                              <td className="py-2 align-top">
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleRemoveItem(index);
-                                  }}
-                                  aria-label={tr.crm.quotes.form.removeItem}
-                                  className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-                                >
-                                  <X size={14} />
-                                </button>
-                              </td>
-                            </tr>
-                            {editingIndex === index && (
-                              <tr className="border-t border-app-border bg-app-bg">
-                                <td colSpan={6} className="p-4">
-                                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
-                                    <TextField
-                                      type="text"
-                                      inputMode="decimal"
-                                      label={tr.crm.quotes.form.quantityLabel}
-                                      value={editQuantity}
-                                      onChange={(event) =>
-                                        setEditQuantity(sanitizeDecimalInput(event.target.value))
-                                      }
-                                    />
-                                    <TextField
-                                      type="text"
-                                      inputMode="decimal"
-                                      label={tr.crm.quotes.form.unitPriceLabel}
-                                      value={editUnitPrice}
-                                      onChange={(event) =>
-                                        setEditUnitPrice(sanitizeDecimalInput(event.target.value))
-                                      }
-                                    />
-                                    <TextField
-                                      type="text"
-                                      inputMode="decimal"
-                                      label={tr.crm.quotes.form.discountPctLabel}
-                                      value={editDiscountPct}
-                                      onChange={(event) =>
-                                        setEditDiscountPct(sanitizeDecimalInput(event.target.value))
-                                      }
-                                    />
-                                    <TextField
-                                      type="text"
-                                      inputMode="decimal"
-                                      label={tr.crm.quotes.form.vatPctLabel}
-                                      value={editVatPct}
-                                      onChange={(event) =>
-                                        setEditVatPct(sanitizeDecimalInput(event.target.value))
-                                      }
-                                    />
-                                    <div className="col-span-2 sm:col-span-4 lg:col-span-1">
-                                      <Button
-                                        type="button"
-                                        className="w-full"
-                                        onClick={() => handleSaveEditRow(index)}
-                                      >
-                                        {tr.crm.quotes.edit.saveRow}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </Fragment>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <Table
+                    columns={summaryColumns}
+                    data={summaryRows}
+                    keyField={(row) => `${row.productId}-${row.index}`}
+                    onRowClick={(row) => handleToggleEditRow(row.index)}
+                    isRowExpanded={(row) => editingIndex === row.index}
+                    renderExpandedRow={() => renderEditPanel()}
+                    rowClassName={(row) => (editingIndex === row.index ? 'bg-blue-50' : undefined)}
+                  />
                 )}
 
                 <div className="flex flex-col gap-1.5 border-t border-app-border pt-4 text-sm">
