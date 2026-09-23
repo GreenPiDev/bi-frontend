@@ -29,7 +29,7 @@ export interface TableColumn<T> {
 interface TableProps<T> {
   columns: TableColumn<T>[];
   data: T[];
-  keyField: (row: T) => string;
+  keyField: (row: T, index: number) => string;
   onRowClick?: (row: T) => void;
   isLoading?: boolean;
   loadingMessage?: string;
@@ -104,9 +104,9 @@ export function Table<T>({
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => (
+          {data.map((row, index) => (
             <tr
-              key={keyField(row)}
+              key={keyField(row, index)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={clsx(
                 'bg-app-surface border-b border-app-border last:border-0',

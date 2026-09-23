@@ -2,7 +2,9 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { useDatasetsQuery } from '../features/datasets/use-datasets';
+import type { DatasetSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
@@ -11,6 +13,29 @@ const numberFormatter = new Intl.NumberFormat('tr-TR');
 export function DatasetsListPage() {
   const navigate = useNavigate();
   const datasetsQuery = useDatasetsQuery();
+
+  const columns: TableColumn<DatasetSummary>[] = [
+    {
+      key: 'name',
+      header: tr.datasets.nameColumn,
+      render: (dataset) => <span className="font-semibold text-app-text">{dataset.name}</span>,
+    },
+    {
+      key: 'rowCount',
+      header: tr.datasets.rowCountColumn,
+      className: 'text-app-muted',
+      render: (dataset) => numberFormatter.format(dataset.rowCount),
+    },
+    {
+      key: 'lastIngestedAt',
+      header: tr.datasets.lastIngestedColumn,
+      className: 'text-app-muted',
+      render: (dataset) =>
+        dataset.lastIngestedAt
+          ? dateFormatter.format(new Date(dataset.lastIngestedAt))
+          : tr.datasets.neverIngested,
+    },
+  ];
 
   return (
     <AppShell>
@@ -27,48 +52,15 @@ export function DatasetsListPage() {
         </Button>
       </div>
 
-      {datasetsQuery.isPending && (
-        <p className="mt-6 text-sm text-app-muted">{tr.datasets.loading}</p>
-      )}
-
-      {datasetsQuery.data?.length === 0 && (
-        <div className="mt-6 border-t border-dashed border-app-border p-8 text-center text-sm text-app-muted">
-          {tr.datasets.empty}
-        </div>
-      )}
-
-      {datasetsQuery.data && datasetsQuery.data.length > 0 && (
-        <div className="mt-6 overflow-hidden border-t border-app-border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-              <tr>
-                <th className="px-4 py-3">{tr.datasets.nameColumn}</th>
-                <th className="px-4 py-3">{tr.datasets.rowCountColumn}</th>
-                <th className="px-4 py-3">{tr.datasets.lastIngestedColumn}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {datasetsQuery.data.map((dataset) => (
-                <tr
-                  key={dataset.id}
-                  onClick={() => navigate(`/datasets/${dataset.id}`)}
-                  className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-blue-50"
-                >
-                  <td className="px-4 py-3 font-semibold text-app-text">{dataset.name}</td>
-                  <td className="px-4 py-3 text-app-muted">
-                    {numberFormatter.format(dataset.rowCount)}
-                  </td>
-                  <td className="px-4 py-3 text-app-muted">
-                    {dataset.lastIngestedAt
-                      ? dateFormatter.format(new Date(dataset.lastIngestedAt))
-                      : tr.datasets.neverIngested}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={datasetsQuery.data ?? []}
+        keyField={(dataset) => dataset.id}
+        onRowClick={(dataset) => navigate(`/datasets/${dataset.id}`)}
+        isLoading={datasetsQuery.isPending}
+        loadingMessage={tr.datasets.loading}
+        emptyMessage={tr.datasets.empty}
+      />
     </AppShell>
   );
 }

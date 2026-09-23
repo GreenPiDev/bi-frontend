@@ -4,12 +4,13 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import {
   useCreateDashboardMutation,
   useDashboardsQuery,
 } from '../features/dashboards/use-dashboards';
-import { ApiError } from '../lib/api';
+import { ApiError, type DashboardSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
@@ -18,6 +19,20 @@ export function DashboardsListPage() {
   const navigate = useNavigate();
   const dashboardsQuery = useDashboardsQuery();
   const createMutation = useCreateDashboardMutation();
+
+  const columns: TableColumn<DashboardSummary>[] = [
+    {
+      key: 'name',
+      header: tr.dashboards.list.nameColumn,
+      render: (dashboard) => <span className="font-semibold text-app-text">{dashboard.name}</span>,
+    },
+    {
+      key: 'createdAt',
+      header: tr.dashboards.list.createdAtColumn,
+      className: 'text-app-muted',
+      render: (dashboard) => dateFormatter.format(new Date(dashboard.createdAt)),
+    },
+  ];
 
   const [isCreating, setIsCreating] = useState(false);
   const [name, setName] = useState('');
@@ -89,42 +104,15 @@ export function DashboardsListPage() {
       )}
       <FormError message={apiErrorMessage && tr.dashboards.list.createError} />
 
-      {dashboardsQuery.isPending && (
-        <p className="mt-6 text-sm text-app-muted">{tr.dashboards.list.loading}</p>
-      )}
-
-      {dashboardsQuery.data?.length === 0 && (
-        <div className="mt-6 border-t border-dashed border-app-border p-8 text-center text-sm text-app-muted">
-          {tr.dashboards.list.empty}
-        </div>
-      )}
-
-      {dashboardsQuery.data && dashboardsQuery.data.length > 0 && (
-        <div className="mt-6 overflow-hidden border-t border-app-border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-              <tr>
-                <th className="px-4 py-3">{tr.dashboards.list.nameColumn}</th>
-                <th className="px-4 py-3">{tr.dashboards.list.createdAtColumn}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dashboardsQuery.data.map((dashboard) => (
-                <tr
-                  key={dashboard.id}
-                  onClick={() => navigate(`/dashboards/${dashboard.id}`)}
-                  className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-blue-50"
-                >
-                  <td className="px-4 py-3 font-semibold text-app-text">{dashboard.name}</td>
-                  <td className="px-4 py-3 text-app-muted">
-                    {dateFormatter.format(new Date(dashboard.createdAt))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={dashboardsQuery.data ?? []}
+        keyField={(dashboard) => dashboard.id}
+        onRowClick={(dashboard) => navigate(`/dashboards/${dashboard.id}`)}
+        isLoading={dashboardsQuery.isPending}
+        loadingMessage={tr.dashboards.list.loading}
+        emptyMessage={tr.dashboards.list.empty}
+      />
     </AppShell>
   );
 }

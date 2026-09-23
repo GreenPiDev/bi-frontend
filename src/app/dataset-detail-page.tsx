@@ -5,6 +5,7 @@ import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import {
   useDatasetPreviewQuery,
   useDatasetQuery,
@@ -71,6 +72,91 @@ export function DatasetDetailPage() {
   const apiErrorMessage =
     updateMutation.error instanceof ApiError ? updateMutation.error.message : undefined;
 
+  const schemaColumns: TableColumn<DatasetField>[] = [
+    {
+      key: 'label',
+      header: tr.datasets.detail.columnLabel,
+      render: (field) => {
+        const edit = edits[field.id] ?? toEdit(field);
+        return (
+          <input
+            value={edit.label}
+            onChange={(event) => updateField(field.id, { label: event.target.value })}
+            className="w-full rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          />
+        );
+      },
+    },
+    {
+      key: 'type',
+      header: tr.datasets.detail.columnType,
+      render: (field) => {
+        const edit = edits[field.id] ?? toEdit(field);
+        return (
+          <select
+            value={edit.type}
+            onChange={(event) =>
+              updateField(field.id, { type: event.target.value as DatasetFieldType })
+            }
+            className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          >
+            {Object.entries(tr.datasets.detail.types).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        );
+      },
+    },
+    {
+      key: 'role',
+      header: tr.datasets.detail.columnRole,
+      render: (field) => {
+        const edit = edits[field.id] ?? toEdit(field);
+        return (
+          <select
+            value={edit.role}
+            onChange={(event) =>
+              updateField(field.id, { role: event.target.value as DatasetFieldRole })
+            }
+            className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          >
+            {Object.entries(tr.datasets.detail.roles).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        );
+      },
+    },
+    {
+      key: 'isVisible',
+      header: tr.datasets.detail.columnVisible,
+      render: (field) => {
+        const edit = edits[field.id] ?? toEdit(field);
+        return (
+          <input
+            type="checkbox"
+            checked={edit.isVisible}
+            onChange={(event) => updateField(field.id, { isVisible: event.target.checked })}
+            aria-label={`${field.label} ${tr.datasets.detail.columnVisible}`}
+          />
+        );
+      },
+    },
+  ];
+
+  const previewColumns: TableColumn<unknown[]>[] = (previewQuery.data?.columns ?? []).map(
+    (column, columnIndex) => ({
+      key: column,
+      header: column,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) => String(row[columnIndex] ?? ''),
+    }),
+  );
+
   return (
     <AppShell>
       <BackLink to={'/datasets'} label={tr.datasets.detail.backToList} />
@@ -87,81 +173,11 @@ export function DatasetDetailPage() {
         <p className="mt-1 text-sm text-app-muted">{tr.datasets.detail.schemaSubtitle}</p>
 
         {datasetQuery.data && (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-                <tr>
-                  <th className="px-3 py-2">{tr.datasets.detail.columnLabel}</th>
-                  <th className="px-3 py-2">{tr.datasets.detail.columnType}</th>
-                  <th className="px-3 py-2">{tr.datasets.detail.columnRole}</th>
-                  <th className="px-3 py-2">{tr.datasets.detail.columnVisible}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {datasetQuery.data.fields.map((field) => {
-                  const edit = edits[field.id] ?? toEdit(field);
-                  return (
-                    <tr
-                      key={field.id}
-                      className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
-                    >
-                      <td className="px-3 py-2">
-                        <input
-                          value={edit.label}
-                          onChange={(event) => updateField(field.id, { label: event.target.value })}
-                          className="w-full rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-                        />
-                      </td>
-                      <td className="px-3 py-2">
-                        <select
-                          value={edit.type}
-                          onChange={(event) =>
-                            updateField(field.id, {
-                              type: event.target.value as DatasetFieldType,
-                            })
-                          }
-                          className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-                        >
-                          {Object.entries(tr.datasets.detail.types).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-3 py-2">
-                        <select
-                          value={edit.role}
-                          onChange={(event) =>
-                            updateField(field.id, {
-                              role: event.target.value as DatasetFieldRole,
-                            })
-                          }
-                          className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-                        >
-                          {Object.entries(tr.datasets.detail.roles).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="checkbox"
-                          checked={edit.isVisible}
-                          onChange={(event) =>
-                            updateField(field.id, { isVisible: event.target.checked })
-                          }
-                          aria-label={`${field.label} ${tr.datasets.detail.columnVisible}`}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={schemaColumns}
+            data={datasetQuery.data.fields}
+            keyField={(field) => field.id}
+          />
         )}
 
         <div className="mt-4 flex items-center gap-3">
@@ -182,33 +198,11 @@ export function DatasetDetailPage() {
         <p className="mt-1 text-sm text-app-muted">{tr.datasets.detail.previewSubtitle}</p>
 
         {previewQuery.data && (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-                <tr>
-                  {previewQuery.data.columns.map((column) => (
-                    <th key={column} className="whitespace-nowrap px-3 py-2">
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {previewQuery.data.rows.map((row, rowIndex) => (
-                  <tr
-                    key={rowIndex}
-                    className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
-                  >
-                    {row.map((value, cellIndex) => (
-                      <td key={cellIndex} className="whitespace-nowrap px-3 py-2 text-app-muted">
-                        {String(value ?? '')}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={previewColumns}
+            data={previewQuery.data.rows}
+            keyField={(_row, index) => String(index)}
+          />
         )}
       </section>
     </AppShell>

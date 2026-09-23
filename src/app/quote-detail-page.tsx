@@ -6,6 +6,7 @@ import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
@@ -78,6 +79,44 @@ export function QuoteDetailPage() {
   const quote = quoteQuery.data;
   const totals = computeTotals(quote);
   const canApprove = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
+
+  const itemColumns: TableColumn<QuoteItem>[] = [
+    {
+      key: 'product',
+      header: tr.crm.products.nameColumn,
+      render: (item) => item.product.name,
+    },
+    {
+      key: 'quantity',
+      header: tr.crm.quotes.detail.quantityColumn,
+      className: 'text-app-muted',
+      render: (item) => item.quantity,
+    },
+    {
+      key: 'unitPrice',
+      header: tr.crm.quotes.detail.unitPriceColumn,
+      className: 'text-app-muted',
+      render: (item) => currency.format(Number(item.unitPrice)),
+    },
+    {
+      key: 'discountPct',
+      header: tr.crm.quotes.detail.discountColumn,
+      className: 'text-app-muted',
+      render: (item) => `%${item.discountPct}`,
+    },
+    {
+      key: 'vatPct',
+      header: tr.crm.quotes.detail.vatColumn,
+      className: 'text-app-muted',
+      render: (item) => `%${item.vatPct}`,
+    },
+    {
+      key: 'lineTotal',
+      header: tr.crm.quotes.detail.lineTotalColumn,
+      className: 'text-right',
+      render: (item) => currency.format(lineTotal(item)),
+    },
+  ];
 
   function handleDelete() {
     if (!window.confirm(tr.crm.quotes.deleteConfirm)) {
@@ -166,36 +205,14 @@ export function QuoteDetailPage() {
         </p>
       )}
 
-      <div className="mt-6 overflow-x-auto border-t border-app-border p-6">
+      <div className="mt-6 border-t border-app-border p-6">
         <h2 className="text-sm font-bold text-app-text">{tr.crm.quotes.detail.itemsTitle}</h2>
-        <table className="mt-3 w-full text-left text-sm">
-          <thead className="text-xs font-semibold uppercase text-app-muted">
-            <tr>
-              <th className="py-2 pr-3">{tr.crm.products.nameColumn}</th>
-              <th className="py-2 pr-3">{tr.crm.quotes.detail.quantityColumn}</th>
-              <th className="py-2 pr-3">{tr.crm.quotes.detail.unitPriceColumn}</th>
-              <th className="py-2 pr-3">{tr.crm.quotes.detail.discountColumn}</th>
-              <th className="py-2 pr-3">{tr.crm.quotes.detail.vatColumn}</th>
-              <th className="py-2 pr-3 text-right">{tr.crm.quotes.detail.lineTotalColumn}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {quote.items.map((item) => (
-              <tr key={item.id} className="bg-app-surface border-t border-app-border">
-                <td className="py-2 pr-3 text-app-text">{item.product.name}</td>
-                <td className="py-2 pr-3 text-app-muted">{item.quantity}</td>
-                <td className="py-2 pr-3 text-app-muted">
-                  {currency.format(Number(item.unitPrice))}
-                </td>
-                <td className="py-2 pr-3 text-app-muted">%{item.discountPct}</td>
-                <td className="py-2 pr-3 text-app-muted">%{item.vatPct}</td>
-                <td className="py-2 pr-3 text-right text-app-text">
-                  {currency.format(lineTotal(item))}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={itemColumns}
+          data={quote.items}
+          keyField={(item) => item.id}
+          emptyMessage={tr.crm.quotes.form.summaryEmpty}
+        />
 
         <div className="mt-4 flex flex-col items-end gap-1 text-sm">
           <div className="flex w-56 justify-between">

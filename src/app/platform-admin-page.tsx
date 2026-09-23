@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { usePlatformTenantsQuery } from '../features/platform-admin/use-platform-admin';
+import type { TenantSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
 import { AppShell } from './app-shell';
 import { PlatformAdminTenantActions } from './platform-admin-tenant-actions';
@@ -11,6 +13,44 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
 export function PlatformAdminPage() {
   const tenantsQuery = usePlatformTenantsQuery();
+
+  const columns: TableColumn<TenantSummary>[] = [
+    {
+      key: 'name',
+      header: tr.platformAdmin.tenantColumn,
+      render: (tenant) => <span className="font-semibold text-app-text">{tenant.name}</span>,
+    },
+    {
+      key: 'adminEmail',
+      header: tr.platformAdmin.adminEmailColumn,
+      className: 'text-app-muted',
+      render: (tenant) => tenant.adminEmail ?? '—',
+    },
+    {
+      key: 'plan',
+      header: tr.platformAdmin.planColumn,
+      className: 'text-app-muted',
+      render: (tenant) => tenant.plan,
+    },
+    {
+      key: 'createdAt',
+      header: tr.platformAdmin.createdAtColumn,
+      className: 'text-app-muted',
+      render: (tenant) => dateFormatter.format(new Date(tenant.createdAt)),
+    },
+    {
+      key: 'modules',
+      header: tr.platformAdmin.modulesColumn,
+      render: (tenant) => <PlatformAdminTenantModules tenantId={tenant.id} />,
+    },
+    {
+      key: 'actions',
+      header: tr.platformAdmin.actionsColumn,
+      render: (tenant) => (
+        <PlatformAdminTenantActions tenantId={tenant.id} adminEmail={tenant.adminEmail} />
+      ),
+    },
+  ];
 
   return (
     <AppShell>
@@ -27,54 +67,14 @@ export function PlatformAdminPage() {
         </Link>
       </div>
 
-      {tenantsQuery.isPending && (
-        <p className="mt-6 text-sm text-app-muted">{tr.platformAdmin.loading}</p>
-      )}
-
-      {tenantsQuery.data?.length === 0 && (
-        <p className="mt-6 text-sm text-app-muted">{tr.platformAdmin.empty}</p>
-      )}
-
-      {tenantsQuery.data && tenantsQuery.data.length > 0 && (
-        <div className="mt-6 overflow-hidden border-t border-app-border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-              <tr>
-                <th className="px-4 py-3">{tr.platformAdmin.tenantColumn}</th>
-                <th className="px-4 py-3">{tr.platformAdmin.adminEmailColumn}</th>
-                <th className="px-4 py-3">{tr.platformAdmin.planColumn}</th>
-                <th className="px-4 py-3">{tr.platformAdmin.createdAtColumn}</th>
-                <th className="px-4 py-3">{tr.platformAdmin.modulesColumn}</th>
-                <th className="px-4 py-3">{tr.platformAdmin.actionsColumn}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tenantsQuery.data.map((tenant) => (
-                <tr
-                  key={tenant.id}
-                  className="bg-app-surface border-b border-app-border last:border-0 hover:bg-blue-50"
-                >
-                  <td className="px-4 py-3 font-semibold text-app-text">{tenant.name}</td>
-                  <td className="px-4 py-3 text-app-muted">{tenant.adminEmail ?? '—'}</td>
-                  <td className="px-4 py-3 text-app-muted">{tenant.plan}</td>
-                  <td className="px-4 py-3 text-app-muted">
-                    {dateFormatter.format(new Date(tenant.createdAt))}
-                  </td>
-                  <td className="px-4 py-3">
-                    <PlatformAdminTenantModules tenantId={tenant.id} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <PlatformAdminTenantActions
-                      tenantId={tenant.id}
-                      adminEmail={tenant.adminEmail}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={tenantsQuery.data ?? []}
+        keyField={(tenant) => tenant.id}
+        isLoading={tenantsQuery.isPending}
+        loadingMessage={tr.platformAdmin.loading}
+        emptyMessage={tr.platformAdmin.empty}
+      />
     </AppShell>
   );
 }
