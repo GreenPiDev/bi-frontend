@@ -6,7 +6,6 @@ import { Modal } from '../../components/ui/modal';
 import { useToast } from '../../components/ui/toast-context';
 import { ContactFormFields } from './contact-form-fields';
 import { cleanEmptyStrings, contactFormSchema, type ContactFormValues } from './schemas';
-import { useAccountsQuery } from './use-accounts';
 import { useCreateContactMutation } from './use-contacts';
 import { useDepartmentOptionsQuery } from './use-department-options';
 import { useTitleOptionsQuery } from './use-title-options';
@@ -21,7 +20,6 @@ interface NewContactModalProps {
 
 export function NewContactModal({ defaultFirstName, onClose, onCreated }: NewContactModalProps) {
   const toast = useToast();
-  const accountsQuery = useAccountsQuery();
   const departmentOptionsQuery = useDepartmentOptionsQuery();
   const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateContactMutation();
@@ -59,7 +57,6 @@ export function NewContactModal({ defaultFirstName, onClose, onCreated }: NewCon
           register={register}
           control={control}
           errors={errors}
-          accountsQuery={accountsQuery}
           departmentOptionsQuery={departmentOptionsQuery}
           titleOptionsQuery={titleOptionsQuery}
         />

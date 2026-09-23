@@ -44,6 +44,7 @@ const quote: api.Quote = {
     district: null,
     ownerId: null,
     missingCriticalFields: [],
+    customFields: null,
     createdAt: '2026-08-01T00:00:00.000Z',
     updatedAt: '2026-08-01T00:00:00.000Z',
   },

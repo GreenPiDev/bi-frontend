@@ -1,15 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
-import { useAccountsQuery } from '../features/crm/use-accounts';
 import { useQuotesQuery } from '../features/crm/use-quotes';
 import {
   useCreateProjectMutation,
@@ -27,7 +27,6 @@ export function ProjectFormPage() {
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
-  const accountsQuery = useAccountsQuery();
   const projectQuery = useProjectQuery(id ?? '');
   const createMutation = useCreateProjectMutation();
   const updateMutation = useUpdateProjectMutation(id ?? '');
@@ -38,6 +37,7 @@ export function ProjectFormPage() {
     handleSubmit,
     reset,
     watch,
+    control,
     formState: { errors },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -114,16 +114,19 @@ export function ProjectFormPage() {
           <div className="sm:col-span-2">
             <FormError message={apiErrorMessage} />
           </div>
-          <Select
-            label={tr.crm.projects.form.accountLabel}
-            required
-            hint={tr.crm.projects.form.accountHint}
-            error={errors.accountId?.message}
-            options={(accountsQuery.data?.data ?? []).map((account) => ({
-              value: account.id,
-              label: account.name,
-            }))}
-            {...register('accountId')}
+          <Controller
+            name="accountId"
+            control={control}
+            render={({ field }) => (
+              <AccountAutocomplete
+                label={tr.crm.projects.form.accountLabel}
+                required
+                hint={tr.crm.projects.form.accountHint}
+                error={errors.accountId?.message}
+                value={field.value}
+                onChange={field.onChange}
+              />
+            )}
           />
           <Select
             label={tr.crm.projects.form.quoteLabel}

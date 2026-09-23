@@ -13,7 +13,6 @@ import {
   contactFormSchema,
   type ContactFormValues,
 } from '../features/crm/schemas';
-import { useAccountsQuery } from '../features/crm/use-accounts';
 import {
   useContactQuery,
   useCreateContactMutation,
@@ -30,7 +29,6 @@ export function ContactFormPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const contactQuery = useContactQuery(id ?? '');
-  const accountsQuery = useAccountsQuery();
   const departmentOptionsQuery = useDepartmentOptionsQuery();
   const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateContactMutation();
@@ -104,7 +102,6 @@ export function ContactFormPage() {
             register={register}
             control={control}
             errors={errors}
-            accountsQuery={accountsQuery}
             departmentOptionsQuery={departmentOptionsQuery}
             titleOptionsQuery={titleOptionsQuery}
           />

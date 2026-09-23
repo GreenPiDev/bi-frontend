@@ -13,7 +13,7 @@ import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
-import { useAccountsQuery } from '../features/crm/use-accounts';
+import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
@@ -46,7 +46,6 @@ export function QuoteFormPage() {
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
-  const accountsQuery = useAccountsQuery();
   const contactsQuery = useContactsQuery();
   const productListsQuery = useProductListsQuery();
   const createMutation = useCreateQuoteMutation();
@@ -437,17 +436,20 @@ export function QuoteFormPage() {
           <FormError message={apiErrorMessage} />
 
           <div className="grid grid-cols-1 gap-4 border-t border-app-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
-            <Select
-              label={tr.crm.quotes.form.accountLabel}
-              required
-              placeholder={tr.crm.quotes.form.accountPlaceholder}
-              hint={tr.crm.quotes.form.accountHint}
-              error={errors.accountId?.message}
-              options={(accountsQuery.data?.data ?? []).map((account) => ({
-                value: account.id,
-                label: account.name,
-              }))}
-              {...register('accountId')}
+            <Controller
+              name="accountId"
+              control={control}
+              render={({ field }) => (
+                <AccountAutocomplete
+                  label={tr.crm.quotes.form.accountLabel}
+                  required
+                  placeholder={tr.crm.quotes.form.accountPlaceholder}
+                  hint={tr.crm.quotes.form.accountHint}
+                  error={errors.accountId?.message}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             <Select
               label={tr.crm.quotes.form.productListLabel}

@@ -14,7 +14,7 @@ import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
-import { useAccountsQuery } from '../features/crm/use-accounts';
+import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import {
   useCreateOpportunityMutation,
@@ -56,7 +56,6 @@ export function OpportunityFormPage() {
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
-  const accountsQuery = useAccountsQuery();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const opportunityQuery = useOpportunityQuery(id ?? '');
   const createMutation = useCreateOpportunityMutation();
@@ -176,16 +175,19 @@ export function OpportunityFormPage() {
           <FormError message={apiErrorMessage} />
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Select
-              label={tr.crm.opportunities.form.accountLabel}
-              required
-              hint={tr.crm.opportunities.form.accountHint}
-              error={errors.accountId?.message}
-              options={(accountsQuery.data?.data ?? []).map((account) => ({
-                value: account.id,
-                label: account.name,
-              }))}
-              {...register('accountId')}
+            <Controller
+              name="accountId"
+              control={control}
+              render={({ field }) => (
+                <AccountAutocomplete
+                  label={tr.crm.opportunities.form.accountLabel}
+                  required
+                  hint={tr.crm.opportunities.form.accountHint}
+                  error={errors.accountId?.message}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
             />
             <TextField
               label={tr.crm.opportunities.form.nameLabel}

@@ -35,6 +35,8 @@ export const tr = {
       'Firmalarınızın (cari) listesi. Arama yapabilir, yeni firma ekleyebilir, Excel ile toplu içe/dışa aktarabilirsiniz. Ünlem ikonu, o firmada eksik kritik bilgi olduğunu gösterir.',
     accountDetail:
       'Bu firmanın genel bilgilerini ve firmayla yapılan tüm işleri (görüşmeler, fırsatlar, teklifler, projeler) sekmeler halinde görüntüleyin.',
+    accountImports:
+      'Firma listenizi Excel/CSV\'den içe aktarın. Dosyanız standart olmasa da (fazladan kolonlar, başlık ilk satırda olmayabilir) her adımda ne yapılacağını siz seçersiniz; bilinmeyen sütunlar kaybolmaz, firmanın "özel alanları" olarak saklanır.',
     contacts:
       'Firmalara bağlı kişilerin listesi. Bir kişinin aktif/pasif durumunu ve son iletişim tarihini buradan takip edebilirsiniz.',
     contactDetail: 'Bu kişinin iletişim bilgilerini görüntüleyin ve düzenleyin.',
@@ -96,7 +98,6 @@ export const tr = {
   auth: {
     eyebrow: 'PiLens',
     loginTitle: 'Hesabınıza giriş yapın',
-    loginSubtitle: 'Verilerinizi görselleştirmeye devam edin.',
     loginSubmit: 'Giriş yap',
     loginSubmitting: 'Giriş yapılıyor...',
     fields: {
@@ -601,6 +602,14 @@ export const tr = {
         gte: 'büyük eşitse',
       },
     },
+    cache: {
+      title: 'Önbellekleri Boşalt',
+      hint: 'Bazı liste sayfaları (örn. Firmalar) performans için önbelleklenir; normalde ekleme/düzenleme/silme yaptığınızda bu önbellek otomatik tazelenir. Ama veritabanına doğrudan (uygulama dışından) müdahale edildiyse önbellek bunu fark edemez ve eski veriyi göstermeye devam edebilir. Böyle bir durumda bu butonla şirketinize ait önbellekleri elle boşaltabilirsiniz; süresi dolmayı beklemez, sadece siz tetiklediğinizde temizlenir.',
+      clearButton: 'Önbellekleri Boşalt',
+      clearing: 'Boşaltılıyor...',
+      success: 'Önbellekler boşaltıldı.',
+      error: 'Önbellekler boşaltılamadı.',
+    },
   },
   onboarding: {
     title: "PiLens'e Hoş Geldin",
@@ -834,6 +843,8 @@ export const tr = {
         noOpportunities: 'Bu firmaya bağlı fırsat yok.',
         noQuotes: 'Bu firmaya ait teklif yok.',
         noProjects: 'Bu firmaya ait proje yok.',
+        customFieldsTitle: 'Özel Alanlar',
+        customFieldsEmpty: 'Bu firma için özel alan yok.',
       },
     },
     contacts: {
@@ -1197,6 +1208,49 @@ export const tr = {
         costPrice: 'Maliyet',
         minStockLevel: 'Minimum Stok Seviyesi',
         maxDiscountPct: 'Azami İskonto Oranı (%)',
+      },
+    },
+    accountImports: {
+      title: 'Firma İçe Aktar',
+      back: 'Listeye dön',
+      stepUpload: '1. Dosya Yükle ve Başlık Satırını Seç',
+      stepMap: '2. Sütunları Eşle',
+      stepResult: '3. Sonuç',
+      fileLabel: 'CSV veya XLSX dosyası',
+      uploadButton: 'Yükle',
+      uploading: 'Yükleniyor...',
+      rawPreviewInstructions:
+        'Aşağıda dosyanın ilk satırları gösteriliyor. Hangi satırın sütun başlıkları olduğunu seçin.',
+      pickHeaderRowButton: 'Bu satır başlık',
+      changeFileButton: 'Farklı dosya seç',
+      mapInstructions:
+        'Her sütun için bir alan seçin: bilinen bir firma alanına eşleyin, özel alan olarak saklayın ya da yok sayın.',
+      columnHeader: 'Kaynak sütun',
+      assignmentHeader: 'Hedef',
+      assignmentIgnore: 'Yok say',
+      assignmentAttribute: 'Özel alan olarak sakla',
+      sampleValueLabel: 'Örnek değer',
+      changeHeaderRowButton: 'Başlık satırını değiştir',
+      importButton: 'İçe Aktar',
+      importing: 'İçe aktarılıyor...',
+      nameRequiredError: "'Firma Adı' alanı bir sütuna eşlenmelidir.",
+      totalRowsLabel: 'Toplam satır',
+      importedLabel: 'Aktarılan',
+      errorsLabel: 'Hatalı satır',
+      rowErrorPrefix: 'Satır',
+      done: 'Tamamla',
+      fieldLabels: {
+        name: 'Firma Adı',
+        taxNumber: 'Vergi No / TC Kimlik No',
+        taxOffice: 'Vergi Dairesi',
+        sector: 'Sektör',
+        website: 'Web Sitesi',
+        phone: 'Telefon',
+        landlinePhone: 'Sabit Hat',
+        email: 'E-posta',
+        address: 'Adres',
+        city: 'İl',
+        district: 'İlçe',
       },
     },
     products: {

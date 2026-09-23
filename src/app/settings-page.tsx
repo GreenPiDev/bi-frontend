@@ -14,6 +14,7 @@ import { PageAccessMatrixSection } from '../features/roles/page-access-matrix-se
 import { RolesSettingsSection } from '../features/roles/roles-settings-section';
 import { UsersSettingsSection } from '../features/roles/users-settings-section';
 import { ReportsSection } from '../features/reports/reports-section';
+import { CacheSection } from '../features/settings/cache-section';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -115,6 +116,7 @@ function GeneralTab() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <ReportsSection />
       <AlertsSection />
+      <CacheSection />
     </div>
   );
 }

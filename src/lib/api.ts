@@ -737,6 +737,7 @@ export interface Account {
   district: string | null;
   ownerId: string | null;
   missingCriticalFields: string[];
+  customFields: Record<string, string> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -984,6 +985,42 @@ export function runImport(
 
 export function exportEntity(entity: ImportEntity): Promise<Blob> {
   return requestBlob(`/imports/${entity}/export`, 'GET');
+}
+
+// --- Firma İçe Aktarma (marka/kaynak-bağımsız, product-imports ile aynı sihirbaz) ------
+
+export interface AccountImportRawPreview {
+  rows: string[][];
+}
+
+export function previewAccountImportRaw(file: File): Promise<AccountImportRawPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/imports/accounts/preview', { method: 'POST', body: formData });
+}
+
+export function previewAccountImportMapped(
+  file: File,
+  headerRowIndex: number,
+): Promise<ImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  return request('/imports/accounts/preview', { method: 'POST', body: formData });
+}
+
+export function runAccountImport(
+  file: File,
+  headerRowIndex: number,
+  mapping: Record<string, string>,
+  attributeColumns: string[],
+): Promise<ImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  formData.append('mapping', JSON.stringify(mapping));
+  formData.append('attributeColumns', JSON.stringify(attributeColumns));
+  return request('/imports/accounts', { method: 'POST', body: formData });
 }
 
 // --- Ürün İçe Aktarma (Faz B, marka bazlı heterojen liste import) ----------
@@ -1911,4 +1948,10 @@ export function setConversationStar(conversationId: string, starred: boolean): P
 
 export function listAssignableMessageUsers(): Promise<AssignableUser[]> {
   return request('/messages/assignable-users');
+}
+
+// --- Önbellek --------------------------------------------------------------
+
+export function clearCache(): Promise<void> {
+  return request('/cache/clear', { method: 'POST' });
 }

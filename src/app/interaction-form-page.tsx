@@ -15,7 +15,7 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { NewContactModal } from '../features/crm/new-contact-modal';
-import { useAccountsQuery } from '../features/crm/use-accounts';
+import { useAccountQuery, useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import { useCreateInteractionMutation } from '../features/crm/use-interactions';
@@ -26,7 +26,10 @@ import {
   type CurrencyCode,
   type OpportunityStage,
 } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
+
+const ACCOUNT_SEARCH_PAGE_SIZE = 20;
 
 const TYPE_OPTIONS = (['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const).map((type) => ({
   value: type,
@@ -49,7 +52,6 @@ export function InteractionFormPage() {
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId');
   const toast = useToast();
-  const accountsQuery = useAccountsQuery();
   const contactsQuery = useContactsQuery();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const createMutation = useCreateInteractionMutation();
@@ -75,15 +77,25 @@ export function InteractionFormPage() {
 
   const { fields, append, remove } = useFieldArray({ control, name: 'participants' });
 
+  // prefillAccountId'nin adini coz - sayfalanmis/aramali accountsQuery'nin o an yuklu
+  // sayfasinda olmayabilecegi icin dogrudan getById ile cekilir (bkz. asagidaki not).
+  const prefillAccountQuery = useAccountQuery(prefillAccountId ?? '');
   useEffect(() => {
-    if (!prefillAccountId) return;
-    const account = (accountsQuery.data?.data ?? []).find((a) => a.id === prefillAccountId);
-    if (account) {
-      setValue('accountName', account.name);
+    if (prefillAccountQuery.data) {
+      setValue('accountName', prefillAccountQuery.data.name);
     }
-  }, [prefillAccountId, accountsQuery.data, setValue]);
+  }, [prefillAccountQuery.data, setValue]);
 
   const accountNameValue = watch('accountName') ?? '';
+  // Firma onerileri ve esleme, yazilan metne gore SUNUCUDAN aranir - sabit ilk sayfa
+  // (varsayilan isim-alfabetik siralama) yerine, boylece "A" ile baslamayan bir firma
+  // adi yazildiginda da (orn. "Demsan") o firma bulunabilir ve M2'nin "zaten var olan
+  // firmayi tekrar olusturma" garantisi de dogru calisir.
+  const debouncedAccountName = useDebouncedValue(accountNameValue);
+  const accountsQuery = useAccountsQuery({
+    q: debouncedAccountName || undefined,
+    pageSize: ACCOUNT_SEARCH_PAGE_SIZE,
+  });
   const matchedAccount = (accountsQuery.data?.data ?? []).find(
     (account) => account.name.toLowerCase() === accountNameValue.trim().toLowerCase(),
   );

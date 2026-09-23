@@ -11,7 +11,7 @@ import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
-import { useAccountsQuery } from '../features/crm/use-accounts';
+import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
@@ -77,7 +77,6 @@ export function ContactsListPage() {
     status: status || undefined,
     sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
-  const accountsQuery = useAccountsQuery({ pageSize: 100 });
   const exportMutation = useExportEntityMutation('contacts');
   const deleteMutation = useDeleteContactMutation();
   const hasActiveFilter = Boolean(accountId) || Boolean(status);
@@ -269,18 +268,14 @@ export function ContactsListPage() {
       {drawerOpen && (
         <Drawer title={tr.crm.contacts.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
           <div className="flex flex-col gap-4">
-            <Select
+            <AccountAutocomplete
               label={tr.crm.contacts.filterDrawer.accountLabel}
               placeholder={tr.crm.contacts.filterDrawer.accountPlaceholder}
-              value={accountId}
-              onChange={(event) => {
+              value={accountId || undefined}
+              onChange={(nextAccountId) => {
                 setPage(1);
-                setAccountId(event.target.value);
+                setAccountId(nextAccountId ?? '');
               }}
-              options={(accountsQuery.data?.data ?? []).map((account) => ({
-                value: account.id,
-                label: account.name,
-              }))}
             />
             <Select
               label={tr.crm.contacts.filterDrawer.statusLabel}

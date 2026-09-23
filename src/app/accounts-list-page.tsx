@@ -67,6 +67,20 @@ export function AccountsListPage() {
     });
   }
 
+  // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar - farklı müşteri
+  // dosyalarında farklı anahtarlar olabilir, o yüzden sayfadaki firmalardan görülen tüm
+  // anahtarların birleşimi kadar sütun eklenir; bir firmada o anahtar yoksa hücre boş kalır
+  // (products-list-page.tsx'teki attributeColumns deseniyle aynı).
+  const attributeKeys = [
+    ...new Set((accountsQuery.data?.data ?? []).flatMap((a) => Object.keys(a.customFields ?? {}))),
+  ].sort();
+  const attributeColumns: TableColumn<Account>[] = attributeKeys.map((key) => ({
+    key: `attr:${key}`,
+    header: key,
+    className: 'text-app-muted',
+    render: (a) => a.customFields?.[key] ?? '—',
+  }));
+
   const ALL_COLUMNS: TableColumn<Account>[] = [
     {
       key: 'name',
@@ -122,6 +136,7 @@ export function AccountsListPage() {
           ? a.accountTypes.map((type) => tr.crm.accounts.accountTypeOptions[type]).join(', ')
           : '—',
     },
+    ...attributeColumns,
     {
       key: 'actions',
       header: tr.crm.accounts.actionsColumn,

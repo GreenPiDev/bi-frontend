@@ -130,6 +130,28 @@ export function AccountDetailPage() {
                       </ul>
                     )}
                   </div>
+
+                  <div className="mt-6 border-t border-app-border pt-6">
+                    <h2 className="text-sm font-bold text-app-text">
+                      {tr.crm.accounts.detail.customFieldsTitle}
+                    </h2>
+                    {account.customFields && Object.keys(account.customFields).length > 0 ? (
+                      <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {Object.entries(account.customFields).map(([key, value]) => (
+                          <div key={key}>
+                            <dt className="text-xs font-semibold uppercase text-app-muted">
+                              {key}
+                            </dt>
+                            <dd className="mt-1 text-sm text-app-text">{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : (
+                      <p className="mt-2 text-sm text-app-muted">
+                        {tr.crm.accounts.detail.customFieldsEmpty}
+                      </p>
+                    )}
+                  </div>
                 </>
               ),
             },

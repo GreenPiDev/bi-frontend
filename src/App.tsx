@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { AccountDetailPage } from './app/account-detail-page';
 import { AccountFormPage } from './app/account-form-page';
+import { AccountImportPage } from './app/account-import-page';
 import { AccountsListPage } from './app/accounts-list-page';
 import { CalendarPage } from './app/calendar-page';
 import { ContactDetailPage } from './app/contact-detail-page';
@@ -263,7 +264,7 @@ function App() {
           path="/firmalar/ice-aktar"
           element={
             <TenantPageRoute pageKey="accounts">
-              <CrmImportPage entity="accounts" />
+              <AccountImportPage />
             </TenantPageRoute>
           }
         />
