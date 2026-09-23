@@ -65,7 +65,7 @@ export function QuoteFormPage() {
       hasOpportunity: false,
     },
   });
-  const { fields, append, remove, replace } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, replace, update } = useFieldArray({ control, name: 'items' });
   const hasOpportunity = watch('hasOpportunity');
   const selectedAccountId = watch('accountId');
   const selectedProductListId = watch('productListId');
@@ -142,6 +142,41 @@ export function QuoteFormPage() {
       vatPct: entryVatPct || '0',
     });
     setEntryProductId(null);
+  }
+
+  // Teklif özeti tablosundaki mevcut satırlara tıklayınca açılan düzenleme paneli -
+  // ürün ekleme panelindeki aynı miktar/fiyat/iskonto/KDV deseni (bkz. quote-edit-page.tsx).
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editQuantity, setEditQuantity] = useState('1');
+  const [editUnitPrice, setEditUnitPrice] = useState('');
+  const [editDiscountPct, setEditDiscountPct] = useState('0');
+  const [editVatPct, setEditVatPct] = useState('0');
+
+  function handleToggleEditRow(index: number) {
+    if (editingIndex === index) {
+      setEditingIndex(null);
+      return;
+    }
+    const item = watchedItems?.[index];
+    if (!item) return;
+    setEditingIndex(index);
+    setEditQuantity(item.quantity);
+    setEditUnitPrice(item.unitPrice ?? '');
+    setEditDiscountPct(item.discountPct ?? '0');
+    setEditVatPct(item.vatPct ?? '0');
+  }
+
+  function handleSaveEditRow(index: number) {
+    const item = watchedItems?.[index];
+    if (!item) return;
+    update(index, {
+      productId: item.productId,
+      quantity: editQuantity || '1',
+      unitPrice: editUnitPrice,
+      discountPct: editDiscountPct || '0',
+      vatPct: editVatPct || '0',
+    });
+    setEditingIndex(null);
   }
 
   const contactOptions = (contactsQuery.data?.data ?? [])
@@ -251,6 +286,7 @@ export function QuoteFormPage() {
                   setPickerPage(1);
                   setPickerQuery('');
                   setEntryProductId(null);
+                  setEditingIndex(null);
                 },
               })}
             />
@@ -441,41 +477,102 @@ export function QuoteFormPage() {
                       </thead>
                       <tbody>
                         {summaryRows.map((row, index) => (
-                          <tr
-                            key={fields[index]?.id ?? index}
-                            className="border-t border-app-border"
-                          >
-                            <td className="py-2 pr-3 align-top">
-                              <div className="font-semibold text-app-text">
-                                {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
-                              </div>
-                              {row.isDefaultPrice && (
-                                <Badge variant="neutral" className="mt-0.5">
-                                  {tr.crm.quotes.form.summaryPriceFromList}
-                                </Badge>
-                              )}
-                            </td>
-                            <td className="py-2 pr-3 align-top text-app-muted">{row.quantity}</td>
-                            <td className="py-2 pr-3 align-top text-app-muted">
-                              {row.discountPct > 0 ? `%${row.discountPct}` : ''}
-                            </td>
-                            <td className="py-2 pr-3 align-top text-app-muted">
-                              {row.vatPct > 0 ? `%${row.vatPct}` : ''}
-                            </td>
-                            <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-text">
-                              {currency.format(row.lineTotal)}
-                            </td>
-                            <td className="py-2 align-top">
-                              <button
-                                type="button"
-                                onClick={() => remove(index)}
-                                aria-label={tr.crm.quotes.form.removeItem}
-                                className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-                              >
-                                <X size={14} />
-                              </button>
-                            </td>
-                          </tr>
+                          <Fragment key={fields[index]?.id ?? index}>
+                            <tr
+                              onClick={() => handleToggleEditRow(index)}
+                              className={`cursor-pointer border-t border-app-border hover:bg-blue-50 ${
+                                editingIndex === index ? 'bg-blue-50' : ''
+                              }`}
+                            >
+                              <td className="py-2 pr-3 align-top">
+                                <div className="font-semibold text-app-text">
+                                  {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
+                                </div>
+                                {row.isDefaultPrice && (
+                                  <Badge variant="neutral" className="mt-0.5">
+                                    {tr.crm.quotes.form.summaryPriceFromList}
+                                  </Badge>
+                                )}
+                              </td>
+                              <td className="py-2 pr-3 align-top text-app-muted">{row.quantity}</td>
+                              <td className="py-2 pr-3 align-top text-app-muted">
+                                {row.discountPct > 0 ? `%${row.discountPct}` : ''}
+                              </td>
+                              <td className="py-2 pr-3 align-top text-app-muted">
+                                {row.vatPct > 0 ? `%${row.vatPct}` : ''}
+                              </td>
+                              <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-text">
+                                {currency.format(row.lineTotal)}
+                              </td>
+                              <td className="py-2 align-top">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    remove(index);
+                                    if (editingIndex === index) setEditingIndex(null);
+                                  }}
+                                  aria-label={tr.crm.quotes.form.removeItem}
+                                  className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                            {editingIndex === index && (
+                              <tr className="border-t border-app-border bg-app-bg">
+                                <td colSpan={6} className="p-4">
+                                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.quantityLabel}
+                                      value={editQuantity}
+                                      onChange={(event) =>
+                                        setEditQuantity(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.unitPriceLabel}
+                                      value={editUnitPrice}
+                                      onChange={(event) =>
+                                        setEditUnitPrice(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.discountPctLabel}
+                                      value={editDiscountPct}
+                                      onChange={(event) =>
+                                        setEditDiscountPct(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.vatPctLabel}
+                                      value={editVatPct}
+                                      onChange={(event) =>
+                                        setEditVatPct(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+                                      <Button
+                                        type="button"
+                                        className="w-full"
+                                        onClick={() => handleSaveEditRow(index)}
+                                      >
+                                        {tr.crm.quotes.edit.saveRow}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
                         ))}
                       </tbody>
                     </table>
