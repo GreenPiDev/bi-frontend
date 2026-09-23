@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { tr } from '../../i18n/tr';
 import { Button } from './button';
 
@@ -37,6 +37,13 @@ interface TableProps<T> {
   /** Aktif siralama (server-side) - sortKey tasiyan kolonlarla birlikte kullanilir. */
   sort?: TableSort | null;
   onSortChange?: (sort: TableSort | null) => void;
+  /** Verilirse, ilgili satirin altina tum genislikte (colSpan) ek bir satir acilir -
+   * denetim kaydi detayi, envanter/ekleme paneli gibi "satira tikla, altinda genislet"
+   * desenleri icin (bkz. settings-page.tsx audit log, quote-form-page.tsx urun secici).
+   * Acik/kapali durumu Table kendisi tutmaz, cagiran bilesenin state'inden okunur -
+   * genelde onRowClick ile ayni id'yi toggle eder. */
+  isRowExpanded?: (row: T, index: number) => boolean;
+  renderExpandedRow?: (row: T, index: number) => ReactNode;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -51,6 +58,8 @@ export function Table<T>({
   emptyMessage,
   sort,
   onSortChange,
+  isRowExpanded,
+  renderExpandedRow,
 }: TableProps<T>) {
   if (isLoading) {
     return <p className="mt-6 text-sm text-app-muted">{loadingMessage}</p>;
@@ -104,22 +113,37 @@ export function Table<T>({
           </tr>
         </thead>
         <tbody>
-          {data.map((row, index) => (
-            <tr
-              key={keyField(row, index)}
-              onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={clsx(
-                'bg-app-surface border-b border-app-border last:border-0',
-                onRowClick && 'cursor-pointer hover:bg-blue-50',
-              )}
-            >
-              {columns.map((column) => (
-                <td key={column.key} className={clsx('px-4 py-3 !text-app-text', column.className)}>
-                  {column.render(row)}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {data.map((row, index) => {
+            const expanded = isRowExpanded?.(row, index) ?? false;
+            return (
+              <Fragment key={keyField(row, index)}>
+                <tr
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={clsx(
+                    'bg-app-surface border-b border-app-border last:border-0',
+                    onRowClick && 'cursor-pointer hover:bg-blue-50',
+                    expanded && 'border-b-0',
+                  )}
+                >
+                  {columns.map((column) => (
+                    <td
+                      key={column.key}
+                      className={clsx('px-4 py-3 !text-app-text', column.className)}
+                    >
+                      {column.render(row)}
+                    </td>
+                  ))}
+                </tr>
+                {expanded && renderExpandedRow && (
+                  <tr className="bg-app-bg border-b border-app-border last:border-0">
+                    <td colSpan={columns.length} className="p-4">
+                      {renderExpandedRow(row, index)}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>
