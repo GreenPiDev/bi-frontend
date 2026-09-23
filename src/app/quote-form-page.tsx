@@ -1,12 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ChangeEvent } from 'react';
-import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
+import { Search, X } from 'lucide-react';
+import { Fragment, useEffect, useState } from 'react';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { Pagination } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { TextField } from '../components/ui/text-field';
@@ -17,7 +19,8 @@ import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
-import { ApiError, type CreateQuoteInput, type OpportunityStage } from '../lib/api';
+import { ApiError, type CreateQuoteInput, type OpportunityStage, type Product } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
@@ -25,18 +28,17 @@ const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
 
 const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+const plainNumber = new Intl.NumberFormat('tr-TR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const PICKER_PAGE_SIZE = 10;
 
 /** Sayısal metin alanları icin: type="number" spinner oklarini kaldirmak amaciyla
  * type="text" kullanilir, bu yuzden rakam/nokta disindaki karakterler onChange'de
  * filtrelenir. */
-function decimalOnly(registration: UseFormRegisterReturn) {
-  return {
-    ...registration,
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = event.target.value.replace(/[^0-9.]/g, '');
-      return registration.onChange(event);
-    },
-  };
+function sanitizeDecimalInput(value: string): string {
+  return value.replace(/[^0-9.]/g, '');
 }
 
 export function QuoteFormPage() {
@@ -54,13 +56,12 @@ export function QuoteFormPage() {
     control,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
       accountId: prefillAccountId,
-      items: [{ productId: '', quantity: '1', unitPrice: '', discountPct: '0', vatPct: '0' }],
+      items: [],
       hasOpportunity: false,
     },
   });
@@ -70,15 +71,78 @@ export function QuoteFormPage() {
   const selectedProductListId = watch('productListId');
   const watchedItems = watch('items');
 
-  const productsQuery = useProductsQuery({ productListId: selectedProductListId || undefined });
-  const products = productsQuery.data?.data ?? [];
-  const productOptions = products.map((product) => ({ value: product.id, label: product.name }));
-  const productNameById = new Map(products.map((product) => [product.id, product.name]));
+  // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
+  // frontende çekilip filtrelenmez. Seçilen ürün listesine göre filtrelenir.
+  const [pickerPage, setPickerPage] = useState(1);
+  const [pickerQuery, setPickerQuery] = useState('');
+  const debouncedPickerQuery = useDebouncedValue(pickerQuery.trim());
+  const productsQuery = useProductsQuery(
+    {
+      page: pickerPage,
+      pageSize: PICKER_PAGE_SIZE,
+      q: debouncedPickerQuery || undefined,
+      productListId: selectedProductListId || undefined,
+    },
+    { enabled: Boolean(selectedProductListId) },
+  );
+  const pickerProducts = productsQuery.data?.data ?? [];
+
+  // Sağdaki özet, arama/sayfalama boyunca görünürden çıkan ürünleri de doğru
+  // gösterebilsin diye görülen her ürün burada biriktirilir (id -> Product).
+  const [productCatalog, setProductCatalog] = useState<Record<string, Product>>({});
+  useEffect(() => {
+    const data = productsQuery.data?.data;
+    if (!data || data.length === 0) return;
+    setProductCatalog((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const product of data) {
+        if (next[product.id] !== product) {
+          next[product.id] = product;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [productsQuery.data]);
+  const productNameById = new Map(
+    Object.values(productCatalog).map((product) => [product.id, product.name]),
+  );
   const productPriceById = new Map(
-    products
+    Object.values(productCatalog)
       .filter((product) => product.price !== null)
       .map((product) => [product.id, Number(product.price)]),
   );
+
+  // Ürün satırına tıklayınca altında açılan miktar/iskonto/KDV giriş paneli.
+  const [entryProductId, setEntryProductId] = useState<string | null>(null);
+  const [entryQuantity, setEntryQuantity] = useState('1');
+  const [entryUnitPrice, setEntryUnitPrice] = useState('');
+  const [entryDiscountPct, setEntryDiscountPct] = useState('0');
+  const [entryVatPct, setEntryVatPct] = useState('0');
+
+  function handleToggleEntry(product: Product) {
+    if (entryProductId === product.id) {
+      setEntryProductId(null);
+      return;
+    }
+    setEntryProductId(product.id);
+    setEntryQuantity('1');
+    setEntryUnitPrice(product.price ?? '');
+    setEntryDiscountPct('0');
+    setEntryVatPct('0');
+  }
+
+  function handleAddEntry(product: Product) {
+    append({
+      productId: product.id,
+      quantity: entryQuantity || '1',
+      unitPrice: entryUnitPrice,
+      discountPct: entryDiscountPct || '0',
+      vatPct: entryVatPct || '0',
+    });
+    setEntryProductId(null);
+  }
 
   const contactOptions = (contactsQuery.data?.data ?? [])
     .filter((contact) => !selectedAccountId || contact.accountId === selectedAccountId)
@@ -155,294 +219,342 @@ export function QuoteFormPage() {
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">{tr.crm.quotes.form.newTitle}</h1>
 
-        <form onSubmit={onSubmit} className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_400px]">
-          <div className="flex flex-col gap-6 border-t border-app-border p-8">
-            <FormError message={apiErrorMessage} />
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6">
+          <FormError message={apiErrorMessage} />
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Select
-                label={tr.crm.quotes.form.accountLabel}
-                required
-                hint={tr.crm.quotes.form.accountHint}
-                error={errors.accountId?.message}
-                options={(accountsQuery.data?.data ?? []).map((account) => ({
-                  value: account.id,
-                  label: account.name,
-                }))}
-                {...register('accountId')}
-              />
-              <Select
-                label={tr.crm.quotes.form.productListLabel}
-                required
-                hint={tr.crm.quotes.form.productListHint}
-                error={errors.productListId?.message}
-                options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                  value: productList.id,
-                  label: productList.name,
-                }))}
-                {...register('productListId', {
-                  onChange: () => {
-                    replace([
-                      {
-                        productId: '',
-                        quantity: '1',
-                        unitPrice: '',
-                        discountPct: '0',
-                        vatPct: '0',
-                      },
-                    ]);
-                  },
-                })}
-              />
-              <Select
-                label={tr.crm.quotes.form.contactLabel}
-                placeholder={tr.crm.quotes.form.contactPlaceholder}
-                hint={tr.crm.quotes.form.contactHint}
-                options={contactOptions}
-                error={errors.contactId?.message}
-                {...register('contactId')}
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-4 border-t border-app-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
+            <Select
+              label={tr.crm.quotes.form.accountLabel}
+              required
+              placeholder={tr.crm.quotes.form.accountPlaceholder}
+              hint={tr.crm.quotes.form.accountHint}
+              error={errors.accountId?.message}
+              options={(accountsQuery.data?.data ?? []).map((account) => ({
+                value: account.id,
+                label: account.name,
+              }))}
+              {...register('accountId')}
+            />
+            <Select
+              label={tr.crm.quotes.form.productListLabel}
+              required
+              placeholder={tr.crm.quotes.form.productListPlaceholder}
+              hint={tr.crm.quotes.form.productListHint}
+              error={errors.productListId?.message}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+              {...register('productListId', {
+                onChange: () => {
+                  replace([]);
+                  setPickerPage(1);
+                  setPickerQuery('');
+                  setEntryProductId(null);
+                },
+              })}
+            />
+            <Select
+              label={tr.crm.quotes.form.contactLabel}
+              placeholder={tr.crm.quotes.form.contactPlaceholder}
+              hint={tr.crm.quotes.form.contactHint}
+              options={contactOptions}
+              error={errors.contactId?.message}
+              {...register('contactId')}
+            />
+          </div>
 
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-lg border border-app-border bg-app-surface p-4">
               <span className="text-sm font-semibold text-app-text">
                 {tr.crm.quotes.form.itemsSectionTitle}
               </span>
               <FormError message={errors.items?.message} />
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full min-w-[720px] text-left text-sm">
-                  <thead className="text-xs font-semibold uppercase text-app-muted">
-                    <tr>
-                      <th className="w-56 py-2 pr-3">{tr.crm.quotes.form.productLabel}</th>
-                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.quantityLabel}</th>
-                      <th className="w-32 py-2 pr-3">{tr.crm.quotes.form.unitPriceLabel}</th>
-                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.discountPctLabel}</th>
-                      <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.vatPctLabel}</th>
-                      <th className="w-10 py-2" aria-hidden="true" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fields.map((field, index) => (
-                      <tr
-                        key={field.id}
-                        className="border-t border-app-border [&_label]:sr-only [&_p]:mt-0.5"
-                      >
-                        <td className="py-2 pr-3 align-top">
-                          <Select
-                            label={tr.crm.quotes.form.productLabel}
-                            required
-                            options={productOptions}
-                            error={errors.items?.[index]?.productId?.message}
-                            {...register(`items.${index}.productId` as const, {
-                              onChange: (event: ChangeEvent<HTMLSelectElement>) => {
-                                const productPrice = productPriceById.get(event.target.value);
-                                setValue(
-                                  `items.${index}.unitPrice`,
-                                  productPrice !== undefined ? String(productPrice) : '',
-                                );
-                              },
-                            })}
-                          />
-                        </td>
-                        <td className="py-2 pr-3 align-top">
-                          <TextField
-                            type="text"
-                            inputMode="decimal"
-                            label={tr.crm.quotes.form.quantityLabel}
-                            required
-                            error={errors.items?.[index]?.quantity?.message}
-                            {...decimalOnly(register(`items.${index}.quantity` as const))}
-                          />
-                        </td>
-                        <td className="py-2 pr-3 align-top">
-                          <TextField
-                            type="text"
-                            inputMode="decimal"
-                            label={tr.crm.quotes.form.unitPriceLabel}
-                            error={errors.items?.[index]?.unitPrice?.message}
-                            {...decimalOnly(register(`items.${index}.unitPrice` as const))}
-                          />
-                        </td>
-                        <td className="py-2 pr-3 align-top">
-                          <TextField
-                            type="text"
-                            inputMode="decimal"
-                            label={tr.crm.quotes.form.discountPctLabel}
-                            error={errors.items?.[index]?.discountPct?.message}
-                            {...decimalOnly(register(`items.${index}.discountPct` as const))}
-                          />
-                        </td>
-                        <td className="py-2 pr-3 align-top">
-                          <TextField
-                            type="text"
-                            inputMode="decimal"
-                            label={tr.crm.quotes.form.vatPctLabel}
-                            error={errors.items?.[index]?.vatPct?.message}
-                            {...decimalOnly(register(`items.${index}.vatPct` as const))}
-                          />
-                        </td>
-                        <td className="py-2 align-top">
-                          <button
-                            type="button"
-                            onClick={() => remove(index)}
-                            aria-label={tr.crm.quotes.form.removeItem}
-                            className="rounded-lg p-2 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              className="h-4 w-4"
+
+              {!selectedProductListId ? (
+                <p className="mt-3 rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
+                  {tr.crm.quotes.form.pickerSelectProductListFirst}
+                </p>
+              ) : (
+                <>
+                  <p className="mt-1 text-xs text-app-muted">{tr.crm.quotes.form.pickerHint}</p>
+
+                  <div className="relative mt-3">
+                    <Search
+                      size={16}
+                      className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+                    />
+                    <input
+                      type="search"
+                      value={pickerQuery}
+                      onChange={(event) => {
+                        setPickerPage(1);
+                        setPickerQuery(event.target.value);
+                      }}
+                      placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
+                      className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                    />
+                  </div>
+
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full min-w-[480px] text-left text-sm">
+                      <thead className="text-xs font-semibold uppercase text-app-muted">
+                        <tr>
+                          <th className="py-2 pr-3">{tr.crm.quotes.form.pickerProductColumn}</th>
+                          <th className="w-24 py-2 pr-3">{tr.crm.quotes.form.pickerUnitColumn}</th>
+                          <th className="w-32 py-2 pr-3">{tr.crm.quotes.form.pickerPriceColumn}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pickerProducts.map((product) => (
+                          <Fragment key={product.id}>
+                            <tr
+                              onClick={() => handleToggleEntry(product)}
+                              className={`cursor-pointer border-t border-app-border hover:bg-blue-50 ${
+                                entryProductId === product.id ? 'bg-blue-50' : ''
+                              }`}
                             >
-                              <path d="M18 6 6 18M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                className="mt-3"
-                onClick={() =>
-                  append({
-                    productId: '',
-                    quantity: '1',
-                    unitPrice: '',
-                    discountPct: '0',
-                    vatPct: '0',
-                  })
-                }
-              >
-                {tr.crm.quotes.form.addItem}
-              </Button>
+                              <td className="py-2 pr-3 font-semibold text-app-text">
+                                {product.name}
+                                {product.sku && (
+                                  <span className="ml-1.5 font-normal text-app-muted">
+                                    ({product.sku})
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 pr-3 text-app-muted">{product.unit}</td>
+                              <td className="py-2 pr-3 text-app-muted">
+                                {product.price !== null
+                                  ? `${plainNumber.format(Number(product.price))} ${product.currency}`
+                                  : '—'}
+                              </td>
+                            </tr>
+                            {entryProductId === product.id && (
+                              <tr className="border-t border-app-border bg-app-bg">
+                                <td colSpan={3} className="p-4">
+                                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.quantityLabel}
+                                      value={entryQuantity}
+                                      onChange={(event) =>
+                                        setEntryQuantity(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.unitPriceLabel}
+                                      value={entryUnitPrice}
+                                      onChange={(event) =>
+                                        setEntryUnitPrice(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.discountPctLabel}
+                                      value={entryDiscountPct}
+                                      onChange={(event) =>
+                                        setEntryDiscountPct(
+                                          sanitizeDecimalInput(event.target.value),
+                                        )
+                                      }
+                                    />
+                                    <TextField
+                                      type="text"
+                                      inputMode="decimal"
+                                      label={tr.crm.quotes.form.vatPctLabel}
+                                      value={entryVatPct}
+                                      onChange={(event) =>
+                                        setEntryVatPct(sanitizeDecimalInput(event.target.value))
+                                      }
+                                    />
+                                    <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+                                      <Button
+                                        type="button"
+                                        className="w-full"
+                                        onClick={() => handleAddEntry(product)}
+                                      >
+                                        {tr.crm.quotes.form.addToQuote}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {productsQuery.isPending && (
+                    <p className="mt-3 text-center text-sm text-app-muted">
+                      {tr.crm.quotes.form.pickerLoading}
+                    </p>
+                  )}
+                  {!productsQuery.isPending && pickerProducts.length === 0 && (
+                    <p className="mt-3 text-center text-sm text-app-muted">
+                      {tr.crm.quotes.form.pickerEmpty}
+                    </p>
+                  )}
+
+                  {productsQuery.data && pickerProducts.length > 0 && (
+                    <Pagination
+                      page={productsQuery.data.meta.page}
+                      totalPages={productsQuery.data.meta.totalPages}
+                      onPrevious={() => setPickerPage((p) => p - 1)}
+                      onNext={() => setPickerPage((p) => p + 1)}
+                    />
+                  )}
+                </>
+              )}
             </div>
 
-            <div className="rounded-lg border border-app-border bg-app-surface p-4">
-              <Controller
-                name="hasOpportunity"
-                control={control}
-                render={({ field }) => (
-                  <div className="flex items-center gap-2">
-                    <Switch checked={field.value ?? false} onChange={field.onChange} />
-                    <span className="text-sm font-semibold text-app-text">
-                      {tr.crm.quotes.form.opportunityCheckboxLabel}
-                    </span>
+            <aside className="lg:sticky lg:top-6 lg:self-start">
+              <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-app-text">
+                    {tr.crm.quotes.form.summaryTitle}
+                  </h2>
+                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
+                    {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
+                  </span>
+                </div>
+
+                {summaryRows.length === 0 ? (
+                  <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[280px] text-left text-sm">
+                      <thead className="text-xs font-semibold uppercase text-app-muted">
+                        <tr>
+                          <th className="py-2 pr-3">{tr.crm.quotes.form.pickerProductColumn}</th>
+                          <th className="w-16 py-2 pr-3">{tr.crm.quotes.form.quantityLabel}</th>
+                          <th className="w-24 py-2 pr-3">{tr.crm.quotes.detail.lineTotalColumn}</th>
+                          <th className="w-8 py-2" aria-hidden="true" />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {summaryRows.map((row, index) => (
+                          <tr
+                            key={fields[index]?.id ?? index}
+                            className="border-t border-app-border"
+                          >
+                            <td className="py-2 pr-3 align-top">
+                              <div className="font-semibold text-app-text">
+                                {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
+                              </div>
+                              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-app-muted">
+                                {row.isDefaultPrice && (
+                                  <Badge variant="neutral">
+                                    {tr.crm.quotes.form.summaryPriceFromList}
+                                  </Badge>
+                                )}
+                                {row.discountPct > 0 && (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-app-success">
+                                    -%{row.discountPct}
+                                  </span>
+                                )}
+                                {row.vatPct > 0 && (
+                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-app-danger">
+                                    +KDV %{row.vatPct}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-2 pr-3 align-top text-app-muted">{row.quantity}</td>
+                            <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-text">
+                              {currency.format(row.lineTotal)}
+                            </td>
+                            <td className="py-2 align-top">
+                              <button
+                                type="button"
+                                onClick={() => remove(index)}
+                                aria-label={tr.crm.quotes.form.removeItem}
+                                className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+                              >
+                                <X size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
-              />
-              {hasOpportunity && (
-                <div className="mt-4 flex flex-col gap-4">
-                  <TextField
-                    label={tr.crm.quotes.form.opportunityNameLabel}
-                    required
-                    hint={tr.crm.quotes.form.opportunityNameHint}
-                    error={errors.opportunityName?.message}
-                    {...register('opportunityName')}
-                  />
-                  <Select
-                    label={tr.crm.quotes.form.opportunityStageLabel}
-                    hint={tr.crm.quotes.form.opportunityStageHint}
-                    options={STAGE_OPTIONS}
-                    error={errors.opportunityStage?.message}
-                    {...register('opportunityStage')}
-                  />
-                  <TextField
-                    type="number"
-                    step="0.01"
-                    label={tr.crm.quotes.form.opportunityValueLabel}
-                    hint={tr.crm.quotes.form.opportunityValueHint}
-                    error={errors.opportunityValue?.message}
-                    {...register('opportunityValue')}
-                  />
+
+                <div className="flex flex-col gap-1.5 border-t border-app-border pt-4 text-sm">
+                  <div className="flex justify-between text-app-muted">
+                    <span>{tr.crm.quotes.detail.subtotalLabel}</span>
+                    <span>{currency.format(summarySubtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-app-muted">
+                    <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
+                    <span>{currency.format(summaryVatTotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-app-text">
+                    <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
+                    <span>{currency.format(summaryGrandTotal)}</span>
+                  </div>
                 </div>
-              )}
-            </div>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending
+                      ? tr.crm.quotes.form.submitting
+                      : tr.crm.quotes.form.submit}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => navigate('/teklifler')}>
+                    {tr.crm.quotes.form.cancel}
+                  </Button>
+                </div>
+              </div>
+            </aside>
           </div>
 
-          <aside className="lg:sticky lg:top-6 lg:self-start">
-            <div className="flex flex-col gap-4 border-t border-app-border p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold text-app-text">
-                  {tr.crm.quotes.form.summaryTitle}
-                </h2>
-                <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
-                  {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
-                </span>
-              </div>
-
-              {summaryRows.length === 0 ? (
-                <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
-              ) : (
-                <ul className="flex flex-col gap-3">
-                  {summaryRows.map((row, index) => (
-                    <li
-                      key={fields[index]?.id ?? index}
-                      className="flex flex-col gap-1 border-b border-app-border pb-3 last:border-b-0 last:pb-0"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="text-sm font-semibold text-app-text">
-                          {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
-                        </span>
-                        <span className="whitespace-nowrap text-sm font-semibold text-app-text">
-                          {currency.format(row.lineTotal)}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5 text-xs text-app-muted">
-                        <span>
-                          {row.quantity} × {currency.format(row.unitPrice)}
-                        </span>
-                        {row.isDefaultPrice && (
-                          <Badge variant="neutral">{tr.crm.quotes.form.summaryPriceFromList}</Badge>
-                        )}
-                        {row.discountPct > 0 && (
-                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-success">
-                            -%{row.discountPct}
-                          </span>
-                        )}
-                        {row.vatPct > 0 && (
-                          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-danger">
-                            +KDV %{row.vatPct}
-                          </span>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+          <div className="rounded-lg border border-app-border bg-app-surface p-4">
+            <Controller
+              name="hasOpportunity"
+              control={control}
+              render={({ field }) => (
+                <div className="flex items-center gap-2">
+                  <Switch checked={field.value ?? false} onChange={field.onChange} />
+                  <span className="text-sm font-semibold text-app-text">
+                    {tr.crm.quotes.form.opportunityCheckboxLabel}
+                  </span>
+                </div>
               )}
-
-              <div className="flex flex-col gap-1.5 border-t border-app-border pt-4 text-sm">
-                <div className="flex justify-between text-app-muted">
-                  <span>{tr.crm.quotes.detail.subtotalLabel}</span>
-                  <span>{currency.format(summarySubtotal)}</span>
-                </div>
-                <div className="flex justify-between text-app-muted">
-                  <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
-                  <span>{currency.format(summaryVatTotal)}</span>
-                </div>
-                <div className="flex justify-between text-base font-bold text-app-text">
-                  <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
-                  <span>{currency.format(summaryGrandTotal)}</span>
-                </div>
+            />
+            {hasOpportunity && (
+              <div className="mt-4 flex flex-col gap-4">
+                <TextField
+                  label={tr.crm.quotes.form.opportunityNameLabel}
+                  required
+                  hint={tr.crm.quotes.form.opportunityNameHint}
+                  error={errors.opportunityName?.message}
+                  {...register('opportunityName')}
+                />
+                <Select
+                  label={tr.crm.quotes.form.opportunityStageLabel}
+                  hint={tr.crm.quotes.form.opportunityStageHint}
+                  options={STAGE_OPTIONS}
+                  error={errors.opportunityStage?.message}
+                  {...register('opportunityStage')}
+                />
+                <TextField
+                  type="number"
+                  step="0.01"
+                  label={tr.crm.quotes.form.opportunityValueLabel}
+                  hint={tr.crm.quotes.form.opportunityValueHint}
+                  error={errors.opportunityValue?.message}
+                  {...register('opportunityValue')}
+                />
               </div>
-
-              <div className="flex flex-col gap-2 pt-2">
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending
-                    ? tr.crm.quotes.form.submitting
-                    : tr.crm.quotes.form.submit}
-                </Button>
-                <Button type="button" variant="secondary" onClick={() => navigate('/teklifler')}>
-                  {tr.crm.quotes.form.cancel}
-                </Button>
-              </div>
-            </div>
-          </aside>
+            )}
+          </div>
         </form>
       </div>
     </AppShell>

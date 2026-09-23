@@ -49,6 +49,7 @@ import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
 import { PurchaseOrderDetailPage } from './app/purchase-order-detail-page';
 import { PurchaseOrderListPage } from './app/purchase-order-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
+import { QuoteEditPage } from './app/quote-edit-page';
 import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
 import { SettingsPage } from './app/settings-page';
@@ -407,6 +408,14 @@ function App() {
           element={
             <TenantPageRoute pageKey="quotes">
               <QuoteFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teklifler/duzenle/:id"
+          element={
+            <TenantPageRoute pageKey="quotes">
+              <QuoteEditPage />
             </TenantPageRoute>
           }
         />

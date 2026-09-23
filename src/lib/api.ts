@@ -1537,6 +1537,7 @@ export interface CreateQuoteInput {
 
 export interface UpdateQuoteInput {
   items?: QuoteItemInput[];
+  status?: QuoteStatus;
 }
 
 export function listQuotes(
