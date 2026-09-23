@@ -324,7 +324,7 @@ export function AppShell({ children, print = false }: AppShellProps) {
       </nav>
 
       <main className="pt-16 md:pl-16">
-        <div className="p-6 md:p-8">{children}</div>
+        <div className="p-6 pb-24 md:p-8 md:pb-24">{children}</div>
       </main>
 
       <FloatingWidgetsDock>
