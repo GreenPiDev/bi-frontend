@@ -1364,6 +1364,8 @@ export const tr = {
         cancel: 'Vazgeç',
         createSuccess: 'Teklif oluşturuldu.',
         summaryTitle: 'Teklif Özeti',
+        summaryEditHint:
+          'Ürün satırına tıklayarak miktar, fiyat, iskonto ve KDV değerlerini güncelleyebilirsiniz.',
         summaryItemCount: (count: number) => `${count} ürün`,
         summaryEmpty: 'Henüz ürün eklenmedi. Soldan ürün satırı ekleyin.',
         summaryIncompleteRow: 'Ürün seçilmedi',
@@ -1383,7 +1385,6 @@ export const tr = {
         cancel: 'Vazgeç',
         updateSuccess: 'Teklif güncellendi.',
         itemsRequired: 'En az bir ürün satırı eklenmelidir.',
-        editRowHint: 'Düzenlemek için satıra tıklayın.',
         saveRow: 'Güncelle',
       },
     },

@@ -460,6 +460,8 @@ export function QuoteFormPage() {
                   </span>
                 </div>
 
+                <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEditHint}</p>
+
                 {summaryRows.length === 0 ? (
                   <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
                 ) : (
@@ -495,11 +497,11 @@ export function QuoteFormPage() {
                                 )}
                               </td>
                               <td className="py-2 pr-3 align-top text-app-muted">{row.quantity}</td>
-                              <td className="py-2 pr-3 align-top text-app-muted">
-                                {row.discountPct > 0 ? `%${row.discountPct}` : ''}
+                              <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-success">
+                                {row.discountPct > 0 ? `-%${row.discountPct}` : ''}
                               </td>
-                              <td className="py-2 pr-3 align-top text-app-muted">
-                                {row.vatPct > 0 ? `%${row.vatPct}` : ''}
+                              <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-danger">
+                                {row.vatPct > 0 ? `+%${row.vatPct}` : ''}
                               </td>
                               <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-text">
                                 {currency.format(row.lineTotal)}
