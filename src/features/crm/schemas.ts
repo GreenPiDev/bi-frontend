@@ -248,7 +248,7 @@ export const purchaseOrderFormSchema = z.object({
     z.object({
       id: z.string().optional(),
       productId: z.string().optional(),
-      description: z.string().min(1, 'Açıklama gerekli.').max(300),
+      description: z.string().max(300),
       quantity: z.string().min(1, 'Miktar gerekli.'),
       source: z.enum(['QUOTE', 'EXTRA']),
     }),

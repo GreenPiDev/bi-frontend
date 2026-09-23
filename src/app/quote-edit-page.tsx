@@ -6,8 +6,10 @@ import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Pagination } from '../components/ui/table';
+import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useQuoteQuery, useUpdateQuoteMutation } from '../features/crm/use-quotes';
 import { ApiError, type Product } from '../lib/api';
@@ -43,9 +45,11 @@ export function QuoteEditPage() {
   const toast = useToast();
   const quoteQuery = useQuoteQuery(id);
   const updateMutation = useUpdateQuoteMutation(id);
+  const productListsQuery = useProductListsQuery();
 
-  // Teklifin urunleri her zaman tek bir urun listesine ait (create sirasinda secilen
-  // katalog) - bu yuzden edit sayfasinda katalog secici yok, ilk kalemden turetilir.
+  // Kalemler baslangicta ilk kalemden turetilen urun listesiyle doldurulur, ama
+  // kullanici (yeni teklif sayfasindaki gibi) baska bir urun listesine gecip oradan
+  // da ekleme yapabilir - katalog degisince mevcut kalemler sifirlanmaz.
   // Sorgu sonucu gelince state'i "render sirasinda" kurma deseni (React docs: Adjusting
   // state when props change) kullanilir - useEffect+setState yerine, gereksiz bir ekstra
   // render'i onlemek icin.
@@ -256,14 +260,23 @@ export function QuoteEditPage() {
               </p>
               <p className="mt-1 text-sm font-semibold text-app-text">{quote.account.name}</p>
             </div>
-            <div>
-              <p className="text-xs font-semibold text-app-muted">
-                {tr.crm.quotes.edit.productListLabel}
-              </p>
-              <p className="mt-1 text-sm text-app-text">
-                {quote.items[0]?.product.productList?.name ?? '—'}
-              </p>
-            </div>
+            <Select
+              label={tr.crm.quotes.edit.productListLabel}
+              placeholder={tr.crm.quotes.form.productListPlaceholder}
+              hint={tr.crm.quotes.form.productListHint}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+              value={productListId ?? ''}
+              onChange={(event) => {
+                setProductListId(event.target.value || undefined);
+                setPickerPage(1);
+                setPickerQuery('');
+                setAddingProductId(null);
+                setEditingIndex(null);
+              }}
+            />
             <div>
               <p className="text-xs font-semibold text-app-muted">
                 {tr.crm.quotes.edit.contactLabel}

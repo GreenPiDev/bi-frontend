@@ -1334,7 +1334,7 @@ export const tr = {
         productListLabel: 'Ürün Listesi',
         productListPlaceholder: 'Ürün listesi seçin',
         productListHint: 'Zorunlu. Hangi katalogdan teklif hazırlanacağını belirler.',
-        itemsSectionTitle: 'Ürün Satırları',
+        itemsSectionTitle: 'Ürün Seçimi',
         pickerHint: 'Teklif listesine eklemek istediğiniz ürüne tıklayınız.',
         pickerSelectProductListFirst: 'Ürün seçebilmek için önce yukarıdan bir ürün listesi seçin.',
         pickerSearchPlaceholder: 'Ürün adına göre ara...',
@@ -1485,10 +1485,6 @@ export const tr = {
         DRAFT: 'Taslak',
         CONFIRMED: 'Onaylandı',
       },
-      sourceOptions: {
-        QUOTE: 'Teklif',
-        EXTRA: 'Ek Kalem',
-      },
       detail: {
         back: 'Siparişlere dön',
         deleteButton: 'Sil',
@@ -1498,7 +1494,6 @@ export const tr = {
         productColumn: 'Ürün',
         descriptionColumn: 'Açıklama',
         quantityColumn: 'Miktar',
-        sourceColumn: 'Kaynak',
         removeItem: 'Kaldır',
         addExtraItem: 'Ek Kalem Ekle',
         productPlaceholder: 'Ürün seçin (opsiyonel)',

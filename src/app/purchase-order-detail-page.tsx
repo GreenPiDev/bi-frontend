@@ -180,7 +180,6 @@ export function PurchaseOrderDetailPage() {
               <div className="w-full min-w-[180px] flex-1 sm:w-auto">
                 <TextField
                   label={tr.crm.purchaseOrders.detail.descriptionLabel}
-                  required
                   error={errors.items?.[index]?.description?.message}
                   {...register(`items.${index}.description` as const)}
                 />
@@ -194,12 +193,6 @@ export function PurchaseOrderDetailPage() {
                   error={errors.items?.[index]?.quantity?.message}
                   {...decimalOnly(register(`items.${index}.quantity` as const))}
                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold uppercase text-app-muted">
-                  {tr.crm.purchaseOrders.detail.sourceColumn}
-                </span>
-                <Badge variant="neutral">{tr.crm.purchaseOrders.sourceOptions[field.source]}</Badge>
               </div>
               <div className="flex flex-col gap-1.5">
                 <span

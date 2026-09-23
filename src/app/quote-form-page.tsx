@@ -65,7 +65,7 @@ export function QuoteFormPage() {
       hasOpportunity: false,
     },
   });
-  const { fields, append, remove, replace, update } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, update } = useFieldArray({ control, name: 'items' });
   const hasOpportunity = watch('hasOpportunity');
   const selectedAccountId = watch('accountId');
   const selectedProductListId = watch('productListId');
@@ -282,7 +282,6 @@ export function QuoteFormPage() {
               }))}
               {...register('productListId', {
                 onChange: () => {
-                  replace([]);
                   setPickerPage(1);
                   setPickerQuery('');
                   setEntryProductId(null);
