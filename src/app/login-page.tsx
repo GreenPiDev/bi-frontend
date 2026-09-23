@@ -33,8 +33,7 @@ export function LoginPage() {
     <AuthLayout>
       <div className="flex flex-col items-center">
         <img src="/pilens-logo.png" alt="PiLens" className="mb-6 h-14 w-auto" />
-        <h1 className="mb-1 text-center text-2xl font-bold text-app-text">{tr.auth.loginTitle}</h1>
-        <p className="mb-7 text-center text-sm text-app-muted">{tr.auth.loginSubtitle}</p>
+        <h1 className="mb-7 text-center text-2xl font-bold text-app-text">{tr.auth.loginTitle}</h1>
         <form onSubmit={onSubmit} className="flex w-full flex-col gap-4 text-left" noValidate>
           <FormError message={apiErrorMessage} />
           <TextField

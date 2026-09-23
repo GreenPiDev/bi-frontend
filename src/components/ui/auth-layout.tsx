@@ -14,7 +14,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         />
         <div className="absolute inset-0 bg-gradient-to-tl from-app-primary-dark/90 via-app-brand/40 to-transparent" />
         <h2 className="relative max-w-sm p-10 text-right text-2xl font-semibold text-balance text-white">
-          Excel'ini yükle, 5 dakikada dashboard'unu gör.
+          Tüm iş süreçleriniz tek platformda.
         </h2>
       </div>
     </div>
