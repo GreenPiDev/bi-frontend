@@ -185,12 +185,7 @@ export function QuoteDetailPage() {
                 key={item.id}
                 className="bg-app-surface border-t border-app-border hover:bg-blue-50"
               >
-                <td className="py-2 pr-3 text-app-text">
-                  {item.product.name}
-                  {!isPrintMode && item.discountNote && (
-                    <p className="text-xs text-app-muted">{item.discountNote}</p>
-                  )}
-                </td>
+                <td className="py-2 pr-3 text-app-text">{item.product.name}</td>
                 <td className="py-2 pr-3 text-app-muted">{item.quantity}</td>
                 <td className="py-2 pr-3 text-app-muted">
                   {currency.format(Number(item.unitPrice))}
