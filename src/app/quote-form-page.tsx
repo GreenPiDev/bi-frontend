@@ -433,6 +433,8 @@ export function QuoteFormPage() {
                         <tr>
                           <th className="py-2 pr-3">{tr.crm.quotes.form.pickerProductColumn}</th>
                           <th className="w-16 py-2 pr-3">{tr.crm.quotes.form.quantityLabel}</th>
+                          <th className="w-16 py-2 pr-3">{tr.crm.quotes.detail.discountColumn}</th>
+                          <th className="w-16 py-2 pr-3">{tr.crm.quotes.detail.vatColumn}</th>
                           <th className="w-24 py-2 pr-3">{tr.crm.quotes.detail.lineTotalColumn}</th>
                           <th className="w-8 py-2" aria-hidden="true" />
                         </tr>
@@ -447,25 +449,19 @@ export function QuoteFormPage() {
                               <div className="font-semibold text-app-text">
                                 {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
                               </div>
-                              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-app-muted">
-                                {row.isDefaultPrice && (
-                                  <Badge variant="neutral">
-                                    {tr.crm.quotes.form.summaryPriceFromList}
-                                  </Badge>
-                                )}
-                                {row.discountPct > 0 && (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-app-success">
-                                    -%{row.discountPct}
-                                  </span>
-                                )}
-                                {row.vatPct > 0 && (
-                                  <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold text-app-danger">
-                                    +KDV %{row.vatPct}
-                                  </span>
-                                )}
-                              </div>
+                              {row.isDefaultPrice && (
+                                <Badge variant="neutral" className="mt-0.5">
+                                  {tr.crm.quotes.form.summaryPriceFromList}
+                                </Badge>
+                              )}
                             </td>
                             <td className="py-2 pr-3 align-top text-app-muted">{row.quantity}</td>
+                            <td className="py-2 pr-3 align-top text-app-muted">
+                              {row.discountPct > 0 ? `%${row.discountPct}` : ''}
+                            </td>
+                            <td className="py-2 pr-3 align-top text-app-muted">
+                              {row.vatPct > 0 ? `%${row.vatPct}` : ''}
+                            </td>
                             <td className="py-2 pr-3 align-top font-semibold whitespace-nowrap text-app-text">
                               {currency.format(row.lineTotal)}
                             </td>
