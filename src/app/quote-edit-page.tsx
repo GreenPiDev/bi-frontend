@@ -9,6 +9,7 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useQuoteQuery, useUpdateQuoteMutation } from '../features/crm/use-quotes';
@@ -46,6 +47,7 @@ export function QuoteEditPage() {
   const quoteQuery = useQuoteQuery(id);
   const updateMutation = useUpdateQuoteMutation(id);
   const productListsQuery = useProductListsQuery();
+  const contactsQuery = useContactsQuery();
 
   // Kalemler baslangicta ilk kalemden turetilen urun listesiyle doldurulur, ama
   // kullanici (yeni teklif sayfasindaki gibi) baska bir urun listesine gecip oradan
@@ -55,6 +57,7 @@ export function QuoteEditPage() {
   // render'i onlemek icin.
   const [items, setItems] = useState<EditableItem[] | null>(null);
   const [productListId, setProductListId] = useState<string | undefined>(undefined);
+  const [contactId, setContactId] = useState<string | undefined>(undefined);
   const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
 
   if (quoteQuery.data && quoteQuery.data.id !== initializedForQuoteId) {
@@ -70,7 +73,15 @@ export function QuoteEditPage() {
       })),
     );
     setProductListId(quoteQuery.data.items[0]?.product.productListId);
+    setContactId(quoteQuery.data.contactId ?? undefined);
   }
+
+  const contactOptions = (contactsQuery.data?.data ?? [])
+    .filter((contact) => !quoteQuery.data || contact.accountId === quoteQuery.data.accountId)
+    .map((contact) => ({
+      value: contact.id,
+      label: `${contact.firstName} ${contact.lastName}`,
+    }));
 
   const [pickerPage, setPickerPage] = useState(1);
   const [pickerQuery, setPickerQuery] = useState('');
@@ -201,6 +212,7 @@ export function QuoteEditPage() {
           discountPct: item.discountPct ? Number(item.discountPct) : 0,
           vatPct: item.vatPct ? Number(item.vatPct) : 0,
         })),
+        contactId: contactId ?? null,
       },
       {
         onSuccess: (quote) => {
@@ -449,16 +461,14 @@ export function QuoteEditPage() {
                 setEditingIndex(null);
               }}
             />
-            <div>
-              <p className="text-xs font-semibold text-app-muted">
-                {tr.crm.quotes.edit.contactLabel}
-              </p>
-              <p className="mt-1 text-sm text-app-text">
-                {quote.contact
-                  ? `${quote.contact.firstName} ${quote.contact.lastName}`
-                  : tr.crm.quotes.edit.noContact}
-              </p>
-            </div>
+            <Select
+              label={tr.crm.quotes.edit.contactLabel}
+              placeholder={tr.crm.quotes.form.contactPlaceholder}
+              hint={tr.crm.quotes.form.contactHint}
+              options={contactOptions}
+              value={contactId ?? ''}
+              onChange={(event) => setContactId(event.target.value || undefined)}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

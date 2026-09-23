@@ -1538,6 +1538,7 @@ export interface CreateQuoteInput {
 export interface UpdateQuoteInput {
   items?: QuoteItemInput[];
   status?: QuoteStatus;
+  contactId?: string | null;
 }
 
 export function listQuotes(

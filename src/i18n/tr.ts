@@ -1302,7 +1302,6 @@ export const tr = {
       },
       detail: {
         back: 'Tekliflere dön',
-        deleteButton: 'Sil',
         approveButton: 'Onayla',
         rejectButton: 'Reddet',
         exportPdfButton: 'PDF İndir',
@@ -1377,7 +1376,6 @@ export const tr = {
         accountLabel: 'Firma',
         productListLabel: 'Ürün Listesi',
         contactLabel: 'Muhatap Kişi',
-        noContact: 'Seçilmedi',
         notEditableTitle: 'Bu teklif düzenlenemez',
         notEditableMessage: 'Onaylanmış veya reddedilmiş teklifler düzenlenemez.',
         submit: 'Kaydet',

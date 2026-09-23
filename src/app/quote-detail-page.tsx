@@ -12,7 +12,6 @@ import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import {
   useApproveQuoteMutation,
-  useDeleteQuoteMutation,
   useQuoteQuery,
   useRejectQuoteMutation,
 } from '../features/crm/use-quotes';
@@ -53,7 +52,6 @@ export function QuoteDetailPage() {
   const isPrintMode = searchParams.get('print') === '1';
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
-  const deleteMutation = useDeleteQuoteMutation();
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
   const exportPdfMutation = useMutation({
@@ -117,13 +115,6 @@ export function QuoteDetailPage() {
       render: (item) => currency.format(lineTotal(item)),
     },
   ];
-
-  function handleDelete() {
-    if (!window.confirm(tr.crm.quotes.deleteConfirm)) {
-      return;
-    }
-    deleteMutation.mutate(id, { onSuccess: () => navigate('/teklifler') });
-  }
 
   function handleApprove() {
     approveMutation.mutate(undefined, {
@@ -192,9 +183,6 @@ export function QuoteDetailPage() {
                   : tr.crm.quotes.detail.exportPdfButton}
               </Button>
             )}
-            <Button type="button" variant="danger" onClick={handleDelete}>
-              {tr.crm.quotes.detail.deleteButton}
-            </Button>
           </div>
         )}
       </div>
