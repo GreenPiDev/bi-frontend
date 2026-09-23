@@ -261,7 +261,7 @@ export function QuoteEditPage() {
                 {tr.crm.quotes.edit.productListLabel}
               </p>
               <p className="mt-1 text-sm text-app-text">
-                {quote.items[0]?.product.productList.name ?? '—'}
+                {quote.items[0]?.product.productList?.name ?? '—'}
               </p>
             </div>
             <div>
