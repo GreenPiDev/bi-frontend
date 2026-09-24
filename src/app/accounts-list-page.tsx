@@ -88,7 +88,6 @@ export function AccountsListPage() {
       required: true,
       render: (a) => (
         <span className="flex items-center gap-1.5 font-semibold text-app-text">
-          {a.name}
           {a.missingCriticalFields.length > 0 && (
             <Tooltip
               content={tr.crm.accounts.missingFieldsWarning(
@@ -97,9 +96,14 @@ export function AccountsListPage() {
                   .join(', '),
               )}
             >
-              <AlertTriangle size={14} className="shrink-0 text-amber-500" />
+              <AlertTriangle
+                size={18}
+                strokeWidth={2.5}
+                className="shrink-0 text-amber-600 dark:text-amber-400"
+              />
             </Tooltip>
           )}
+          {a.name}
         </span>
       ),
     },
