@@ -1,14 +1,21 @@
+import { Trash2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
+import { Tooltip } from '../components/ui/tooltip';
+import { useToast } from '../components/ui/toast-context';
+import { useMeQuery } from '../features/auth/use-auth';
+import { hasPermission } from '../features/auth/permissions';
 import {
   useCreateDashboardMutation,
   useDashboardsQuery,
+  useDeleteDashboardMutation,
 } from '../features/dashboards/use-dashboards';
 import { ApiError, type DashboardSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -17,8 +24,29 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
 export function DashboardsListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const dashboardsQuery = useDashboardsQuery();
   const createMutation = useCreateDashboardMutation();
+  const deleteMutation = useDeleteDashboardMutation();
+  const meQuery = useMeQuery();
+  const canDelete = hasPermission(meQuery.data?.permissions, 'dashboards', 'DELETE');
+  const [deletingDashboard, setDeletingDashboard] = useState<DashboardSummary | undefined>(
+    undefined,
+  );
+
+  function handleConfirmDelete() {
+    if (!deletingDashboard) return;
+    deleteMutation.mutate(deletingDashboard.id, {
+      onSuccess: () => {
+        toast.success(tr.dashboards.list.deleteSuccess);
+        setDeletingDashboard(undefined);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.dashboards.list.deleteError);
+        setDeletingDashboard(undefined);
+      },
+    });
+  }
 
   const columns: TableColumn<DashboardSummary>[] = [
     {
@@ -32,6 +60,32 @@ export function DashboardsListPage() {
       className: 'text-app-muted',
       render: (dashboard) => dateFormatter.format(new Date(dashboard.createdAt)),
     },
+    ...(canDelete
+      ? [
+          {
+            key: 'actions',
+            header: tr.dashboards.list.actionsColumn,
+            className: 'w-px',
+            required: true,
+            render: (dashboard: DashboardSummary) => (
+              <div className="flex items-center gap-1">
+                <Tooltip content={tr.dashboards.list.deleteButton}>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setDeletingDashboard(dashboard);
+                    }}
+                    className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </Tooltip>
+              </div>
+            ),
+          } satisfies TableColumn<DashboardSummary>,
+        ]
+      : []),
   ];
 
   const [isCreating, setIsCreating] = useState(false);
@@ -113,6 +167,17 @@ export function DashboardsListPage() {
         loadingMessage={tr.dashboards.list.loading}
         emptyMessage={tr.dashboards.list.empty}
       />
+
+      {deletingDashboard && (
+        <ConfirmModal
+          title={tr.dashboards.list.deleteConfirmTitle}
+          message={tr.dashboards.list.deleteConfirm}
+          confirmLabel={tr.dashboards.list.deleteButton}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingDashboard(undefined)}
+        />
+      )}
     </AppShell>
   );
 }

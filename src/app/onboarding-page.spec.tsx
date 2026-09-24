@@ -55,6 +55,7 @@ describe('OnboardingPage', () => {
       rowCount: 180,
       lastIngestedAt: null,
       createdAt: '2026-01-01T00:00:00.000Z',
+      sourceKind: 'UPLOAD',
       fields: FIELDS,
     });
     const createDashboardSpy = vi

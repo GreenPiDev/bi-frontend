@@ -80,7 +80,7 @@ export function OnboardingPage() {
     }
     setFileError(undefined);
     uploadMutation.mutate(
-      { file, name: name.trim() || undefined },
+      { file, name: name.trim() || undefined, headerRowIndex: 0 },
       {
         onSuccess: (result) => {
           setDataSourceId(result.id);

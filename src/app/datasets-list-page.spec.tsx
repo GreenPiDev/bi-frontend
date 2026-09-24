@@ -4,19 +4,22 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatasetsListPage } from './datasets-list-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderDatasetsListPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/datasets']}>
-        <Routes>
-          <Route path="/datasets" element={<DatasetsListPage />} />
-          <Route path="/datasets/upload" element={<div>upload-page</div>} />
-          <Route path="/datasets/:id" element={<div>detail-page</div>} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/datasets']}>
+          <Routes>
+            <Route path="/datasets" element={<DatasetsListPage />} />
+            <Route path="/datasets/upload" element={<div>upload-page</div>} />
+            <Route path="/datasets/:id" element={<div>detail-page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -43,6 +46,7 @@ describe('DatasetsListPage', () => {
         rowCount: 1234,
         lastIngestedAt: '2026-08-01T00:00:00.000Z',
         createdAt: '2026-08-01T00:00:00.000Z',
+        sourceKind: 'UPLOAD',
       },
     ]);
     const user = userEvent.setup();
@@ -62,5 +66,48 @@ describe('DatasetsListPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Dosya Yükle' }));
     expect(await screen.findByText('upload-page')).toBeInTheDocument();
+  });
+
+  it('sil butonu onay sonrasi veri kumesini siler ve listeyi yeniler', async () => {
+    vi.spyOn(api, 'listDatasets').mockResolvedValue([
+      {
+        id: 'ds-1',
+        name: 'Satış Verisi',
+        rowCount: 1234,
+        lastIngestedAt: '2026-08-01T00:00:00.000Z',
+        createdAt: '2026-08-01T00:00:00.000Z',
+        sourceKind: 'UPLOAD',
+      },
+    ]);
+    const deleteSpy = vi.spyOn(api, 'deleteDataset').mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    const { container } = renderDatasetsListPage();
+
+    expect(await screen.findByText('Satış Verisi')).toBeInTheDocument();
+    const deleteButton = container.querySelector('table tbody button');
+    expect(deleteButton).not.toBeNull();
+    await user.click(deleteButton as HTMLButtonElement);
+    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+
+    expect(deleteSpy).toHaveBeenCalledWith('ds-1');
+    expect(await screen.findByText('Veri kümesi silindi.')).toBeInTheDocument();
+  });
+
+  it('sistem tarafindan yonetilen (CRM) veri kumesinde sil butonu devre disi', async () => {
+    vi.spyOn(api, 'listDatasets').mockResolvedValue([
+      {
+        id: 'ds-crm',
+        name: 'Teklif Kalemleri',
+        rowCount: 10,
+        lastIngestedAt: null,
+        createdAt: '2026-08-01T00:00:00.000Z',
+        sourceKind: 'CRM_TABLE',
+      },
+    ]);
+    const { container } = renderDatasetsListPage();
+
+    expect(await screen.findByText('Teklif Kalemleri')).toBeInTheDocument();
+    const deleteButton = container.querySelector('table tbody button');
+    expect(deleteButton).toBeDisabled();
   });
 });

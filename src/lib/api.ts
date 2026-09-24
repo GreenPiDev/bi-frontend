@@ -299,12 +299,27 @@ export interface DataSourceStatusView {
   datasetId: string | null;
 }
 
-export function uploadDatasource(file: File, name?: string): Promise<{ id: string }> {
+export interface DataSourceRawPreview {
+  rows: string[][];
+}
+
+export function previewDatasourceRaw(file: File): Promise<DataSourceRawPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/datasources/preview-raw', { method: 'POST', body: formData });
+}
+
+export function uploadDatasource(
+  file: File,
+  name: string | undefined,
+  headerRowIndex: number,
+): Promise<{ id: string }> {
   const formData = new FormData();
   formData.append('file', file);
   if (name) {
     formData.append('name', name);
   }
+  formData.append('headerRowIndex', String(headerRowIndex));
   return request('/datasources/upload', { method: 'POST', body: formData });
 }
 
@@ -323,12 +338,15 @@ export function createStarterDashboard(datasetId: string): Promise<{ id: string 
   });
 }
 
+export type DatasetSourceKind = 'UPLOAD' | 'CRM_TABLE';
+
 export interface DatasetSummary {
   id: string;
   name: string;
   rowCount: number;
   lastIngestedAt: string | null;
   createdAt: string;
+  sourceKind: DatasetSourceKind;
 }
 
 export type DatasetFieldType = 'STRING' | 'NUMBER' | 'DATE' | 'BOOLEAN';
@@ -386,6 +404,10 @@ export function updateDatasetFields(
     method: 'PATCH',
     body: JSON.stringify({ fields }),
   });
+}
+
+export function deleteDataset(id: string): Promise<void> {
+  return request(`/datasets/${id}`, { method: 'DELETE' });
 }
 
 export type AggregationType = 'sum' | 'avg' | 'min' | 'max' | 'count' | 'count_distinct';

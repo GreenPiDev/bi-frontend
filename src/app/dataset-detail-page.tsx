@@ -148,14 +148,27 @@ export function DatasetDetailPage() {
     },
   ];
 
-  const previewColumns: TableColumn<unknown[]>[] = (previewQuery.data?.columns ?? []).map(
-    (column, columnIndex) => ({
+  // Sema duzenleyicideki "Gorunur" checkbox'i kaydedilmeden once de onizlemeyi
+  // canli yansitsin diye backend'den donen alan listesi yerine yerel `edits` state'i
+  // okunuyor. datasetQuery henuz yuklenmediyse (preview daha once gelmis olabilir)
+  // hicbir kolonu filtrelemeden goster - erken "bos tablo" yanip sonmesini onler.
+  const visibleFieldNames = datasetQuery.data
+    ? new Set(
+        datasetQuery.data.fields
+          .filter((field) => (edits[field.id] ?? toEdit(field)).isVisible)
+          .map((field) => field.name),
+      )
+    : null;
+
+  const previewColumns: TableColumn<unknown[]>[] = (previewQuery.data?.columns ?? [])
+    .map((column, columnIndex) => ({ column, columnIndex }))
+    .filter(({ column }) => !visibleFieldNames || visibleFieldNames.has(column))
+    .map(({ column, columnIndex }) => ({
       key: column,
       header: column,
       className: 'whitespace-nowrap text-app-muted',
       render: (row) => String(row[columnIndex] ?? ''),
-    }),
-  );
+    }));
 
   return (
     <AppShell>
@@ -202,6 +215,7 @@ export function DatasetDetailPage() {
             columns={previewColumns}
             data={previewQuery.data.rows}
             keyField={(_row, index) => String(index)}
+            scrollX
           />
         )}
       </section>

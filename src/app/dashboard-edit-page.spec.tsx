@@ -31,6 +31,7 @@ function mockDataset() {
       rowCount: 10,
       lastIngestedAt: null,
       createdAt: '2026-08-01T00:00:00.000Z',
+      sourceKind: 'UPLOAD',
     },
   ]);
   vi.spyOn(api, 'getDataset').mockResolvedValue({
@@ -39,6 +40,7 @@ function mockDataset() {
     rowCount: 10,
     lastIngestedAt: null,
     createdAt: '2026-08-01T00:00:00.000Z',
+    sourceKind: 'UPLOAD',
     fields: [
       {
         id: 'f-1',

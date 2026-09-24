@@ -1,10 +1,15 @@
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
-import { useDatasetsQuery } from '../features/datasets/use-datasets';
-import type { DatasetSummary } from '../lib/api';
+import { Tooltip } from '../components/ui/tooltip';
+import { useToast } from '../components/ui/toast-context';
+import { useDatasetsQuery, useDeleteDatasetMutation } from '../features/datasets/use-datasets';
+import { ApiError, type DatasetSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
@@ -12,7 +17,24 @@ const numberFormatter = new Intl.NumberFormat('tr-TR');
 
 export function DatasetsListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const datasetsQuery = useDatasetsQuery();
+  const deleteMutation = useDeleteDatasetMutation();
+  const [deletingDataset, setDeletingDataset] = useState<DatasetSummary | undefined>(undefined);
+
+  function handleConfirmDelete() {
+    if (!deletingDataset) return;
+    deleteMutation.mutate(deletingDataset.id, {
+      onSuccess: () => {
+        toast.success(tr.datasets.deleteSuccess);
+        setDeletingDataset(undefined);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.datasets.deleteError);
+        setDeletingDataset(undefined);
+      },
+    });
+  }
 
   const columns: TableColumn<DatasetSummary>[] = [
     {
@@ -34,6 +56,35 @@ export function DatasetsListPage() {
         dataset.lastIngestedAt
           ? dateFormatter.format(new Date(dataset.lastIngestedAt))
           : tr.datasets.neverIngested,
+    },
+    {
+      key: 'actions',
+      header: tr.datasets.actionsColumn,
+      className: 'w-px',
+      required: true,
+      render: (dataset) => (
+        <div className="flex items-center gap-1">
+          <Tooltip
+            content={
+              dataset.sourceKind === 'CRM_TABLE'
+                ? tr.datasets.deleteReadonlyTooltip
+                : tr.datasets.deleteTooltip
+            }
+          >
+            <button
+              type="button"
+              disabled={dataset.sourceKind === 'CRM_TABLE'}
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeletingDataset(dataset);
+              }}
+              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-app-muted"
+            >
+              <Trash2 size={16} />
+            </button>
+          </Tooltip>
+        </div>
+      ),
     },
   ];
 
@@ -61,6 +112,17 @@ export function DatasetsListPage() {
         loadingMessage={tr.datasets.loading}
         emptyMessage={tr.datasets.empty}
       />
+
+      {deletingDataset && (
+        <ConfirmModal
+          title={tr.datasets.deleteConfirmTitle}
+          message={tr.datasets.deleteConfirm}
+          confirmLabel={tr.datasets.deleteTooltip}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingDataset(undefined)}
+        />
+      )}
     </AppShell>
   );
 }

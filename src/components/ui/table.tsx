@@ -47,6 +47,11 @@ interface TableProps<T> {
   /** Satira ek class eklemek icin (orn. genisletilmis/secili satiri kalici olarak
    * vurgulamak) - hover haricinde bir vurgu gerekmiyorsa gerek yok. */
   rowClassName?: (row: T, index: number) => string | undefined;
+  /** Kolon sayisi ekrana sigmayabilecek tablolar icin (orn. dataset onizlemesi): tabloyu
+   * konteynir genisligine sikistirmak yerine dogal genisliginde birakip yatay scroll
+   * verir. Varsayilan false - mevcut sabit genislikli liste sayfalarinin davranisi
+   * degismez. */
+  scrollX?: boolean;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -64,6 +69,7 @@ export function Table<T>({
   isRowExpanded,
   renderExpandedRow,
   rowClassName,
+  scrollX = false,
 }: TableProps<T>) {
   if (isLoading) {
     return <p className="mt-6 text-sm text-app-muted">{loadingMessage}</p>;
@@ -89,8 +95,18 @@ export function Table<T>({
   }
 
   return (
-    <div className="mt-6 overflow-hidden border border-app-border bg-app-surface">
-      <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+    <div
+      className={clsx(
+        'mt-6 border border-app-border bg-app-surface',
+        scrollX ? 'overflow-x-auto' : 'overflow-hidden',
+      )}
+    >
+      <table
+        className={clsx(
+          'text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]',
+          scrollX ? 'w-max min-w-full' : 'w-full',
+        )}
+      >
         <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
           <tr>
             {columns.map((column) => {

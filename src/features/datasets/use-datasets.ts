@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  deleteDataset,
   getDataset,
   getDatasourceStatus,
   listDatasets,
   previewDataset,
+  previewDatasourceRaw,
   updateDatasetFields,
   uploadDatasource,
   type UpdateDatasetFieldInput,
@@ -34,9 +36,23 @@ export function useDatasetPreviewQuery(id: string) {
   });
 }
 
+export function usePreviewDatasourceRawMutation() {
+  return useMutation({
+    mutationFn: (file: File) => previewDatasourceRaw(file),
+  });
+}
+
 export function useUploadDatasourceMutation() {
   return useMutation({
-    mutationFn: ({ file, name }: { file: File; name?: string }) => uploadDatasource(file, name),
+    mutationFn: ({
+      file,
+      name,
+      headerRowIndex,
+    }: {
+      file: File;
+      name?: string;
+      headerRowIndex: number;
+    }) => uploadDatasource(file, name, headerRowIndex),
   });
 }
 
@@ -49,6 +65,16 @@ export function useDatasourceStatusQuery(id: string) {
     enabled: Boolean(id),
     refetchInterval: (query) =>
       query.state.data && ACTIVE_STATUSES.has(query.state.data.status) ? 1500 : false,
+  });
+}
+
+export function useDeleteDatasetMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteDataset(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: DATASETS_QUERY_KEY });
+    },
   });
 }
 

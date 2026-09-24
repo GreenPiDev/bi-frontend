@@ -13,6 +13,7 @@ function makeDataset(): DatasetWithFields {
     rowCount: 100,
     lastIngestedAt: '2026-08-01T00:00:00.000Z',
     createdAt: '2026-08-01T00:00:00.000Z',
+    sourceKind: 'UPLOAD',
     fields: [
       {
         id: 'f1',
