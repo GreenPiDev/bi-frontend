@@ -30,11 +30,17 @@ describe('DatasetUploadPage', () => {
     const user = userEvent.setup();
     renderUploadPage();
 
-    await user.click(screen.getByRole('button', { name: 'Yüklemeyi Başlat' }));
+    await user.click(screen.getByRole('button', { name: 'Devam Et' }));
     expect(await screen.findByText('Lütfen bir dosya seçin.')).toBeInTheDocument();
   });
 
-  it('dosya secilip gonderilince yukler ve isleme sayfasina gider', async () => {
+  it('dosya secilince ham satirlari onizler, baslik satiri secilince yukler ve isleme sayfasina gider', async () => {
+    const previewSpy = vi.spyOn(api, 'previewDatasourceRaw').mockResolvedValue({
+      rows: [
+        ['a', 'b'],
+        ['1', '2'],
+      ],
+    });
     const uploadSpy = vi.spyOn(api, 'uploadDatasource').mockResolvedValue({ id: 'src-1' });
     const user = userEvent.setup();
     renderUploadPage();
@@ -42,13 +48,23 @@ describe('DatasetUploadPage', () => {
     const file = new File(['a,b\n1,2'], 'veri.csv', { type: 'text/csv' });
     const fileInput = screen.getByLabelText('Dosya');
     await user.upload(fileInput, file);
-    await user.click(screen.getByRole('button', { name: 'Yüklemeyi Başlat' }));
+    await user.click(screen.getByRole('button', { name: 'Devam Et' }));
+
+    expect(previewSpy).toHaveBeenCalledWith(file);
+    const pickButtons = await screen.findAllByRole('button', { name: 'Bu satır başlık' });
+    await user.click(pickButtons[0]);
 
     expect(await screen.findByText('processing-page')).toBeInTheDocument();
-    expect(uploadSpy).toHaveBeenCalledWith(file, undefined);
+    expect(uploadSpy).toHaveBeenCalledWith(file, undefined, 0);
   });
 
   it('api hatasi mesaji gosterilir', async () => {
+    vi.spyOn(api, 'previewDatasourceRaw').mockResolvedValue({
+      rows: [
+        ['a', 'b'],
+        ['1', '2'],
+      ],
+    });
     vi.spyOn(api, 'uploadDatasource').mockRejectedValue(
       new api.ApiError('FILE_TOO_LARGE', 'Dosya cok buyuk.', 400),
     );
@@ -57,7 +73,10 @@ describe('DatasetUploadPage', () => {
 
     const file = new File(['a,b\n1,2'], 'veri.csv', { type: 'text/csv' });
     await user.upload(screen.getByLabelText('Dosya'), file);
-    await user.click(screen.getByRole('button', { name: 'Yüklemeyi Başlat' }));
+    await user.click(screen.getByRole('button', { name: 'Devam Et' }));
+
+    const pickButtons = await screen.findAllByRole('button', { name: 'Bu satır başlık' });
+    await user.click(pickButtons[0]);
 
     expect(await screen.findByText('Dosya cok buyuk.')).toBeInTheDocument();
   });
