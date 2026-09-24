@@ -100,6 +100,8 @@ export const tr = {
     loginTitle: 'Hesabınıza giriş yapın',
     loginSubmit: 'Giriş yap',
     loginSubmitting: 'Giriş yapılıyor...',
+    loginSuccessToast: 'Giriş Başarılı',
+    loginErrorToast: 'Giriş yapılamadı. Sunucuya ulaşılamıyor olabilir, lütfen tekrar deneyin.',
     fields: {
       tenantName: 'Şirket adı',
       name: 'Ad soyad',

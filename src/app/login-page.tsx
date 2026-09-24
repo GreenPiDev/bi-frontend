@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { PasswordField } from '../components/ui/password-field';
 import { TextField } from '../components/ui/text-field';
+import { useToast } from '../components/ui/toast-context';
 import { useLoginMutation } from '../features/auth/use-auth';
 import { loginFormSchema, type LoginFormValues } from '../features/auth/schemas';
 import { ApiError } from '../lib/api';
@@ -13,6 +14,7 @@ import { tr } from '../i18n/tr';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const loginMutation = useLoginMutation();
   const {
     register: registerField,
@@ -22,7 +24,13 @@ export function LoginPage() {
 
   const onSubmit = handleSubmit((values) => {
     loginMutation.mutate(values, {
-      onSuccess: () => navigate('/', { replace: true }),
+      onSuccess: () => {
+        toast.success(tr.auth.loginSuccessToast);
+        navigate('/', { replace: true });
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.auth.loginErrorToast);
+      },
     });
   });
 

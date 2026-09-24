@@ -144,6 +144,17 @@ body {
   animation: toast-out 0.28s ease-in forwards;
 }
 
+/* Toast otomatik kapanma geri sayim cubugu: hover'da JS tarafinda zamanlayici durdugunda
+   bu animasyon da group-hover:[animation-play-state:paused] ile birlikte durur. */
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-toast-in,
   .animate-toast-out {
