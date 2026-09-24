@@ -4,6 +4,7 @@ import { Download, FileSpreadsheet, FileText } from 'lucide-react';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
+import { FileDropzone } from '../components/ui/file-dropzone';
 import { FormError } from '../components/ui/form-error';
 import { TextField } from '../components/ui/text-field';
 import { useUploadDatasourceMutation } from '../features/datasets/use-datasets';
@@ -75,13 +76,12 @@ export function DatasetUploadPage() {
             <label htmlFor="file" className="text-sm font-semibold text-app-muted">
               {tr.datasets.upload.fileLabel}
             </label>
-            <input
+            <FileDropzone
               id="file"
-              name="file"
-              type="file"
+              file={file}
+              onFileSelect={setFile}
               accept=".csv,.xlsx"
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              disabled={uploadMutation.isPending}
             />
             {fileError && <p className="text-xs text-app-danger">{fileError}</p>}
           </div>

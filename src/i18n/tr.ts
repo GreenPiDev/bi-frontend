@@ -19,6 +19,11 @@ export const tr = {
       label: 'Gösterilecek Kolonlar',
       placeholder: 'Kolon seçin',
     },
+    fileDropzone: {
+      instructions: 'Dosya seçmek için tıklayın veya dosyayı sürükleyip bırakın',
+      selectedFile: (name: string) => `Seçilen dosya: ${name}`,
+      removeAria: 'Dosyayı kaldır',
+    },
   },
   help: {
     dashboards:

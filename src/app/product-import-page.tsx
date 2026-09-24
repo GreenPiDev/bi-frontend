@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
+import { FileDropzone } from '../components/ui/file-dropzone';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
@@ -119,11 +120,11 @@ export function ProductImportPage() {
           <div className="mt-6">
             <h2 className="text-sm font-bold text-app-text">{tr.crm.productImports.stepUpload}</h2>
             <div className="mt-3 flex flex-col gap-3">
-              <input
-                type="file"
+              <FileDropzone
+                file={file}
+                onFileSelect={setFile}
                 accept=".csv,.xlsx"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                disabled={rawPreviewMutation.isPending}
               />
               <FormError message={uploadError} />
               <Button
