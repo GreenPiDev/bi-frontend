@@ -4,15 +4,18 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { LoginPage } from './login-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderLoginPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/login']}>
-        <LoginPage />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/login']}>
+          <LoginPage />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
@@ -41,7 +44,7 @@ describe('LoginPage', () => {
     await user.click(screen.getByRole('button', { name: 'Giriş yap' }));
 
     await waitFor(() => {
-      expect(screen.getByText('E-posta veya sifre hatali.')).toBeInTheDocument();
+      expect(screen.getAllByText('E-posta veya sifre hatali.').length).toBeGreaterThan(0);
     });
   });
 });
