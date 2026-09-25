@@ -1071,6 +1071,10 @@ export const tr = {
         editButton: 'Düzenle',
         deleteButton: 'Sil',
         close: 'Kapat',
+        pastBadge: 'Geçmiş',
+        noAttendees: 'Katılımcı eklenmemiş.',
+        whenLabel: 'Tarih & Saat',
+        descriptionLabel: 'Not',
       },
     },
     interactions: {
