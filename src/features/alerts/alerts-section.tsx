@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../components/ui/button';
+import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { useDashboardQuery, useDashboardsQuery } from '../dashboards/use-dashboards';
 import { ApiError, type AlertOperator } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -161,18 +162,14 @@ export function AlertsSection() {
   const [isAdding, setIsAdding] = useState(false);
 
   return (
-    <section className="border-t border-app-border p-4">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-app-text">{tr.settings.alerts.title}</h2>
-          <p className="text-sm text-app-muted">{tr.settings.alerts.subtitle}</p>
-        </div>
-        {!isAdding && (
+    <CollapsibleSection title={tr.settings.alerts.title} subtitle={tr.settings.alerts.subtitle}>
+      {!isAdding && (
+        <div className="mb-4 flex justify-end">
           <Button type="button" onClick={() => setIsAdding(true)}>
             {tr.settings.alerts.addButton}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {isAdding && <AlertForm onCancel={() => setIsAdding(false)} />}
 
@@ -213,6 +210,6 @@ export function AlertsSection() {
           })}
         </ul>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }

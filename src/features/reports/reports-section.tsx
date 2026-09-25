@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../../components/ui/button';
+import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { useDashboardsQuery } from '../dashboards/use-dashboards';
 import { ApiError } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -166,18 +167,14 @@ export function ReportsSection() {
   const dashboardNameById = new Map(dashboardsQuery.data?.map((d) => [d.id, d.name]) ?? []);
 
   return (
-    <section className="border-t border-app-border p-4">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-bold text-app-text">{tr.settings.reports.title}</h2>
-          <p className="text-sm text-app-muted">{tr.settings.reports.subtitle}</p>
-        </div>
-        {!isAdding && (
+    <CollapsibleSection title={tr.settings.reports.title} subtitle={tr.settings.reports.subtitle}>
+      {!isAdding && (
+        <div className="mb-4 flex justify-end">
           <Button type="button" onClick={() => setIsAdding(true)}>
             {tr.settings.reports.addButton}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {isAdding && <ReportForm onCancel={() => setIsAdding(false)} />}
 
@@ -229,6 +226,6 @@ export function ReportsSection() {
           ))}
         </ul>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }
