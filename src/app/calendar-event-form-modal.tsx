@@ -4,7 +4,6 @@ import { Button } from '../components/ui/button';
 import { DateTimeField } from '../components/ui/date-time-field';
 import { Modal } from '../components/ui/modal';
 import { MultiSelect } from '../components/ui/multi-select';
-import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -55,28 +54,23 @@ export function CalendarEventFormModal({
           title: event.title,
           description: event.description ?? undefined,
           startAt: toDatetimeLocal(event.startAt),
-          endAt: toDatetimeLocal(event.endAt),
-          allDay: event.allDay,
           attendeeUserIds: event.attendees.map((a) => a.userId),
         }
       : {
           title: '',
           startAt: defaultStart ? toDatetimeLocal(defaultStart.toISOString()) : '',
-          endAt: defaultStart
-            ? toDatetimeLocal(new Date(defaultStart.getTime() + 60 * 60_000).toISOString())
-            : '',
-          allDay: false,
           attendeeUserIds: [],
         },
   });
 
   function onSubmit(values: CalendarEventFormValues) {
+    const startAt = new Date(values.startAt).toISOString();
     const input = {
       title: values.title,
       description: values.description || undefined,
-      startAt: new Date(values.startAt).toISOString(),
-      endAt: new Date(values.endAt).toISOString(),
-      allDay: values.allDay ?? false,
+      startAt,
+      endAt: startAt,
+      allDay: false,
       attendees: (values.attendeeUserIds ?? []).map((userId) => ({ userId })),
     };
     mutation.mutate(input, {
@@ -116,52 +110,29 @@ export function CalendarEventFormModal({
         <TextField
           label={tr.crm.calendar.form.titleLabel}
           error={errors.title?.message}
+          hint="En az 2, en fazla 200 karakter olmalı."
+          required
           {...register('title')}
         />
         <TextareaField
           label={tr.crm.calendar.form.descriptionLabel}
           rows={3}
           error={errors.description?.message}
+          hint="Opsiyonel, en fazla 2000 karakter."
           {...register('description')}
         />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Controller
-            name="startAt"
-            control={control}
-            render={({ field }) => (
-              <DateTimeField
-                label={tr.crm.calendar.form.startLabel}
-                error={errors.startAt?.message}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <Controller
-            name="endAt"
-            control={control}
-            render={({ field }) => (
-              <DateTimeField
-                label={tr.crm.calendar.form.endLabel}
-                error={errors.endAt?.message}
-                value={field.value ?? ''}
-                onChange={field.onChange}
-              />
-            )}
-          />
-        </div>
         <Controller
-          name="allDay"
+          name="startAt"
           control={control}
           render={({ field }) => (
-            <div className="flex items-center gap-2">
-              <Switch
-                checked={field.value ?? false}
-                onChange={field.onChange}
-                label={tr.crm.calendar.form.allDayLabel}
-              />
-              <span className="text-sm text-app-text">{tr.crm.calendar.form.allDayLabel}</span>
-            </div>
+            <DateTimeField
+              label={tr.crm.calendar.form.startLabel}
+              error={errors.startAt?.message}
+              hint="Etkinliğin tarih ve saati."
+              required
+              value={field.value ?? ''}
+              onChange={field.onChange}
+            />
           )}
         />
         <Controller
@@ -178,6 +149,7 @@ export function CalendarEventFormModal({
                 label: user.name,
               }))}
               error={errors.attendeeUserIds?.message}
+              hint="Opsiyonel, en fazla 50 kişi seçebilirsiniz."
             />
           )}
         />

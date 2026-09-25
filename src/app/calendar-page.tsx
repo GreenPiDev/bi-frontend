@@ -58,8 +58,6 @@ function eventsOnDay(events: CalendarEvent[], day: Date): CalendarEvent[] {
   });
 }
 
-const MAX_VISIBLE_PER_DAY = 3;
-
 export function CalendarPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [monthCursor, setMonthCursor] = useState(() => new Date());
@@ -210,8 +208,6 @@ export function CalendarPage() {
           <div className="grid grid-cols-7 gap-px overflow-hidden rounded-b-lg border-x border-b border-app-border bg-app-border">
             {gridDays.map((day) => {
               const dayEvents = eventsOnDay(events, day);
-              const visible = dayEvents.slice(0, MAX_VISIBLE_PER_DAY);
-              const overflow = dayEvents.length - visible.length;
               const isCurrentMonth = day.getMonth() === monthCursor.getMonth();
               return (
                 <button
@@ -229,7 +225,7 @@ export function CalendarPage() {
                   )}
                 >
                   <span className="text-xs font-semibold">{day.getDate()}</span>
-                  {visible.map((event) => (
+                  {dayEvents.map((event) => (
                     <span
                       key={event.id}
                       role="button"
@@ -243,11 +239,6 @@ export function CalendarPage() {
                       {displayEventTitle(event.title)}
                     </span>
                   ))}
-                  {overflow > 0 && (
-                    <span className="text-[11px] text-app-muted">
-                      {tr.crm.calendar.moreEvents(overflow)}
-                    </span>
-                  )}
                 </button>
               );
             })}

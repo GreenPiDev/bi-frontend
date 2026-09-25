@@ -74,9 +74,7 @@ describe('CalendarPage', () => {
     const dialog = within(await screen.findByRole('dialog', { name: 'Yeni Etkinlik' }));
     await user.type(await dialog.findByLabelText('Başlık'), 'Yeni gorusme');
 
-    await user.click(dialog.getByLabelText('Başlangıç'));
-    await user.click(await dialog.findByText('Bugün'));
-    await user.click(dialog.getByLabelText('Bitiş'));
+    await user.click(dialog.getByLabelText('Tarih ve Saat'));
     await user.click(await dialog.findByText('Bugün'));
 
     await user.click(dialog.getByRole('button', { name: 'Kaydet' }));

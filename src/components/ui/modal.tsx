@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react';
 
 type ModalWidth = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -21,6 +21,22 @@ const WIDTH_CLASSES: Record<ModalWidth, string> = {
 };
 
 export function Modal({ title, subtitle, onClose, children, footer, width = 'md' }: ModalProps) {
+  // Metin secimi icin input'ta baslayip mouse'u modal disina surukleyip birakan bir
+  // kullanici, modali kapatmak istemiyor - sadece hem mousedown hem click backdrop'un
+  // kendisinde basladiysa kapat (bkz. kullanici bildirimi).
+  const mouseDownOnBackdrop = useRef(false);
+
+  function handleBackdropMouseDown(event: MouseEvent<HTMLDivElement>) {
+    mouseDownOnBackdrop.current = event.target === event.currentTarget;
+  }
+
+  function handleBackdropClick(event: MouseEvent<HTMLDivElement>) {
+    if (mouseDownOnBackdrop.current && event.target === event.currentTarget) {
+      onClose();
+    }
+    mouseDownOnBackdrop.current = false;
+  }
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -34,7 +50,8 @@ export function Modal({ title, subtitle, onClose, children, footer, width = 'md'
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={onClose}
+      onMouseDown={handleBackdropMouseDown}
+      onClick={handleBackdropClick}
     >
       <div
         role="dialog"
