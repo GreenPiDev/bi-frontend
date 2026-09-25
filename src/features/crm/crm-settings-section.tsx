@@ -1,8 +1,11 @@
 import { Check, Pencil, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/ui/button';
+import { ConfirmModal } from '../../components/ui/confirm-modal';
+import { Table, type TableColumn } from '../../components/ui/table';
+import { TextField } from '../../components/ui/text-field';
 import { useToast } from '../../components/ui/toast-context';
-import { ApiError } from '../../lib/api';
+import { ApiError, type IbanOption } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 import {
   useCreateDepartmentOptionMutation,
@@ -10,6 +13,18 @@ import {
   useDepartmentOptionsQuery,
   useUpdateDepartmentOptionMutation,
 } from './use-department-options';
+import {
+  useCreateIbanOptionMutation,
+  useDeleteIbanOptionMutation,
+  useIbanOptionsQuery,
+  useUpdateIbanOptionMutation,
+} from './use-iban-options';
+import {
+  useCreatePaymentMethodOptionMutation,
+  useDeletePaymentMethodOptionMutation,
+  usePaymentMethodOptionsQuery,
+  useUpdatePaymentMethodOptionMutation,
+} from './use-payment-method-options';
 import {
   useCreateProductCategoryOptionMutation,
   useDeleteProductCategoryOptionMutation,
@@ -22,6 +37,11 @@ import {
   useSectorOptionsQuery,
   useUpdateSectorOptionMutation,
 } from './use-sector-options';
+import {
+  useDeleteTenantLogoMutation,
+  useTenantProfileQuery,
+  useUploadTenantLogoMutation,
+} from './use-tenant-logo';
 import { useTenantSettingsQuery, useUpdateTenantSettingMutation } from './use-tenant-settings';
 import {
   useCreateTitleOptionMutation,
@@ -32,6 +52,115 @@ import {
 
 const THRESHOLD_KEY = 'crm.contactInactivityThresholdDays';
 const POST_SALE_FOLLOW_UP_DAYS_KEY = 'crm.postSaleFollowUpDays';
+
+const MAX_LOGO_SIZE_BYTES = 1.5 * 1024 * 1024;
+const ACCEPTED_LOGO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+/** Sirket logosu - kullanici avatariyla ayni desen (bkz. app/profile-page.tsx
+ * AvatarSection): secilince aninda yuklenir, "Kaydet" adimi yok. */
+function CompanyLogoSection() {
+  const toast = useToast();
+  const strings = tr.settings.crm.companyLogo;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [removing, setRemoving] = useState(false);
+  const profileQuery = useTenantProfileQuery();
+  const uploadMutation = useUploadTenantLogoMutation();
+  const deleteMutation = useDeleteTenantLogoMutation();
+  const logoUrl = profileQuery.data?.logoUrl ?? null;
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!ACCEPTED_LOGO_TYPES.includes(file.type)) {
+      toast.error(strings.unsupportedType);
+      return;
+    }
+    if (file.size > MAX_LOGO_SIZE_BYTES) {
+      toast.error(strings.tooLarge);
+      return;
+    }
+    uploadMutation.mutate(file, {
+      onSuccess: () => toast.success(strings.uploadSuccess),
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
+  function handleConfirmRemove() {
+    deleteMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success(strings.removeSuccess);
+        setRemoving(false);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        setRemoving(false);
+      },
+    });
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-bold text-app-text">{strings.title}</h3>
+      <p className="text-sm text-app-muted">{strings.subtitle}</p>
+
+      <div className="mt-3 flex items-center gap-4">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={strings.alt}
+            className="h-20 w-20 rounded-lg border border-app-border object-contain bg-app-surface"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-lg border border-dashed border-app-border text-xs text-app-muted">
+            {strings.noLogo}
+          </div>
+        )}
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={uploadMutation.isPending}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {uploadMutation.isPending
+                ? strings.uploading
+                : logoUrl
+                  ? strings.replaceButton
+                  : strings.uploadButton}
+            </Button>
+            {logoUrl && (
+              <Button type="button" variant="danger" onClick={() => setRemoving(true)}>
+                {strings.removeButton}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {removing && (
+        <ConfirmModal
+          title={strings.removeConfirmTitle}
+          message={strings.removeConfirmMessage}
+          confirmLabel={strings.removeButton}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setRemoving(false)}
+        />
+      )}
+    </div>
+  );
+}
 
 interface NamedOption {
   id: string;
@@ -328,6 +457,274 @@ function ProductCategoryOptionsManager() {
   );
 }
 
+function PaymentMethodOptionsManager() {
+  return (
+    <OptionListManager
+      title={tr.settings.crm.paymentMethodOptions.title}
+      subtitle={tr.settings.crm.paymentMethodOptions.subtitle}
+      addPlaceholder={tr.settings.crm.paymentMethodOptions.addPlaceholder}
+      addButtonLabel={tr.settings.crm.paymentMethodOptions.addButton}
+      emptyText={tr.settings.crm.paymentMethodOptions.empty}
+      editButtonLabel={tr.settings.crm.paymentMethodOptions.editButton}
+      saveButtonLabel={tr.settings.crm.paymentMethodOptions.saveButton}
+      cancelButtonLabel={tr.settings.crm.paymentMethodOptions.cancelButton}
+      deleteButtonLabel={tr.settings.crm.paymentMethodOptions.deleteButton}
+      addSuccessMessage={tr.settings.crm.paymentMethodOptions.addSuccess}
+      editSuccessMessage={tr.settings.crm.paymentMethodOptions.editSuccess}
+      deleteSuccessMessage={tr.settings.crm.paymentMethodOptions.deleteSuccess}
+      optionsQuery={usePaymentMethodOptionsQuery()}
+      createMutation={useCreatePaymentMethodOptionMutation()}
+      updateMutation={useUpdatePaymentMethodOptionMutation()}
+      deleteMutation={useDeletePaymentMethodOptionMutation()}
+    />
+  );
+}
+
+interface IbanFormState {
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string;
+  iban: string;
+}
+
+const EMPTY_IBAN_FORM: IbanFormState = {
+  bankName: '',
+  accountHolderName: '',
+  accountNumber: '',
+  iban: '',
+};
+
+function IbanOptionsManager() {
+  const toast = useToast();
+  const optionsQuery = useIbanOptionsQuery();
+  const createMutation = useCreateIbanOptionMutation();
+  const updateMutation = useUpdateIbanOptionMutation();
+  const deleteMutation = useDeleteIbanOptionMutation();
+
+  const [form, setForm] = useState<IbanFormState>(EMPTY_IBAN_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<IbanFormState>(EMPTY_IBAN_FORM);
+
+  function handleApiError(error: unknown) {
+    toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+  }
+
+  function handleAdd() {
+    if (!form.bankName.trim() || !form.accountHolderName.trim() || !form.iban.trim()) {
+      return;
+    }
+    createMutation.mutate(
+      {
+        bankName: form.bankName.trim(),
+        accountHolderName: form.accountHolderName.trim(),
+        accountNumber: form.accountNumber.trim() || undefined,
+        iban: form.iban.trim(),
+      },
+      {
+        onSuccess: () => {
+          toast.success(tr.settings.crm.ibanOptions.addSuccess);
+          setForm(EMPTY_IBAN_FORM);
+        },
+        onError: handleApiError,
+      },
+    );
+  }
+
+  function startEdit(option: IbanOption) {
+    setEditingId(option.id);
+    setEditForm({
+      bankName: option.bankName,
+      accountHolderName: option.accountHolderName,
+      accountNumber: option.accountNumber ?? '',
+      iban: option.iban,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditForm(EMPTY_IBAN_FORM);
+  }
+
+  function handleSaveEdit() {
+    if (
+      !editingId ||
+      !editForm.bankName.trim() ||
+      !editForm.accountHolderName.trim() ||
+      !editForm.iban.trim()
+    ) {
+      return;
+    }
+    updateMutation.mutate(
+      {
+        id: editingId,
+        input: {
+          bankName: editForm.bankName.trim(),
+          accountHolderName: editForm.accountHolderName.trim(),
+          accountNumber: editForm.accountNumber.trim() || undefined,
+          iban: editForm.iban.trim(),
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success(tr.settings.crm.ibanOptions.editSuccess);
+          cancelEdit();
+        },
+        onError: handleApiError,
+      },
+    );
+  }
+
+  function handleDelete(id: string) {
+    deleteMutation.mutate(id, {
+      onSuccess: () => toast.success(tr.settings.crm.ibanOptions.deleteSuccess),
+      onError: handleApiError,
+    });
+  }
+
+  const columns: TableColumn<IbanOption>[] = [
+    { key: 'bankName', header: tr.settings.crm.ibanOptions.bankColumn, render: (o) => o.bankName },
+    {
+      key: 'accountHolderName',
+      header: tr.settings.crm.ibanOptions.accountHolderColumn,
+      render: (o) => o.accountHolderName,
+    },
+    {
+      key: 'accountNumber',
+      header: tr.settings.crm.ibanOptions.accountNumberColumn,
+      render: (o) => o.accountNumber ?? '—',
+    },
+    { key: 'iban', header: tr.settings.crm.ibanOptions.ibanColumn, render: (o) => o.iban },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-16',
+      render: (o) => (
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              startEdit(o);
+            }}
+            aria-label={tr.settings.crm.ibanOptions.editButton}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full text-app-muted hover:bg-app-primary/10 hover:text-app-primary"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleDelete(o.id);
+            }}
+            aria-label={tr.settings.crm.ibanOptions.deleteButton}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div>
+      <h3 className="text-sm font-bold text-app-text">{tr.settings.crm.ibanOptions.title}</h3>
+      <p className="text-sm text-app-muted">{tr.settings.crm.ibanOptions.subtitle}</p>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <TextField
+          label={tr.settings.crm.ibanOptions.bankNameLabel}
+          placeholder={tr.settings.crm.ibanOptions.bankNamePlaceholder}
+          value={form.bankName}
+          onChange={(event) => setForm((prev) => ({ ...prev, bankName: event.target.value }))}
+        />
+        <TextField
+          label={tr.settings.crm.ibanOptions.accountHolderNameLabel}
+          placeholder={tr.settings.crm.ibanOptions.accountHolderNamePlaceholder}
+          value={form.accountHolderName}
+          onChange={(event) =>
+            setForm((prev) => ({ ...prev, accountHolderName: event.target.value }))
+          }
+        />
+        <TextField
+          label={tr.settings.crm.ibanOptions.accountNumberLabel}
+          placeholder={tr.settings.crm.ibanOptions.accountNumberPlaceholder}
+          value={form.accountNumber}
+          onChange={(event) => setForm((prev) => ({ ...prev, accountNumber: event.target.value }))}
+        />
+        <TextField
+          label={tr.settings.crm.ibanOptions.ibanLabel}
+          placeholder={tr.settings.crm.ibanOptions.ibanPlaceholder}
+          value={form.iban}
+          onChange={(event) => setForm((prev) => ({ ...prev, iban: event.target.value }))}
+        />
+      </div>
+      <Button
+        type="button"
+        className="mt-3"
+        disabled={createMutation.isPending}
+        onClick={handleAdd}
+      >
+        {tr.settings.crm.ibanOptions.addButton}
+      </Button>
+
+      {optionsQuery.data && optionsQuery.data.length === 0 && (
+        <p className="mt-3 text-sm text-app-muted">{tr.settings.crm.ibanOptions.empty}</p>
+      )}
+
+      {optionsQuery.data && optionsQuery.data.length > 0 && (
+        <Table
+          columns={columns}
+          data={optionsQuery.data}
+          keyField={(option) => option.id}
+          onRowClick={startEdit}
+          isRowExpanded={(option) => editingId === option.id}
+          rowClassName={(option) => (editingId === option.id ? 'bg-blue-50' : undefined)}
+          renderExpandedRow={() => (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end">
+              <TextField
+                label={tr.settings.crm.ibanOptions.bankNameLabel}
+                value={editForm.bankName}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, bankName: event.target.value }))
+                }
+              />
+              <TextField
+                label={tr.settings.crm.ibanOptions.accountHolderNameLabel}
+                value={editForm.accountHolderName}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, accountHolderName: event.target.value }))
+                }
+              />
+              <TextField
+                label={tr.settings.crm.ibanOptions.accountNumberLabel}
+                value={editForm.accountNumber}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, accountNumber: event.target.value }))
+                }
+              />
+              <TextField
+                label={tr.settings.crm.ibanOptions.ibanLabel}
+                value={editForm.iban}
+                onChange={(event) => setEditForm((prev) => ({ ...prev, iban: event.target.value }))}
+              />
+              <div className="col-span-2 flex gap-2 sm:col-span-4">
+                <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
+                  {tr.settings.crm.ibanOptions.saveButton}
+                </Button>
+                <Button type="button" variant="secondary" onClick={cancelEdit}>
+                  {tr.settings.crm.ibanOptions.cancelButton}
+                </Button>
+              </div>
+            </div>
+          )}
+        />
+      )}
+    </div>
+  );
+}
+
 function InactivityThresholdSetting() {
   const toast = useToast();
   const settingsQuery = useTenantSettingsQuery();
@@ -457,7 +854,10 @@ export function CrmSettingsSection() {
       <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.crm.title}</h2>
       <p className="mb-4 text-sm text-app-muted">{tr.settings.crm.subtitle}</p>
 
-      <SectorOptionsManager />
+      <CompanyLogoSection />
+      <div className="mt-6 border-t border-app-border pt-6">
+        <SectorOptionsManager />
+      </div>
       <div className="mt-6 border-t border-app-border pt-6">
         <DepartmentOptionsManager />
       </div>
@@ -466,6 +866,12 @@ export function CrmSettingsSection() {
       </div>
       <div className="mt-6 border-t border-app-border pt-6">
         <ProductCategoryOptionsManager />
+      </div>
+      <div className="mt-6 border-t border-app-border pt-6">
+        <PaymentMethodOptionsManager />
+      </div>
+      <div className="mt-6 border-t border-app-border pt-6">
+        <IbanOptionsManager />
       </div>
       <InactivityThresholdSetting />
       <PostSaleFollowUpDaysSetting />

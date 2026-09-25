@@ -45,6 +45,11 @@ interface AppShellProps {
    * dashboard-pdf.service.ts): sadece logo + verilen icerik kalir, navigasyon/
    * kullanici aksiyonlari/chatbot widget'i render edilmez. */
   print?: boolean;
+  /** print=true iken varsayilan PiLens logosu yerine gosterilecek logo -
+   * teklif PDF'i gibi musteriye giden belgelerde tenant'in kendi sirket logosu
+   * (bkz. /settings?tab=crm "Sirket Logosu") kullanilir. Verilmezse/null ise
+   * PiLens logosu gosterilmeye devam eder (dashboard PDF export'u gibi). */
+  printLogoUrl?: string | null;
 }
 
 // AppShell paylasilan/kalici bir layout degil - her sayfa kendi icinde <AppShell>
@@ -57,7 +62,7 @@ interface AppShellProps {
 // deger true olarak kalir.
 let persistedSidebarOpen = false;
 
-export function AppShell({ children, print = false }: AppShellProps) {
+export function AppShell({ children, print = false, printLogoUrl }: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
   const [sidebarOpen, setSidebarOpenState] = useState(persistedSidebarOpen);
@@ -199,7 +204,11 @@ export function AppShell({ children, print = false }: AppShellProps) {
     return (
       <div className="min-h-screen bg-app-bg">
         <header className="flex h-16 items-center border-b border-app-border bg-app-surface px-5">
-          <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
+          <img
+            src={printLogoUrl || '/pilens-logo.png'}
+            alt={tr.common.appName}
+            className="h-11 w-auto object-contain"
+          />
         </header>
         <main>
           <div className="p-6 md:p-8">{children}</div>

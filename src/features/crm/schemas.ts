@@ -219,6 +219,7 @@ export const quoteFormSchema = z
   .object({
     accountId: z.string().min(1, 'Firma gerekli.'),
     contactId: z.string().optional(),
+    quoteDate: z.string().min(1, 'Teklif tarihi gerekli.'),
     productListId: z.string().min(1, 'Ürün listesi gerekli.'),
     items: z
       .array(
@@ -235,6 +236,12 @@ export const quoteFormSchema = z
     opportunityName: z.string().max(200).optional(),
     opportunityStage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
     opportunityValue: z.string().optional(),
+    leadTime: z.string().max(200).optional(),
+    paymentMethod: z.string().max(200).optional(),
+    title: z.string().max(200).optional(),
+    salesTerms: z.string().max(4000).optional(),
+    deliveryTerms: z.string().max(4000).optional(),
+    ibanOptionId: z.string().optional(),
   })
   .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
     message: 'Fırsat adı en az 2 karakter olmalı.',

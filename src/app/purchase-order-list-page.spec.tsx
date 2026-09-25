@@ -23,6 +23,16 @@ function renderPurchaseOrderListPage() {
 const quote: api.Quote = {
   id: 'q1',
   quoteNumber: 'TEK-2026-09-07-001',
+  quoteDate: '2026-09-07T00:00:00.000Z',
+  leadTime: null,
+  paymentMethod: null,
+  title: null,
+  salesTerms: null,
+  deliveryTerms: null,
+  ibanBankName: null,
+  ibanAccountHolderName: null,
+  ibanAccountNumber: null,
+  ibanNumber: null,
   accountId: 'acc-1',
   account: {
     id: 'acc-1',

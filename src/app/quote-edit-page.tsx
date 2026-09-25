@@ -7,8 +7,10 @@ import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
+import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
@@ -58,6 +60,16 @@ export function QuoteEditPage() {
   const [items, setItems] = useState<EditableItem[] | null>(null);
   const [productListId, setProductListId] = useState<string | undefined>(undefined);
   const [contactId, setContactId] = useState<string | undefined>(undefined);
+  const [quoteDate, setQuoteDate] = useState('');
+  const [title, setTitle] = useState('');
+  const [leadTime, setLeadTime] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  // Quote, secilen IbanOption'i FK olarak degil 4 alanin snapshot'i olarak tasir
+  // (bkz. QuotesService.resolveIbanSnapshot) - bu yuzden duzenlemede hangi tanimin
+  // secili oldugu bilinmez, kullanici degistirmek isterse yeniden secer.
+  const [ibanOptionId, setIbanOptionId] = useState('');
+  const [salesTerms, setSalesTerms] = useState('');
+  const [deliveryTerms, setDeliveryTerms] = useState('');
   const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
 
   if (quoteQuery.data && quoteQuery.data.id !== initializedForQuoteId) {
@@ -74,6 +86,12 @@ export function QuoteEditPage() {
     );
     setProductListId(quoteQuery.data.items[0]?.product.productListId);
     setContactId(quoteQuery.data.contactId ?? undefined);
+    setQuoteDate(quoteQuery.data.quoteDate.slice(0, 10));
+    setTitle(quoteQuery.data.title ?? '');
+    setLeadTime(quoteQuery.data.leadTime ?? '');
+    setPaymentMethod(quoteQuery.data.paymentMethod ?? '');
+    setSalesTerms(quoteQuery.data.salesTerms ?? '');
+    setDeliveryTerms(quoteQuery.data.deliveryTerms ?? '');
   }
 
   const contactOptions = (contactsQuery.data?.data ?? [])
@@ -213,6 +231,13 @@ export function QuoteEditPage() {
           vatPct: item.vatPct ? Number(item.vatPct) : 0,
         })),
         contactId: contactId ?? null,
+        quoteDate: quoteDate ? new Date(quoteDate).toISOString() : undefined,
+        title: title || null,
+        leadTime: leadTime || null,
+        paymentMethod: paymentMethod || null,
+        ibanOptionId: ibanOptionId || undefined,
+        salesTerms: salesTerms || null,
+        deliveryTerms: deliveryTerms || null,
       },
       {
         onSuccess: (quote) => {
@@ -437,39 +462,50 @@ export function QuoteEditPage() {
         <div className="mt-6 flex flex-col gap-6">
           <FormError message={apiErrorMessage} />
 
-          <div className="grid grid-cols-1 gap-4 border-t border-app-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <p className="text-xs font-semibold text-app-muted">
-                {tr.crm.quotes.edit.accountLabel}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-app-text">{quote.account.name}</p>
-            </div>
-            <Select
-              label={tr.crm.quotes.edit.productListLabel}
-              placeholder={tr.crm.quotes.form.productListPlaceholder}
-              hint={tr.crm.quotes.form.productListHint}
-              options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                value: productList.id,
-                label: productList.name,
-              }))}
-              value={productListId ?? ''}
-              onChange={(event) => {
-                setProductListId(event.target.value || undefined);
-                setPickerPage(1);
-                setPickerQuery('');
-                setAddingProductId(null);
-                setEditingIndex(null);
-              }}
-            />
-            <Select
-              label={tr.crm.quotes.edit.contactLabel}
-              placeholder={tr.crm.quotes.form.contactPlaceholder}
-              hint={tr.crm.quotes.form.contactHint}
-              options={contactOptions}
-              value={contactId ?? ''}
-              onChange={(event) => setContactId(event.target.value || undefined)}
-            />
-          </div>
+          <QuoteMetaFields
+            accountSlot={
+              <div>
+                <p className="text-xs font-semibold text-app-muted">
+                  {tr.crm.quotes.edit.accountLabel}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-app-text">{quote.account.name}</p>
+              </div>
+            }
+            contactOptions={contactOptions}
+            values={{
+              contactId: contactId ?? '',
+              quoteDate,
+              leadTime,
+              paymentMethod,
+              ibanOptionId,
+            }}
+            onChange={(field, value) => {
+              if (field === 'contactId') {
+                setContactId(value || undefined);
+              } else if (field === 'quoteDate') {
+                setQuoteDate(value);
+              } else if (field === 'leadTime') {
+                setLeadTime(value);
+              } else if (field === 'paymentMethod') {
+                setPaymentMethod(value);
+              } else if (field === 'ibanOptionId') {
+                setIbanOptionId(value);
+              }
+            }}
+            ibanCurrentInfo={
+              quote.ibanNumber && quote.ibanBankName
+                ? { bankName: quote.ibanBankName, ibanNumber: quote.ibanNumber }
+                : null
+            }
+          />
+
+          <TextField
+            label={tr.crm.quotes.edit.titleLabel}
+            placeholder={tr.crm.quotes.form.titlePlaceholder}
+            hint={tr.crm.quotes.form.titleHint}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-lg border border-app-border bg-app-surface p-4">
@@ -477,7 +513,27 @@ export function QuoteEditPage() {
                 {tr.crm.quotes.form.itemsSectionTitle}
               </span>
 
-              <p className="mt-1 text-xs text-app-muted">{tr.crm.quotes.form.pickerHint}</p>
+              <div className="mt-3">
+                <Select
+                  label={tr.crm.quotes.edit.productListLabel}
+                  placeholder={tr.crm.quotes.form.productListPlaceholder}
+                  hint={tr.crm.quotes.form.productListHint}
+                  options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                    value: productList.id,
+                    label: productList.name,
+                  }))}
+                  value={productListId ?? ''}
+                  onChange={(event) => {
+                    setProductListId(event.target.value || undefined);
+                    setPickerPage(1);
+                    setPickerQuery('');
+                    setAddingProductId(null);
+                    setEditingIndex(null);
+                  }}
+                />
+              </div>
+
+              <p className="mt-3 text-xs text-app-muted">{tr.crm.quotes.form.pickerHint}</p>
 
               <div className="relative mt-3">
                 <Search
@@ -587,6 +643,23 @@ export function QuoteEditPage() {
                 </div>
               </div>
             </aside>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextareaField
+              label={tr.crm.quotes.edit.salesTermsLabel}
+              placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
+              hint={tr.crm.quotes.form.salesTermsHint}
+              value={salesTerms}
+              onChange={(event) => setSalesTerms(event.target.value)}
+            />
+            <TextareaField
+              label={tr.crm.quotes.edit.deliveryTermsLabel}
+              placeholder={tr.crm.quotes.form.deliveryTermsPlaceholder}
+              hint={tr.crm.quotes.form.deliveryTermsHint}
+              value={deliveryTerms}
+              onChange={(event) => setDeliveryTerms(event.target.value)}
+            />
           </div>
         </div>
       </div>

@@ -193,6 +193,26 @@ export function deleteAvatar(): Promise<UserProfile> {
   return request('/users/me/avatar', { method: 'DELETE' });
 }
 
+export interface TenantProfile {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+}
+
+export function getMyTenant(): Promise<TenantProfile> {
+  return request('/tenants/me');
+}
+
+export function uploadTenantLogo(file: File): Promise<TenantProfile> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/tenants/me/logo', { method: 'POST', body: formData });
+}
+
+export function deleteTenantLogo(): Promise<TenantProfile> {
+  return request('/tenants/me/logo', { method: 'DELETE' });
+}
+
 export interface TenantSummary {
   id: string;
   name: string;
@@ -1004,6 +1024,66 @@ export function deleteProductCategoryOption(id: string): Promise<void> {
   return request(`/product-categories/${id}`, { method: 'DELETE' });
 }
 
+export interface PaymentMethodOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listPaymentMethodOptions(): Promise<PaymentMethodOption[]> {
+  return request('/payment-method-options');
+}
+
+export function createPaymentMethodOption(label: string): Promise<PaymentMethodOption> {
+  return request('/payment-method-options', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updatePaymentMethodOption(id: string, label: string): Promise<PaymentMethodOption> {
+  return request(`/payment-method-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deletePaymentMethodOption(id: string): Promise<void> {
+  return request(`/payment-method-options/${id}`, { method: 'DELETE' });
+}
+
+export interface IbanOption {
+  id: string;
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string | null;
+  iban: string;
+  createdAt: string;
+}
+
+export interface IbanOptionInput {
+  bankName: string;
+  accountHolderName: string;
+  accountNumber?: string;
+  iban: string;
+}
+
+export function listIbanOptions(): Promise<IbanOption[]> {
+  return request('/iban-options');
+}
+
+export function createIbanOption(input: IbanOptionInput): Promise<IbanOption> {
+  return request('/iban-options', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateIbanOption(id: string, input: IbanOptionInput): Promise<IbanOption> {
+  return request(`/iban-options/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteIbanOption(id: string): Promise<void> {
+  return request(`/iban-options/${id}`, { method: 'DELETE' });
+}
+
 export interface TenantSetting {
   key: string;
   value: unknown;
@@ -1623,6 +1703,16 @@ export interface Quote {
   contactId: string | null;
   contact: Contact | null;
   status: QuoteStatus;
+  quoteDate: string;
+  leadTime: string | null;
+  paymentMethod: string | null;
+  title: string | null;
+  salesTerms: string | null;
+  deliveryTerms: string | null;
+  ibanBankName: string | null;
+  ibanAccountHolderName: string | null;
+  ibanAccountNumber: string | null;
+  ibanNumber: string | null;
   approvedAt: string | null;
   approvedById: string | null;
   createdById: string;
@@ -1645,12 +1735,26 @@ export interface CreateQuoteInput {
   contactId?: string;
   items: QuoteItemInput[];
   opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
+  quoteDate: string;
+  leadTime?: string;
+  paymentMethod?: string;
+  title?: string;
+  salesTerms?: string;
+  deliveryTerms?: string;
+  ibanOptionId?: string;
 }
 
 export interface UpdateQuoteInput {
   items?: QuoteItemInput[];
   status?: QuoteStatus;
   contactId?: string | null;
+  quoteDate?: string;
+  leadTime?: string | null;
+  paymentMethod?: string | null;
+  title?: string | null;
+  salesTerms?: string | null;
+  deliveryTerms?: string | null;
+  ibanOptionId?: string | null;
 }
 
 export function listQuotes(

@@ -15,6 +15,7 @@ import {
   useQuoteQuery,
   useRejectQuoteMutation,
 } from '../features/crm/use-quotes';
+import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { tr } from '../i18n/tr';
@@ -27,6 +28,7 @@ const STATUS_BADGE_VARIANT: Record<QuoteStatus, 'success' | 'warning' | 'danger'
 };
 
 const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
+const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
 function lineTotal(item: QuoteItem): number {
   const subtotal = Number(item.quantity) * Number(item.unitPrice);
@@ -52,6 +54,7 @@ export function QuoteDetailPage() {
   const isPrintMode = searchParams.get('print') === '1';
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
+  const tenantProfileQuery = useTenantProfileQuery();
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
   const exportPdfMutation = useMutation({
@@ -64,7 +67,7 @@ export function QuoteDetailPage() {
 
   if (quoteQuery.isPending) {
     return (
-      <AppShell print={isPrintMode}>
+      <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
         <p className="text-sm text-app-muted">{tr.common.loading}</p>
       </AppShell>
     );
@@ -135,13 +138,18 @@ export function QuoteDetailPage() {
   }
 
   return (
-    <AppShell print={isPrintMode}>
+    <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
       {!isPrintMode && <BackLink to={'/teklifler'} label={tr.crm.quotes.detail.back} />}
 
       <div
         className={clsx('flex flex-wrap items-start justify-between gap-4', !isPrintMode && 'mt-6')}
       >
         <div>
+          {isPrintMode && (
+            <p className="text-xs font-bold tracking-wide text-app-muted uppercase">
+              {tr.crm.quotes.detail.documentEyebrow}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-bold text-app-text">{quote.quoteNumber}</h1>
             <PageHelp text={tr.help.quoteDetail} />
@@ -149,10 +157,31 @@ export function QuoteDetailPage() {
               {tr.crm.quotes.statusOptions[quote.status]}
             </Badge>
           </div>
+          {quote.title && <p className="mt-1 text-sm font-semibold text-app-text">{quote.title}</p>}
           <p className="mt-1 text-sm text-app-muted">
             {quote.account.name}
             {quote.contact && ` · ${quote.contact.firstName} ${quote.contact.lastName}`}
           </p>
+          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <span className="text-app-muted">
+              {tr.crm.quotes.detail.quoteDateLabel}:{' '}
+              <span className="font-semibold text-app-text">
+                {dateFormatter.format(new Date(quote.quoteDate))}
+              </span>
+            </span>
+            {quote.leadTime && (
+              <span className="text-app-muted">
+                {tr.crm.quotes.detail.leadTimeLabel}:{' '}
+                <span className="font-semibold text-app-text">{quote.leadTime}</span>
+              </span>
+            )}
+            {quote.paymentMethod && (
+              <span className="text-app-muted">
+                {tr.crm.quotes.detail.paymentMethodLabel}:{' '}
+                <span className="font-semibold text-app-text">{quote.paymentMethod}</span>
+              </span>
+            )}
+          </div>
         </div>
         {!isPrintMode && (
           <div className="flex flex-wrap gap-2">
@@ -217,6 +246,57 @@ export function QuoteDetailPage() {
           </div>
         </div>
       </div>
+
+      {(quote.salesTerms || quote.deliveryTerms) && (
+        <div className="mt-6 grid grid-cols-1 gap-6 border-t border-app-border p-6 sm:grid-cols-2">
+          {quote.salesTerms && (
+            <div>
+              <h2 className="text-sm font-bold text-app-text">
+                {tr.crm.quotes.detail.salesTermsTitle}
+              </h2>
+              <p className="mt-2 text-sm whitespace-pre-wrap text-app-muted">{quote.salesTerms}</p>
+            </div>
+          )}
+          {quote.deliveryTerms && (
+            <div>
+              <h2 className="text-sm font-bold text-app-text">
+                {tr.crm.quotes.detail.deliveryTermsTitle}
+              </h2>
+              <p className="mt-2 text-sm whitespace-pre-wrap text-app-muted">
+                {quote.deliveryTerms}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {quote.ibanNumber && (
+        <div className="mt-6 border-t border-app-border p-6">
+          <h2 className="text-sm font-bold text-app-text">
+            {tr.crm.quotes.detail.bankDetailsTitle}
+          </h2>
+          <div className="mt-2 flex flex-wrap gap-x-8 gap-y-1 text-sm">
+            <span className="text-app-muted">
+              {tr.crm.quotes.detail.bankNameLabel}:{' '}
+              <span className="font-semibold text-app-text">{quote.ibanBankName}</span>
+            </span>
+            <span className="text-app-muted">
+              {tr.crm.quotes.detail.accountHolderNameLabel}:{' '}
+              <span className="font-semibold text-app-text">{quote.ibanAccountHolderName}</span>
+            </span>
+            {quote.ibanAccountNumber && (
+              <span className="text-app-muted">
+                {tr.crm.quotes.detail.accountNumberLabel}:{' '}
+                <span className="font-semibold text-app-text">{quote.ibanAccountNumber}</span>
+              </span>
+            )}
+            <span className="text-app-muted">
+              {tr.crm.quotes.detail.ibanLabel}:{' '}
+              <span className="font-semibold text-app-text">{quote.ibanNumber}</span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {!isPrintMode && quote.opportunity && (
         <div className="mt-6 border-t border-app-border p-6">

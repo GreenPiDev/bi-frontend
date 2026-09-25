@@ -11,9 +11,11 @@ import { FormError } from '../components/ui/form-error';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
+import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
+import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
@@ -41,6 +43,14 @@ function sanitizeDecimalInput(value: string): string {
   return value.replace(/[^0-9.]/g, '');
 }
 
+function todayDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function QuoteFormPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -55,11 +65,13 @@ export function QuoteFormPage() {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
       accountId: prefillAccountId,
+      quoteDate: todayDateString(),
       items: [],
       hasOpportunity: false,
     },
@@ -232,6 +244,13 @@ export function QuoteFormPage() {
             },
           }
         : {}),
+      quoteDate: new Date(values.quoteDate).toISOString(),
+      leadTime: values.leadTime || undefined,
+      paymentMethod: values.paymentMethod || undefined,
+      title: values.title || undefined,
+      salesTerms: values.salesTerms || undefined,
+      deliveryTerms: values.deliveryTerms || undefined,
+      ibanOptionId: values.ibanOptionId || undefined,
     };
 
     createMutation.mutate(input, {
@@ -435,50 +454,49 @@ export function QuoteFormPage() {
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6">
           <FormError message={apiErrorMessage} />
 
-          <div className="grid grid-cols-1 gap-4 border-t border-app-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
-            <Controller
-              name="accountId"
-              control={control}
-              render={({ field }) => (
-                <AccountAutocomplete
-                  label={tr.crm.quotes.form.accountLabel}
-                  required
-                  placeholder={tr.crm.quotes.form.accountPlaceholder}
-                  hint={tr.crm.quotes.form.accountHint}
-                  error={errors.accountId?.message}
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-            <Select
-              label={tr.crm.quotes.form.productListLabel}
-              required
-              placeholder={tr.crm.quotes.form.productListPlaceholder}
-              hint={tr.crm.quotes.form.productListHint}
-              error={errors.productListId?.message}
-              options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                value: productList.id,
-                label: productList.name,
-              }))}
-              {...register('productListId', {
-                onChange: () => {
-                  setPickerPage(1);
-                  setPickerQuery('');
-                  setEntryProductId(null);
-                  setEditingIndex(null);
-                },
-              })}
-            />
-            <Select
-              label={tr.crm.quotes.form.contactLabel}
-              placeholder={tr.crm.quotes.form.contactPlaceholder}
-              hint={tr.crm.quotes.form.contactHint}
-              options={contactOptions}
-              error={errors.contactId?.message}
-              {...register('contactId')}
-            />
-          </div>
+          <QuoteMetaFields
+            accountSlot={
+              <Controller
+                name="accountId"
+                control={control}
+                render={({ field }) => (
+                  <AccountAutocomplete
+                    label={tr.crm.quotes.form.accountLabel}
+                    required
+                    placeholder={tr.crm.quotes.form.accountPlaceholder}
+                    hint={tr.crm.quotes.form.accountHint}
+                    error={errors.accountId?.message}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
+              />
+            }
+            contactOptions={contactOptions}
+            values={{
+              contactId: watch('contactId') ?? '',
+              quoteDate: watch('quoteDate') ?? '',
+              leadTime: watch('leadTime') ?? '',
+              paymentMethod: watch('paymentMethod') ?? '',
+              ibanOptionId: watch('ibanOptionId') ?? '',
+            }}
+            onChange={(field, value) => setValue(field, value as never, { shouldValidate: true })}
+            errors={{
+              contactId: errors.contactId?.message,
+              quoteDate: errors.quoteDate?.message,
+              leadTime: errors.leadTime?.message,
+              paymentMethod: errors.paymentMethod?.message,
+              ibanOptionId: errors.ibanOptionId?.message,
+            }}
+          />
+
+          <TextField
+            label={tr.crm.quotes.form.titleLabel}
+            placeholder={tr.crm.quotes.form.titlePlaceholder}
+            hint={tr.crm.quotes.form.titleHint}
+            error={errors.title?.message}
+            {...register('title')}
+          />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-lg border border-app-border bg-app-surface p-4">
@@ -486,6 +504,28 @@ export function QuoteFormPage() {
                 {tr.crm.quotes.form.itemsSectionTitle}
               </span>
               <FormError message={errors.items?.message} />
+
+              <div className="mt-3">
+                <Select
+                  label={tr.crm.quotes.form.productListLabel}
+                  required
+                  placeholder={tr.crm.quotes.form.productListPlaceholder}
+                  hint={tr.crm.quotes.form.productListHint}
+                  error={errors.productListId?.message}
+                  options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                    value: productList.id,
+                    label: productList.name,
+                  }))}
+                  {...register('productListId', {
+                    onChange: () => {
+                      setPickerPage(1);
+                      setPickerQuery('');
+                      setEntryProductId(null);
+                      setEditingIndex(null);
+                    },
+                  })}
+                />
+              </div>
 
               {!selectedProductListId ? (
                 <p className="mt-3 rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
@@ -601,6 +641,23 @@ export function QuoteFormPage() {
                 </div>
               </div>
             </aside>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextareaField
+              label={tr.crm.quotes.form.salesTermsLabel}
+              placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
+              hint={tr.crm.quotes.form.salesTermsHint}
+              error={errors.salesTerms?.message}
+              {...register('salesTerms')}
+            />
+            <TextareaField
+              label={tr.crm.quotes.form.deliveryTermsLabel}
+              placeholder={tr.crm.quotes.form.deliveryTermsPlaceholder}
+              hint={tr.crm.quotes.form.deliveryTermsHint}
+              error={errors.deliveryTerms?.message}
+              {...register('deliveryTerms')}
+            />
           </div>
 
           <div className="rounded-lg border border-app-border bg-app-surface p-4">
