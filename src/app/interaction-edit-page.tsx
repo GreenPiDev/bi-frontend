@@ -23,6 +23,16 @@ const TYPE_OPTIONS = (['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const).m
   label: tr.crm.interactions.typeOptions[type],
 }));
 
+/** occurredAt backend'den UTC ISO string olarak gelir - DateTimeField ise native
+ * datetime-local input'u gibi yerel saat bekler (bkz. date-time-field.tsx). Duz
+ * `.slice(0, 16)` UTC saatini oldugu gibi gosterirdi (orn. 16:55 yerine 13:55) -
+ * bkz. calendar-event-form-modal.tsx'teki ayni desen (toDatetimeLocal). */
+function toDatetimeLocal(iso: string): string {
+  const date = new Date(iso);
+  const offsetMs = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
 /** Backend PATCH /interactions/:id sadece type/notes/occurredAt/status gunceller - bu yuzden
  * bu form, olusturma formunun (interaction-form-page.tsx) aksine firma/kisi/katilimci/
  * firsat/hatirlatma alanlarini icermez, sadece gercekten guncellenebilen alanlari gosterir. */
@@ -48,7 +58,7 @@ export function InteractionEditPage() {
       reset({
         type: interactionQuery.data.type,
         notes: interactionQuery.data.notes,
-        occurredAt: interactionQuery.data.occurredAt.slice(0, 16),
+        occurredAt: toDatetimeLocal(interactionQuery.data.occurredAt),
       });
     }
   }, [interactionQuery.data, reset]);
