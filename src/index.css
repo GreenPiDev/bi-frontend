@@ -112,6 +112,36 @@ body {
   min-height: 100vh;
 }
 
+/* PDF/yazdırma çıktısı (bkz. app-shell.tsx print branch, quote-detail-page.tsx):
+   kullanıcının aktif teması (özellikle dark theme) ne olursa olsun, çıktı sayfası
+   her zaman beyaz arkaplan + koyu metin kullanmalı. */
+.print-mode {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-bg-elevated: #ffffff;
+  --color-bg-muted: #f8fafc;
+  --color-border: #dfe3ea;
+  --color-text: #16202e;
+  --color-muted: #5b6b81;
+  color-scheme: light;
+}
+
+/* Mantıksal bölümleri (teklif kalemleri, satış/teslimat şartları, banka bilgileri)
+   ayrı PDF sayfalarına ayırır. */
+@media print {
+  .print-page-break {
+    break-before: page;
+  }
+
+  /* .print-mode içerik div'inin doğal yüksekliği sayfa sonuna kadar uzanmaz;
+     break-before: page ile oluşan sayfaların boş kalan alt kısmı, iç div değil
+     body'nin arkaplanını gösterir — bu yüzden body de burada beyaza sabitlenir. */
+  html,
+  body {
+    background: #ffffff;
+  }
+}
+
 /* Toast bildirimleri (components/ui/toast.tsx): sağdan kayarak girer, aşağı doğru
    kayıp solarak çıkar. */
 @keyframes toast-in {

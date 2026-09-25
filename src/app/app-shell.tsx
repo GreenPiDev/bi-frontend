@@ -202,8 +202,8 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
 
   if (print) {
     return (
-      <div className="min-h-screen bg-app-bg">
-        <header className="flex h-16 items-center border-b border-app-border bg-app-surface px-5">
+      <div className="print-mode min-h-screen bg-white">
+        <header className="flex h-16 items-center border-b border-gray-200 bg-white px-5">
           <img
             src={printLogoUrl || '/pilens-logo.png'}
             alt={tr.common.appName}

@@ -1,5 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
+import { ChevronRight, FileDown } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
@@ -7,6 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
+import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
@@ -44,6 +47,60 @@ function computeTotals(quote: Quote) {
   );
   const grandTotal = quote.items.reduce((sum, item) => sum + lineTotal(item), 0);
   return { subtotal, vatTotal: grandTotal - subtotal, grandTotal };
+}
+
+function MetaCell({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">{label}</p>
+      <div className="mt-1.5 text-sm font-medium text-app-text">{children}</div>
+    </div>
+  );
+}
+
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <span className="shrink-0 text-[11px] font-bold tracking-wide text-app-muted uppercase">
+        {children}
+      </span>
+      <span className="h-px flex-1 bg-app-border" />
+    </div>
+  );
+}
+
+function InfoLinkRow({
+  label,
+  value,
+  suffix,
+  onClick,
+}: {
+  label: string;
+  value: string;
+  suffix?: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-start justify-between gap-2 rounded-lg text-left transition-transform duration-150 hover:translate-x-1"
+    >
+      <span className="min-w-0">
+        <span className="block text-[11px] font-semibold tracking-wide text-app-muted uppercase">
+          {label}
+        </span>
+        <span className="mt-1 block truncate text-lg font-semibold text-app-text group-hover:text-app-brand">
+          {value}
+          {suffix && <span className="ml-1 text-sm font-normal text-app-muted">({suffix})</span>}
+        </span>
+      </span>
+      <ChevronRight
+        size={16}
+        className="mt-1 shrink-0 text-app-muted transition-colors group-hover:text-app-brand"
+      />
+    </button>
+  );
 }
 
 export function QuoteDetailPage() {
@@ -142,49 +199,33 @@ export function QuoteDetailPage() {
       {!isPrintMode && <BackLink to={'/teklifler'} label={tr.crm.quotes.detail.back} />}
 
       <div
-        className={clsx('flex flex-wrap items-start justify-between gap-4', !isPrintMode && 'mt-6')}
+        className={clsx('flex flex-wrap items-start justify-between gap-4', !isPrintMode && 'mt-3')}
       >
-        <div>
-          {isPrintMode && (
-            <p className="text-xs font-bold tracking-wide text-app-muted uppercase">
+        <div className="min-w-0">
+          {!isPrintMode && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-app-muted uppercase">
               {tr.crm.quotes.detail.documentEyebrow}
-            </p>
+            </span>
           )}
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{quote.quoteNumber}</h1>
-            <PageHelp text={tr.help.quoteDetail} />
-            <Badge variant={STATUS_BADGE_VARIANT[quote.status]}>
-              {tr.crm.quotes.statusOptions[quote.status]}
-            </Badge>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+            <h1 className="text-4xl leading-tight font-bold text-app-text">{quote.quoteNumber}</h1>
+            {!isPrintMode && <PageHelp text={tr.help.quoteDetail} />}
+            {!isPrintMode && (
+              <Badge variant={STATUS_BADGE_VARIANT[quote.status]}>
+                {tr.crm.quotes.statusOptions[quote.status]}
+              </Badge>
+            )}
           </div>
-          {quote.title && <p className="mt-1 text-sm font-semibold text-app-text">{quote.title}</p>}
+          {quote.title && (
+            <p className="mt-1.5 text-sm font-semibold text-app-text">{quote.title}</p>
+          )}
           <p className="mt-1 text-sm text-app-muted">
             {quote.account.name}
             {quote.contact && ` · ${quote.contact.firstName} ${quote.contact.lastName}`}
           </p>
-          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-            <span className="text-app-muted">
-              {tr.crm.quotes.detail.quoteDateLabel}:{' '}
-              <span className="font-semibold text-app-text">
-                {dateFormatter.format(new Date(quote.quoteDate))}
-              </span>
-            </span>
-            {quote.leadTime && (
-              <span className="text-app-muted">
-                {tr.crm.quotes.detail.leadTimeLabel}:{' '}
-                <span className="font-semibold text-app-text">{quote.leadTime}</span>
-              </span>
-            )}
-            {quote.paymentMethod && (
-              <span className="text-app-muted">
-                {tr.crm.quotes.detail.paymentMethodLabel}:{' '}
-                <span className="font-semibold text-app-text">{quote.paymentMethod}</span>
-              </span>
-            )}
-          </div>
         </div>
         {!isPrintMode && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 pt-1">
             {quote.status === 'PENDING_APPROVAL' && canApprove && (
               <>
                 <Button type="button" onClick={handleApprove} disabled={approveMutation.isPending}>
@@ -201,19 +242,35 @@ export function QuoteDetailPage() {
               </>
             )}
             {(quote.status === 'DRAFT' || quote.status === 'APPROVED') && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => exportPdfMutation.mutate()}
-                disabled={exportPdfMutation.isPending}
-              >
-                {exportPdfMutation.isPending
-                  ? tr.crm.quotes.detail.exportPdfBusy
-                  : tr.crm.quotes.detail.exportPdfButton}
-              </Button>
+              <Tooltip content={tr.crm.quotes.detail.exportPdfButton}>
+                <button
+                  type="button"
+                  onClick={() => exportPdfMutation.mutate()}
+                  disabled={exportPdfMutation.isPending}
+                  aria-label={tr.crm.quotes.detail.exportPdfButton}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <FileDown size={18} />
+                </button>
+              </Tooltip>
             )}
           </div>
         )}
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-4 sm:divide-x sm:divide-app-border">
+        <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
+          {dateFormatter.format(new Date(quote.quoteDate))}
+        </MetaCell>
+        <MetaCell label={tr.crm.quotes.detail.leadTimeLabel}>
+          {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
+        </MetaCell>
+        <MetaCell label={tr.crm.quotes.detail.paymentMethodLabel}>
+          {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
+        </MetaCell>
+        <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
+          {currency.format(totals.grandTotal)}
+        </MetaCell>
       </div>
 
       {!isPrintMode && quote.status === 'PENDING_APPROVAL' && (
@@ -222,8 +279,8 @@ export function QuoteDetailPage() {
         </p>
       )}
 
-      <div className="mt-6 border-t border-app-border p-6">
-        <h2 className="text-sm font-bold text-app-text">{tr.crm.quotes.detail.itemsTitle}</h2>
+      <div className="mt-8">
+        <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
         <Table
           columns={itemColumns}
           data={quote.items}
@@ -231,16 +288,16 @@ export function QuoteDetailPage() {
           emptyMessage={tr.crm.quotes.form.summaryEmpty}
         />
 
-        <div className="mt-4 flex flex-col items-end gap-1 text-sm">
-          <div className="flex w-56 justify-between">
+        <div className="mt-4 flex flex-col items-end gap-1.5 text-sm">
+          <div className="flex w-64 justify-between">
             <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
             <span className="text-app-text">{currency.format(totals.subtotal)}</span>
           </div>
-          <div className="flex w-56 justify-between">
+          <div className="flex w-64 justify-between">
             <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
             <span className="text-app-text">{currency.format(totals.vatTotal)}</span>
           </div>
-          <div className="flex w-56 justify-between font-bold">
+          <div className="flex w-64 justify-between border-t border-app-border pt-1.5 text-base font-bold">
             <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
             <span className="text-app-text">{currency.format(totals.grandTotal)}</span>
           </div>
@@ -248,21 +305,19 @@ export function QuoteDetailPage() {
       </div>
 
       {(quote.salesTerms || quote.deliveryTerms) && (
-        <div className="mt-6 grid grid-cols-1 gap-6 border-t border-app-border p-6 sm:grid-cols-2">
+        <div className="print-page-break mt-8 flex flex-col gap-4 border-t border-app-border pt-6">
           {quote.salesTerms && (
-            <div>
-              <h2 className="text-sm font-bold text-app-text">
-                {tr.crm.quotes.detail.salesTermsTitle}
-              </h2>
-              <p className="mt-2 text-sm whitespace-pre-wrap text-app-muted">{quote.salesTerms}</p>
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <SectionHeader>{tr.crm.quotes.detail.salesTermsTitle}</SectionHeader>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+                {quote.salesTerms}
+              </p>
             </div>
           )}
           {quote.deliveryTerms && (
-            <div>
-              <h2 className="text-sm font-bold text-app-text">
-                {tr.crm.quotes.detail.deliveryTermsTitle}
-              </h2>
-              <p className="mt-2 text-sm whitespace-pre-wrap text-app-muted">
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <SectionHeader>{tr.crm.quotes.detail.deliveryTermsTitle}</SectionHeader>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
                 {quote.deliveryTerms}
               </p>
             </div>
@@ -271,45 +326,32 @@ export function QuoteDetailPage() {
       )}
 
       {quote.ibanNumber && (
-        <div className="mt-6 border-t border-app-border p-6">
-          <h2 className="text-sm font-bold text-app-text">
-            {tr.crm.quotes.detail.bankDetailsTitle}
-          </h2>
-          <div className="mt-2 flex flex-wrap gap-x-8 gap-y-1 text-sm">
-            <span className="text-app-muted">
-              {tr.crm.quotes.detail.bankNameLabel}:{' '}
-              <span className="font-semibold text-app-text">{quote.ibanBankName}</span>
-            </span>
-            <span className="text-app-muted">
-              {tr.crm.quotes.detail.accountHolderNameLabel}:{' '}
-              <span className="font-semibold text-app-text">{quote.ibanAccountHolderName}</span>
-            </span>
+        <div className="print-page-break mt-8 border-t border-app-border pt-6">
+          <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
+            <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
+              {quote.ibanAccountHolderName}
+            </MetaCell>
             {quote.ibanAccountNumber && (
-              <span className="text-app-muted">
-                {tr.crm.quotes.detail.accountNumberLabel}:{' '}
-                <span className="font-semibold text-app-text">{quote.ibanAccountNumber}</span>
-              </span>
+              <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
+                {quote.ibanAccountNumber}
+              </MetaCell>
             )}
-            <span className="text-app-muted">
-              {tr.crm.quotes.detail.ibanLabel}:{' '}
-              <span className="font-semibold text-app-text">{quote.ibanNumber}</span>
-            </span>
+            <MetaCell label={tr.crm.quotes.detail.ibanLabel}>{quote.ibanNumber}</MetaCell>
           </div>
         </div>
       )}
 
       {!isPrintMode && quote.opportunity && (
-        <div className="mt-6 border-t border-app-border p-6">
-          <h2 className="text-sm font-bold text-app-text">
-            {tr.crm.quotes.detail.opportunityTitle}
-          </h2>
-          <button
-            type="button"
+        <div className="mt-8 border-t border-app-border pt-6">
+          <SectionHeader>{tr.crm.quotes.detail.opportunityTitle}</SectionHeader>
+          <InfoLinkRow
+            label={tr.crm.opportunities.stageColumn}
+            value={quote.opportunity.name}
+            suffix={tr.crm.opportunities.stageOptions[quote.opportunity.stage]}
             onClick={() => navigate(`/firsatlar/${quote.opportunity?.id}`)}
-            className="mt-2 text-sm font-semibold text-app-brand hover:underline"
-          >
-            {quote.opportunity.name} ({tr.crm.opportunities.stageOptions[quote.opportunity.stage]})
-          </button>
+          />
         </div>
       )}
     </AppShell>
