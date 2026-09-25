@@ -16,7 +16,10 @@ function maskIban(iban: string): string {
 
 /** IBAN/banka hesabi dropdown'u - sadece /settings?tab=crm'de tanimlanan
  * listeden secilir, serbest metin girisi yok. Tenant henuz hic tanimlamamissa,
- * dropdown yerine ayarlara yonlendiren bir mesaj/link gosterilir. */
+ * dropdown yerine ayarlara (yeni sekmede) yonlendiren bir mesaj/link gosterilir.
+ * IBAN oradan eklenince `useIbanOptionsRealtimeSync` bu sorguyu invalidate eder
+ * ve dropdown sayfa yenilenmeden otomatik guncellenir (departman/odeme yontemi
+ * alanlariyla ayni desen, bkz. department-select.tsx). */
 export function IbanSelect({ label, value, onChange, error }: IbanSelectProps) {
   const optionsQuery = useIbanOptionsQuery();
   const options = optionsQuery.data ?? [];
@@ -27,7 +30,12 @@ export function IbanSelect({ label, value, onChange, error }: IbanSelectProps) {
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.quotes.form.ibanEmptyMessage}{' '}
-          <Link to="/settings?tab=crm" className="font-semibold text-app-brand hover:underline">
+          <Link
+            to="/settings?tab=crm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-app-brand hover:underline"
+          >
             {tr.crm.quotes.form.ibanEmptyLink}
           </Link>
         </div>

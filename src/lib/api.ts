@@ -1741,6 +1741,7 @@ export interface Quote {
   approvedAt: string | null;
   approvedById: string | null;
   createdById: string;
+  createdByName: string | null;
   items: QuoteItem[];
   opportunity: Opportunity | null;
   createdAt: string;

@@ -12,7 +12,10 @@ interface PaymentMethodSelectProps {
 
 /** Odeme yontemi dropdown'u - sadece /settings?tab=crm'de tanimlanan listeden
  * seçilir, serbest metin girisi yok. Tenant henuz hic tanimlamamissa, dropdown
- * yerine ayarlara yonlendiren bir mesaj/link gosterilir. */
+ * yerine ayarlara (yeni sekmede) yonlendiren bir mesaj/link gosterilir. Odeme
+ * yontemi oradan eklenince `usePaymentMethodOptionsRealtimeSync` bu sorguyu
+ * invalidate eder ve dropdown sayfa yenilenmeden otomatik guncellenir (departman
+ * alaniyla ayni desen, bkz. department-select.tsx). */
 export function PaymentMethodSelect({ label, value, onChange, error }: PaymentMethodSelectProps) {
   const optionsQuery = usePaymentMethodOptionsQuery();
   const options = optionsQuery.data ?? [];
@@ -23,7 +26,12 @@ export function PaymentMethodSelect({ label, value, onChange, error }: PaymentMe
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.quotes.form.paymentMethodEmptyMessage}{' '}
-          <Link to="/settings?tab=crm" className="font-semibold text-app-brand hover:underline">
+          <Link
+            to="/settings?tab=crm"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-app-brand hover:underline"
+          >
             {tr.crm.quotes.form.paymentMethodEmptyLink}
           </Link>
         </div>

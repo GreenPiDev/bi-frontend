@@ -64,6 +64,7 @@ const quote: api.Quote = {
   approvedAt: '2026-09-01T00:00:00.000Z',
   approvedById: 'u1',
   createdById: 'u1',
+  createdByName: 'Admin',
   items: [],
   opportunity: null,
   createdAt: '2026-08-01T00:00:00.000Z',

@@ -1473,6 +1473,7 @@ export const tr = {
       accountColumn: 'Firma',
       statusColumn: 'Durum',
       totalColumn: 'Toplam',
+      createdByColumn: 'Oluşturan',
       statusFilterLabel: 'Durum',
       allStatuses: 'Tümü',
       deleteConfirm: 'Bu teklifi silmek istediğinize emin misiniz?',

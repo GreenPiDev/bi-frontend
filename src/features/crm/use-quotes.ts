@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   approveQuote,
   createQuote,
@@ -23,6 +23,33 @@ export function useQuotesQuery(
     queryFn: () => listQuotes(params),
     enabled: options.enabled ?? true,
   });
+}
+
+/** "Durum" buton filtresindeki her secenegin (Tumu + her QuoteStatus) yanina yazilacak
+ * kayit sayisini getirir - `/quotes` ucu durum bazli kirilim dondurmuyor, bu yuzden her
+ * secenek icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total kullanilir). */
+export function useQuoteStatusCounts(statuses: readonly QuoteStatus[]) {
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: [...QUOTES_QUERY_KEY, 'count', 'all'],
+        queryFn: () => listQuotes({ pageSize: 1 }),
+      },
+      ...statuses.map((status) => ({
+        queryKey: [...QUOTES_QUERY_KEY, 'count', status],
+        queryFn: () => listQuotes({ pageSize: 1, status }),
+      })),
+    ],
+  });
+
+  const [allResult, ...statusResults] = results;
+  const counts: Partial<Record<QuoteStatus, number>> = {};
+  statuses.forEach((status, index) => {
+    const total = statusResults[index]?.data?.meta.total;
+    if (total !== undefined) counts[status] = total;
+  });
+
+  return { all: allResult?.data?.meta.total, counts };
 }
 
 export function useQuoteQuery(id: string) {

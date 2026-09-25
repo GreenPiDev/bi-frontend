@@ -68,6 +68,7 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     approvedAt: null,
     approvedById: null,
     createdById: 'u1',
+    createdByName: 'Admin',
     items: [],
     opportunity: null,
     createdAt: '2026-08-01T00:00:00.000Z',

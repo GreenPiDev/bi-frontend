@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useDepartmentOptionsRealtimeSync } from '../features/crm/use-department-options-realtime-sync';
+import { useIbanOptionsRealtimeSync } from '../features/crm/use-iban-options-realtime-sync';
 import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
+import { usePaymentMethodOptionsRealtimeSync } from '../features/crm/use-payment-method-options-realtime-sync';
 import { useSectorOptionsRealtimeSync } from '../features/crm/use-sector-options-realtime-sync';
 import { useTitleOptionsRealtimeSync } from '../features/crm/use-title-options-realtime-sync';
 import { useModuleAccessRealtimeSync } from '../features/platform-admin/use-module-access-realtime-sync';
@@ -28,6 +30,8 @@ export function ProtectedRoute({
   useSectorOptionsRealtimeSync();
   useDepartmentOptionsRealtimeSync();
   useTitleOptionsRealtimeSync();
+  usePaymentMethodOptionsRealtimeSync();
+  useIbanOptionsRealtimeSync();
 
   if (meQuery.isPending) {
     return (

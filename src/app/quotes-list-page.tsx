@@ -7,8 +7,8 @@ import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
-import { Select } from '../components/ui/select';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { hasPermission } from '../features/auth/permissions';
@@ -16,6 +16,7 @@ import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   useDeleteQuoteMutation,
+  useQuoteStatusCounts,
   useQuotesQuery,
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
@@ -83,7 +84,7 @@ function QuoteStatusSelect({
       }}
       disabled={updateMutation.isPending}
       className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent p-0 text-sm font-semibold outline-none focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
+        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
         STATUS_TEXT_CLASS[quote.status],
       )}
     >
@@ -116,6 +117,11 @@ export function QuotesListPage() {
   >(undefined);
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const quotesQuery = useQuotesQuery({ page, pageSize, status: status || undefined });
+  const statusCounts = useQuoteStatusCounts(STATUS_OPTIONS.map((option) => option.value));
+  const filterCounts: Partial<Record<QuoteStatus | '', number>> = {
+    '': statusCounts.all,
+    ...statusCounts.counts,
+  };
   const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const deleteMutation = useDeleteQuoteMutation();
   const confirmStatusMutation = useUpdateQuoteMutation(pendingStatusChange?.quote.id ?? '');
@@ -198,6 +204,12 @@ export function QuotesListPage() {
         new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
           quoteTotal(q),
         ),
+    },
+    {
+      key: 'createdByName',
+      header: tr.crm.quotes.createdByColumn,
+      className: 'text-app-muted',
+      render: (q) => q.createdByName ?? '—',
     },
     {
       key: 'actions',
@@ -287,20 +299,18 @@ export function QuotesListPage() {
         </Tooltip>
       </div>
 
-      <div className="mt-6 max-w-xs">
-        <Select
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <FilterButtonGroup
           label={tr.crm.quotes.statusFilterLabel}
           value={status}
-          onChange={(event) => {
+          onChange={(next) => {
             setPage(1);
-            setStatus(event.target.value as QuoteStatus | '');
+            setStatus(next);
           }}
-          placeholder={tr.crm.quotes.allStatuses}
+          allLabel={tr.crm.quotes.allStatuses}
           options={STATUS_OPTIONS}
+          counts={filterCounts}
         />
-      </div>
-
-      <div className="mt-4 flex justify-end">
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}
