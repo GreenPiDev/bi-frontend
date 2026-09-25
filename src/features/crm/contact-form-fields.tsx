@@ -1,13 +1,12 @@
 import { Controller, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form';
-import { Autocomplete } from '../../components/ui/autocomplete';
 import { DateField } from '../../components/ui/date-field';
 import { Select } from '../../components/ui/select';
 import { TextField } from '../../components/ui/text-field';
 import { AccountAutocomplete } from './account-autocomplete';
+import { DepartmentSelect } from './department-select';
 import { PhoneField } from './phone-field';
 import type { ContactFormValues } from './schemas';
-import type { useDepartmentOptionsQuery } from './use-department-options';
-import type { useTitleOptionsQuery } from './use-title-options';
+import { TitleSelect } from './title-select';
 import { tr } from '../../i18n/tr';
 
 const STATUS_OPTIONS = [
@@ -19,17 +18,9 @@ interface ContactFormFieldsProps {
   register: UseFormRegister<ContactFormValues>;
   control: Control<ContactFormValues>;
   errors: FieldErrors<ContactFormValues>;
-  departmentOptionsQuery: ReturnType<typeof useDepartmentOptionsQuery>;
-  titleOptionsQuery: ReturnType<typeof useTitleOptionsQuery>;
 }
 
-export function ContactFormFields({
-  register,
-  control,
-  errors,
-  departmentOptionsQuery,
-  titleOptionsQuery,
-}: ContactFormFieldsProps) {
+export function ContactFormFields({ register, control, errors }: ContactFormFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
       <TextField
@@ -64,18 +55,10 @@ export function ContactFormFields({
         name="department"
         control={control}
         render={({ field }) => (
-          <Autocomplete
-            label={tr.crm.contacts.form.departmentLabel}
-            placeholder={tr.crm.contacts.form.departmentPlaceholder}
+          <DepartmentSelect
             value={field.value ?? ''}
             onChange={field.onChange}
-            options={(departmentOptionsQuery.data ?? []).map((option) => option.label)}
             error={errors.department?.message}
-            hint={
-              (departmentOptionsQuery.data?.length ?? 0) > 0
-                ? tr.crm.contacts.form.departmentHintRestricted
-                : tr.crm.contacts.form.departmentHintFree
-            }
           />
         )}
       />
@@ -83,18 +66,10 @@ export function ContactFormFields({
         name="title"
         control={control}
         render={({ field }) => (
-          <Autocomplete
-            label={tr.crm.contacts.form.titleLabel}
-            placeholder={tr.crm.contacts.form.titlePlaceholder}
+          <TitleSelect
             value={field.value ?? ''}
             onChange={field.onChange}
-            options={(titleOptionsQuery.data ?? []).map((option) => option.label)}
             error={errors.title?.message}
-            hint={
-              (titleOptionsQuery.data?.length ?? 0) > 0
-                ? tr.crm.contacts.form.titleHintRestricted
-                : tr.crm.contacts.form.titleHintFree
-            }
           />
         )}
       />

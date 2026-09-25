@@ -7,8 +7,6 @@ import { useToast } from '../../components/ui/toast-context';
 import { ContactFormFields } from './contact-form-fields';
 import { cleanEmptyStrings, contactFormSchema, type ContactFormValues } from './schemas';
 import { useCreateContactMutation } from './use-contacts';
-import { useDepartmentOptionsQuery } from './use-department-options';
-import { useTitleOptionsQuery } from './use-title-options';
 import { ApiError, type Contact } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 
@@ -20,8 +18,6 @@ interface NewContactModalProps {
 
 export function NewContactModal({ defaultFirstName, onClose, onCreated }: NewContactModalProps) {
   const toast = useToast();
-  const departmentOptionsQuery = useDepartmentOptionsQuery();
-  const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateContactMutation();
 
   const {
@@ -53,13 +49,7 @@ export function NewContactModal({ defaultFirstName, onClose, onCreated }: NewCon
     <Modal title={tr.crm.contacts.form.newTitle} onClose={onClose} width="lg">
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />
-        <ContactFormFields
-          register={register}
-          control={control}
-          errors={errors}
-          departmentOptionsQuery={departmentOptionsQuery}
-          titleOptionsQuery={titleOptionsQuery}
-        />
+        <ContactFormFields register={register} control={control} errors={errors} />
         <div className="mt-1 flex gap-2">
           <Button type="submit" disabled={createMutation.isPending}>
             {createMutation.isPending

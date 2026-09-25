@@ -1000,16 +1000,17 @@ export const tr = {
         accountPlaceholder: 'Firma seç (opsiyonel)',
         accountHint: 'Opsiyonel. Bu kişinin bağlı olduğu firma.',
         departmentLabel: 'Departman',
-        departmentPlaceholder: 'Departman seçin veya yazın',
-        departmentHintFree:
-          'Opsiyonel. Henüz tanımlı departman olmadığı için serbest metin girebilirsiniz.',
+        departmentPlaceholder: 'Departman seçin',
         departmentHintRestricted:
           'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan departmanlardan biri seçilebilir.',
+        departmentEmptyMessage: 'Henüz tanımlanmış bir departman yok.',
+        departmentEmptyLink: 'Tanımlamak için ayarlara git',
         titleLabel: 'Unvan',
-        titlePlaceholder: 'Unvan seçin veya yazın',
-        titleHintFree: 'Opsiyonel. Henüz tanımlı unvan olmadığı için serbest metin girebilirsiniz.',
+        titlePlaceholder: 'Unvan seçin',
         titleHintRestricted:
           'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan unvanlardan biri seçilebilir.',
+        titleEmptyMessage: 'Henüz tanımlanmış bir unvan yok.',
+        titleEmptyLink: 'Tanımlamak için ayarlara git',
         emailLabel: 'E-posta',
         emailHint: 'Opsiyonel. Girilirse geçerli bir e-posta adresi olmalı (örn. ad@firma.com).',
         phoneLabel: 'Cep Telefonu',

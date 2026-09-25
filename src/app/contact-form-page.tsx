@@ -18,8 +18,6 @@ import {
   useCreateContactMutation,
   useUpdateContactMutation,
 } from '../features/crm/use-contacts';
-import { useDepartmentOptionsQuery } from '../features/crm/use-department-options';
-import { useTitleOptionsQuery } from '../features/crm/use-title-options';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -29,8 +27,6 @@ export function ContactFormPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const contactQuery = useContactQuery(id ?? '');
-  const departmentOptionsQuery = useDepartmentOptionsQuery();
-  const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateContactMutation();
   const updateMutation = useUpdateContactMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -98,13 +94,7 @@ export function ContactFormPage() {
 
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4" noValidate>
           <FormError message={apiErrorMessage} />
-          <ContactFormFields
-            register={register}
-            control={control}
-            errors={errors}
-            departmentOptionsQuery={departmentOptionsQuery}
-            titleOptionsQuery={titleOptionsQuery}
-          />
+          <ContactFormFields register={register} control={control} errors={errors} />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? tr.crm.contacts.form.submitting : tr.crm.contacts.form.submit}

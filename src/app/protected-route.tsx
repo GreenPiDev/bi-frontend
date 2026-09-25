@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useDepartmentOptionsRealtimeSync } from '../features/crm/use-department-options-realtime-sync';
 import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
 import { useSectorOptionsRealtimeSync } from '../features/crm/use-sector-options-realtime-sync';
+import { useTitleOptionsRealtimeSync } from '../features/crm/use-title-options-realtime-sync';
 import { useModuleAccessRealtimeSync } from '../features/platform-admin/use-module-access-realtime-sync';
 import { tr } from '../i18n/tr';
 import { useRealtimeConnection } from '../lib/realtime';
@@ -24,6 +26,8 @@ export function ProtectedRoute({
   useModuleAccessRealtimeSync();
   useMessagesRealtimeSync();
   useSectorOptionsRealtimeSync();
+  useDepartmentOptionsRealtimeSync();
+  useTitleOptionsRealtimeSync();
 
   if (meQuery.isPending) {
     return (
