@@ -1,24 +1,34 @@
 import { clsx } from 'clsx';
-import { Pencil, Trash2 } from 'lucide-react';
+import { ListFilter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { DateField } from '../components/ui/date-field';
+import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { AccountAutocomplete } from '../features/crm/account-autocomplete';
+import { ContactAutocomplete } from '../features/crm/contact-autocomplete';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   useDeleteInteractionMutation,
+  useInteractionCreatorsQuery,
   useInteractionsQuery,
   useUpdateInteractionMutation,
 } from '../features/crm/use-interactions';
-import { ApiError, type Interaction } from '../lib/api';
+import { ApiError, type Interaction, type InteractionType } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+const TYPE_OPTIONS: { value: InteractionType; label: string }[] = (
+  ['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const
+).map((type) => ({ value: type, label: tr.crm.interactions.typeOptions[type] }));
 
 function InteractionStatusSelect({ interaction }: { interaction: Interaction }) {
   const toast = useToast();
@@ -61,10 +71,57 @@ export function InteractionsListPage() {
   const [deletingInteraction, setDeletingInteraction] = useState<Interaction | undefined>(
     undefined,
   );
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // AccountAutocomplete/ContactAutocomplete yazilan metni kendi ic state'inde tutar
+  // (bkz. o bilesenlerdeki yorum) - disaridan sadece accountId/contactId'yi sifirlamak
+  // gorunen metni temizlemez, bu yuzden Sifirla'da bu key degistirilip bilesenler
+  // yeniden monte edilir.
+  const [filterResetKey, setFilterResetKey] = useState(0);
+  const [accountId, setAccountId] = useState('');
+  const [contactId, setContactId] = useState('');
+  const [createdById, setCreatedById] = useState('');
+  const [type, setType] = useState<InteractionType | ''>('');
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
+  // Iki tarih filtresi ayni occurredAt alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir - bkz. opportunities-list-page.tsx.
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter =
+    Boolean(accountId) ||
+    Boolean(contactId) ||
+    Boolean(createdById) ||
+    Boolean(type) ||
+    Boolean(from) ||
+    Boolean(to);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const interactionsQuery = useInteractionsQuery({ page, pageSize });
+  const interactionsQuery = useInteractionsQuery({
+    page,
+    pageSize,
+    accountId: accountId || undefined,
+    contactId: contactId || undefined,
+    createdById: createdById || undefined,
+    type: type || undefined,
+    from,
+    to,
+  });
+  const creatorsQuery = useInteractionCreatorsQuery();
   const deleteMutation = useDeleteInteractionMutation();
+
+  function resetFilters() {
+    setPage(1);
+    setAccountId('');
+    setContactId('');
+    setCreatedById('');
+    setType('');
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
+    setFilterResetKey((k) => k + 1);
+  }
 
   function handleConfirmDelete() {
     if (!deletingInteraction) return;
@@ -170,9 +227,37 @@ export function InteractionsListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.interactions.subtitle}</p>
         </div>
-        <Button type="button" onClick={() => navigate('/gorusmeler/yeni')}>
-          {tr.crm.interactions.newButton}
-        </Button>
+        <div className="flex items-center gap-2 pt-1">
+          <Tooltip
+            content={
+              hasActiveFilter
+                ? tr.crm.interactions.filterActiveTooltip
+                : tr.crm.interactions.filterButton
+            }
+          >
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label={tr.crm.interactions.filterButton}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <ListFilter size={18} />
+              {hasActiveFilter && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.interactions.newButton}>
+            <button
+              type="button"
+              onClick={() => navigate('/gorusmeler/yeni')}
+              aria-label={tr.crm.interactions.newButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+            >
+              <Plus size={18} strokeWidth={3} />
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       <div className="mt-4 flex justify-end">
@@ -200,6 +285,114 @@ export function InteractionsListPage() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.interactions.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <AccountAutocomplete
+              key={`account-${filterResetKey}`}
+              label={tr.crm.interactions.filterDrawer.accountLabel}
+              placeholder={tr.crm.interactions.filterDrawer.accountPlaceholder}
+              value={accountId || undefined}
+              onChange={(nextAccountId) => {
+                setPage(1);
+                setAccountId(nextAccountId ?? '');
+              }}
+              clearable
+            />
+            <ContactAutocomplete
+              key={`contact-${filterResetKey}`}
+              label={tr.crm.interactions.filterDrawer.contactLabel}
+              placeholder={tr.crm.interactions.filterDrawer.contactPlaceholder}
+              value={contactId || undefined}
+              onChange={(nextContactId) => {
+                setPage(1);
+                setContactId(nextContactId ?? '');
+              }}
+              clearable
+            />
+            <Select
+              label={tr.crm.interactions.filterDrawer.createdByLabel}
+              placeholder={tr.crm.interactions.filterDrawer.createdByPlaceholder}
+              value={createdById}
+              onChange={(event) => {
+                setPage(1);
+                setCreatedById(event.target.value);
+              }}
+              options={(creatorsQuery.data ?? []).map((creator) => ({
+                value: creator.id,
+                label: creator.name,
+              }))}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setCreatedById('');
+              }}
+            />
+            <Select
+              label={tr.crm.interactions.filterDrawer.typeLabel}
+              placeholder={tr.crm.interactions.filterDrawer.typeAllOption}
+              value={type}
+              onChange={(event) => {
+                setPage(1);
+                setType(event.target.value as InteractionType | '');
+              }}
+              options={TYPE_OPTIONS}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setType('');
+              }}
+            />
+            <DateField
+              label={tr.crm.interactions.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setPage(1);
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setSinceInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.interactions.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeFromInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.interactions.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeToInput('');
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.interactions.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
 
       {deletingInteraction && (

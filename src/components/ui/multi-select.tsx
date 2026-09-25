@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { SelectOption } from './select';
 
@@ -12,6 +12,8 @@ interface MultiSelectProps {
   error?: string;
   required?: boolean;
   hint?: string;
+  /** Secilen degerleri, alanin altinda kaldirma (X) ikonlu etiketler halinde de gosterir. */
+  showChips?: boolean;
 }
 
 /** A4: dropdown alanlarda çoklu seçim (ör. bir firma hem müşteri hem tedarikçi olabilir).
@@ -29,6 +31,7 @@ export function MultiSelect({
   error,
   required,
   hint,
+  showChips,
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(
@@ -124,6 +127,28 @@ export function MultiSelect({
               {option.label}
             </label>
           ))}
+        </div>
+      )}
+      {showChips && value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {options
+            .filter((option) => value.includes(option.value))
+            .map((option) => (
+              <span
+                key={option.value}
+                className="flex items-center gap-1 rounded-full bg-app-bg-muted py-1 pr-1.5 pl-3 text-xs font-medium text-app-text"
+              >
+                {option.label}
+                <button
+                  type="button"
+                  onClick={() => toggleValue(option.value)}
+                  aria-label={`${option.label} kaldır`}
+                  className="inline-flex h-4 w-4 items-center justify-center rounded-full text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            ))}
         </div>
       )}
       {error ? (

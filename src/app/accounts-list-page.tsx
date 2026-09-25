@@ -129,7 +129,7 @@ export function AccountsListPage() {
       key: 'sector',
       header: tr.crm.accounts.sectorColumn,
       className: 'text-app-muted',
-      render: (a) => a.sector ?? '—',
+      render: (a) => ((a.sector?.length ?? 0) > 0 ? a.sector.join(', ') : '—'),
     },
     {
       key: 'accountTypes',
@@ -295,6 +295,11 @@ export function AccountsListPage() {
                 setLastNDaysInput('');
                 setFrom(value);
               }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setFrom('');
+              }}
             />
             <TextField
               type="text"
@@ -303,6 +308,8 @@ export function AccountsListPage() {
               placeholder={tr.crm.accounts.filterDrawer.lastNDaysPlaceholder}
               value={lastNDaysInput}
               onChange={(event) => applyLastNDays(event.target.value.replace(/[^0-9]/g, ''))}
+              clearable
+              onClear={() => applyLastNDays('')}
             />
             <TextField
               type="text"
@@ -313,6 +320,11 @@ export function AccountsListPage() {
               onChange={(event) => {
                 setPage(1);
                 setNotContactedDaysInput(event.target.value.replace(/[^0-9]/g, ''));
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setNotContactedDaysInput('');
               }}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>

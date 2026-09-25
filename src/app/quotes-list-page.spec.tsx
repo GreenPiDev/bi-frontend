@@ -30,7 +30,7 @@ const account: api.Account = {
   name: 'Acme A.S.',
   taxNumber: null,
   taxOffice: null,
-  sector: null,
+  sector: [],
   accountTypes: [],
   website: null,
   phone: null,

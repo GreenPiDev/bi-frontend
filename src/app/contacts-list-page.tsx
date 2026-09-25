@@ -64,6 +64,10 @@ export function ContactsListPage() {
   const q = useDebouncedValue(qInput.trim());
   const [deletingContact, setDeletingContact] = useState<Contact | undefined>(undefined);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // AccountAutocomplete yazilan metni kendi ic state'inde tutar (bkz. o bilesendeki
+  // yorum) - disaridan sadece accountId'yi sifirlamak gorunen metni temizlemez, bu
+  // yuzden Sifirla'da bu key degistirilip bilesen yeniden monte edilir.
+  const [filterResetKey, setFilterResetKey] = useState(0);
   const [accountId, setAccountId] = useState('');
   const [status, setStatus] = useState<ContactStatus | ''>('');
   const [sort, setSort] = useState<TableSort | null>(null);
@@ -85,6 +89,7 @@ export function ContactsListPage() {
     setPage(1);
     setAccountId('');
     setStatus('');
+    setFilterResetKey((k) => k + 1);
   }
 
   function handleConfirmDelete() {
@@ -269,6 +274,7 @@ export function ContactsListPage() {
         <Drawer title={tr.crm.contacts.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
           <div className="flex flex-col gap-4">
             <AccountAutocomplete
+              key={`account-${filterResetKey}`}
               label={tr.crm.contacts.filterDrawer.accountLabel}
               placeholder={tr.crm.contacts.filterDrawer.accountPlaceholder}
               value={accountId || undefined}
@@ -276,6 +282,7 @@ export function ContactsListPage() {
                 setPage(1);
                 setAccountId(nextAccountId ?? '');
               }}
+              clearable
             />
             <Select
               label={tr.crm.contacts.filterDrawer.statusLabel}
@@ -289,6 +296,11 @@ export function ContactsListPage() {
                 { value: 'ACTIVE', label: tr.crm.contacts.statusActive },
                 { value: 'INACTIVE', label: tr.crm.contacts.statusInactive },
               ]}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setStatus('');
+              }}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>
               {tr.crm.contacts.filterDrawer.reset}

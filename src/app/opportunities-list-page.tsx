@@ -216,6 +216,11 @@ export function OpportunitiesListPage() {
               }}
               placeholder={tr.crm.opportunities.filterDrawer.stageAllOption}
               options={STAGE_OPTIONS}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setStage('');
+              }}
             />
             <TextField
               type="number"
@@ -228,6 +233,11 @@ export function OpportunitiesListPage() {
                 setPage(1);
                 setMinEstimatedValueInput(event.target.value);
               }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setMinEstimatedValueInput('');
+              }}
             />
             <DateField
               label={tr.crm.opportunities.filterDrawer.sinceLabel}
@@ -238,27 +248,40 @@ export function OpportunitiesListPage() {
                 setRangeToInput('');
                 setSinceInput(value);
               }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setSinceInput('');
+              }}
             />
-            <div className="flex gap-3">
-              <DateField
-                label={tr.crm.opportunities.filterDrawer.rangeFromLabel}
-                value={rangeFromInput}
-                onChange={(value) => {
-                  setPage(1);
-                  setSinceInput('');
-                  setRangeFromInput(value);
-                }}
-              />
-              <DateField
-                label={tr.crm.opportunities.filterDrawer.rangeToLabel}
-                value={rangeToInput}
-                onChange={(value) => {
-                  setPage(1);
-                  setSinceInput('');
-                  setRangeToInput(value);
-                }}
-              />
-            </div>
+            <DateField
+              label={tr.crm.opportunities.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeFromInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.opportunities.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeToInput('');
+              }}
+            />
             <Button type="button" variant="secondary" onClick={resetFilters}>
               {tr.crm.opportunities.filterDrawer.reset}
             </Button>

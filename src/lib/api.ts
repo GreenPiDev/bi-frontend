@@ -768,7 +768,7 @@ export interface Account {
   name: string;
   taxNumber: string | null;
   taxOffice: string | null;
-  sector: string | null;
+  sector: string[];
   accountTypes: AccountType[];
   website: string | null;
   phone: string | null;
@@ -792,7 +792,7 @@ export interface AccountInput {
   name: string;
   taxNumber?: string;
   taxOffice?: string;
-  sector?: string;
+  sector?: string[];
   accountTypes?: AccountType[];
   website?: string;
   phone?: string;
@@ -1483,15 +1483,39 @@ export interface CreateInteractionResult {
 }
 
 export function listInteractions(
-  params: { page?: number; pageSize?: number; accountId?: string; status?: InteractionStatus } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    contactId?: string;
+    createdById?: string;
+    type?: InteractionType;
+    status?: InteractionStatus;
+    from?: string;
+    to?: string;
+  } = {},
 ): Promise<PagedResult<Interaction>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
+  if (params.contactId) query.set('contactId', params.contactId);
+  if (params.createdById) query.set('createdById', params.createdById);
+  if (params.type) query.set('type', params.type);
   if (params.status) query.set('status', params.status);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
   const qs = query.toString();
   return request(`/interactions${qs ? `?${qs}` : ''}`);
+}
+
+export interface InteractionCreator {
+  id: string;
+  name: string;
+}
+
+export function listInteractionCreators(): Promise<InteractionCreator[]> {
+  return request('/interactions/creators');
 }
 
 export function getInteraction(id: string): Promise<Interaction> {

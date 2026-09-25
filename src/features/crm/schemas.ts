@@ -9,7 +9,7 @@ export const accountFormSchema = z
       .regex(/^\d*$/, 'Sadece rakam girilebilir.')
       .optional(),
     taxOffice: z.string().max(200).optional(),
-    sector: z.string().max(200).optional(),
+    sector: z.array(z.string().max(200)).max(20).optional(),
     accountTypes: z
       .array(z.enum(['CUSTOMER', 'SUPPLIER', 'CONTRACTOR', 'SUBCONTRACTOR']))
       .max(4)

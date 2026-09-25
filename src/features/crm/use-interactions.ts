@@ -3,23 +3,42 @@ import {
   createInteraction,
   deleteInteraction,
   getInteraction,
+  listInteractionCreators,
   listInteractions,
   updateInteraction,
   type CreateInteractionInput,
   type InteractionStatus,
+  type InteractionType,
   type UpdateInteractionInput,
 } from '../../lib/api';
 
 export const INTERACTIONS_QUERY_KEY = ['interactions'];
 
 export function useInteractionsQuery(
-  params: { page?: number; pageSize?: number; accountId?: string; status?: InteractionStatus } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    contactId?: string;
+    createdById?: string;
+    type?: InteractionType;
+    status?: InteractionStatus;
+    from?: string;
+    to?: string;
+  } = {},
   options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...INTERACTIONS_QUERY_KEY, params],
     queryFn: () => listInteractions(params),
     enabled: options.enabled ?? true,
+  });
+}
+
+export function useInteractionCreatorsQuery() {
+  return useQuery({
+    queryKey: ['interactions', 'creators'],
+    queryFn: () => listInteractionCreators(),
   });
 }
 

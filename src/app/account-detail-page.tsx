@@ -48,7 +48,10 @@ export function AccountDetailPage() {
   const fields: { label: string; value: string }[] = [
     { label: tr.crm.accounts.form.taxNumberLabel, value: account.taxNumber ?? '—' },
     { label: tr.crm.accounts.form.taxOfficeLabel, value: account.taxOffice ?? '—' },
-    { label: tr.crm.accounts.form.sectorLabel, value: account.sector ?? '—' },
+    {
+      label: tr.crm.accounts.form.sectorLabel,
+      value: (account.sector?.length ?? 0) > 0 ? account.sector.join(', ') : '—',
+    },
     { label: tr.crm.accounts.form.websiteLabel, value: account.website ?? '—' },
     { label: tr.crm.accounts.form.phoneLabel, value: account.phone ?? '—' },
     { label: tr.crm.accounts.form.landlinePhoneLabel, value: account.landlinePhone ?? '—' },

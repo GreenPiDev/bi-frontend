@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { AsyncAutocomplete } from '../../components/ui/async-autocomplete';
-import { useAccountQuery, useAccountsQuery } from './use-accounts';
+import { useContactQuery, useContactsQuery } from './use-contacts';
 import { useDebouncedValue } from '../../lib/use-debounced-value';
 
-interface AccountAutocompleteProps {
+interface ContactAutocompleteProps {
   label: string;
   value: string | undefined;
-  onChange: (accountId: string | undefined) => void;
+  onChange: (contactId: string | undefined) => void;
   placeholder?: string;
   error?: string;
   required?: boolean;
@@ -18,15 +18,10 @@ interface AccountAutocompleteProps {
 const PAGE_SIZE = 20;
 
 /**
- * Firma secimi icin `AsyncAutocomplete`'in veri-cekme sarmalayicisi - `<Select>`'in
- * aksine tum firmalari onceden yuklemez (yuzlerce/binlerce firma olan tenant'larda
- * `<Select>` sadece ilk sayfayi gosterdigi icin cogu firma hic secilemiyordu).
- * `typedQuery` null oldugu surece input, `value`'ya karsilik gelen firmanin adini
- * (selectedAccountQuery uzerinden) TURETIR; kullanici yazmaya baslar baslamaz
- * `typedQuery` dolar ve gosterilen metin onun yazdigi olur, bir firma secilince
- * tekrar null'a donup guncel etikete gecilir.
+ * Kisi secimi icin `AsyncAutocomplete`'in veri-cekme sarmalayicisi -
+ * `account-autocomplete.tsx` ile ayni desen (bkz. o dosyadaki yorum).
  */
-export function AccountAutocomplete({
+export function ContactAutocomplete({
   label,
   value,
   onChange,
@@ -35,16 +30,19 @@ export function AccountAutocomplete({
   required,
   hint,
   clearable,
-}: AccountAutocompleteProps) {
+}: ContactAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
-  const searchQuery = useAccountsQuery({ q: debouncedQuery || undefined, pageSize: PAGE_SIZE });
-  const selectedAccountQuery = useAccountQuery(value ?? '');
+  const searchQuery = useContactsQuery({ q: debouncedQuery || undefined, pageSize: PAGE_SIZE });
+  const selectedContactQuery = useContactQuery(value ?? '');
+  const selectedContact = selectedContactQuery.data;
 
-  const displayValue = typedQuery ?? selectedAccountQuery.data?.name ?? '';
-  const options = (searchQuery.data?.data ?? []).map((account) => ({
-    id: account.id,
-    label: account.name,
+  const displayValue =
+    typedQuery ??
+    (selectedContact ? `${selectedContact.firstName} ${selectedContact.lastName}` : '');
+  const options = (searchQuery.data?.data ?? []).map((contact) => ({
+    id: contact.id,
+    label: `${contact.firstName} ${contact.lastName}`,
   }));
 
   return (

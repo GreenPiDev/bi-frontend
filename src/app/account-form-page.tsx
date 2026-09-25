@@ -24,7 +24,7 @@ import {
 } from '../features/crm/use-accounts';
 import { useCreateContactMutation } from '../features/crm/use-contacts';
 import { useDepartmentOptionsQuery } from '../features/crm/use-department-options';
-import { useSectorOptionsQuery } from '../features/crm/use-sector-options';
+import { SectorMultiSelect } from '../features/crm/sector-multi-select';
 import { useTitleOptionsQuery } from '../features/crm/use-title-options';
 import { LandlineField } from '../features/crm/landline-field';
 import { ApiError, type AccountInput, type AccountType } from '../lib/api';
@@ -46,7 +46,6 @@ export function AccountFormPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const accountQuery = useAccountQuery(id ?? '');
-  const sectorOptionsQuery = useSectorOptionsQuery();
   const departmentOptionsQuery = useDepartmentOptionsQuery();
   const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateAccountMutation();
@@ -63,7 +62,7 @@ export function AccountFormPage() {
     formState: { errors },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
-    defaultValues: { accountTypes: [] },
+    defaultValues: { accountTypes: [], sector: [] },
   });
 
   const taxNumberRegistration = register('taxNumber');
@@ -78,7 +77,7 @@ export function AccountFormPage() {
         name: accountQuery.data.name,
         taxNumber: accountQuery.data.taxNumber ?? undefined,
         taxOffice: accountQuery.data.taxOffice ?? undefined,
-        sector: accountQuery.data.sector ?? undefined,
+        sector: accountQuery.data.sector ?? [],
         accountTypes: accountQuery.data.accountTypes,
         website: accountQuery.data.website ?? undefined,
         phone: accountQuery.data.phone ?? undefined,
@@ -209,18 +208,10 @@ export function AccountFormPage() {
             name="sector"
             control={control}
             render={({ field }) => (
-              <Autocomplete
-                label={tr.crm.accounts.form.sectorLabel}
-                placeholder={tr.crm.accounts.form.sectorPlaceholder}
-                value={field.value ?? ''}
+              <SectorMultiSelect
+                value={field.value ?? []}
                 onChange={field.onChange}
-                options={(sectorOptionsQuery.data ?? []).map((option) => option.label)}
                 error={errors.sector?.message}
-                hint={
-                  (sectorOptionsQuery.data?.length ?? 0) > 0
-                    ? tr.crm.accounts.form.sectorHintRestricted
-                    : tr.crm.accounts.form.sectorHintFree
-                }
               />
             )}
           />
