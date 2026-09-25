@@ -1036,7 +1036,7 @@ export const tr = {
     calendar: {
       title: 'Ajanda',
       subtitle: 'Görüşme, hatırlatma ve görevlerinizi tek takvimde yönetin.',
-      newButton: 'Yeni Etkinlik',
+      newButton: 'Yeni Hatırlatıcı',
       monthView: 'Ay Görünümü',
       listView: 'Liste Görünümü',
       today: 'Bugün',

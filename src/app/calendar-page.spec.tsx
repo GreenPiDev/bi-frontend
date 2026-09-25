@@ -51,7 +51,7 @@ describe('CalendarPage', () => {
     const user = userEvent.setup();
     renderCalendarPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Yeni Etkinlik' }));
+    await user.click(await screen.findByRole('button', { name: 'Yeni Hatırlatıcı' }));
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
@@ -70,7 +70,7 @@ describe('CalendarPage', () => {
     const user = userEvent.setup();
     renderCalendarPage();
 
-    await user.click(await screen.findByRole('button', { name: 'Yeni Etkinlik' }));
+    await user.click(await screen.findByRole('button', { name: 'Yeni Hatırlatıcı' }));
     const dialog = within(await screen.findByRole('dialog', { name: 'Yeni Etkinlik' }));
     await user.type(await dialog.findByLabelText('Başlık'), 'Yeni gorusme');
 

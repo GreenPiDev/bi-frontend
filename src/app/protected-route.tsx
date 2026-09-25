@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useCalendarEventsRealtimeSync } from '../features/crm/use-calendar-events-realtime-sync';
 import { useDepartmentOptionsRealtimeSync } from '../features/crm/use-department-options-realtime-sync';
 import { useIbanOptionsRealtimeSync } from '../features/crm/use-iban-options-realtime-sync';
 import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
@@ -27,6 +28,7 @@ export function ProtectedRoute({
   useRealtimeConnection(isAuthenticated);
   useModuleAccessRealtimeSync();
   useMessagesRealtimeSync();
+  useCalendarEventsRealtimeSync();
   useSectorOptionsRealtimeSync();
   useDepartmentOptionsRealtimeSync();
   useTitleOptionsRealtimeSync();
