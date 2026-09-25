@@ -1,9 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
-import { ChevronRight, FileDown } from 'lucide-react';
+import { ChevronRight, FileDown, Mail } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -110,6 +112,7 @@ export function QuoteDetailPage() {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const isPrintMode = searchParams.get('print') === '1';
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery();
@@ -227,6 +230,16 @@ export function QuoteDetailPage() {
         </div>
         {!isPrintMode && (
           <div className="flex items-center gap-2 pt-1">
+            <Tooltip content={tr.crm.quotes.detail.createMessageTooltip}>
+              <button
+                type="button"
+                onClick={() => setIsMessageModalOpen(true)}
+                aria-label={tr.crm.quotes.detail.createMessageTooltip}
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+              >
+                <Mail size={18} />
+              </button>
+            </Tooltip>
             {quote.status === 'PENDING_APPROVAL' && canApprove && (
               <>
                 <Button type="button" onClick={handleApprove} disabled={approveMutation.isPending}>
@@ -363,6 +376,15 @@ export function QuoteDetailPage() {
             onClick={() => navigate(`/firsatlar/${quote.opportunity?.id}`)}
           />
         </div>
+      )}
+
+      {isMessageModalOpen && (
+        <NewMessageModal
+          onClose={() => setIsMessageModalOpen(false)}
+          defaultToUserIds={quote.createdById ? [quote.createdById] : []}
+          defaultRelatedEntity="QUOTE"
+          defaultRelatedEntityId={id}
+        />
       )}
     </AppShell>
   );

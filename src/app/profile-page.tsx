@@ -64,7 +64,7 @@ export function ProfilePage() {
                         name={profileQuery.data.name}
                       />
 
-                      <section className="border-t border-app-border p-4">
+                      <section className="p-4">
                         <h2 className="mb-4 text-base font-bold text-app-text">
                           {tr.profile.infoSection.title}
                         </h2>
@@ -174,7 +174,7 @@ function AvatarSection({ avatarUrl, name }: { avatarUrl: string | null; name: st
   }
 
   return (
-    <section className="border-t border-app-border p-4">
+    <section className="p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
       <div className="flex items-center gap-4">
         {avatarUrl ? (
@@ -254,7 +254,7 @@ function ListSettingsSection({ defaultPageSize }: { defaultPageSize: number }) {
   }
 
   return (
-    <section className="border-t border-app-border p-4">
+    <section className="p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
       <div className="max-w-xs">
         <Select
@@ -348,7 +348,7 @@ function ChangePasswordForm() {
       : undefined;
 
   return (
-    <section className="border-t border-app-border p-4">
+    <section className="p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.profile.passwordSection.title}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />

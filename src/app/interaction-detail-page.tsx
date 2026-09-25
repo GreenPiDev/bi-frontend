@@ -17,6 +17,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
@@ -148,6 +149,7 @@ export function InteractionDetailPage() {
   const deleteMutation = useDeleteInteractionMutation();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   if (interactionQuery.isPending) {
     return (
@@ -205,6 +207,16 @@ export function InteractionDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.interactions.detail.createMessageTooltip}>
+            <button
+              type="button"
+              onClick={() => setIsMessageModalOpen(true)}
+              aria-label={tr.crm.interactions.detail.createMessageTooltip}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <Mail size={18} />
+            </button>
+          </Tooltip>
           <Tooltip content={tr.crm.interactions.editTooltip}>
             <button
               type="button"
@@ -343,6 +355,15 @@ export function InteractionDetailPage() {
           </div>
         </div>
       </div>
+
+      {isMessageModalOpen && (
+        <NewMessageModal
+          onClose={() => setIsMessageModalOpen(false)}
+          defaultToUserIds={interaction.createdById ? [interaction.createdById] : []}
+          defaultRelatedEntity="INTERACTION"
+          defaultRelatedEntityId={id}
+        />
+      )}
 
       {isDeleteModalOpen && (
         <ConfirmModal

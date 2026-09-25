@@ -1140,6 +1140,7 @@ export const tr = {
         opportunityTitle: 'İlişkili Fırsat',
         noParticipants: 'Katılımcı eklenmemiş.',
         noAccountFallback: 'Firma yok',
+        createMessageTooltip: 'Kayıt ile ilişkili mesaj oluştur',
       },
       form: {
         newTitle: 'Yeni Görüşme',
@@ -1531,6 +1532,7 @@ export const tr = {
         accountHolderNameLabel: 'Alıcı Adı',
         accountNumberLabel: 'Hesap Numarası',
         ibanLabel: 'IBAN',
+        createMessageTooltip: 'Kayıt ile ilişkili mesaj oluştur',
       },
       form: {
         newTitle: 'Yeni Teklif',
@@ -1686,6 +1688,7 @@ export const tr = {
         estimatedBudgetLabel: 'Tahmini Bütçe',
         actualCostLabel: 'Gerçekleşen Maliyet',
         relatedQuoteLink: 'İlişkili teklifi gör',
+        createMessageTooltip: 'Kayıt ile ilişkili mesaj oluştur',
       },
       form: {
         newTitle: 'Yeni Proje',

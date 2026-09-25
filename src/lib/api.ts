@@ -1438,6 +1438,7 @@ export interface Interaction {
   contactAutoCreated: boolean;
   participants: InteractionParticipant[];
   opportunity: Opportunity | null;
+  createdById: string;
   createdByName: string | null;
   createdAt: string;
   updatedAt: string;

@@ -1,13 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ExternalLink } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { getRelatedEntityDetailPath } from './message-related-entity-paths';
 import { messageComposeSchema, type MessageComposeFormValues } from './schemas';
-import { useInteractionsQuery } from './use-interactions';
+import { useInteractionQuery, useInteractionsQuery } from './use-interactions';
 import { useAssignableMessageUsersQuery, useCreateMessageMutation } from './use-messages';
-import { useProjectsQuery } from './use-projects';
-import { useQuotesQuery } from './use-quotes';
+import { useProjectQuery, useProjectsQuery } from './use-projects';
+import { useQuoteQuery, useQuotesQuery } from './use-quotes';
 import { Button } from '../../components/ui/button';
 import { MultiSelect } from '../../components/ui/multi-select';
 import { Select, type SelectOption } from '../../components/ui/select';
@@ -25,6 +25,8 @@ interface MessageComposeFormProps {
   mode: 'new' | 'reply';
   conversationId?: string;
   defaultToUserIds?: string[];
+  defaultRelatedEntity?: MessageComposeFormValues['relatedEntity'];
+  defaultRelatedEntityId?: string;
   onCancel?: () => void;
   onSuccess: () => void;
 }
@@ -36,6 +38,8 @@ export function MessageComposeForm({
   mode,
   conversationId,
   defaultToUserIds = [],
+  defaultRelatedEntity,
+  defaultRelatedEntityId,
   onCancel,
   onSuccess,
 }: MessageComposeFormProps) {
@@ -59,6 +63,8 @@ export function MessageComposeForm({
       toUserIds: defaultToUserIds,
       ccUserIds: [],
       isNewConversation: false,
+      relatedEntity: defaultRelatedEntity,
+      relatedEntityId: defaultRelatedEntityId ?? '',
     },
   });
 
@@ -72,13 +78,38 @@ export function MessageComposeForm({
 
   // Kayit turu degistiginde onceki secimin (baska bir turdeki bir kayda ait
   // olabilecek) ID'sini elde tutmuyoruz - bkz. asagidaki kayit-secimi dropdown'u.
+  // Sadece relatedEntity GERCEKTEN degistiginde sifirlanir (onceki deger ile
+  // karsilastirarak) - "ilk render'i atla" seklindeki bir ref bayragi, React
+  // StrictMode'un effect'leri mount'ta iki kez calistirmasi yuzunden yaniltici
+  // olurdu (ikinci calisirken bayrak zaten false'a dustugu icin defaultRelatedEntityId
+  // ile gelen on-dolu deger silinirdi).
+  const previousRelatedEntityRef = useRef(relatedEntity);
   useEffect(() => {
-    setValue('relatedEntityId', '');
+    if (previousRelatedEntityRef.current !== relatedEntity) {
+      setValue('relatedEntityId', '');
+    }
+    previousRelatedEntityRef.current = relatedEntity;
   }, [relatedEntity, setValue]);
 
   const projectsQuery = useProjectsQuery({}, { enabled: relatedEntity === 'PROJECT' });
   const quotesQuery = useQuotesQuery({}, { enabled: relatedEntity === 'QUOTE' });
   const interactionsQuery = useInteractionsQuery({}, { enabled: relatedEntity === 'INTERACTION' });
+
+  // Ust kaptan (ör. gorusme detay sayfasi) gelen on-secili kayit, liste sorgusunun
+  // ilk sayfasinda yer almayabilir (varsayilan siralama/sayfalama) - o zaman Select'in
+  // value'su hicbir <option>'a eslesmez ve secili gorunmez. Bu yuzden secilen kaydi
+  // tekil ucla ayrica cekip listede yoksa basa ekliyoruz.
+  const isDefaultProject = relatedEntity === 'PROJECT' && defaultRelatedEntity === 'PROJECT';
+  const isDefaultQuote = relatedEntity === 'QUOTE' && defaultRelatedEntity === 'QUOTE';
+  const isDefaultInteraction =
+    relatedEntity === 'INTERACTION' && defaultRelatedEntity === 'INTERACTION';
+  const defaultProjectQuery = useProjectQuery(
+    isDefaultProject ? (defaultRelatedEntityId ?? '') : '',
+  );
+  const defaultQuoteQuery = useQuoteQuery(isDefaultQuote ? (defaultRelatedEntityId ?? '') : '');
+  const defaultInteractionQuery = useInteractionQuery(
+    isDefaultInteraction ? (defaultRelatedEntityId ?? '') : '',
+  );
 
   let relatedEntityOptions: SelectOption[] = [];
   let relatedEntityOptionsLoading = false;
@@ -88,18 +119,54 @@ export function MessageComposeForm({
       value: project.id,
       label: `${project.projectNumber} — ${project.name}`,
     }));
+    const defaultProject = defaultProjectQuery.data;
+    if (
+      defaultProject &&
+      !relatedEntityOptions.some((option) => option.value === defaultProject.id)
+    ) {
+      relatedEntityOptions = [
+        {
+          value: defaultProject.id,
+          label: `${defaultProject.projectNumber} — ${defaultProject.name}`,
+        },
+        ...relatedEntityOptions,
+      ];
+    }
   } else if (relatedEntity === 'QUOTE') {
     relatedEntityOptionsLoading = quotesQuery.isPending;
     relatedEntityOptions = (quotesQuery.data?.data ?? []).map((quote) => ({
       value: quote.id,
       label: `${quote.quoteNumber} — ${quote.account.name}`,
     }));
+    const defaultQuote = defaultQuoteQuery.data;
+    if (defaultQuote && !relatedEntityOptions.some((option) => option.value === defaultQuote.id)) {
+      relatedEntityOptions = [
+        {
+          value: defaultQuote.id,
+          label: `${defaultQuote.quoteNumber} — ${defaultQuote.account.name}`,
+        },
+        ...relatedEntityOptions,
+      ];
+    }
   } else if (relatedEntity === 'INTERACTION') {
     relatedEntityOptionsLoading = interactionsQuery.isPending;
     relatedEntityOptions = (interactionsQuery.data?.data ?? []).map((interaction) => ({
       value: interaction.id,
       label: `${interaction.account?.name ?? tr.crm.interactions.detail.noAccountFallback} — ${tr.crm.interactions.typeOptions[interaction.type]} (${new Date(interaction.occurredAt).toLocaleDateString('tr-TR')})`,
     }));
+    const defaultInteraction = defaultInteractionQuery.data;
+    if (
+      defaultInteraction &&
+      !relatedEntityOptions.some((option) => option.value === defaultInteraction.id)
+    ) {
+      relatedEntityOptions = [
+        {
+          value: defaultInteraction.id,
+          label: `${defaultInteraction.account?.name ?? tr.crm.interactions.detail.noAccountFallback} — ${tr.crm.interactions.typeOptions[defaultInteraction.type]} (${new Date(defaultInteraction.occurredAt).toLocaleDateString('tr-TR')})`,
+        },
+        ...relatedEntityOptions,
+      ];
+    }
   }
   const relatedEntityIdPlaceholder =
     !relatedEntityOptionsLoading && relatedEntityOptions.length === 0

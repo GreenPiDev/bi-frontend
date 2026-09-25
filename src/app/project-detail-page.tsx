@@ -1,6 +1,8 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Mail, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
@@ -19,6 +21,7 @@ export function ProjectDetailPage() {
   const navigate = useNavigate();
   const projectQuery = useProjectQuery(id);
   const deleteMutation = useDeleteProjectMutation();
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   if (projectQuery.isPending) {
     return (
@@ -54,6 +57,16 @@ export function ProjectDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.projects.detail.createMessageTooltip}>
+            <button
+              type="button"
+              onClick={() => setIsMessageModalOpen(true)}
+              aria-label={tr.crm.projects.detail.createMessageTooltip}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <Mail size={18} />
+            </button>
+          </Tooltip>
           <Tooltip content={tr.crm.projects.detail.editButton}>
             <button
               type="button"
@@ -107,6 +120,15 @@ export function ProjectDetailPage() {
           </div>
         )}
       </div>
+
+      {isMessageModalOpen && (
+        <NewMessageModal
+          onClose={() => setIsMessageModalOpen(false)}
+          defaultToUserIds={project.createdById ? [project.createdById] : []}
+          defaultRelatedEntity="PROJECT"
+          defaultRelatedEntityId={id}
+        />
+      )}
     </AppShell>
   );
 }
