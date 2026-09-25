@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import { CalendarDays } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Calendar } from './calendar';
+import { ClearFieldButton } from './clear-field-button';
 
 interface DateFieldProps {
   label: string;
@@ -11,6 +12,10 @@ interface DateFieldProps {
   required?: boolean;
   hint?: string;
   error?: string;
+  /** Filtre alanlarinda opt-in tekil sifirlama butonu - `onClear` de verilmeden
+   * hicbir sey render edilmez, formlardaki mevcut kullanimlari etkilemez. */
+  clearable?: boolean;
+  onClear?: () => void;
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -36,8 +41,18 @@ const MENU_HORIZONTAL_MARGIN = 8;
  * spacer eklenip otomatik asagi scroll edilir ki tasan kisim gorunur olsun. menuRect,
  * her kapanista sifirlanir - aksi halde bir sonraki acilista onceki (zaten scroll ile
  * duzeltilmis) konum kullanilir ve tasma tekrar hesaplanmadigi icin scroll calismaz. */
-export function DateField({ label, value, onChange, required, hint, error }: DateFieldProps) {
+export function DateField({
+  label,
+  value,
+  onChange,
+  required,
+  hint,
+  error,
+  clearable,
+  onClear,
+}: DateFieldProps) {
   const buttonId = useId();
+  const showClear = clearable && Boolean(onClear) && Boolean(value);
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -119,21 +134,29 @@ export function DateField({ label, value, onChange, required, hint, error }: Dat
           </span>
         )}
       </label>
-      <button
-        ref={buttonRef}
-        id={buttonId}
-        type="button"
-        aria-label={label}
-        onClick={() => (open ? closeMenu() : setOpen(true))}
-        className={clsx(
-          'flex w-full items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:ring-2 focus:ring-app-primary',
-          error && 'border-app-danger',
-          value ? 'text-app-text' : 'text-app-muted',
+      <div className="relative">
+        <button
+          ref={buttonRef}
+          id={buttonId}
+          type="button"
+          aria-label={label}
+          onClick={() => (open ? closeMenu() : setOpen(true))}
+          className={clsx(
+            'flex w-full items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:ring-2 focus:ring-app-primary',
+            showClear && 'pr-9',
+            error && 'border-app-danger',
+            value ? 'text-app-text' : 'text-app-muted',
+          )}
+        >
+          <span>{formatDateDisplay(value) || 'Tarih seçin'}</span>
+          <CalendarDays size={16} className="shrink-0 text-app-muted" />
+        </button>
+        {showClear && (
+          <div className="absolute top-1/2 right-2.5 -translate-y-1/2">
+            <ClearFieldButton onClick={() => onClear?.()} label={label} />
+          </div>
         )}
-      >
-        <span>{formatDateDisplay(value) || 'Tarih seçin'}</span>
-        <CalendarDays size={16} className="shrink-0 text-app-muted" />
-      </button>
+      </div>
       {open && menuRect && (
         <div
           ref={menuRef}

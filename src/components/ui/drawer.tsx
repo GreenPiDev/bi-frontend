@@ -58,7 +58,13 @@ export function Drawer({ title, onClose, children, footer, width = 'sm' }: Drawe
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+        {/* overflow-x'i acikca 'visible' yapmak sart: CSS spec'e gore overflow-y
+            'visible' disi bir degere sahipken overflow-x belirtilmezse (varsayilan
+            'visible'), tarayici overflow-x'i de otomatik olarak 'auto'ya cevirir -
+            sadece `overflow-y-auto` yazmak yetmiyor. overflow-x auto olunca focus
+            ring'in (box-shadow) konteynerin sag/sol kenarindan tasan kismi
+            kirpiliyor, alan odaklaninca kenarlar "kesik" gorunuyordu. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-visible">{children}</div>
 
         {footer && <div className="mt-5 flex justify-end gap-2">{footer}</div>}
       </div>

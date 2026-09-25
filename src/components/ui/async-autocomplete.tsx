@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { ClearFieldButton } from './clear-field-button';
 
 export interface AsyncAutocompleteOption {
   id: string;
@@ -24,6 +25,10 @@ interface AsyncAutocompleteProps {
   error?: string;
   required?: boolean;
   hint?: string;
+  /** Filtre alanlarinda opt-in tekil sifirlama butonu - `onClear` de verilmeden
+   * hicbir sey render edilmez, formlardaki mevcut kullanimlari etkilemez. */
+  clearable?: boolean;
+  onClear?: () => void;
 }
 
 /**
@@ -45,7 +50,10 @@ export function AsyncAutocomplete({
   error,
   required,
   hint,
+  clearable,
+  onClear,
 }: AsyncAutocompleteProps) {
+  const showClear = clearable && Boolean(onClear) && Boolean(value);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,11 +117,17 @@ export function AsyncAutocomplete({
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           className={clsx(
-            'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 pr-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
+            'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
+            showClear ? 'pr-16' : 'pr-9',
             error && 'border-app-danger',
           )}
           aria-invalid={Boolean(error)}
         />
+        {showClear && (
+          <div className="absolute top-1/2 right-8 -translate-y-1/2">
+            <ClearFieldButton onClick={() => onClear?.()} label={label} />
+          </div>
+        )}
         <ChevronDown
           size={16}
           className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-muted"
