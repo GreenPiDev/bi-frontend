@@ -991,9 +991,11 @@ export const tr = {
       dateColumn: 'Tarih',
       timeColumn: 'Saat',
       accountColumn: 'Firma',
-      contactColumn: 'Kişi',
+      contactColumn: 'Görüşülen Kişi',
       typeColumn: 'Tür',
       statusColumn: 'Durum',
+      createdByColumn: 'Oluşturan',
+      createdByLabel: 'Oluşturan',
       deleteConfirm: 'Bu görüşmeyi silmek istediğinize emin misiniz?',
       deleteError: 'Görüşme silinemedi.',
       deleteSuccess: 'Görüşme silindi.',
@@ -1037,7 +1039,7 @@ export const tr = {
         accountPlaceholder: 'Firma seçin veya yeni firma adı yazın',
         accountHint:
           'Firma veya kişiden en az biri doldurulmalı. Kayıtlı bir firma seçin; listede yoksa serbest metin girin, kayıt tamamlanınca o isimle otomatik yeni bir firma oluşur.',
-        contactLabel: 'Kişi',
+        contactLabel: 'Görüşülen Kişi',
         contactPlaceholder: 'Kişi seçin veya yeni kişi adı yazın',
         contactHint:
           'Firma veya kişiden en az biri doldurulmalı. Seçilen firmaya bağlı kişiler listelenir; kayıtlı değilse yazdığınız isim otomatik olarak eklenir (firma boşsa kişi firmasız kaydedilir).',

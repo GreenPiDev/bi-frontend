@@ -248,7 +248,7 @@ export function InteractionDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-4 sm:divide-x sm:divide-app-border">
+      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-5 sm:divide-x sm:divide-app-border">
         <MetaCell label={tr.crm.interactions.statusColumn}>
           <span className="inline-flex items-center gap-1.5">
             <span
@@ -275,6 +275,9 @@ export function InteractionDetailPage() {
         </MetaCell>
         <MetaCell label={tr.crm.interactions.timeColumn}>
           {occurredAt.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+        </MetaCell>
+        <MetaCell label={tr.crm.interactions.createdByLabel}>
+          {interaction.createdByName ?? '—'}
         </MetaCell>
       </div>
 

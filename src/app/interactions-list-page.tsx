@@ -112,6 +112,12 @@ export function InteractionsListPage() {
       render: (i) => <InteractionStatusSelect interaction={i} />,
     },
     {
+      key: 'createdByName',
+      header: tr.crm.interactions.createdByColumn,
+      className: 'text-app-muted',
+      render: (i) => i.createdByName ?? '—',
+    },
+    {
       key: 'actions',
       header: tr.crm.interactions.actionsColumn,
       className: 'w-px',
