@@ -1,3 +1,4 @@
+import { clsx } from 'clsx';
 import { Download, ListFilter, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +26,11 @@ import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
+const CONTACT_STATUS_TEXT_CLASS: Record<ContactStatus, string> = {
+  ACTIVE: 'text-app-success',
+  INACTIVE: 'text-app-muted',
+};
+
 function ContactStatusSelect({ contact }: { contact: Contact }) {
   const toast = useToast();
   const updateMutation = useUpdateContactMutation(contact.id);
@@ -48,7 +54,10 @@ function ContactStatusSelect({ contact }: { contact: Contact }) {
         );
       }}
       disabled={updateMutation.isPending}
-      className="cursor-pointer rounded-md border-none bg-transparent p-0 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50"
+      className={clsx(
+        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
+        CONTACT_STATUS_TEXT_CLASS[contact.status],
+      )}
     >
       <option value="ACTIVE">{tr.crm.contacts.statusActive}</option>
       <option value="INACTIVE">{tr.crm.contacts.statusInactive}</option>

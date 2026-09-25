@@ -1985,13 +1985,20 @@ export interface UpdatePurchaseOrderInput {
 }
 
 export function listPurchaseOrders(
-  params: { page?: number; pageSize?: number; quoteId?: string; projectId?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    quoteId?: string;
+    projectId?: string;
+    status?: PurchaseOrderStatus;
+  } = {},
 ): Promise<PagedResult<PurchaseOrder>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.quoteId) query.set('quoteId', params.quoteId);
   if (params.projectId) query.set('projectId', params.projectId);
+  if (params.status) query.set('status', params.status);
   const qs = query.toString();
   return request(`/purchase-orders${qs ? `?${qs}` : ''}`);
 }

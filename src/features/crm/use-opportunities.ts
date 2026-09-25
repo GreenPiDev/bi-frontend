@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createOpportunity,
   deleteOpportunity,
@@ -27,6 +27,33 @@ export function useOpportunitiesQuery(
     queryKey: [...OPPORTUNITIES_QUERY_KEY, params],
     queryFn: () => listOpportunities(params),
   });
+}
+
+/** "Asama" buton filtresindeki her secenegin (Tumu + her OpportunityStage) yanina yazilacak
+ * kayit sayisini getirir - `/opportunities` ucu asama bazli kirilim dondurmuyor, bu yuzden
+ * her secenek icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total kullanilir). */
+export function useOpportunityStageCounts(stages: readonly OpportunityStage[]) {
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: [...OPPORTUNITIES_QUERY_KEY, 'count', 'all'],
+        queryFn: () => listOpportunities({ pageSize: 1 }),
+      },
+      ...stages.map((stage) => ({
+        queryKey: [...OPPORTUNITIES_QUERY_KEY, 'count', stage],
+        queryFn: () => listOpportunities({ pageSize: 1, stage }),
+      })),
+    ],
+  });
+
+  const [allResult, ...stageResults] = results;
+  const counts: Partial<Record<OpportunityStage, number>> = {};
+  stages.forEach((stage, index) => {
+    const total = stageResults[index]?.data?.meta.total;
+    if (total !== undefined) counts[stage] = total;
+  });
+
+  return { all: allResult?.data?.meta.total, counts };
 }
 
 export function useOpportunityQuery(id: string) {

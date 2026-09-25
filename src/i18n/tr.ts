@@ -1208,10 +1208,10 @@ export const tr = {
       descriptionColumn: 'Açıklama',
       occurredAtColumn: 'Oluşma Tarihi',
       filterButton: 'Filtrele',
+      stageFilterLabel: 'Aşama',
+      allStages: 'Tümü',
       filterDrawer: {
         title: 'Fırsatları Filtrele',
-        stageLabel: 'Aşama',
-        stageAllOption: 'Tümü',
         minEstimatedValueLabel: 'Min. Tahmini Değer',
         minEstimatedValuePlaceholder: 'Örn. 10000',
         sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
@@ -1722,6 +1722,10 @@ export const tr = {
       createdAtColumn: 'Oluşturulma Tarihi',
       noProject: '—',
       deleteConfirm: 'Bu siparişi silmek istediğinize emin misiniz?',
+      statusFilterLabel: 'Durum',
+      allStatuses: 'Tümü',
+      statusUpdateSuccess: 'Durum güncellendi.',
+      statusUpdateError: 'Durum güncellenemedi.',
       statusOptions: {
         DRAFT: 'Taslak',
         CONFIRMED: 'Onaylandı',

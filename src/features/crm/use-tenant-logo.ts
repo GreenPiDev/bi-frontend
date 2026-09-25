@@ -3,10 +3,11 @@ import { deleteTenantLogo, getMyTenant, uploadTenantLogo } from '../../lib/api';
 
 const TENANT_PROFILE_QUERY_KEY = ['tenants', 'me'];
 
-export function useTenantProfileQuery() {
+export function useTenantProfileQuery(enabled = true) {
   return useQuery({
     queryKey: TENANT_PROFILE_QUERY_KEY,
     queryFn: () => getMyTenant(),
+    enabled,
   });
 }
 

@@ -56,7 +56,7 @@ function InteractionStatusSelect({ interaction }: { interaction: Interaction }) 
       }}
       disabled={updateMutation.isPending}
       className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent p-0 text-sm font-semibold outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50',
+        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-50',
         interaction.status === 'OPEN' ? 'text-app-success' : 'text-app-danger',
       )}
     >

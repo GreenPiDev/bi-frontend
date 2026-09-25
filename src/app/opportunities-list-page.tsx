@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { ListFilter, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -5,9 +6,9 @@ import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
+import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { DateField } from '../components/ui/date-field';
-import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
@@ -16,6 +17,7 @@ import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   useOpportunitiesQuery,
+  useOpportunityStageCounts,
   useUpdateOpportunityMutation,
 } from '../features/crm/use-opportunities';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -25,6 +27,14 @@ import { tr } from '../i18n/tr';
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
+
+const STAGE_TEXT_CLASS: Record<OpportunityStage, string> = {
+  NEW: 'text-app-muted',
+  QUALIFIED: 'text-app-primary',
+  PROPOSAL: 'text-amber-600 dark:text-amber-400',
+  WON: 'text-app-success',
+  LOST: 'text-app-danger',
+};
 
 const DESCRIPTION_TRUNCATE_LENGTH = 40;
 
@@ -55,7 +65,10 @@ function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
         );
       }}
       disabled={updateMutation.isPending}
-      className="cursor-pointer rounded-md border-none bg-transparent p-0 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50"
+      className={clsx(
+        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-50',
+        STAGE_TEXT_CLASS[opportunity.stage],
+      )}
     >
       {STAGE_OPTIONS.map((option) => (
         <option key={option.value} value={option.value}>
@@ -122,8 +135,7 @@ export function OpportunitiesListPage() {
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
   const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
   const to = hasRange ? rangeToInput || undefined : undefined;
-  const hasActiveFilter =
-    Boolean(stage) || Boolean(minEstimatedValueInput.trim()) || Boolean(from) || Boolean(to);
+  const hasActiveFilter = Boolean(minEstimatedValueInput.trim()) || Boolean(from) || Boolean(to);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const opportunitiesQuery = useOpportunitiesQuery({
@@ -137,6 +149,11 @@ export function OpportunitiesListPage() {
     from,
     to,
   });
+  const stageCounts = useOpportunityStageCounts(STAGE_OPTIONS.map((option) => option.value));
+  const stageFilterCounts: Partial<Record<OpportunityStage | '', number>> = {
+    '': stageCounts.all,
+    ...stageCounts.counts,
+  };
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
     useColumnVisibility(
       'opportunities',
@@ -190,7 +207,18 @@ export function OpportunitiesListPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <FilterButtonGroup
+          label={tr.crm.opportunities.stageFilterLabel}
+          value={stage}
+          onChange={(next) => {
+            setPage(1);
+            setStage(next);
+          }}
+          allLabel={tr.crm.opportunities.allStages}
+          options={STAGE_OPTIONS}
+          counts={stageFilterCounts}
+        />
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}
@@ -223,21 +251,6 @@ export function OpportunitiesListPage() {
           onClose={() => setDrawerOpen(false)}
         >
           <div className="flex flex-col gap-4">
-            <Select
-              label={tr.crm.opportunities.filterDrawer.stageLabel}
-              value={stage}
-              onChange={(event) => {
-                setPage(1);
-                setStage(event.target.value as OpportunityStage | '');
-              }}
-              placeholder={tr.crm.opportunities.filterDrawer.stageAllOption}
-              options={STAGE_OPTIONS}
-              clearable
-              onClear={() => {
-                setPage(1);
-                setStage('');
-              }}
-            />
             <TextField
               type="number"
               min={0}
