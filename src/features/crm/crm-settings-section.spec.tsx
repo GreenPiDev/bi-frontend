@@ -6,15 +6,20 @@ import { CrmSettingsSection } from './crm-settings-section';
 import { ToastProvider } from '../../components/ui/toast';
 import * as api from '../../lib/api';
 
-function renderSection() {
+async function renderSection() {
   const queryClient = new QueryClient();
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <CrmSettingsSection />
       </ToastProvider>
     </QueryClientProvider>,
   );
+  const user = userEvent.setup();
+  for (const header of await screen.findAllByRole('button', { expanded: false })) {
+    await user.click(header);
+  }
+  return result;
 }
 
 describe('CrmSettingsSection', () => {
@@ -26,7 +31,7 @@ describe('CrmSettingsSection', () => {
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
-    renderSection();
+    await renderSection();
     expect(
       await screen.findByText(
         'Henüz sektör tanımlanmadı. Firma formunda serbest metin kabul edilir.',
@@ -51,7 +56,7 @@ describe('CrmSettingsSection', () => {
     });
 
     const user = userEvent.setup();
-    renderSection();
+    await renderSection();
 
     expect(await screen.findByText('Yazılım')).toBeInTheDocument();
 
@@ -80,7 +85,7 @@ describe('CrmSettingsSection', () => {
     });
 
     const user = userEvent.setup();
-    renderSection();
+    await renderSection();
 
     expect(await screen.findByText('Muhasebe')).toBeInTheDocument();
 
@@ -109,7 +114,7 @@ describe('CrmSettingsSection', () => {
     });
 
     const user = userEvent.setup();
-    renderSection();
+    await renderSection();
 
     expect(await screen.findByText('Yazılım')).toBeInTheDocument();
 
@@ -140,7 +145,7 @@ describe('CrmSettingsSection', () => {
     });
 
     const user = userEvent.setup();
-    renderSection();
+    await renderSection();
 
     expect(await screen.findByText('Elektrik')).toBeInTheDocument();
 
@@ -167,7 +172,7 @@ describe('CrmSettingsSection', () => {
     });
 
     const user = userEvent.setup();
-    renderSection();
+    await renderSection();
 
     const input = (await screen.findByLabelText('Eşik (gün)')) as HTMLInputElement;
     await waitFor(() => expect(input.value).toBe('180'));
@@ -197,7 +202,7 @@ describe('CrmSettingsSection', () => {
     });
 
     const user = userEvent.setup();
-    renderSection();
+    await renderSection();
 
     const input = (await screen.findByLabelText('Hatırlatma süresi (gün)')) as HTMLInputElement;
     await waitFor(() => expect(input.value).toBe('14'));

@@ -4,18 +4,21 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PurchaseOrderListPage } from './purchase-order-list-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderPurchaseOrderListPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/siparisler']}>
-        <Routes>
-          <Route path="/siparisler" element={<PurchaseOrderListPage />} />
-          <Route path="/siparisler/:id" element={<div>detail-page</div>} />
-        </Routes>
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/siparisler']}>
+          <Routes>
+            <Route path="/siparisler" element={<PurchaseOrderListPage />} />
+            <Route path="/siparisler/:id" element={<div>detail-page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }

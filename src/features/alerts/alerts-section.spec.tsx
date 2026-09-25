@@ -4,20 +4,22 @@ import { describe, expect, it, vi } from 'vitest';
 import { AlertsSection } from './alerts-section';
 import * as api from '../../lib/api';
 
-function renderSection() {
+async function renderSection() {
   const queryClient = new QueryClient();
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <AlertsSection />
     </QueryClientProvider>,
   );
+  fireEvent.click(await screen.findByText('Eşik Alarmları'));
+  return result;
 }
 
 describe('AlertsSection', () => {
   it('alarm yokken bos durum gosterir', async () => {
     vi.spyOn(api, 'listAlerts').mockResolvedValue([]);
     vi.spyOn(api, 'listDashboards').mockResolvedValue([]);
-    renderSection();
+    await renderSection();
     expect(await screen.findByText('Henüz eşik alarmı yok.')).toBeInTheDocument();
   });
 
@@ -70,7 +72,7 @@ describe('AlertsSection', () => {
         },
       ],
     });
-    renderSection();
+    await renderSection();
     expect(await screen.findByText('Satış Panosu · Toplam Ciro')).toBeInTheDocument();
     expect(screen.getByText(/küçükse 1000/)).toBeInTheDocument();
   });
@@ -78,7 +80,7 @@ describe('AlertsSection', () => {
   it('+ Alarm Ekle formu acar, gerekli alanlar doldurulmadan gonderilemez', async () => {
     vi.spyOn(api, 'listAlerts').mockResolvedValue([]);
     vi.spyOn(api, 'listDashboards').mockResolvedValue([]);
-    renderSection();
+    await renderSection();
     fireEvent.click(await screen.findByText('+ Alarm Ekle'));
     const createButton = await screen.findByText('Alarm Oluştur');
     expect(createButton).toBeDisabled();
@@ -133,7 +135,7 @@ describe('AlertsSection', () => {
       lastTriggeredAt: null,
     });
 
-    renderSection();
+    await renderSection();
     fireEvent.click(await screen.findByText('+ Alarm Ekle'));
     fireEvent.change(await screen.findByLabelText('Pano'), { target: { value: 'd1' } });
     fireEvent.change(await screen.findByLabelText('Widget'), { target: { value: 'w1' } });

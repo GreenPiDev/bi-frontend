@@ -4,20 +4,22 @@ import { describe, expect, it, vi } from 'vitest';
 import { ReportsSection } from './reports-section';
 import * as api from '../../lib/api';
 
-function renderSection() {
+async function renderSection() {
   const queryClient = new QueryClient();
-  return render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <ReportsSection />
     </QueryClientProvider>,
   );
+  fireEvent.click(await screen.findByText('Zamanlanmış Raporlar'));
+  return result;
 }
 
 describe('ReportsSection', () => {
   it('rapor yokken bos durum gosterir', async () => {
     vi.spyOn(api, 'listReports').mockResolvedValue([]);
     vi.spyOn(api, 'listDashboards').mockResolvedValue([]);
-    renderSection();
+    await renderSection();
     expect(await screen.findByText('Henüz zamanlanmış rapor yok.')).toBeInTheDocument();
   });
 
@@ -43,7 +45,7 @@ describe('ReportsSection', () => {
         createdAt: '2026-08-01T00:00:00.000Z',
       },
     ]);
-    renderSection();
+    await renderSection();
     expect(await screen.findByText('Satış Panosu')).toBeInTheDocument();
     expect(screen.getByText(/Her Pazartesi saat 08:00/)).toBeInTheDocument();
   });
@@ -61,7 +63,7 @@ describe('ReportsSection', () => {
         createdAt: '2026-08-01T00:00:00.000Z',
       },
     ]);
-    renderSection();
+    await renderSection();
     fireEvent.click(await screen.findByText('+ Rapor Ekle'));
     const createButton = await screen.findByText('Rapor Oluştur');
     expect(createButton).toBeDisabled();
@@ -88,7 +90,7 @@ describe('ReportsSection', () => {
       isActive: true,
       lastRunAt: null,
     });
-    renderSection();
+    await renderSection();
     fireEvent.click(await screen.findByText('+ Rapor Ekle'));
     fireEvent.change(await screen.findByLabelText('Pano'), { target: { value: 'd1' } });
     fireEvent.change(screen.getByLabelText(/Alıcılar/), {
