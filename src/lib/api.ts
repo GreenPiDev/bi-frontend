@@ -1460,8 +1460,9 @@ export interface CreateInteractionInput {
   };
   reminder?: {
     startAt: string;
-    title?: string;
-    assignees: { userId: string; note?: string }[];
+    title: string;
+    description?: string;
+    assignees: { userId: string }[];
   };
 }
 

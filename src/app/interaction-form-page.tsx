@@ -137,13 +137,14 @@ export function InteractionFormPage() {
             },
           }
         : {}),
-      ...(values.hasReminder && values.reminderStartAt
+      ...(values.hasReminder && values.reminderStartAt && values.reminderTitle
         ? {
             reminder: {
               startAt: new Date(values.reminderStartAt).toISOString(),
+              title: values.reminderTitle,
+              description: values.reminderDescription || undefined,
               assignees: (values.reminderAssigneeUserIds ?? []).map((userId) => ({
                 userId,
-                note: values.reminderNote || undefined,
               })),
             },
           }
@@ -427,10 +428,18 @@ export function InteractionFormPage() {
                   )}
                 />
                 <TextField
-                  label={tr.crm.interactions.form.reminderNoteLabel}
-                  hint={tr.crm.interactions.form.reminderNoteHint}
-                  error={errors.reminderNote?.message}
-                  {...register('reminderNote')}
+                  label={tr.crm.interactions.form.reminderTitleLabel}
+                  required
+                  hint={tr.crm.interactions.form.reminderTitleHint}
+                  error={errors.reminderTitle?.message}
+                  {...register('reminderTitle')}
+                />
+                <TextareaField
+                  label={tr.crm.interactions.form.reminderDescriptionLabel}
+                  rows={3}
+                  hint={tr.crm.interactions.form.reminderDescriptionHint}
+                  error={errors.reminderDescription?.message}
+                  {...register('reminderDescription')}
                 />
               </div>
             )}

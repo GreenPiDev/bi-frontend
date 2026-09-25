@@ -121,7 +121,8 @@ export const interactionFormSchema = z
     hasReminder: z.boolean().optional(),
     reminderStartAt: z.string().optional(),
     reminderAssigneeUserIds: z.array(z.string()).max(50).optional(),
-    reminderNote: z.string().max(1000).optional(),
+    reminderTitle: z.string().max(200).optional(),
+    reminderDescription: z.string().max(2000).optional(),
   })
   .refine(
     (values) =>
@@ -142,6 +143,10 @@ export const interactionFormSchema = z
   .refine((values) => !values.hasReminder || (values.reminderAssigneeUserIds ?? []).length > 0, {
     message: 'En az bir kişi seçin.',
     path: ['reminderAssigneeUserIds'],
+  })
+  .refine((values) => !values.hasReminder || (values.reminderTitle ?? '').trim().length > 0, {
+    message: 'Hatırlatma başlığı gerekli.',
+    path: ['reminderTitle'],
   });
 
 export type InteractionFormValues = z.infer<typeof interactionFormSchema>;
