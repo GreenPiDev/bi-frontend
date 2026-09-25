@@ -1,4 +1,13 @@
-import { AlertTriangle, Pencil, Search, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  Download,
+  ListFilter,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -212,31 +221,55 @@ export function AccountsListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.accounts.subtitle}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" type="button" onClick={() => setDrawerOpen(true)}>
-            {tr.crm.accounts.filterButton}
-            {hasActiveFilter && (
-              <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-app-primary" />
-            )}
-          </Button>
-          <Button
-            variant="secondary"
-            type="button"
-            disabled={exportMutation.isPending}
-            onClick={() =>
-              exportMutation.mutate(undefined, {
-                onSuccess: (blob) => downloadBlob(blob, 'firmalar.xlsx'),
-              })
-            }
-          >
-            {tr.crm.accounts.exportButton}
-          </Button>
-          <Button variant="secondary" type="button" onClick={() => navigate('/firmalar/ice-aktar')}>
-            {tr.crm.accounts.importButton}
-          </Button>
-          <Button type="button" onClick={() => navigate('/firmalar/yeni')}>
-            {tr.crm.accounts.newButton}
-          </Button>
+        <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.accounts.filterButton}>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label={tr.crm.accounts.filterButton}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <ListFilter size={18} />
+              {hasActiveFilter && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.accounts.exportButton}>
+            <button
+              type="button"
+              disabled={exportMutation.isPending}
+              onClick={() =>
+                exportMutation.mutate(undefined, {
+                  onSuccess: (blob) => downloadBlob(blob, 'firmalar.xlsx'),
+                })
+              }
+              aria-label={tr.crm.accounts.exportButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:opacity-50"
+            >
+              <Upload size={18} />
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.accounts.importButton}>
+            <button
+              type="button"
+              onClick={() => navigate('/firmalar/ice-aktar')}
+              aria-label={tr.crm.accounts.importButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <Download size={18} />
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.accounts.newButton}>
+            <button
+              type="button"
+              onClick={() => navigate('/firmalar/yeni')}
+              aria-label={tr.crm.accounts.newButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+            >
+              <Plus size={18} strokeWidth={3} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

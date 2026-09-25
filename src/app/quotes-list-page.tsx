@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -275,9 +275,16 @@ export function QuotesListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.quotes.subtitle}</p>
         </div>
-        <Button type="button" onClick={() => navigate('/teklifler/yeni')}>
-          {tr.crm.quotes.newButton}
-        </Button>
+        <Tooltip content={tr.crm.quotes.newButton}>
+          <button
+            type="button"
+            onClick={() => navigate('/teklifler/yeni')}
+            aria-label={tr.crm.quotes.newButton}
+            className="mt-1 flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+          >
+            <Plus size={18} strokeWidth={3} />
+          </button>
+        </Tooltip>
       </div>
 
       <div className="mt-6 max-w-xs">

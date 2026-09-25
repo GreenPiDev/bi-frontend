@@ -1,11 +1,13 @@
 import { clsx } from 'clsx';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppShell } from './app-shell';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
 import { CalendarEventFormModal } from './calendar-event-form-modal';
 import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
+import { Table } from '../components/ui/table';
+import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import {
   useCalendarEventsQuery,
@@ -67,12 +69,15 @@ export function CalendarPage() {
   const [showForm, setShowForm] = useState(false);
   const toast = useToast();
   const deleteMutation = useDeleteCalendarEventMutation();
+  // Date.now() render sirasinda dogrudan cagrilamaz (react-hooks/purity) - lazy useState
+  // initializer'i istisna, bir kere mount'ta calisir.
+  const [now] = useState(() => Date.now());
 
   const { from, to } = useMemo(() => getMonthGridRange(monthCursor), [monthCursor]);
   const monthQuery = useCalendarEventsQuery(
     viewMode === 'month'
       ? { from: from.toISOString(), to: to.toISOString(), order: 'asc' }
-      : { order: 'desc' },
+      : { order: 'asc' },
   );
 
   const gridDays = useMemo(() => buildGridDays(from), [from]);
@@ -105,6 +110,12 @@ export function CalendarPage() {
   }
 
   const events = monthQuery.data ?? [];
+  const listEvents = useMemo(() => {
+    if (viewMode !== 'list') return events;
+    const upcoming = events.filter((event) => new Date(event.endAt).getTime() >= now);
+    const past = events.filter((event) => new Date(event.endAt).getTime() < now);
+    return [...upcoming, ...past];
+  }, [events, viewMode, now]);
 
   return (
     <AppShell>
@@ -116,24 +127,45 @@ export function CalendarPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.calendar.subtitle}</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'month' ? 'primary' : 'secondary'}
-            type="button"
-            onClick={() => setViewMode('month')}
-          >
-            {tr.crm.calendar.monthView}
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'primary' : 'secondary'}
-            type="button"
-            onClick={() => setViewMode('list')}
-          >
-            {tr.crm.calendar.listView}
-          </Button>
-          <Button type="button" onClick={() => openCreateModal()}>
-            {tr.crm.calendar.newButton}
-          </Button>
+        <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.calendar.monthView}>
+            <button
+              type="button"
+              onClick={() => setViewMode('month')}
+              aria-label={tr.crm.calendar.monthView}
+              aria-pressed={viewMode === 'month'}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <CalendarDays size={18} />
+              {viewMode === 'month' && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-app-success" />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.calendar.listView}>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              aria-label={tr.crm.calendar.listView}
+              aria-pressed={viewMode === 'list'}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <List size={18} />
+              {viewMode === 'list' && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-app-success" />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.calendar.newButton}>
+            <button
+              type="button"
+              onClick={() => openCreateModal()}
+              aria-label={tr.crm.calendar.newButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+            >
+              <Plus size={18} strokeWidth={3} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -222,34 +254,40 @@ export function CalendarPage() {
           </div>
         </div>
       ) : (
-        <div className="mt-6 flex flex-col gap-2">
-          {monthQuery.isPending && (
-            <p className="text-sm text-app-muted">{tr.crm.calendar.loading}</p>
-          )}
-          {!monthQuery.isPending && events.length === 0 && (
-            <p className="text-sm text-app-muted">{tr.crm.calendar.empty}</p>
-          )}
-          {events.map((event) => (
-            <button
-              key={event.id}
-              type="button"
-              onClick={() => setSelectedEvent(event)}
-              className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-3 text-left hover:bg-app-bg-muted"
-            >
-              <div>
-                <p className="text-sm font-semibold text-app-text">
+        <Table<CalendarEvent>
+          columns={[
+            {
+              key: 'title',
+              header: tr.crm.calendar.listColumnTitle,
+              render: (event) => (
+                <span className="text-sm font-semibold text-app-text">
                   {displayEventTitle(event.title)}
-                </p>
-                <p className="text-xs text-app-muted">
+                </span>
+              ),
+            },
+            {
+              key: 'startAt',
+              header: tr.crm.calendar.listColumnDate,
+              render: (event) => (
+                <span className="text-xs text-app-muted">
                   {new Intl.DateTimeFormat('tr-TR', {
                     dateStyle: 'medium',
                     timeStyle: event.allDay ? undefined : 'short',
                   }).format(new Date(event.startAt))}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
+                </span>
+              ),
+            },
+          ]}
+          data={listEvents}
+          keyField={(event) => event.id}
+          onRowClick={(event) => setSelectedEvent(event)}
+          isLoading={monthQuery.isPending}
+          loadingMessage={tr.crm.calendar.loading}
+          emptyMessage={tr.crm.calendar.empty}
+          rowClassName={(event) =>
+            new Date(event.endAt).getTime() < now ? 'bg-red-50 hover:bg-red-100' : undefined
+          }
+        />
       )}
 
       {selectedEvent && (

@@ -1,9 +1,10 @@
+import { Pencil, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { PageHelp } from '../components/ui/page-help';
+import { Tooltip } from '../components/ui/tooltip';
 import {
   useDeleteOpportunityMutation,
   useOpportunityQuery,
@@ -57,17 +58,27 @@ export function OpportunityDetailPage() {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => navigate(`/firsatlar/${id}/duzenle`)}
-          >
-            {tr.crm.opportunities.detail.editButton}
-          </Button>
-          <Button type="button" variant="danger" onClick={handleDelete}>
-            {tr.crm.opportunities.detail.deleteButton}
-          </Button>
+        <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.opportunities.detail.editButton}>
+            <button
+              type="button"
+              onClick={() => navigate(`/firsatlar/${id}/duzenle`)}
+              aria-label={tr.crm.opportunities.detail.editButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <Pencil size={18} />
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.opportunities.detail.deleteButton}>
+            <button
+              type="button"
+              onClick={handleDelete}
+              aria-label={tr.crm.opportunities.detail.deleteButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-[#ff5c5c] transition-colors hover:bg-[#141c33]"
+            >
+              <Trash2 size={18} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

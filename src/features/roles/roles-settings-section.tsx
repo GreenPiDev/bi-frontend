@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -103,9 +104,16 @@ export function RolesSettingsSection() {
             <p className="text-sm text-app-muted">{tr.settings.roles.subtitle}</p>
           </div>
           {isCompanyAdmin && (
-            <Button type="button" onClick={() => setModalState({ mode: 'create' })}>
-              {tr.settings.roles.newRoleButton}
-            </Button>
+            <Tooltip content={tr.settings.roles.newRoleButton}>
+              <button
+                type="button"
+                onClick={() => setModalState({ mode: 'create' })}
+                aria-label={tr.settings.roles.newRoleButton}
+                className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+              >
+                <Plus size={18} strokeWidth={3} />
+              </button>
+            </Tooltip>
           )}
         </div>
 

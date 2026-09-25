@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -5,6 +6,7 @@ import { Modal } from '../../components/ui/modal';
 import { MultiSelect } from '../../components/ui/multi-select';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
+import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type RoleView, type SafeUser } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -312,9 +314,16 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
           <p className="text-sm text-app-muted">{tr.settings.roles.users.subtitle}</p>
         </div>
         {isCompanyAdmin && (
-          <Button type="button" onClick={() => setInviteOpen(true)}>
-            {tr.settings.roles.users.inviteButton}
-          </Button>
+          <Tooltip content={tr.settings.roles.users.inviteButton}>
+            <button
+              type="button"
+              onClick={() => setInviteOpen(true)}
+              aria-label={tr.settings.roles.users.inviteButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+            >
+              <Plus size={18} strokeWidth={3} />
+            </button>
+          </Tooltip>
         )}
       </div>
 

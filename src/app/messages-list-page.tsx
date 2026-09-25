@@ -1,4 +1,4 @@
-import { Search, Star } from 'lucide-react';
+import { ListFilter, Plus, Search, Star } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Tooltip } from '../components/ui/tooltip';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { MessagesFilterDrawer } from '../features/crm/messages-filter-drawer';
@@ -43,6 +44,13 @@ export function MessagesListPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
+  const hasActiveFilter =
+    Boolean(filters.box) ||
+    filters.relatedEntity.length > 0 ||
+    filters.quoteIds.length > 0 ||
+    filters.projectIds.length > 0 ||
+    filters.interactionIds.length > 0 ||
+    Boolean(filters.recipientUserId);
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const messagesQuery = useMessagesQuery({
     page,
@@ -223,13 +231,30 @@ export function MessagesListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.messages.subtitle}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" type="button" onClick={() => setDrawerOpen(true)}>
-            {tr.crm.messages.filterButton}
-          </Button>
-          <Button type="button" onClick={() => setNewMessageOpen(true)}>
-            {tr.crm.messages.newButton}
-          </Button>
+        <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.messages.filterButton}>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label={tr.crm.messages.filterButton}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <ListFilter size={18} />
+              {hasActiveFilter && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.messages.newButton}>
+            <button
+              type="button"
+              onClick={() => setNewMessageOpen(true)}
+              aria-label={tr.crm.messages.newButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+            >
+              <Plus size={18} strokeWidth={3} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+import { ListFilter, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -9,6 +10,7 @@ import { DateField } from '../components/ui/date-field';
 import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { PageHelp } from '../components/ui/page-help';
+import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -161,16 +163,30 @@ export function OpportunitiesListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.opportunities.subtitle}</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary" type="button" onClick={() => setDrawerOpen(true)}>
-            {tr.crm.opportunities.filterButton}
-            {hasActiveFilter && (
-              <span className="ml-1.5 inline-flex h-2 w-2 rounded-full bg-app-primary" />
-            )}
-          </Button>
-          <Button type="button" onClick={() => navigate('/firsatlar/yeni')}>
-            {tr.crm.opportunities.newButton}
-          </Button>
+        <div className="flex items-center gap-2 pt-1">
+          <Tooltip content={tr.crm.opportunities.filterButton}>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label={tr.crm.opportunities.filterButton}
+              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+            >
+              <ListFilter size={18} />
+              {hasActiveFilter && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+              )}
+            </button>
+          </Tooltip>
+          <Tooltip content={tr.crm.opportunities.newButton}>
+            <button
+              type="button"
+              onClick={() => navigate('/firsatlar/yeni')}
+              aria-label={tr.crm.opportunities.newButton}
+              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
+            >
+              <Plus size={18} strokeWidth={3} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 

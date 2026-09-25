@@ -46,7 +46,7 @@ export const tr = {
       'Firmalara bağlı kişilerin listesi. Bir kişinin aktif/pasif durumunu ve son iletişim tarihini buradan takip edebilirsiniz.',
     contactDetail: 'Bu kişinin iletişim bilgilerini görüntüleyin ve düzenleyin.',
     calendar:
-      'Görüşme, teklif ve diğer kayıtlara bağlı tüm hatırlatma ve etkinlikleriniz burada. Bir güne tıklayarak yeni etkinlik oluşturabilir, üstteki listeye geçerek ters kronolojik görünümü kullanabilirsiniz.',
+      'Görüşme, teklif ve diğer kayıtlara bağlı tüm hatırlatma ve etkinlikleriniz burada. Bir güne tıklayarak yeni etkinlik oluşturabilir, üstteki listeye geçerek kronolojik görünümü (geçmiş etkinlikler soluk kırmızı, en yakın gelecek etkinlik üstte) kullanabilirsiniz.',
     interactions:
       'Müşteri/tedarikçi görüşmelerinizin kaydı. Yeni bir görüşme girerken bilinmeyen firma/kişi otomatik olarak cari kaydına eklenir.',
     interactionDetail:
@@ -1037,6 +1037,8 @@ export const tr = {
       today: 'Bugün',
       loading: 'Etkinlikler yükleniyor...',
       empty: 'Bu aralıkta etkinlik yok.',
+      listColumnTitle: 'Etkinlik',
+      listColumnDate: 'Tarih',
       weekdays: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
       moreEvents: (count: number) => `+${count} daha`,
       deleteConfirm: 'Bu etkinliği silmek istediğinize emin misiniz?',
