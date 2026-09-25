@@ -419,7 +419,7 @@ export const tr = {
     subtitle: 'Zamanlanmış raporlarınızı ve denetim kaydınızı buradan yönetin.',
     tabs: {
       general: 'Genel',
-      crm: 'CRM Ayarları',
+      crm: 'Tanımlamalar',
       audit: 'Kullanıcı Aktiviteleri',
       roles: 'Roller',
       users: 'Kullanıcılar',
@@ -522,16 +522,20 @@ export const tr = {
       },
     },
     crm: {
-      title: 'CRM Ayarları',
-      subtitle: 'Sektör listesini ve kişi iletişim eşiğini yönetin.',
+      title: 'Tanımlamalar',
+      subtitle: 'Formlarda kullanılan liste tanımlarını ve iletişim eşiklerini yönetin.',
       sectorOptions: {
         title: 'Sektörler',
         subtitle: 'Firma formunda seçilebilecek sektör listesi.',
         addPlaceholder: 'Yeni sektör adı',
         addButton: 'Ekle',
         empty: 'Henüz sektör tanımlanmadı. Firma formunda serbest metin kabul edilir.',
+        editButton: 'Düzenle',
+        saveButton: 'Kaydet',
+        cancelButton: 'Vazgeç',
         deleteButton: 'Sil',
         addSuccess: 'Sektör eklendi.',
+        editSuccess: 'Sektör güncellendi.',
         deleteSuccess: 'Sektör silindi.',
       },
       departmentOptions: {
@@ -540,8 +544,12 @@ export const tr = {
         addPlaceholder: 'Yeni departman adı',
         addButton: 'Ekle',
         empty: 'Henüz departman tanımlanmadı. Formlarda serbest metin kabul edilir.',
+        editButton: 'Düzenle',
+        saveButton: 'Kaydet',
+        cancelButton: 'Vazgeç',
         deleteButton: 'Sil',
         addSuccess: 'Departman eklendi.',
+        editSuccess: 'Departman güncellendi.',
         deleteSuccess: 'Departman silindi.',
       },
       titleOptions: {
@@ -550,9 +558,27 @@ export const tr = {
         addPlaceholder: 'Yeni unvan adı',
         addButton: 'Ekle',
         empty: 'Henüz unvan tanımlanmadı. Formlarda serbest metin kabul edilir.',
+        editButton: 'Düzenle',
+        saveButton: 'Kaydet',
+        cancelButton: 'Vazgeç',
         deleteButton: 'Sil',
         addSuccess: 'Unvan eklendi.',
+        editSuccess: 'Unvan güncellendi.',
         deleteSuccess: 'Unvan silindi.',
+      },
+      productCategoryOptions: {
+        title: 'Ürün Kategorileri',
+        subtitle: 'Ürün formunda seçilebilecek kategori listesi.',
+        addPlaceholder: 'Yeni kategori adı',
+        addButton: 'Ekle',
+        empty: 'Henüz kategori tanımlanmadı. Ürün formunda serbest metin kabul edilir.',
+        editButton: 'Düzenle',
+        saveButton: 'Kaydet',
+        cancelButton: 'Vazgeç',
+        deleteButton: 'Sil',
+        addSuccess: 'Kategori eklendi.',
+        editSuccess: 'Kategori güncellendi.',
+        deleteSuccess: 'Kategori silindi.',
       },
       inactivityThreshold: {
         title: 'İletişim Kurulmama Bildirimi',
@@ -786,7 +812,7 @@ export const tr = {
         sectorHintFree:
           'Opsiyonel. Henüz tanımlı sektör olmadığı için serbest metin girebilirsiniz.',
         sectorHintRestricted:
-          'Opsiyonel. Sadece Ayarlar → CRM Ayarları sayfasında tanımlanan sektörlerden biri seçilebilir.',
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan sektörlerden biri seçilebilir.',
         accountTypesLabel: 'Firma Türü',
         accountTypesPlaceholder: 'Müşteri / Tedarikçi / Yüklenici / Alt Yüklenici seçin',
         accountTypesHint: 'Opsiyonel. Bir firma birden fazla türde işaretlenebilir.',
@@ -814,13 +840,13 @@ export const tr = {
         contactDepartmentHintFree:
           'Opsiyonel. Henüz tanımlı departman olmadığı için serbest metin girebilirsiniz.',
         contactDepartmentHintRestricted:
-          'Opsiyonel. Sadece Ayarlar → CRM Ayarları sayfasında tanımlanan departmanlardan biri seçilebilir.',
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan departmanlardan biri seçilebilir.',
         contactTitleLabel: 'Unvan',
         contactTitlePlaceholder: 'Unvan seçin veya yazın',
         contactTitleHintFree:
           'Opsiyonel. Henüz tanımlı unvan olmadığı için serbest metin girebilirsiniz.',
         contactTitleHintRestricted:
-          'Opsiyonel. Sadece Ayarlar → CRM Ayarları sayfasında tanımlanan unvanlardan biri seçilebilir.',
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan unvanlardan biri seçilebilir.',
         contactPhoneLabel: 'Cep Telefonu',
         contactPhoneHint: 'Opsiyonel. Ülke kodu seçip 5xx xxx xx xx formatında girin.',
         contactExtensionLabel: 'Firma Dahili Numarası',
@@ -921,12 +947,12 @@ export const tr = {
         departmentHintFree:
           'Opsiyonel. Henüz tanımlı departman olmadığı için serbest metin girebilirsiniz.',
         departmentHintRestricted:
-          'Opsiyonel. Sadece Ayarlar → CRM Ayarları sayfasında tanımlanan departmanlardan biri seçilebilir.',
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan departmanlardan biri seçilebilir.',
         titleLabel: 'Unvan',
         titlePlaceholder: 'Unvan seçin veya yazın',
         titleHintFree: 'Opsiyonel. Henüz tanımlı unvan olmadığı için serbest metin girebilirsiniz.',
         titleHintRestricted:
-          'Opsiyonel. Sadece Ayarlar → CRM Ayarları sayfasında tanımlanan unvanlardan biri seçilebilir.',
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan unvanlardan biri seçilebilir.',
         emailLabel: 'E-posta',
         emailHint: 'Opsiyonel. Girilirse geçerli bir e-posta adresi olmalı (örn. ad@firma.com).',
         phoneLabel: 'Cep Telefonu',
@@ -1324,7 +1350,11 @@ export const tr = {
         unitLabel: 'Birim',
         unitHint: 'Örn. adet, kg, kutu, metre.',
         categoryLabel: 'Kategori',
-        categoryHint: 'Ürünü gruplamak için serbest metin (opsiyonel).',
+        categoryPlaceholder: 'Kategori seçin veya yazın',
+        categoryHintFree:
+          'Opsiyonel. Henüz tanımlı kategori olmadığı için serbest metin girebilirsiniz.',
+        categoryHintRestricted:
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan kategorilerden biri seçilebilir.',
         descriptionLabel: 'Açıklama',
         descriptionHint: 'Ürün hakkında kısa bir açıklama (opsiyonel).',
         priceLabel: 'Fiyat',

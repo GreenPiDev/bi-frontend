@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Autocomplete } from '../components/ui/autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -10,6 +11,7 @@ import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
+import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
   useCreateProductMutation,
@@ -29,6 +31,7 @@ export function ProductFormPage() {
   const toast = useToast();
   const productQuery = useProductQuery(id ?? '');
   const productListsQuery = useProductListsQuery();
+  const categoryOptionsQuery = useProductCategoryOptionsQuery();
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -37,6 +40,7 @@ export function ProductFormPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -155,11 +159,24 @@ export function ProductFormPage() {
             error={errors.unit?.message}
             {...register('unit')}
           />
-          <TextField
-            label={tr.crm.products.form.categoryLabel}
-            hint={tr.crm.products.form.categoryHint}
-            error={errors.category?.message}
-            {...register('category')}
+          <Controller
+            name="category"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={tr.crm.products.form.categoryLabel}
+                placeholder={tr.crm.products.form.categoryPlaceholder}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                options={(categoryOptionsQuery.data ?? []).map((option) => option.label)}
+                error={errors.category?.message}
+                hint={
+                  (categoryOptionsQuery.data?.length ?? 0) > 0
+                    ? tr.crm.products.form.categoryHintRestricted
+                    : tr.crm.products.form.categoryHintFree
+                }
+              />
+            )}
           />
           <div className="sm:col-span-2">
             <TextareaField

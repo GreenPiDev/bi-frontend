@@ -22,6 +22,7 @@ describe('CrmSettingsSection', () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -39,6 +40,7 @@ describe('CrmSettingsSection', () => {
     ]);
     vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -67,6 +69,7 @@ describe('CrmSettingsSection', () => {
       { id: 'd1', label: 'Muhasebe', createdAt: '2026-08-01T00:00:00.000Z' },
     ]);
     vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -89,10 +92,70 @@ describe('CrmSettingsSection', () => {
     await waitFor(() => expect(createSpy).toHaveBeenCalledWith('Satış'));
   });
 
+  it('mevcut bir sektoru duzenler', async () => {
+    vi.spyOn(api, 'listSectorOptions').mockResolvedValue([
+      { id: 's1', label: 'Yazılım', createdAt: '2026-08-01T00:00:00.000Z' },
+    ]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
+      { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
+    ]);
+    const updateSpy = vi.spyOn(api, 'updateSectorOption').mockResolvedValue({
+      id: 's1',
+      label: 'Bilişim',
+      createdAt: '2026-08-01T00:00:00.000Z',
+    });
+
+    const user = userEvent.setup();
+    renderSection();
+
+    expect(await screen.findByText('Yazılım')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Düzenle' }));
+    const editInput = screen.getByDisplayValue('Yazılım');
+    await user.clear(editInput);
+    await user.type(editInput, 'Bilişim');
+    await user.click(screen.getByRole('button', { name: 'Kaydet' }));
+
+    await waitFor(() => expect(updateSpy).toHaveBeenCalledWith('s1', 'Bilişim'));
+  });
+
+  it('mevcut kategorileri listeler ve yenisini ekler', async () => {
+    vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([
+      { id: 'c1', label: 'Elektrik', createdAt: '2026-08-01T00:00:00.000Z' },
+    ]);
+    vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
+      { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
+    ]);
+    const createSpy = vi.spyOn(api, 'createProductCategoryOption').mockResolvedValue({
+      id: 'c2',
+      label: 'Mekanik',
+      createdAt: '2026-08-02T00:00:00.000Z',
+    });
+
+    const user = userEvent.setup();
+    renderSection();
+
+    expect(await screen.findByText('Elektrik')).toBeInTheDocument();
+
+    const categoryInput = screen.getByPlaceholderText('Yeni kategori adı');
+    await user.type(categoryInput, 'Mekanik');
+    const categorySection = within(categoryInput.parentElement!.parentElement!);
+    await user.click(categorySection.getByRole('button', { name: 'Ekle' }));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalledWith('Mekanik'));
+  });
+
   it('esik degerini varsayilan olarak gosterir ve kaydetmeyi tetikler', async () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.contactInactivityThresholdDays', value: 180, isDefault: true },
     ]);
@@ -122,6 +185,7 @@ describe('CrmSettingsSection', () => {
     vi.spyOn(api, 'listSectorOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listDepartmentOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTitleOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listProductCategoryOptions').mockResolvedValue([]);
     vi.spyOn(api, 'listTenantSettings').mockResolvedValue([
       { key: 'crm.postSaleFollowUpDays', value: 14, isDefault: true },
     ]);

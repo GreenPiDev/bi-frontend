@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createSectorOption, deleteSectorOption, listSectorOptions } from '../../lib/api';
+import {
+  createSectorOption,
+  deleteSectorOption,
+  listSectorOptions,
+  updateSectorOption,
+} from '../../lib/api';
 
 const SECTOR_OPTIONS_QUERY_KEY = ['sector-options'];
 
@@ -14,6 +19,14 @@ export function useCreateSectorOptionMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (label: string) => createSectorOption(label),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: SECTOR_OPTIONS_QUERY_KEY }),
+  });
+}
+
+export function useUpdateSectorOptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, label }: { id: string; label: string }) => updateSectorOption(id, label),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: SECTOR_OPTIONS_QUERY_KEY }),
   });
 }

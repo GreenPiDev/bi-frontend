@@ -912,6 +912,13 @@ export function createSectorOption(label: string): Promise<SectorOption> {
   return request('/sector-options', { method: 'POST', body: JSON.stringify({ label }) });
 }
 
+export function updateSectorOption(id: string, label: string): Promise<SectorOption> {
+  return request(`/sector-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
 export function deleteSectorOption(id: string): Promise<void> {
   return request(`/sector-options/${id}`, { method: 'DELETE' });
 }
@@ -928,6 +935,13 @@ export function listDepartmentOptions(): Promise<DepartmentOption[]> {
 
 export function createDepartmentOption(label: string): Promise<DepartmentOption> {
   return request('/department-options', { method: 'POST', body: JSON.stringify({ label }) });
+}
+
+export function updateDepartmentOption(id: string, label: string): Promise<DepartmentOption> {
+  return request(`/department-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
 }
 
 export function deleteDepartmentOption(id: string): Promise<void> {
@@ -948,8 +962,46 @@ export function createTitleOption(label: string): Promise<TitleOption> {
   return request('/title-options', { method: 'POST', body: JSON.stringify({ label }) });
 }
 
+export function updateTitleOption(id: string, label: string): Promise<TitleOption> {
+  return request(`/title-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
 export function deleteTitleOption(id: string): Promise<void> {
   return request(`/title-options/${id}`, { method: 'DELETE' });
+}
+
+export interface ProductCategoryOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listProductCategoryOptions(): Promise<ProductCategoryOption[]> {
+  return request('/product-categories');
+}
+
+export function createProductCategoryOption(label: string): Promise<ProductCategoryOption> {
+  return request('/product-categories', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updateProductCategoryOption(
+  id: string,
+  label: string,
+): Promise<ProductCategoryOption> {
+  return request(`/product-categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deleteProductCategoryOption(id: string): Promise<void> {
+  return request(`/product-categories/${id}`, { method: 'DELETE' });
 }
 
 export interface TenantSetting {
