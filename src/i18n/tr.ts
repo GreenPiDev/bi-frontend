@@ -524,6 +524,11 @@ export const tr = {
     crm: {
       title: 'Tanımlamalar',
       subtitle: 'Formlarda kullanılan liste tanımlarını ve iletişim eşiklerini yönetin.',
+      otherGroupLabel: 'Diğer',
+      quoteCreationGroupLabel: 'Teklif Oluşturma',
+      productCreationGroupLabel: 'Ürün Ekleme',
+      contactCreationGroupLabel: 'İletişim Kişisi Ekleme',
+      accountCreationGroupLabel: 'Firma Ekleme',
       sectorOptions: {
         title: 'Sektörler',
         subtitle: 'Firma formunda seçilebilecek sektör listesi.',
@@ -540,7 +545,7 @@ export const tr = {
       },
       departmentOptions: {
         title: 'Departmanlar',
-        subtitle: 'Firma/kişi formunda seçilebilecek departman listesi.',
+        subtitle: 'İletişim kişisi oluşturma formunda seçilebilecek departman listesi.',
         addPlaceholder: 'Yeni departman adı',
         addButton: 'Ekle',
         empty: 'Henüz departman tanımlanmadı. Formlarda serbest metin kabul edilir.',
@@ -554,7 +559,7 @@ export const tr = {
       },
       titleOptions: {
         title: 'Unvanlar',
-        subtitle: 'Firma/kişi formunda seçilebilecek unvan listesi.',
+        subtitle: 'İletişim kişisi oluşturma formunda seçilebilecek unvan listesi.',
         addPlaceholder: 'Yeni unvan adı',
         addButton: 'Ekle',
         empty: 'Henüz unvan tanımlanmadı. Formlarda serbest metin kabul edilir.',

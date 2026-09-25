@@ -1,6 +1,7 @@
 import { Check, Pencil, X } from 'lucide-react';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/ui/button';
+import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
@@ -103,11 +104,8 @@ function CompanyLogoSection() {
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-bold text-app-text">{strings.title}</h3>
-      <p className="text-sm text-app-muted">{strings.subtitle}</p>
-
-      <div className="mt-3 flex items-center gap-4">
+    <CollapsibleSection title={strings.title} subtitle={strings.subtitle}>
+      <div className="flex items-center gap-4">
         {logoUrl ? (
           <img
             src={logoUrl}
@@ -159,7 +157,7 @@ function CompanyLogoSection() {
           onCancel={() => setRemoving(false)}
         />
       )}
-    </div>
+    </CollapsibleSection>
   );
 }
 
@@ -276,11 +274,8 @@ function OptionListManager({
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-bold text-app-text">{title}</h3>
-      <p className="text-sm text-app-muted">{subtitle}</p>
-
-      <div className="mt-3 flex gap-2">
+    <CollapsibleSection title={title} subtitle={subtitle}>
+      <div className="flex gap-2">
         <input
           type="text"
           value={label}
@@ -366,7 +361,7 @@ function OptionListManager({
           )}
         </ul>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }
 
@@ -633,11 +628,11 @@ function IbanOptionsManager() {
   ];
 
   return (
-    <div>
-      <h3 className="text-sm font-bold text-app-text">{tr.settings.crm.ibanOptions.title}</h3>
-      <p className="text-sm text-app-muted">{tr.settings.crm.ibanOptions.subtitle}</p>
-
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <CollapsibleSection
+      title={tr.settings.crm.ibanOptions.title}
+      subtitle={tr.settings.crm.ibanOptions.subtitle}
+    >
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <TextField
           label={tr.settings.crm.ibanOptions.bankNameLabel}
           placeholder={tr.settings.crm.ibanOptions.bankNamePlaceholder}
@@ -726,7 +721,7 @@ function IbanOptionsManager() {
           )}
         />
       )}
-    </div>
+    </CollapsibleSection>
   );
 }
 
@@ -761,30 +756,30 @@ function InactivityThresholdSetting() {
   }
 
   return (
-    <div className="mt-6 border-t border-app-border pt-6">
-      <h3 className="text-sm font-bold text-app-text">
-        {tr.settings.crm.inactivityThreshold.title}
-      </h3>
-      <p className="text-sm text-app-muted">{tr.settings.crm.inactivityThreshold.subtitle}</p>
-
-      <div className="mt-3 flex items-end gap-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="inactivity-threshold" className="text-sm font-semibold text-app-muted">
-            {tr.settings.crm.inactivityThreshold.label}
-          </label>
-          <input
-            id="inactivity-threshold"
-            type="number"
-            min={1}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-          />
+    <div className="mt-3 border-t border-app-border">
+      <CollapsibleSection
+        title={tr.settings.crm.inactivityThreshold.title}
+        subtitle={tr.settings.crm.inactivityThreshold.subtitle}
+      >
+        <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="inactivity-threshold" className="text-sm font-semibold text-app-muted">
+              {tr.settings.crm.inactivityThreshold.label}
+            </label>
+            <input
+              id="inactivity-threshold"
+              type="number"
+              min={1}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            />
+          </div>
+          <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
+            {tr.settings.crm.inactivityThreshold.saveButton}
+          </Button>
         </div>
-        <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
-          {tr.settings.crm.inactivityThreshold.saveButton}
-        </Button>
-      </div>
+      </CollapsibleSection>
     </div>
   );
 }
@@ -822,64 +817,83 @@ function PostSaleFollowUpDaysSetting() {
   }
 
   return (
-    <div className="mt-6 border-t border-app-border pt-6">
-      <h3 className="text-sm font-bold text-app-text">
-        {tr.settings.crm.postSaleFollowUpDays.title}
-      </h3>
-      <p className="text-sm text-app-muted">{tr.settings.crm.postSaleFollowUpDays.subtitle}</p>
-
-      <div className="mt-3 flex items-end gap-2">
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="post-sale-follow-up-days"
-            className="text-sm font-semibold text-app-muted"
-          >
-            {tr.settings.crm.postSaleFollowUpDays.label}
-          </label>
-          <input
-            id="post-sale-follow-up-days"
-            type="number"
-            min={1}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-            className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-          />
+    <div className="mt-3 border-t border-app-border">
+      <CollapsibleSection
+        title={tr.settings.crm.postSaleFollowUpDays.title}
+        subtitle={tr.settings.crm.postSaleFollowUpDays.subtitle}
+      >
+        <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="post-sale-follow-up-days"
+              className="text-sm font-semibold text-app-muted"
+            >
+              {tr.settings.crm.postSaleFollowUpDays.label}
+            </label>
+            <input
+              id="post-sale-follow-up-days"
+              type="number"
+              min={1}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            />
+          </div>
+          <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
+            {tr.settings.crm.postSaleFollowUpDays.saveButton}
+          </Button>
         </div>
-        <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
-          {tr.settings.crm.postSaleFollowUpDays.saveButton}
-        </Button>
-      </div>
+      </CollapsibleSection>
     </div>
   );
 }
 
 export function CrmSettingsSection() {
   return (
-    <section className="mt-6 p-4">
+    <section>
       <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.crm.title}</h2>
       <p className="mb-4 text-sm text-app-muted">{tr.settings.crm.subtitle}</p>
 
-      <div className="border-t border-app-border pt-6">
-        <CompanyLogoSection />
-      </div>
-      <div className="mt-6 border-t border-app-border pt-6">
+      <h2 className="mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.accountCreationGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
         <SectorOptionsManager />
       </div>
-      <div className="mt-6 border-t border-app-border pt-6">
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.contactCreationGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
         <DepartmentOptionsManager />
       </div>
-      <div className="mt-6 border-t border-app-border pt-6">
+      <div className="mt-3 border-t border-app-border">
         <TitleOptionsManager />
       </div>
-      <div className="mt-6 border-t border-app-border pt-6">
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.productCreationGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
         <ProductCategoryOptionsManager />
       </div>
-      <div className="mt-6 border-t border-app-border pt-6">
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.quoteCreationGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
+        <CompanyLogoSection />
+      </div>
+      <div className="mt-3 border-t border-app-border">
         <PaymentMethodOptionsManager />
       </div>
-      <div className="mt-6 border-t border-app-border pt-6">
+      <div className="mt-3 border-t border-app-border">
         <IbanOptionsManager />
       </div>
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.otherGroupLabel}
+      </h2>
       <InactivityThresholdSetting />
       <PostSaleFollowUpDaysSetting />
     </section>
