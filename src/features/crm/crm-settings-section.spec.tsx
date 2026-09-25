@@ -117,7 +117,8 @@ describe('CrmSettingsSection', () => {
     const editInput = screen.getByDisplayValue('Yazılım');
     await user.clear(editInput);
     await user.type(editInput, 'Bilişim');
-    await user.click(screen.getByRole('button', { name: 'Kaydet' }));
+    const editRow = within(editInput.closest('li')!);
+    await user.click(editRow.getByRole('button', { name: 'Kaydet' }));
 
     await waitFor(() => expect(updateSpy).toHaveBeenCalledWith('s1', 'Bilişim'));
   });
