@@ -1,12 +1,14 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 import { AppShell } from './app-shell';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { AlertsSection } from '../features/alerts/alerts-section';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
+import type { AuditLogEntry } from '../lib/api';
 import { CrmSettingsSection } from '../features/crm/crm-settings-section';
 import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
 import { ActionPermissionsSection } from '../features/roles/action-permissions-section';
@@ -125,81 +127,76 @@ function AuditLogTab() {
   const auditLogsQuery = useAuditLogsQuery();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const columns: TableColumn<AuditLogEntry>[] = [
+    {
+      key: 'toggle',
+      header: '',
+      className: 'w-px',
+      render: (log) => {
+        const isExpanded = expandedId === log.id;
+        return (
+          <button
+            type="button"
+            aria-label={
+              isExpanded
+                ? tr.settings.audit.detailToggleCollapse
+                : tr.settings.audit.detailToggleExpand
+            }
+            onClick={(event) => {
+              event.stopPropagation();
+              setExpandedId(isExpanded ? null : log.id);
+            }}
+            className="flex items-center rounded-lg p-1 hover:bg-app-bg"
+          >
+            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </button>
+        );
+      },
+    },
+    {
+      key: 'user',
+      header: tr.settings.audit.userColumn,
+      className: 'whitespace-nowrap',
+      render: (log) => (
+        <>
+          {log.userName}
+          <span className="ml-1 text-app-muted">({log.userEmail})</span>
+        </>
+      ),
+    },
+    {
+      key: 'action',
+      header: tr.settings.audit.actionColumn,
+      className: 'whitespace-nowrap',
+      render: (log) => actionLabels[log.action] ?? log.action,
+    },
+    {
+      key: 'entity',
+      header: tr.settings.audit.entityColumn,
+      className: 'whitespace-nowrap',
+      render: (log) => entityLabels[log.entity] ?? log.entity,
+    },
+    {
+      key: 'createdAt',
+      header: tr.settings.audit.dateColumn,
+      className: 'whitespace-nowrap',
+      render: (log) => dateFormatter.format(new Date(log.createdAt)),
+    },
+  ];
+
   return (
     <section>
-      {auditLogsQuery.isPending && (
-        <p className="text-sm text-app-muted">{tr.settings.audit.loading}</p>
-      )}
-      {auditLogsQuery.data && auditLogsQuery.data.length === 0 && (
-        <p className="text-sm text-app-muted">{tr.settings.audit.empty}</p>
-      )}
-      {auditLogsQuery.data && auditLogsQuery.data.length > 0 && (
-        <div className="overflow-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-app-border text-xs uppercase text-app-muted">
-              <tr>
-                <th className="w-px px-3 py-2" />
-                <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.userColumn}</th>
-                <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.actionColumn}</th>
-                <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.entityColumn}</th>
-                <th className="whitespace-nowrap px-3 py-2">{tr.settings.audit.dateColumn}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {auditLogsQuery.data.map((log) => {
-                const isExpanded = expandedId === log.id;
-                return (
-                  <Fragment key={log.id}>
-                    <tr
-                      onClick={() => setExpandedId(isExpanded ? null : log.id)}
-                      className="bg-app-surface cursor-pointer border-b border-app-border last:border-0 hover:bg-blue-50"
-                    >
-                      <td className="px-3 py-2 text-app-muted">
-                        <button
-                          type="button"
-                          aria-label={
-                            isExpanded
-                              ? tr.settings.audit.detailToggleCollapse
-                              : tr.settings.audit.detailToggleExpand
-                          }
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setExpandedId(isExpanded ? null : log.id);
-                          }}
-                          className="flex items-center rounded-lg p-1 hover:bg-app-surface"
-                        >
-                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-app-text">
-                        {log.userName}
-                        <span className="ml-1 text-app-muted">({log.userEmail})</span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-app-text">
-                        {actionLabels[log.action] ?? log.action}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-app-text">
-                        {entityLabels[log.entity] ?? log.entity}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-app-muted">
-                        {dateFormatter.format(new Date(log.createdAt))}
-                      </td>
-                    </tr>
-                    {isExpanded && (
-                      <tr className="border-b border-app-border bg-app-bg last:border-0">
-                        <td />
-                        <td colSpan={4} className="px-3 py-3">
-                          <AuditLogMetaDetail meta={log.meta} />
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Table
+        columns={columns}
+        data={auditLogsQuery.data ?? []}
+        keyField={(log) => log.id}
+        isLoading={auditLogsQuery.isPending}
+        loadingMessage={tr.settings.audit.loading}
+        emptyMessage={tr.settings.audit.empty}
+        onRowClick={(log) => setExpandedId(expandedId === log.id ? null : log.id)}
+        isRowExpanded={(log) => expandedId === log.id}
+        renderExpandedRow={(log) => <AuditLogMetaDetail meta={log.meta} />}
+      />
     </section>
   );
 }

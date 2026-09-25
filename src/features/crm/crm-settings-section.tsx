@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
+import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type IbanOption } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -337,25 +338,29 @@ function OptionListManager({
             ) : (
               <li
                 key={option.id}
-                className="flex items-center gap-1.5 rounded-full bg-app-bg-muted py-1 pr-1.5 pl-3 text-sm text-app-text"
+                className="flex items-center gap-1.5 rounded-md bg-app-primary py-1 pr-1.5 pl-2.5 text-sm font-medium text-white"
               >
                 {option.label}
-                <button
-                  type="button"
-                  onClick={() => startEdit(option)}
-                  aria-label={editButtonLabel}
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-app-muted hover:bg-app-primary/10 hover:text-app-primary"
-                >
-                  <Pencil size={12} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(option.id)}
-                  aria-label={deleteButtonLabel}
-                  className="inline-flex h-5 w-5 items-center justify-center rounded-full text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-                >
-                  <X size={12} />
-                </button>
+                <Tooltip content={editButtonLabel}>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(option)}
+                    aria-label={editButtonLabel}
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-white/80 hover:bg-white/15 hover:text-white"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                </Tooltip>
+                <Tooltip content={deleteButtonLabel}>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(option.id)}
+                    aria-label={deleteButtonLabel}
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full text-white/80 hover:bg-white/15 hover:text-white"
+                  >
+                    <X size={12} />
+                  </button>
+                </Tooltip>
               </li>
             ),
           )}
@@ -850,11 +855,13 @@ function PostSaleFollowUpDaysSetting() {
 
 export function CrmSettingsSection() {
   return (
-    <section className="mt-6 border-t border-app-border p-4">
+    <section className="mt-6 p-4">
       <h2 className="mb-1 text-base font-bold text-app-text">{tr.settings.crm.title}</h2>
       <p className="mb-4 text-sm text-app-muted">{tr.settings.crm.subtitle}</p>
 
-      <CompanyLogoSection />
+      <div className="border-t border-app-border pt-6">
+        <CompanyLogoSection />
+      </div>
       <div className="mt-6 border-t border-app-border pt-6">
         <SectorOptionsManager />
       </div>
