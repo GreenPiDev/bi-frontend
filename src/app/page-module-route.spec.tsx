@@ -31,7 +31,7 @@ describe('PageModuleRoute', () => {
     await waitFor(() => {
       expect(screen.getByText('CRM modülü kapalı')).toBeInTheDocument();
     });
-    expect(screen.queryByText('Yeni Firma')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Yeni Firma' })).not.toBeInTheDocument();
   });
 
   it('accounts sayfasi accessible=true ise firma listesini gosterir', async () => {
@@ -46,7 +46,7 @@ describe('PageModuleRoute', () => {
     renderAppAt('/firmalar');
 
     await waitFor(() => {
-      expect(screen.getByText('Yeni Firma')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Yeni Firma' })).toBeInTheDocument();
     });
   });
 
@@ -60,7 +60,7 @@ describe('PageModuleRoute', () => {
     renderAppAt('/firmalar');
 
     await waitFor(() => {
-      expect(screen.getByText('Yeni Firma')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Yeni Firma' })).toBeInTheDocument();
     });
   });
 });

@@ -110,7 +110,7 @@ describe('TenantPageRoute / RootRedirect - VIEW izin kontrolu', () => {
     renderAppAt('/');
 
     await waitFor(() => {
-      expect(screen.getByText('Yeni Firma')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Yeni Firma' })).toBeInTheDocument();
     });
   });
 

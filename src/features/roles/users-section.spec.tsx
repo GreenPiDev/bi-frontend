@@ -54,7 +54,7 @@ describe('UsersSection', () => {
 
     renderComponent();
 
-    fireEvent.click(await screen.findByText('+ Kullanıcı Ekle'));
+    fireEvent.click(await screen.findByRole('button', { name: '+ Kullanıcı Ekle' }));
     fireEvent.change(screen.getByLabelText('Ad Soyad'), {
       target: { value: 'Yeni Kisi' },
     });
