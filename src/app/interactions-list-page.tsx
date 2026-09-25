@@ -8,6 +8,7 @@ import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picke
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
+import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
@@ -21,6 +22,7 @@ import {
   useDeleteInteractionMutation,
   useInteractionCreatorsQuery,
   useInteractionsQuery,
+  useInteractionTypeCounts,
   useUpdateInteractionMutation,
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction, type InteractionType } from '../lib/api';
@@ -93,7 +95,6 @@ export function InteractionsListPage() {
     Boolean(accountId) ||
     Boolean(contactId) ||
     Boolean(createdById) ||
-    Boolean(type) ||
     Boolean(from) ||
     Boolean(to);
   const meQuery = useMeQuery();
@@ -109,6 +110,11 @@ export function InteractionsListPage() {
     to,
   });
   const creatorsQuery = useInteractionCreatorsQuery();
+  const typeCounts = useInteractionTypeCounts(TYPE_OPTIONS.map((option) => option.value));
+  const typeFilterCounts: Partial<Record<InteractionType | '', number>> = {
+    '': typeCounts.all,
+    ...typeCounts.counts,
+  };
   const deleteMutation = useDeleteInteractionMutation();
 
   function resetFilters() {
@@ -260,7 +266,18 @@ export function InteractionsListPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <FilterButtonGroup
+          label={tr.crm.interactions.typeFilterLabel}
+          value={type}
+          onChange={(next) => {
+            setPage(1);
+            setType(next);
+          }}
+          allLabel={tr.crm.interactions.allTypes}
+          options={TYPE_OPTIONS}
+          counts={typeFilterCounts}
+        />
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}
@@ -328,21 +345,6 @@ export function InteractionsListPage() {
               onClear={() => {
                 setPage(1);
                 setCreatedById('');
-              }}
-            />
-            <Select
-              label={tr.crm.interactions.filterDrawer.typeLabel}
-              placeholder={tr.crm.interactions.filterDrawer.typeAllOption}
-              value={type}
-              onChange={(event) => {
-                setPage(1);
-                setType(event.target.value as InteractionType | '');
-              }}
-              options={TYPE_OPTIONS}
-              clearable
-              onClear={() => {
-                setPage(1);
-                setType('');
               }}
             />
             <DateField

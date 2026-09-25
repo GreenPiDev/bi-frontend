@@ -1102,6 +1102,8 @@ export const tr = {
       statusUpdateError: 'Durum güncellenemedi.',
       filterButton: 'Filtrele',
       filterActiveTooltip: 'Filtreli Sonuçlar Gösteriliyor',
+      typeFilterLabel: 'Tür',
+      allTypes: 'Tümü',
       filterDrawer: {
         title: 'Görüşmeleri Filtrele',
         accountLabel: 'Firma',
@@ -1110,8 +1112,6 @@ export const tr = {
         contactPlaceholder: 'Kişi seçin',
         createdByLabel: 'Oluşturan',
         createdByPlaceholder: 'Tümü',
-        typeLabel: 'Tür',
-        typeAllOption: 'Tümü',
         sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
         rangeFromLabel: 'Başlangıç tarihi',
         rangeToLabel: 'Bitiş tarihi',

@@ -21,6 +21,7 @@ import {
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
+import { formatIbanInput } from '../lib/iban-validation';
 import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<QuoteStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
@@ -327,18 +328,27 @@ export function QuoteDetailPage() {
 
       {quote.ibanNumber && (
         <div className="print-page-break mt-8 border-t border-app-border pt-6">
-          <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
-            <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
-              {quote.ibanAccountHolderName}
-            </MetaCell>
-            {quote.ibanAccountNumber && (
-              <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
-                {quote.ibanAccountNumber}
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
+            <div
+              className={clsx(
+                'gap-4',
+                isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-4',
+              )}
+            >
+              <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
+              <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
+                {quote.ibanAccountHolderName}
               </MetaCell>
-            )}
-            <MetaCell label={tr.crm.quotes.detail.ibanLabel}>{quote.ibanNumber}</MetaCell>
+              {quote.ibanAccountNumber && (
+                <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
+                  {quote.ibanAccountNumber}
+                </MetaCell>
+              )}
+              <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
+                <span className="break-all">{formatIbanInput(quote.ibanNumber)}</span>
+              </MetaCell>
+            </div>
           </div>
         </div>
       )}

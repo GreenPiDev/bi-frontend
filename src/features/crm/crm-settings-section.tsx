@@ -8,6 +8,7 @@ import { TextField } from '../../components/ui/text-field';
 import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type IbanOption } from '../../lib/api';
+import { formatIbanInput, normalizeIban, validateIban } from '../../lib/iban-validation';
 import { tr } from '../../i18n/tr';
 import {
   useCreateDepartmentOptionMutation,
@@ -502,15 +503,21 @@ function IbanOptionsManager() {
   const deleteMutation = useDeleteIbanOptionMutation();
 
   const [form, setForm] = useState<IbanFormState>(EMPTY_IBAN_FORM);
+  const [ibanTouched, setIbanTouched] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<IbanFormState>(EMPTY_IBAN_FORM);
+  const [editIbanTouched, setEditIbanTouched] = useState(false);
+
+  const ibanValidation = validateIban(form.iban);
+  const editIbanValidation = validateIban(editForm.iban);
 
   function handleApiError(error: unknown) {
     toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
   }
 
   function handleAdd() {
-    if (!form.bankName.trim() || !form.accountHolderName.trim() || !form.iban.trim()) {
+    setIbanTouched(true);
+    if (!form.bankName.trim() || !form.accountHolderName.trim() || !ibanValidation.isValid) {
       return;
     }
     createMutation.mutate(
@@ -518,12 +525,13 @@ function IbanOptionsManager() {
         bankName: form.bankName.trim(),
         accountHolderName: form.accountHolderName.trim(),
         accountNumber: form.accountNumber.trim() || undefined,
-        iban: form.iban.trim(),
+        iban: normalizeIban(form.iban),
       },
       {
         onSuccess: () => {
           toast.success(tr.settings.crm.ibanOptions.addSuccess);
           setForm(EMPTY_IBAN_FORM);
+          setIbanTouched(false);
         },
         onError: handleApiError,
       },
@@ -536,21 +544,24 @@ function IbanOptionsManager() {
       bankName: option.bankName,
       accountHolderName: option.accountHolderName,
       accountNumber: option.accountNumber ?? '',
-      iban: option.iban,
+      iban: formatIbanInput(option.iban),
     });
+    setEditIbanTouched(false);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditForm(EMPTY_IBAN_FORM);
+    setEditIbanTouched(false);
   }
 
   function handleSaveEdit() {
+    setEditIbanTouched(true);
     if (
       !editingId ||
       !editForm.bankName.trim() ||
       !editForm.accountHolderName.trim() ||
-      !editForm.iban.trim()
+      !editIbanValidation.isValid
     ) {
       return;
     }
@@ -561,7 +572,7 @@ function IbanOptionsManager() {
           bankName: editForm.bankName.trim(),
           accountHolderName: editForm.accountHolderName.trim(),
           accountNumber: editForm.accountNumber.trim() || undefined,
-          iban: editForm.iban.trim(),
+          iban: normalizeIban(editForm.iban),
         },
       },
       {
@@ -657,7 +668,11 @@ function IbanOptionsManager() {
           label={tr.settings.crm.ibanOptions.ibanLabel}
           placeholder={tr.settings.crm.ibanOptions.ibanPlaceholder}
           value={form.iban}
-          onChange={(event) => setForm((prev) => ({ ...prev, iban: event.target.value }))}
+          onChange={(event) =>
+            setForm((prev) => ({ ...prev, iban: formatIbanInput(event.target.value) }))
+          }
+          onBlur={() => setIbanTouched(true)}
+          error={ibanTouched ? ibanValidation.error : undefined}
         />
       </div>
       <Button
@@ -707,7 +722,11 @@ function IbanOptionsManager() {
               <TextField
                 label={tr.settings.crm.ibanOptions.ibanLabel}
                 value={editForm.iban}
-                onChange={(event) => setEditForm((prev) => ({ ...prev, iban: event.target.value }))}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, iban: formatIbanInput(event.target.value) }))
+                }
+                onBlur={() => setEditIbanTouched(true)}
+                error={editIbanTouched ? editIbanValidation.error : undefined}
               />
               <div className="col-span-2 flex gap-2 sm:col-span-4">
                 <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
