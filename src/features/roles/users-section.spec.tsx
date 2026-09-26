@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { ToastProvider } from '../../components/ui/toast';
 import { UsersSection } from './users-section';
@@ -34,7 +35,9 @@ function renderComponent(props: Partial<Parameters<typeof UsersSection>[0]> = {}
   return render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <UsersSection roles={ROLES} isCompanyAdmin currentUserId="me" {...props} />
+        <MemoryRouter>
+          <UsersSection roles={ROLES} isCompanyAdmin currentUserId="me" {...props} />
+        </MemoryRouter>
       </ToastProvider>
     </QueryClientProvider>,
   );
@@ -79,7 +82,7 @@ describe('UsersSection', () => {
     renderComponent();
 
     await screen.findByText('ben@test.com');
-    const resetButtons = screen.getAllByText('Yeni Şifre Üret');
+    const resetButtons = screen.getAllByRole('button', { name: 'Yeni Şifre Üret' });
     expect(resetButtons).toHaveLength(1);
   });
 
@@ -91,7 +94,7 @@ describe('UsersSection', () => {
 
     renderComponent();
 
-    fireEvent.click(await screen.findByText('Yeni Şifre Üret'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Yeni Şifre Üret' }));
 
     await waitFor(() => expect(api.resetUserPassword).toHaveBeenCalledWith('other'));
     expect(await screen.findByDisplayValue('739201')).toBeInTheDocument();

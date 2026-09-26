@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -101,7 +101,8 @@ describe('ContactsListPage', () => {
     expect(await screen.findByText('Ayşe Yılmaz')).toBeInTheDocument();
     const actionButtons = container.querySelectorAll('table tbody button');
     await user.click(actionButtons[1]);
-    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Sil' }));
     expect(deleteSpy).toHaveBeenCalledWith('c-1');
   });
 });

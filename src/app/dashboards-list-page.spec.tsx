@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -138,7 +138,8 @@ describe('DashboardsListPage', () => {
     const deleteButton = container.querySelector('table tbody button');
     expect(deleteButton).not.toBeNull();
     await user.click(deleteButton as HTMLButtonElement);
-    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Sil' }));
 
     expect(deleteSpy).toHaveBeenCalledWith('db-1');
     expect(await screen.findByText('Pano silindi.')).toBeInTheDocument();

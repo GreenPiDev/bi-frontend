@@ -174,7 +174,8 @@ describe('AccountsListPage', () => {
     expect(await screen.findByText('Acme A.S.')).toBeInTheDocument();
     const actionButtons = container.querySelectorAll('table tbody button');
     await user.click(actionButtons[1]);
-    await user.click(await screen.findByRole('button', { name: 'Sil' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Sil' }));
     expect(deleteSpy).toHaveBeenCalledWith('acc-1');
   });
 
@@ -221,7 +222,9 @@ describe('AccountsListPage', () => {
     await user.click(screen.getByRole('checkbox', { name: 'Şehir' }));
 
     expect(updateProfileSpy).toHaveBeenCalledWith({
-      columnPreferences: { accounts: ['phone', 'email', 'sector', 'accountTypes'] },
+      columnPreferences: {
+        accounts: ['phone', 'email', 'sector', 'accountTypes', 'createdByName'],
+      },
     });
     expect(screen.queryByText('Istanbul')).not.toBeInTheDocument();
   });
