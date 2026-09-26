@@ -1760,6 +1760,16 @@ export function deleteProduct(id: string): Promise<void> {
   return request(`/products/${id}`, { method: 'DELETE' });
 }
 
+export function bulkMoveProducts(
+  productIds: string[],
+  targetProductListId: string,
+): Promise<{ movedCount: number }> {
+  return request('/products/bulk-move', {
+    method: 'PATCH',
+    body: JSON.stringify({ productIds, targetProductListId }),
+  });
+}
+
 export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
 
 export interface QuoteItem {

@@ -6,12 +6,18 @@ import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useDeleteProductMutation, useProductsQuery } from '../features/crm/use-products';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
+import {
+  useBulkMoveProductsMutation,
+  useDeleteProductMutation,
+  useProductsQuery,
+} from '../features/crm/use-products';
 import { ApiError, type Product } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -24,11 +30,21 @@ export function ProductsListContent() {
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
+  const [filterListId, setFilterListId] = useState('');
   const [deletingProduct, setDeletingProduct] = useState<Product | undefined>(undefined);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [moveTargetListId, setMoveTargetListId] = useState('');
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const productsQuery = useProductsQuery({ page, pageSize, q: q || undefined });
+  const productsQuery = useProductsQuery({
+    page,
+    pageSize,
+    q: q || undefined,
+    productListId: filterListId || undefined,
+  });
+  const productListsQuery = useProductListsQuery();
   const deleteMutation = useDeleteProductMutation();
+  const bulkMoveMutation = useBulkMoveProductsMutation();
 
   function handleConfirmDelete() {
     if (!deletingProduct) return;
@@ -41,6 +57,35 @@ export function ProductsListContent() {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
     });
+  }
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function handleMoveSelected() {
+    if (selectedIds.size === 0 || !moveTargetListId) return;
+    bulkMoveMutation.mutate(
+      { productIds: [...selectedIds], targetProductListId: moveTargetListId },
+      {
+        onSuccess: () => {
+          toast.success(tr.crm.products.moveSuccess);
+          setSelectedIds(new Set());
+          setMoveTargetListId('');
+        },
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
   }
 
   // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar (Faz B) - farklı ürün
@@ -58,6 +103,21 @@ export function ProductsListContent() {
   }));
 
   const ALL_COLUMNS: TableColumn<Product>[] = [
+    {
+      key: 'select',
+      header: tr.crm.products.selectColumn,
+      className: 'w-px',
+      required: true,
+      render: (p) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(p.id)}
+          onChange={() => toggleSelected(p.id)}
+          onClick={(event) => event.stopPropagation()}
+          className="h-4 w-4 rounded border-app-border"
+        />
+      ),
+    },
     {
       key: 'name',
       header: tr.crm.products.nameColumn,
@@ -146,21 +206,43 @@ export function ProductsListContent() {
         </Button>
       </div>
 
-      <div className="relative mt-6 w-full">
-        <Search
-          size={16}
-          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-        />
-        <input
-          type="search"
-          value={qInput}
-          onChange={(event) => {
-            setPage(1);
-            setQInput(event.target.value);
-          }}
-          placeholder={tr.crm.products.searchPlaceholder}
-          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-        />
+      <div className="mt-6 flex flex-wrap items-end gap-3">
+        <div className="relative min-w-[240px] flex-1">
+          <Search
+            size={16}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+          />
+          <input
+            type="search"
+            value={qInput}
+            onChange={(event) => {
+              setPage(1);
+              setQInput(event.target.value);
+            }}
+            placeholder={tr.crm.products.searchPlaceholder}
+            className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          />
+        </div>
+        <div className="min-w-[220px]">
+          <Select
+            label={tr.crm.products.filterListLabel}
+            placeholder={tr.crm.products.filterListPlaceholder}
+            clearable
+            value={filterListId}
+            onChange={(event) => {
+              setPage(1);
+              setFilterListId(event.target.value);
+            }}
+            onClear={() => {
+              setPage(1);
+              setFilterListId('');
+            }}
+            options={(productListsQuery.data?.data ?? []).map((productList) => ({
+              value: productList.id,
+              label: productList.name,
+            }))}
+          />
+        </div>
       </div>
 
       <div className="mt-4 flex justify-end">
@@ -170,6 +252,36 @@ export function ProductsListContent() {
           onChange={setVisibleOptionalKeys}
         />
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-app-border bg-app-surface p-3">
+          <span className="text-sm font-semibold text-app-text">
+            {tr.crm.products.selectedCount(selectedIds.size)}
+          </span>
+          <div className="min-w-[220px]">
+            <Select
+              label={tr.crm.products.moveToListLabel}
+              placeholder={tr.crm.products.movePlaceholder}
+              value={moveTargetListId}
+              onChange={(event) => setMoveTargetListId(event.target.value)}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={handleMoveSelected}
+            disabled={!moveTargetListId || bulkMoveMutation.isPending}
+          >
+            {bulkMoveMutation.isPending ? tr.crm.products.moving : tr.crm.products.moveButton}
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setSelectedIds(new Set())}>
+            {tr.crm.products.clearSelection}
+          </Button>
+        </div>
+      )}
 
       <Table
         columns={columns}
