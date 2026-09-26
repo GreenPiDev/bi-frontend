@@ -95,7 +95,7 @@ export const interactionFormSchema = z
     contactName: z.string().max(200).optional(),
     type: z.enum(['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER']),
     notes: z.string().min(1, 'Notlar gerekli.').max(5000),
-    occurredAt: z.string().min(1, 'Tarih gerekli.'),
+    occurredAt: z.string().optional(),
     hasOpportunity: z.boolean().optional(),
     opportunityName: z.string().max(200).optional(),
     opportunityStage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
@@ -128,6 +128,10 @@ export const interactionFormSchema = z
   .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
     message: 'Fırsat adı en az 2 karakter olmalı.',
     path: ['opportunityName'],
+  })
+  .refine((values) => (values.occurredAt ?? '').length > 0, {
+    message: 'Tarih gerekli.',
+    path: ['occurredAt'],
   })
   .refine((values) => !values.hasReminder || (values.reminderStartAt ?? '').length > 0, {
     message: 'Hatırlatma tarihi gerekli.',

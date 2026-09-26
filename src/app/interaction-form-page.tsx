@@ -68,6 +68,7 @@ export function InteractionFormPage() {
     resolver: zodResolver(interactionFormSchema),
     defaultValues: {
       type: 'CALL',
+      occurredAt: '',
       participants: [],
       hasOpportunity: false,
       opportunityValueCurrency: 'TRY',
@@ -121,7 +122,7 @@ export function InteractionFormPage() {
       ...(contactName ? (matchedContact ? { contactId: matchedContact.id } : { contactName }) : {}),
       type: values.type,
       notes: values.notes,
-      occurredAt: new Date(values.occurredAt).toISOString(),
+      occurredAt: new Date(values.occurredAt as string).toISOString(),
       participants: (values.participants ?? [])
         .filter((p) => p.name.trim().length > 0)
         .map((p) => ({ name: p.name, isInternal: p.isInternal, note: p.note || undefined })),
