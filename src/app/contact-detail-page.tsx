@@ -47,7 +47,7 @@ export function ContactDetailPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/kisiler'} label={tr.crm.accounts.detail.back} />
+      <BackLink to={'/kisiler'} label={tr.crm.contacts.back} />
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>
