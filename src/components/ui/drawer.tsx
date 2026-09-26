@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { X } from 'lucide-react';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 
 type DrawerWidth = 'sm' | 'md' | 'lg';
 
@@ -18,30 +18,49 @@ const WIDTH_CLASSES: Record<DrawerWidth, string> = {
   lg: 'max-w-md',
 };
 
+// animate-drawer-slide-out'un (index.css) suresiyle esit olmali.
+const EXIT_ANIMATION_MS = 200;
+
 /**
  * Generic, sagdan acilan filtre/aksiyon cekmecesi - Modal ile ayni ESC/overlay-click
  * desenini kullanir, sadece konumu (fixed inset-y-0 right-0) farkli. Mesajlara ozel
  * hicbir sey bilmez - baska liste sayfalarinda da yeniden kullanilmak icin yazildi.
+ * Kapanirken de acilma animasyonunun tersi yonde kayarak kaybolur - bunun icin
+ * gercek `onClose` cagrisi, kapanis animasyonu bitene kadar (EXIT_ANIMATION_MS)
+ * ertelenir; bu sirada bilesen hala DOM'da kalir (parent onu hemen kaldirmaz).
  */
 export function Drawer({ title, onClose, children, footer, width = 'sm' }: DrawerProps) {
+  const [isClosing, setIsClosing] = useState(false);
+
+  function requestClose() {
+    setIsClosing(true);
+  }
+
+  useEffect(() => {
+    if (!isClosing) return;
+    const timeoutId = window.setTimeout(onClose, EXIT_ANIMATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isClosing, onClose]);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
-        onClose();
+        requestClose();
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, []);
 
   return (
-    <div className="fixed inset-x-0 top-16 bottom-0 z-50 bg-black/40" onClick={onClose}>
+    <div className="fixed inset-x-0 top-16 bottom-0 z-50 bg-black/40" onClick={requestClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
         className={clsx(
-          'animate-drawer-slide-in fixed top-16 right-0 bottom-0 flex w-full flex-col bg-app-surface p-5 shadow-xl',
+          'fixed top-16 right-0 bottom-0 flex w-full flex-col bg-app-surface p-5 shadow-xl',
+          isClosing ? 'animate-drawer-slide-out' : 'animate-drawer-slide-in',
           WIDTH_CLASSES[width],
         )}
         onClick={(event) => event.stopPropagation()}
@@ -50,7 +69,7 @@ export function Drawer({ title, onClose, children, footer, width = 'sm' }: Drawe
           <h2 className="text-base font-bold text-app-text">{title}</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             className="shrink-0 text-app-muted hover:text-app-text"
             aria-label="Kapat"
           >

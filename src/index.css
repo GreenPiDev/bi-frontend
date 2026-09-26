@@ -253,7 +253,8 @@ body {
   }
 }
 
-/* Drawer (components/ui/drawer.tsx): sagdan kayarak girer. */
+/* Drawer (components/ui/drawer.tsx): sagdan kayarak girer, ayni yonde (saga) kayarak
+   cikar - cikis suresi bilesendeki EXIT_ANIMATION_MS ile esit olmali. */
 @keyframes drawer-slide-in {
   from {
     transform: translateX(100%);
@@ -263,12 +264,26 @@ body {
   }
 }
 
+@keyframes drawer-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 .animate-drawer-slide-in {
   animation: drawer-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.animate-drawer-slide-out {
+  animation: drawer-slide-out 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-drawer-slide-in {
+  .animate-drawer-slide-in,
+  .animate-drawer-slide-out {
     animation: none;
   }
 }

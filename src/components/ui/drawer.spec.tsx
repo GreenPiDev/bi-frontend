@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Drawer } from './drawer';
@@ -14,7 +14,7 @@ describe('Drawer', () => {
     expect(screen.getByText('Filtre icerigi')).toBeInTheDocument();
   });
 
-  it('kapat butonuna tiklaninca onClose cagirilir', async () => {
+  it('kapat butonuna tiklaninca kapanis animasyonundan sonra onClose cagirilir', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(
@@ -23,10 +23,11 @@ describe('Drawer', () => {
       </Drawer>,
     );
     await user.click(screen.getByRole('button', { name: 'Kapat' }));
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
 
-  it('ESC tusuna basilinca onClose cagirilir', async () => {
+  it('ESC tusuna basilinca kapanis animasyonundan sonra onClose cagirilir', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(
@@ -35,10 +36,11 @@ describe('Drawer', () => {
       </Drawer>,
     );
     await user.keyboard('{Escape}');
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
 
-  it('overlay tiklaninca onClose cagirilir, panel icine tiklaninca cagirilmaz', async () => {
+  it('overlay tiklaninca kapanis animasyonundan sonra onClose cagirilir, panel icine tiklaninca cagirilmaz', async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(
@@ -50,7 +52,7 @@ describe('Drawer', () => {
     expect(onClose).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole('dialog').parentElement as HTMLElement);
-    expect(onClose).toHaveBeenCalledOnce();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });
 
   it('footer verilirse gosterilir', () => {
