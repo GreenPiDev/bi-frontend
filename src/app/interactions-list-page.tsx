@@ -185,34 +185,35 @@ export function InteractionsListPage() {
       header: tr.crm.interactions.actionsColumn,
       className: 'w-px',
       required: true,
-      render: (i) => (
-        <div className="flex items-center gap-1">
-          <Tooltip content={tr.crm.interactions.editTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                navigate(`/gorusmeler/duzenle/${i.id}`);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-            >
-              <Pencil size={16} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.interactions.deleteTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setDeletingInteraction(i);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-            >
-              <Trash2 size={16} />
-            </button>
-          </Tooltip>
-        </div>
-      ),
+      render: (i) =>
+        i.createdById === meQuery.data?.id ? (
+          <div className="flex items-center gap-1">
+            <Tooltip content={tr.crm.interactions.editTooltip}>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  navigate(`/gorusmeler/duzenle/${i.id}`);
+                }}
+                className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
+              >
+                <Pencil size={16} />
+              </button>
+            </Tooltip>
+            <Tooltip content={tr.crm.interactions.deleteTooltip}>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setDeletingInteraction(i);
+                }}
+                className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
+              >
+                <Trash2 size={16} />
+              </button>
+            </Tooltip>
+          </div>
+        ) : null,
     },
   ];
 

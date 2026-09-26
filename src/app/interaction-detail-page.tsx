@@ -23,6 +23,7 @@ import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import {
   useDeleteInteractionMutation,
@@ -145,6 +146,7 @@ export function InteractionDetailPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const interactionQuery = useInteractionQuery(id);
+  const meQuery = useMeQuery();
   const updateMutation = useUpdateInteractionMutation(id);
   const deleteMutation = useDeleteInteractionMutation();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
@@ -176,6 +178,7 @@ export function InteractionDetailPage() {
   const avatarByName = new Map(
     (assignableUsersQuery.data ?? []).map((user) => [user.name, user.avatarUrl] as const),
   );
+  const isOwnInteraction = interaction.createdById === meQuery.data?.id;
 
   function handleDelete() {
     deleteMutation.mutate(id, { onSuccess: () => navigate('/gorusmeler') });
@@ -217,26 +220,30 @@ export function InteractionDetailPage() {
               <Mail size={18} />
             </button>
           </Tooltip>
-          <Tooltip content={tr.crm.interactions.editTooltip}>
-            <button
-              type="button"
-              onClick={() => navigate(`/gorusmeler/duzenle/${id}`)}
-              aria-label={tr.crm.interactions.editTooltip}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <Pencil size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.interactions.deleteTooltip}>
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              aria-label={tr.crm.interactions.deleteTooltip}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-[#ff5c5c] transition-colors hover:bg-[#141c33]"
-            >
-              <Trash2 size={18} />
-            </button>
-          </Tooltip>
+          {isOwnInteraction && (
+            <>
+              <Tooltip content={tr.crm.interactions.editTooltip}>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/gorusmeler/duzenle/${id}`)}
+                  aria-label={tr.crm.interactions.editTooltip}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
+                >
+                  <Pencil size={18} />
+                </button>
+              </Tooltip>
+              <Tooltip content={tr.crm.interactions.deleteTooltip}>
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  aria-label={tr.crm.interactions.deleteTooltip}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-[#ff5c5c] transition-colors hover:bg-[#141c33]"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </Tooltip>
+            </>
+          )}
           <Tooltip
             content={
               interaction.status === 'OPEN'
