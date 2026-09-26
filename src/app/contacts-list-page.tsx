@@ -156,6 +156,12 @@ export function ContactsListPage() {
       render: (c) => <ContactStatusSelect contact={c} />,
     },
     {
+      key: 'createdByName',
+      header: tr.crm.contacts.createdByColumn,
+      className: 'text-app-muted',
+      render: (c) => c.createdByName ?? '—',
+    },
+    {
       key: 'actions',
       header: tr.crm.contacts.actionsColumn,
       className: 'w-px',

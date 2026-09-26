@@ -29,6 +29,7 @@ const account: api.Account = {
   id: 'acc-1',
   name: 'Acme A.S.',
   taxNumber: null,
+  createdByName: null,
   taxOffice: null,
   sector: [],
   accountTypes: [],

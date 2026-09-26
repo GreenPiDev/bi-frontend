@@ -151,6 +151,12 @@ export function AccountsListPage() {
     },
     ...attributeColumns,
     {
+      key: 'createdByName',
+      header: tr.crm.accounts.createdByColumn,
+      className: 'text-app-muted',
+      render: (a) => a.createdByName ?? '—',
+    },
+    {
       key: 'actions',
       header: tr.crm.accounts.actionsColumn,
       className: 'w-px',

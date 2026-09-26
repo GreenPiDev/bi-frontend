@@ -94,6 +94,8 @@ export const tr = {
       'Hangi sayfanın hangi modüle bağlı olduğunu buradan eşleyebilir, modülleri kapatılabilir/her zaman açık olarak işaretleyebilirsiniz.',
     messages:
       'Şirket içi mesajlarınızın gelen/gönderilen kutusu. Bir mesajı bir projeye, teklife veya görüşmeye bağlayabilirsiniz.',
+    userStats:
+      'Bu kullanıcının sistemde oluşturduğu firma, kişi, görüşme, fırsat, teklif, proje ve sipariş sayılarını görüntüleyin. Salt okunur bir özet ekranıdır.',
   },
   health: {
     checking: 'Bağlantı kontrol ediliyor...',
@@ -508,6 +510,17 @@ export const tr = {
           submitting: 'Kaydediliyor...',
           success: 'Kullanıcının rolleri güncellendi.',
         },
+        statsPage: {
+          back: 'Kullanıcılara dön',
+          subtitle: 'Bu kullanıcının sistemde oluşturduğu kayıtların özeti (salt okunur).',
+          accountsLabel: 'Oluşturduğu Firmalar',
+          contactsLabel: 'Oluşturduğu Kişiler',
+          interactionsLabel: 'Oluşturduğu Görüşmeler',
+          opportunitiesLabel: 'Oluşturduğu Fırsatlar',
+          quotesLabel: 'Oluşturduğu Teklifler',
+          projectsLabel: 'Oluşturduğu Projeler',
+          purchaseOrdersLabel: 'Oluşturduğu Siparişler',
+        },
         credentialsResult: {
           createTitle: 'Kullanıcı Oluşturuldu',
           resetTitle: 'Yeni Şifre Üretildi',
@@ -839,6 +852,7 @@ export const tr = {
       emailColumn: 'E-posta',
       sectorColumn: 'Sektör',
       accountTypesColumn: 'Firma Türü',
+      createdByColumn: 'Oluşturan',
       deleteConfirm: 'Bu firmayı silmek istediğinize emin misiniz?',
       deleteError: 'Firma silinemedi.',
       deleteSuccess: 'Firma silindi.',
@@ -979,6 +993,7 @@ export const tr = {
       phoneColumn: 'Telefon',
       emailColumn: 'E-posta',
       statusColumn: 'Durum',
+      createdByColumn: 'Oluşturan',
       deleteConfirm: 'Bu kişiyi silmek istediğinize emin misiniz?',
       deleteError: 'Kişi silinemedi.',
       deleteSuccess: 'Kişi silindi.',

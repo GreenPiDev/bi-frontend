@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createUser,
+  getUserStats,
   listUsers,
   resetUserPassword,
   updateUserRole,
@@ -27,6 +28,14 @@ export function useCreateUserMutation() {
 export function useResetUserPasswordMutation() {
   return useMutation({
     mutationFn: (userId: string) => resetUserPassword(userId),
+  });
+}
+
+export function useUserStatsQuery(userId: string) {
+  return useQuery({
+    queryKey: ['user-stats', userId],
+    queryFn: () => getUserStats(userId),
+    enabled: !!userId,
   });
 }
 

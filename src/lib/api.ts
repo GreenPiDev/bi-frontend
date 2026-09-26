@@ -780,6 +780,7 @@ export interface Account {
   ownerId: string | null;
   missingCriticalFields: string[];
   customFields: Record<string, string> | null;
+  createdByName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -864,6 +865,7 @@ export interface Contact {
   ownerId: string | null;
   status: ContactStatus;
   lastContactedAt: string | null;
+  createdByName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -1252,6 +1254,23 @@ export function updateUserRole(userId: string, roleIds: string[]): Promise<SafeU
     method: 'PATCH',
     body: JSON.stringify({ roleIds }),
   });
+}
+
+export interface UserStats {
+  user: SafeUser;
+  counts: {
+    accounts: number;
+    contacts: number;
+    interactions: number;
+    opportunities: number;
+    quotes: number;
+    projects: number;
+    purchaseOrders: number;
+  };
+}
+
+export function getUserStats(userId: string): Promise<UserStats> {
+  return request(`/users/${userId}/stats`);
 }
 
 // --- Roller / Sayfa Yonetimi (dinamik RBAC) ---------------------------------

@@ -42,6 +42,7 @@ const quote: api.Quote = {
     id: 'acc-1',
     name: 'Acme A.S.',
     taxNumber: null,
+    createdByName: null,
     taxOffice: null,
     sector: [],
     accountTypes: [],

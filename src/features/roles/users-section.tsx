@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
@@ -222,6 +223,7 @@ function EditUserRolesModal({
 
 export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSectionProps) {
   const toast = useToast();
+  const navigate = useNavigate();
   const usersQuery = useUsersQuery();
   const resetPasswordMutation = useResetUserPasswordMutation();
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -332,6 +334,7 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
         data={usersQuery.data ?? []}
         keyField={(u) => u.id}
         isLoading={usersQuery.isPending}
+        onRowClick={(u) => navigate(`/settings/kullanicilar/${u.id}`)}
       />
 
       {inviteOpen && <AddUserModal roles={roles} onClose={() => setInviteOpen(false)} />}

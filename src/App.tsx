@@ -55,6 +55,7 @@ import { QuoteFormPage } from './app/quote-form-page';
 import { QuotesListPage } from './app/quotes-list-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
+import { UserStatsPage } from './app/user-stats-page';
 import { hasPermission } from './features/auth/permissions';
 import { useMeQuery } from './features/auth/use-auth';
 import { usePageAccessQuery } from './features/crm/use-page-access';
@@ -602,6 +603,16 @@ function App() {
             <ProtectedRoute>
               <PermissionRoute pageKey="settings" action="VIEW" redirectTo="/">
                 <SettingsPage />
+              </PermissionRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings/kullanicilar/:id"
+          element={
+            <ProtectedRoute>
+              <PermissionRoute pageKey="settings" action="VIEW" redirectTo="/">
+                <UserStatsPage />
               </PermissionRoute>
             </ProtectedRoute>
           }
