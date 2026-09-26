@@ -40,6 +40,7 @@ const MESSAGE = {
   relatedEntity: null,
   relatedEntityId: null,
   recipients: [{ id: 'rec-1', userId: 'user-me', kind: 'TO', readAt: '2026-01-01T11:00:00.000Z' }],
+  attachments: [],
   createdAt: '2026-01-01T10:00:00.000Z',
   updatedAt: '2026-01-01T10:00:00.000Z',
 } satisfies api.Message;

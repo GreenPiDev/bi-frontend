@@ -2,11 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMeQuery } from '../auth/use-auth';
 import {
   createMessage,
+  deleteUnattachedMessageFile,
   getConversation,
   listAssignableMessageUsers,
   listMessages,
   setConversationRead,
   setConversationStar,
+  uploadMessageAttachment,
   type ConversationDetail,
   type ConversationSummary,
   type CreateMessageInput,
@@ -166,6 +168,18 @@ export function useSetConversationStarMutation() {
         queryKey: ['messages', 'conversation', conversationId],
       });
     },
+  });
+}
+
+export function useUploadMessageAttachmentMutation() {
+  return useMutation({
+    mutationFn: (file: File) => uploadMessageAttachment(file),
+  });
+}
+
+export function useDeleteUnattachedMessageFileMutation() {
+  return useMutation({
+    mutationFn: (fileKey: string) => deleteUnattachedMessageFile(fileKey),
   });
 }
 

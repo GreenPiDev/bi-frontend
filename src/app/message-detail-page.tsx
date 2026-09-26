@@ -1,9 +1,10 @@
-import { ArrowLeft, ChevronDown, ChevronUp, Link2, Star } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Link2, Paperclip, Star } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { useMeQuery } from '../features/auth/use-auth';
+import { formatFileSize } from '../features/crm/format-file-size';
 import { MessageComposeForm } from '../features/crm/message-compose-form';
 import { RELATED_ENTITY_PATH } from '../features/crm/message-related-entity-paths';
 import {
@@ -73,6 +74,29 @@ function ConversationMessageItem({
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-app-text">
             {message.body}
           </p>
+          {message.attachments.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-app-muted">
+                {tr.crm.messages.detail.attachmentsLabel}
+              </p>
+              <ul className="mt-1 flex flex-col gap-1">
+                {message.attachments.map((attachment) => (
+                  <li key={attachment.id}>
+                    <a
+                      href={attachment.url ?? undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={tr.crm.messages.detail.downloadAttachmentAria}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-app-border bg-app-bg-muted px-2.5 py-1 text-sm text-app-primary hover:underline"
+                    >
+                      <Paperclip size={14} />
+                      {attachment.fileName} ({formatFileSize(attachment.sizeBytes)})
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,11 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExternalLink } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { ExternalLink, Paperclip, X } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { formatFileSize } from './format-file-size';
 import { getRelatedEntityDetailPath } from './message-related-entity-paths';
 import { messageComposeSchema, type MessageComposeFormValues } from './schemas';
 import { useInteractionQuery, useInteractionsQuery } from './use-interactions';
-import { useAssignableMessageUsersQuery, useCreateMessageMutation } from './use-messages';
+import {
+  useAssignableMessageUsersQuery,
+  useCreateMessageMutation,
+  useDeleteUnattachedMessageFileMutation,
+  useUploadMessageAttachmentMutation,
+} from './use-messages';
 import { useProjectQuery, useProjectsQuery } from './use-projects';
 import { useQuoteQuery, useQuotesQuery } from './use-quotes';
 import { Button } from '../../components/ui/button';
@@ -15,8 +21,21 @@ import { TextareaField } from '../../components/ui/textarea-field';
 import { TextField } from '../../components/ui/text-field';
 import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
-import { ApiError } from '../../lib/api';
+import { ApiError, type UploadedMessageAttachment } from '../../lib/api';
 import { tr } from '../../i18n/tr';
+
+const ACCEPTED_ATTACHMENT_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+];
+const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_ATTACHMENTS = 5;
 
 interface MessageComposeFormProps {
   /** 'new': her zaman yeni bir konusma baslatir (Yeni Mesaj modali).
@@ -46,6 +65,11 @@ export function MessageComposeForm({
   const toast = useToast();
   const assignableUsersQuery = useAssignableMessageUsersQuery();
   const createMutation = useCreateMessageMutation();
+  const uploadAttachmentMutation = useUploadMessageAttachmentMutation();
+  const deleteAttachmentMutation = useDeleteUnattachedMessageFileMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<UploadedMessageAttachment[]>([]);
+  const [uploadingNames, setUploadingNames] = useState<string[]>([]);
 
   const {
     register,
@@ -176,6 +200,44 @@ export function MessageComposeForm({
   const relatedEntityId = watch('relatedEntityId');
   const relatedEntityDetailPath = getRelatedEntityDetailPath(relatedEntity, relatedEntityId);
 
+  async function handleFilesSelected(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = '';
+    if (files.length === 0) return;
+    if (attachments.length + uploadingNames.length + files.length > MAX_ATTACHMENTS) {
+      toast.error(tr.crm.messages.form.tooMany);
+      return;
+    }
+    for (const file of files) {
+      if (!ACCEPTED_ATTACHMENT_TYPES.includes(file.type)) {
+        toast.error(tr.crm.messages.form.unsupportedType);
+        continue;
+      }
+      if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+        toast.error(tr.crm.messages.form.tooLarge);
+        continue;
+      }
+      setUploadingNames((prev) => [...prev, file.name]);
+      try {
+        const uploaded = await uploadAttachmentMutation.mutateAsync(file);
+        setAttachments((prev) => [...prev, uploaded]);
+      } catch (error) {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.messages.form.uploadFailed);
+      } finally {
+        setUploadingNames((prev) => {
+          const index = prev.indexOf(file.name);
+          if (index === -1) return prev;
+          return [...prev.slice(0, index), ...prev.slice(index + 1)];
+        });
+      }
+    }
+  }
+
+  function handleRemoveAttachment(attachment: UploadedMessageAttachment) {
+    setAttachments((prev) => prev.filter((a) => a.fileKey !== attachment.fileKey));
+    deleteAttachmentMutation.mutate(attachment.fileKey);
+  }
+
   function onSubmit(values: MessageComposeFormValues) {
     if (isNewConversation && !values.subject?.trim()) {
       setError('subject', { message: 'Konu gereklidir.' });
@@ -187,6 +249,7 @@ export function MessageComposeForm({
         body: values.body,
         toUserIds: values.toUserIds,
         ccUserIds: values.ccUserIds ?? [],
+        attachments: attachments.length > 0 ? attachments : undefined,
         ...(isNewConversation
           ? {
               subject: values.subject,
@@ -265,6 +328,59 @@ export function MessageComposeForm({
         error={errors.body?.message}
         {...register('body')}
       />
+      <div>
+        <label className="mb-1 block text-sm font-medium text-app-text">
+          {tr.crm.messages.form.attachmentsLabel}
+        </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept={ACCEPTED_ATTACHMENT_TYPES.join(',')}
+          className="hidden"
+          onChange={handleFilesSelected}
+        />
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={attachments.length + uploadingNames.length >= MAX_ATTACHMENTS}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Paperclip size={16} className="mr-1.5 inline" />
+          {tr.crm.messages.form.attachButton}
+        </Button>
+        {(attachments.length > 0 || uploadingNames.length > 0) && (
+          <ul className="mt-2 flex flex-col gap-1">
+            {attachments.map((attachment) => (
+              <li
+                key={attachment.fileKey}
+                className="flex items-center justify-between gap-2 rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-sm text-app-text"
+              >
+                <span className="truncate">
+                  {attachment.fileName} ({formatFileSize(attachment.sizeBytes)})
+                </span>
+                <button
+                  type="button"
+                  aria-label={tr.crm.messages.form.removeAttachmentAria}
+                  onClick={() => handleRemoveAttachment(attachment)}
+                  className="text-app-muted hover:text-app-text"
+                >
+                  <X size={14} />
+                </button>
+              </li>
+            ))}
+            {uploadingNames.map((name) => (
+              <li
+                key={name}
+                className="flex items-center gap-2 rounded-lg border border-app-border bg-app-bg-muted px-3 py-1.5 text-sm text-app-muted"
+              >
+                <span className="truncate">{name}</span>
+                <span>— {tr.crm.messages.form.uploadingLabel}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
       {isNewConversation && (
         <>
           <Select
@@ -321,7 +437,7 @@ export function MessageComposeForm({
             {tr.crm.messages.form.cancel}
           </Button>
         )}
-        <Button type="submit" disabled={createMutation.isPending}>
+        <Button type="submit" disabled={createMutation.isPending || uploadingNames.length > 0}>
           {createMutation.isPending ? tr.crm.messages.form.submitting : tr.crm.messages.form.submit}
         </Button>
       </div>

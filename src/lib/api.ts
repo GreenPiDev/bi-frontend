@@ -2117,6 +2117,14 @@ export interface MessageRecipient {
   readAt: string | null;
 }
 
+export interface MessageAttachment {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  url: string | null;
+}
+
 export interface Message {
   id: string;
   conversationId: string;
@@ -2127,8 +2135,18 @@ export interface Message {
   relatedEntity: MessageRelatedEntity | null;
   relatedEntityId: string | null;
   recipients: MessageRecipient[];
+  attachments: MessageAttachment[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** POST /messages/attachments'in donusu - mesaj olusturulmadan once yuklenip
+ * anahtari CreateMessageInput.attachments'ta referans verilir. */
+export interface UploadedMessageAttachment {
+  fileKey: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
 }
 
 export interface ConversationSummary {
@@ -2161,6 +2179,7 @@ export interface CreateMessageInput {
   relatedEntity?: MessageRelatedEntity;
   relatedEntityId?: string;
   conversationId?: string;
+  attachments?: UploadedMessageAttachment[];
 }
 
 export function listMessages(
@@ -2196,6 +2215,20 @@ export function getConversation(conversationId: string): Promise<ConversationDet
 
 export function createMessage(input: CreateMessageInput): Promise<Message> {
   return request('/messages', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function uploadMessageAttachment(file: File): Promise<UploadedMessageAttachment> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/messages/attachments', { method: 'POST', body: formData });
+}
+
+/** Kullanici mesaji gondermeden vazgecip eki kaldirirsa, R2'de yetim dosya
+ * kalmamasi icin temizlik. */
+export function deleteUnattachedMessageFile(fileKey: string): Promise<void> {
+  return request(`/messages/attachments?key=${encodeURIComponent(fileKey)}`, {
+    method: 'DELETE',
+  });
 }
 
 export function setConversationRead(conversationId: string, read = true): Promise<void> {

@@ -49,6 +49,7 @@ describe('MessagingWidget', () => {
       relatedEntity: null,
       relatedEntityId: null,
       recipients: [{ id: 'rec-1', userId: 'user-me', kind: 'TO', readAt: null }],
+      attachments: [],
       createdAt: '2026-01-01T10:00:00.000Z',
       updatedAt: '2026-01-01T10:00:00.000Z',
     } satisfies api.Message;
@@ -151,6 +152,7 @@ describe('MessagingWidget', () => {
       relatedEntity: 'QUOTE' as const,
       relatedEntityId: 'quote-1',
       recipients: [{ id: 'rec-2', userId: 'user-me', kind: 'TO' as const, readAt: null }],
+      attachments: [],
       createdAt: '2026-01-02T10:00:00.000Z',
       updatedAt: '2026-01-02T10:00:00.000Z',
     } satisfies api.Message;

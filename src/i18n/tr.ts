@@ -1891,6 +1891,14 @@ export const tr = {
         submitting: 'Gönderiliyor...',
         cancel: 'Vazgeç',
         createSuccess: 'Mesaj gönderildi.',
+        attachmentsLabel: 'Dosya Ekle',
+        attachButton: 'Dosya Ekle',
+        uploadingLabel: 'Yükleniyor...',
+        removeAttachmentAria: 'Eki kaldır',
+        unsupportedType: 'Sadece PDF, Word, Excel veya JPEG/PNG/WEBP formatında dosya eklenebilir.',
+        tooLarge: "Dosya boyutu 10 MB'ı aşamaz.",
+        tooMany: 'En fazla 5 dosya eklenebilir.',
+        uploadFailed: 'Dosya yüklenemedi.',
       },
       detail: {
         back: 'Mesajlara dön',
@@ -1909,6 +1917,8 @@ export const tr = {
         markUnread: 'Okunmadı yap',
         starAria: 'Yıldızla',
         unstarAria: 'Yıldızı kaldır',
+        attachmentsLabel: 'Ekler',
+        downloadAttachmentAria: 'Eki indir',
       },
       widget: {
         title: 'Mesajlaşma',
