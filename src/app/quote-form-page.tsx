@@ -628,17 +628,6 @@ export function QuoteFormPage() {
                     <span>{currency.format(summaryGrandTotal)}</span>
                   </div>
                 </div>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending
-                      ? tr.crm.quotes.form.submitting
-                      : tr.crm.quotes.form.submit}
-                  </Button>
-                  <Button type="button" variant="secondary" onClick={() => navigate('/teklifler')}>
-                    {tr.crm.quotes.form.cancel}
-                  </Button>
-                </div>
               </div>
             </aside>
           </div>
@@ -699,6 +688,20 @@ export function QuoteFormPage() {
                 />
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+              {createMutation.isPending ? tr.crm.quotes.form.submitting : tr.crm.quotes.form.submit}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              className="w-full border border-white"
+              onClick={() => navigate('/teklifler')}
+            >
+              {tr.crm.quotes.form.cancel}
+            </Button>
           </div>
         </form>
       </div>
