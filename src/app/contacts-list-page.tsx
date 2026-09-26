@@ -133,6 +133,12 @@ export function ContactsListPage() {
       render: (c) => c.account?.name ?? tr.crm.contacts.noAccount,
     },
     {
+      key: 'department',
+      header: tr.crm.contacts.departmentColumn,
+      className: 'text-app-muted',
+      render: (c) => c.department ?? '—',
+    },
+    {
       key: 'phone',
       header: tr.crm.contacts.phoneColumn,
       className: 'text-app-muted',

@@ -23,9 +23,9 @@ import {
   useUpdateAccountMutation,
 } from '../features/crm/use-accounts';
 import { useCreateContactMutation } from '../features/crm/use-contacts';
-import { useDepartmentOptionsQuery } from '../features/crm/use-department-options';
+import { DepartmentSelect } from '../features/crm/department-select';
 import { SectorMultiSelect } from '../features/crm/sector-multi-select';
-import { useTitleOptionsQuery } from '../features/crm/use-title-options';
+import { TitleSelect } from '../features/crm/title-select';
 import { LandlineField } from '../features/crm/landline-field';
 import { ApiError, type AccountInput, type AccountType } from '../lib/api';
 import { TURKISH_CITIES } from '../lib/turkish-cities';
@@ -46,8 +46,6 @@ export function AccountFormPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const accountQuery = useAccountQuery(id ?? '');
-  const departmentOptionsQuery = useDepartmentOptionsQuery();
-  const titleOptionsQuery = useTitleOptionsQuery();
   const createMutation = useCreateAccountMutation();
   const updateMutation = useUpdateAccountMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -356,18 +354,10 @@ export function AccountFormPage() {
                   name="contactDepartment"
                   control={control}
                   render={({ field }) => (
-                    <Autocomplete
-                      label={tr.crm.accounts.form.contactDepartmentLabel}
-                      placeholder={tr.crm.accounts.form.contactDepartmentPlaceholder}
+                    <DepartmentSelect
                       value={field.value ?? ''}
                       onChange={field.onChange}
-                      options={(departmentOptionsQuery.data ?? []).map((option) => option.label)}
                       error={errors.contactDepartment?.message}
-                      hint={
-                        (departmentOptionsQuery.data?.length ?? 0) > 0
-                          ? tr.crm.accounts.form.contactDepartmentHintRestricted
-                          : tr.crm.accounts.form.contactDepartmentHintFree
-                      }
                     />
                   )}
                 />
@@ -375,18 +365,10 @@ export function AccountFormPage() {
                   name="contactTitle"
                   control={control}
                   render={({ field }) => (
-                    <Autocomplete
-                      label={tr.crm.accounts.form.contactTitleLabel}
-                      placeholder={tr.crm.accounts.form.contactTitlePlaceholder}
+                    <TitleSelect
                       value={field.value ?? ''}
                       onChange={field.onChange}
-                      options={(titleOptionsQuery.data ?? []).map((option) => option.label)}
                       error={errors.contactTitle?.message}
-                      hint={
-                        (titleOptionsQuery.data?.length ?? 0) > 0
-                          ? tr.crm.accounts.form.contactTitleHintRestricted
-                          : tr.crm.accounts.form.contactTitleHintFree
-                      }
                     />
                   )}
                 />
