@@ -12,6 +12,7 @@ import { TextField } from '../components/ui/text-field';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
 import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
+import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
   useCreateProductMutation,
@@ -32,6 +33,7 @@ export function ProductFormPage() {
   const productQuery = useProductQuery(id ?? '');
   const productListsQuery = useProductListsQuery();
   const categoryOptionsQuery = useProductCategoryOptionsQuery();
+  const brandOptionsQuery = useBrandOptionsQuery();
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -65,6 +67,7 @@ export function ProductFormPage() {
         currency: productQuery.data.currency,
         description: productQuery.data.description ?? undefined,
         category: productQuery.data.category ?? undefined,
+        brand: productQuery.data.brand ?? undefined,
         costPrice: productQuery.data.costPrice ?? undefined,
       });
     }
@@ -93,6 +96,7 @@ export function ProductFormPage() {
       currency: values.currency,
       description: values.description || null,
       category: values.category || null,
+      brand: values.brand || null,
       costPrice:
         values.costPrice === undefined || values.costPrice === '' ? null : Number(values.costPrice),
     };
@@ -174,6 +178,25 @@ export function ProductFormPage() {
                   (categoryOptionsQuery.data?.length ?? 0) > 0
                     ? tr.crm.products.form.categoryHintRestricted
                     : tr.crm.products.form.categoryHintFree
+                }
+              />
+            )}
+          />
+          <Controller
+            name="brand"
+            control={control}
+            render={({ field }) => (
+              <Autocomplete
+                label={tr.crm.products.form.brandLabel}
+                placeholder={tr.crm.products.form.brandPlaceholder}
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                options={(brandOptionsQuery.data ?? []).map((option) => option.label)}
+                error={errors.brand?.message}
+                hint={
+                  (brandOptionsQuery.data?.length ?? 0) > 0
+                    ? tr.crm.products.form.brandHintRestricted
+                    : tr.crm.products.form.brandHintFree
                 }
               />
             )}

@@ -598,6 +598,20 @@ export const tr = {
         editSuccess: 'Kategori güncellendi.',
         deleteSuccess: 'Kategori silindi.',
       },
+      brandOptions: {
+        title: 'Markalar',
+        subtitle: 'Ürün formunda seçilebilecek marka listesi.',
+        addPlaceholder: 'Yeni marka adı',
+        addButton: 'Ekle',
+        empty: 'Henüz marka tanımlanmadı. Ürün formunda serbest metin kabul edilir.',
+        editButton: 'Düzenle',
+        saveButton: 'Kaydet',
+        cancelButton: 'Vazgeç',
+        deleteButton: 'Sil',
+        addSuccess: 'Marka eklendi.',
+        editSuccess: 'Marka güncellendi.',
+        deleteSuccess: 'Marka silindi.',
+      },
       paymentMethodOptions: {
         title: 'Ödeme Yöntemleri',
         subtitle:
@@ -1427,6 +1441,7 @@ export const tr = {
       skuColumn: 'SKU',
       unitColumn: 'Birim',
       categoryColumn: 'Kategori',
+      brandColumn: 'Marka',
       maxDiscountColumn: 'Azami İskonto',
       searchPlaceholder: 'Ürün ara...',
       actionsColumn: 'Aksiyonlar',
@@ -1442,6 +1457,7 @@ export const tr = {
         skuLabel: 'SKU',
         unitLabel: 'Birim',
         categoryLabel: 'Kategori',
+        brandLabel: 'Marka',
         descriptionLabel: 'Açıklama',
         priceLabel: 'Fiyat',
         costPriceLabel: 'Maliyet',
@@ -1467,6 +1483,11 @@ export const tr = {
           'Opsiyonel. Henüz tanımlı kategori olmadığı için serbest metin girebilirsiniz.',
         categoryHintRestricted:
           'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan kategorilerden biri seçilebilir.',
+        brandLabel: 'Marka',
+        brandPlaceholder: 'Marka seçin veya yazın',
+        brandHintFree: 'Opsiyonel. Henüz tanımlı marka olmadığı için serbest metin girebilirsiniz.',
+        brandHintRestricted:
+          'Opsiyonel. Sadece Ayarlar → Tanımlamalar sayfasında tanımlanan markalardan biri seçilebilir.',
         descriptionLabel: 'Açıklama',
         descriptionHint: 'Ürün hakkında kısa bir açıklama (opsiyonel).',
         priceLabel: 'Fiyat',

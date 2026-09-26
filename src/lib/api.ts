@@ -1030,6 +1030,34 @@ export function deleteProductCategoryOption(id: string): Promise<void> {
   return request(`/product-categories/${id}`, { method: 'DELETE' });
 }
 
+export interface BrandOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listBrandOptions(): Promise<BrandOption[]> {
+  return request('/brand-options');
+}
+
+export function createBrandOption(label: string): Promise<BrandOption> {
+  return request('/brand-options', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updateBrandOption(id: string, label: string): Promise<BrandOption> {
+  return request(`/brand-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deleteBrandOption(id: string): Promise<void> {
+  return request(`/brand-options/${id}`, { method: 'DELETE' });
+}
+
 export interface PaymentMethodOption {
   id: string;
   label: string;
@@ -1683,6 +1711,7 @@ export interface Product {
   attributes: Record<string, string> | null;
   description: string | null;
   category: string | null;
+  brand: string | null;
   costPrice: string | null;
   createdAt: string;
   updatedAt: string;
@@ -1699,6 +1728,7 @@ export interface ProductInput {
   currency?: string;
   description?: string | null;
   category?: string | null;
+  brand?: string | null;
   costPrice?: number | null;
 }
 

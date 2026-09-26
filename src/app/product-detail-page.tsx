@@ -29,6 +29,7 @@ export function ProductDetailPage() {
     { label: tr.crm.products.detail.skuLabel, value: product.sku ?? '—' },
     { label: tr.crm.products.detail.unitLabel, value: product.unit },
     { label: tr.crm.products.detail.categoryLabel, value: product.category ?? '—' },
+    { label: tr.crm.products.detail.brandLabel, value: product.brand ?? '—' },
     {
       label: tr.crm.products.detail.priceLabel,
       value: product.price ? `${product.price} ${product.currency}` : '—',

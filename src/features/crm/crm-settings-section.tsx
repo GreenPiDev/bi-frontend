@@ -36,6 +36,12 @@ import {
   useUpdateProductCategoryOptionMutation,
 } from './use-product-categories';
 import {
+  useBrandOptionsQuery,
+  useCreateBrandOptionMutation,
+  useDeleteBrandOptionMutation,
+  useUpdateBrandOptionMutation,
+} from './use-brand-options';
+import {
   useCreateSectorOptionMutation,
   useDeleteSectorOptionMutation,
   useSectorOptionsQuery,
@@ -455,6 +461,29 @@ function ProductCategoryOptionsManager() {
       createMutation={useCreateProductCategoryOptionMutation()}
       updateMutation={useUpdateProductCategoryOptionMutation()}
       deleteMutation={useDeleteProductCategoryOptionMutation()}
+    />
+  );
+}
+
+function BrandOptionsManager() {
+  return (
+    <OptionListManager
+      title={tr.settings.crm.brandOptions.title}
+      subtitle={tr.settings.crm.brandOptions.subtitle}
+      addPlaceholder={tr.settings.crm.brandOptions.addPlaceholder}
+      addButtonLabel={tr.settings.crm.brandOptions.addButton}
+      emptyText={tr.settings.crm.brandOptions.empty}
+      editButtonLabel={tr.settings.crm.brandOptions.editButton}
+      saveButtonLabel={tr.settings.crm.brandOptions.saveButton}
+      cancelButtonLabel={tr.settings.crm.brandOptions.cancelButton}
+      deleteButtonLabel={tr.settings.crm.brandOptions.deleteButton}
+      addSuccessMessage={tr.settings.crm.brandOptions.addSuccess}
+      editSuccessMessage={tr.settings.crm.brandOptions.editSuccess}
+      deleteSuccessMessage={tr.settings.crm.brandOptions.deleteSuccess}
+      optionsQuery={useBrandOptionsQuery()}
+      createMutation={useCreateBrandOptionMutation()}
+      updateMutation={useUpdateBrandOptionMutation()}
+      deleteMutation={useDeleteBrandOptionMutation()}
     />
   );
 }
@@ -885,6 +914,9 @@ export function CrmSettingsSection() {
       </h2>
       <div className="border-t border-app-border">
         <ProductCategoryOptionsManager />
+      </div>
+      <div className="mt-3 border-t border-app-border">
+        <BrandOptionsManager />
       </div>
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">

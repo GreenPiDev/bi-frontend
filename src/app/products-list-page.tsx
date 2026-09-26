@@ -89,6 +89,12 @@ export function ProductsListContent() {
       render: (p) => p.category ?? '—',
     },
     {
+      key: 'brand',
+      header: tr.crm.products.brandColumn,
+      className: 'text-app-muted',
+      render: (p) => p.brand ?? '—',
+    },
+    {
       key: 'maxDiscountPct',
       header: tr.crm.products.maxDiscountColumn,
       className: 'text-app-muted',

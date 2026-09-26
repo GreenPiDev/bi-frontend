@@ -60,6 +60,12 @@ export function ProductListFormPage() {
       className: 'text-app-muted',
       render: (p) => p.unit,
     },
+    {
+      key: 'brand',
+      header: tr.crm.products.brandColumn,
+      className: 'text-app-muted',
+      render: (p) => p.brand ?? '—',
+    },
     ...attributeKeys.map((key) => ({
       key: `attr:${key}`,
       header: key,

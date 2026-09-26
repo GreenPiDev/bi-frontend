@@ -212,6 +212,7 @@ export const productFormSchema = z.object({
   currency: z.string().min(1, 'Para birimi gerekli.').max(3),
   description: z.string().max(2000).optional(),
   category: z.string().max(100).optional(),
+  brand: z.string().max(100).optional(),
   costPrice: z.string().optional(),
 });
 
