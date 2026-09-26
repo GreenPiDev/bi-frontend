@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useDatasetsQuery, useDeleteDatasetMutation } from '../features/datasets/use-datasets';
 import { ApiError, type DatasetSummary } from '../lib/api';
@@ -64,25 +64,18 @@ export function DatasetsListPage() {
       required: true,
       render: (dataset) => (
         <div className="flex items-center gap-1">
-          <Tooltip
-            content={
+          <IconActionButton
+            icon={Trash2}
+            variant="danger"
+            tooltip={
               dataset.sourceKind === 'CRM_TABLE'
                 ? tr.datasets.deleteReadonlyTooltip
                 : tr.datasets.deleteTooltip
             }
-          >
-            <button
-              type="button"
-              disabled={dataset.sourceKind === 'CRM_TABLE'}
-              onClick={(event) => {
-                event.stopPropagation();
-                setDeletingDataset(dataset);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-app-muted"
-            >
-              <Trash2 size={16} />
-            </button>
-          </Tooltip>
+            disabled={dataset.sourceKind === 'CRM_TABLE'}
+            onClick={() => setDeletingDataset(dataset)}
+            className="disabled:hover:bg-transparent disabled:hover:text-app-muted"
+          />
         </div>
       ),
     },

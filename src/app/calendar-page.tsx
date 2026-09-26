@@ -5,9 +5,9 @@ import { AppShell } from './app-shell';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
 import { CalendarEventFormModal } from './calendar-event-form-modal';
 import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import {
   useCalendarEventsQuery,
@@ -126,44 +126,33 @@ export function CalendarPage() {
           <p className="mt-1 text-sm text-app-muted">{tr.crm.calendar.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <Tooltip content={tr.crm.calendar.monthView}>
-            <button
-              type="button"
-              onClick={() => setViewMode('month')}
-              aria-label={tr.crm.calendar.monthView}
-              aria-pressed={viewMode === 'month'}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <CalendarDays size={18} />
-              {viewMode === 'month' && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-app-success" />
-              )}
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.calendar.listView}>
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              aria-label={tr.crm.calendar.listView}
-              aria-pressed={viewMode === 'list'}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <List size={18} />
-              {viewMode === 'list' && (
-                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-app-success" />
-              )}
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.calendar.newButton}>
-            <button
-              type="button"
-              onClick={() => openCreateModal()}
-              aria-label={tr.crm.calendar.newButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-            >
-              <Plus size={18} strokeWidth={3} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={CalendarDays}
+            tooltip={tr.crm.calendar.monthView}
+            aria-pressed={viewMode === 'month'}
+            onClick={() => setViewMode('month')}
+          >
+            {viewMode === 'month' && (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-app-success" />
+            )}
+          </CircleIconButton>
+          <CircleIconButton
+            icon={List}
+            tooltip={tr.crm.calendar.listView}
+            aria-pressed={viewMode === 'list'}
+            onClick={() => setViewMode('list')}
+          >
+            {viewMode === 'list' && (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-app-success" />
+            )}
+          </CircleIconButton>
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.calendar.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => openCreateModal()}
+          />
         </div>
       </div>
 
@@ -178,7 +167,7 @@ export function CalendarPage() {
                 setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))
               }
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={20} />
             </button>
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-app-text capitalize">{monthLabel}</span>
@@ -194,7 +183,7 @@ export function CalendarPage() {
                 setMonthCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))
               }
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={20} />
             </button>
           </div>
 

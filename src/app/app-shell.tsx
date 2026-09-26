@@ -300,7 +300,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
                   type="button"
                   onClick={() => navigate(path)}
                   className={clsx(
-                    'flex h-12 w-full cursor-pointer items-center whitespace-nowrap transition-colors duration-200',
+                    'flex h-10 w-full cursor-pointer items-center whitespace-nowrap transition-colors duration-200',
                     !isActive && 'hover:bg-app-brand/10 hover:text-app-text',
                     !isActive && hasUnread && 'text-app-danger',
                     !isActive && !hasUnread && 'text-app-muted',

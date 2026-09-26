@@ -8,6 +8,7 @@ import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
@@ -384,18 +385,15 @@ export function QuoteFormPage() {
       header: '',
       className: 'w-8 align-top',
       render: (row) => (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
+        <IconActionButton
+          icon={X}
+          tooltip={tr.crm.quotes.form.removeItem}
+          variant="danger"
+          onClick={() => {
             remove(row.index);
             if (editingIndex === row.index) setEditingIndex(null);
           }}
-          aria-label={tr.crm.quotes.form.removeItem}
-          className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-        >
-          <X size={14} />
-        </button>
+        />
       ),
     },
   ];

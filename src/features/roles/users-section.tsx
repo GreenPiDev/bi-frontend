@@ -1,13 +1,14 @@
-import { Plus } from 'lucide-react';
+import { KeyRound, Pencil, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { CircleIconButton } from '../../components/ui/circle-icon-button';
+import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Modal } from '../../components/ui/modal';
 import { MultiSelect } from '../../components/ui/multi-select';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
-import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type RoleView, type SafeUser } from '../../lib/api';
 import { tr } from '../../i18n/tr';
@@ -277,30 +278,20 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
             header: tr.settings.roles.users.actionsColumn,
             className: 'text-right',
             render: (u: SafeUser) => (
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-1">
                 {u.id !== currentUserId && (
-                  <Button
-                    type="button"
-                    variant="secondary"
+                  <IconActionButton
+                    icon={KeyRound}
+                    tooltip={tr.settings.roles.users.resetPasswordButton}
                     disabled={resetPasswordMutation.isPending}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleResetPassword(u);
-                    }}
-                  >
-                    {tr.settings.roles.users.resetPasswordButton}
-                  </Button>
+                    onClick={() => handleResetPassword(u)}
+                  />
                 )}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setEditingUser(u);
-                  }}
-                >
-                  {tr.settings.roles.users.editRolesButton}
-                </Button>
+                <IconActionButton
+                  icon={Pencil}
+                  tooltip={tr.settings.roles.users.editRolesButton}
+                  onClick={() => setEditingUser(u)}
+                />
               </div>
             ),
           } satisfies TableColumn<SafeUser>,
@@ -316,16 +307,13 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
           <p className="text-sm text-app-muted">{tr.settings.roles.users.subtitle}</p>
         </div>
         {isCompanyAdmin && (
-          <Tooltip content={tr.settings.roles.users.inviteButton}>
-            <button
-              type="button"
-              onClick={() => setInviteOpen(true)}
-              aria-label={tr.settings.roles.users.inviteButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-            >
-              <Plus size={18} strokeWidth={3} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.settings.roles.users.inviteButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => setInviteOpen(true)}
+          />
         )}
       </div>
 

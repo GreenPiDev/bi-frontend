@@ -3,6 +3,7 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/ui/button';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
+import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
 import { Tooltip } from '../../components/ui/tooltip';
@@ -610,29 +611,18 @@ function IbanOptionsManager() {
       header: '',
       className: 'w-16',
       render: (o) => (
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              startEdit(o);
-            }}
-            aria-label={tr.settings.crm.ibanOptions.editButton}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-full text-app-muted hover:bg-app-primary/10 hover:text-app-primary"
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleDelete(o.id);
-            }}
-            aria-label={tr.settings.crm.ibanOptions.deleteButton}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-full text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-          >
-            <X size={14} />
-          </button>
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.settings.crm.ibanOptions.editButton}
+            onClick={() => startEdit(o)}
+          />
+          <IconActionButton
+            icon={X}
+            tooltip={tr.settings.crm.ibanOptions.deleteButton}
+            variant="danger"
+            onClick={() => handleDelete(o.id)}
+          />
         </div>
       ),
     },

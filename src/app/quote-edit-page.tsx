@@ -5,6 +5,7 @@ import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
@@ -391,17 +392,12 @@ export function QuoteEditPage() {
       header: '',
       className: 'w-8 align-top',
       render: (row) => (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleRemoveItem(row.index);
-          }}
-          aria-label={tr.crm.quotes.form.removeItem}
-          className="rounded-lg p-1 text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
-        >
-          <X size={14} />
-        </button>
+        <IconActionButton
+          icon={X}
+          tooltip={tr.crm.quotes.form.removeItem}
+          variant="danger"
+          onClick={() => handleRemoveItem(row.index)}
+        />
       ),
     },
   ];

@@ -19,9 +19,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
@@ -210,60 +210,36 @@ export function InteractionDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <Tooltip content={tr.crm.interactions.detail.createMessageTooltip}>
-            <button
-              type="button"
-              onClick={() => setIsMessageModalOpen(true)}
-              aria-label={tr.crm.interactions.detail.createMessageTooltip}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <Mail size={18} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={Mail}
+            tooltip={tr.crm.interactions.detail.createMessageTooltip}
+            onClick={() => setIsMessageModalOpen(true)}
+          />
           {isOwnInteraction && (
             <>
-              <Tooltip content={tr.crm.interactions.editTooltip}>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/gorusmeler/duzenle/${id}`)}
-                  aria-label={tr.crm.interactions.editTooltip}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-                >
-                  <Pencil size={18} />
-                </button>
-              </Tooltip>
-              <Tooltip content={tr.crm.interactions.deleteTooltip}>
-                <button
-                  type="button"
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  aria-label={tr.crm.interactions.deleteTooltip}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-[#ff5c5c] transition-colors hover:bg-[#141c33]"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </Tooltip>
+              <CircleIconButton
+                icon={Pencil}
+                tooltip={tr.crm.interactions.editTooltip}
+                onClick={() => navigate(`/gorusmeler/duzenle/${id}`)}
+              />
+              <CircleIconButton
+                icon={Trash2}
+                tooltip={tr.crm.interactions.deleteTooltip}
+                variant="danger"
+                onClick={() => setIsDeleteModalOpen(true)}
+              />
             </>
           )}
-          <Tooltip
-            content={
+          <CircleIconButton
+            icon={interaction.status === 'OPEN' ? CheckCircle2 : RotateCcw}
+            tooltip={
               interaction.status === 'OPEN'
                 ? tr.crm.interactions.detail.closeButton
                 : tr.crm.interactions.detail.reopenButton
             }
-          >
-            <button
-              type="button"
-              onClick={handleToggleStatus}
-              aria-label={
-                interaction.status === 'OPEN'
-                  ? tr.crm.interactions.detail.closeButton
-                  : tr.crm.interactions.detail.reopenButton
-              }
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-[#2ee06a] transition-colors hover:bg-[#141c33]"
-            >
-              {interaction.status === 'OPEN' ? <CheckCircle2 size={18} /> : <RotateCcw size={18} />}
-            </button>
-          </Tooltip>
+            variant="success"
+            onClick={handleToggleStatus}
+          />
         </div>
       </div>
 

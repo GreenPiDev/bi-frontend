@@ -12,19 +12,23 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useAccountsQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
+import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Account } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -47,9 +51,11 @@ export function AccountsListPage() {
   const [from, setFrom] = useState('');
   const [lastNDaysInput, setLastNDaysInput] = useState('');
   const [notContactedDaysInput, setNotContactedDaysInput] = useState('');
+  const [createdById, setCreatedById] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState<Account | undefined>(undefined);
   const meQuery = useMeQuery();
+  const usersQuery = useUsersQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const notContactedDays = notContactedDaysInput ? Number(notContactedDaysInput) : undefined;
   const accountsQuery = useAccountsQuery({
@@ -58,10 +64,11 @@ export function AccountsListPage() {
     q: q || undefined,
     from: from || undefined,
     notContactedDays,
+    createdById: createdById || undefined,
   });
   const exportMutation = useExportEntityMutation('accounts');
   const deleteMutation = useDeleteAccountMutation();
-  const hasActiveFilter = Boolean(from) || Boolean(notContactedDays);
+  const hasActiveFilter = Boolean(from) || Boolean(notContactedDays) || Boolean(createdById);
 
   function handleConfirmDelete() {
     if (!deletingAccount) return;
@@ -163,30 +170,17 @@ export function AccountsListPage() {
       required: true,
       render: (a) => (
         <div className="flex items-center gap-1">
-          <Tooltip content={tr.crm.accounts.editTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                navigate(`/firmalar/duzenle/${a.id}`);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-            >
-              <Pencil size={16} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.accounts.deleteTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setDeletingAccount(a);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-            >
-              <Trash2 size={16} />
-            </button>
-          </Tooltip>
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.accounts.editTooltip}
+            onClick={() => navigate(`/firmalar/duzenle/${a.id}`)}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.accounts.deleteTooltip}
+            variant="danger"
+            onClick={() => setDeletingAccount(a)}
+          />
         </div>
       ),
     },
@@ -215,6 +209,7 @@ export function AccountsListPage() {
     setFrom('');
     setLastNDaysInput('');
     setNotContactedDaysInput('');
+    setCreatedById('');
   }
 
   return (
@@ -228,54 +223,38 @@ export function AccountsListPage() {
           <p className="mt-1 text-sm text-app-muted">{tr.crm.accounts.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <Tooltip content={tr.crm.accounts.filterButton}>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              aria-label={tr.crm.accounts.filterButton}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <ListFilter size={18} />
-              {hasActiveFilter && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
-              )}
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.accounts.exportButton}>
-            <button
-              type="button"
-              disabled={exportMutation.isPending}
-              onClick={() =>
-                exportMutation.mutate(undefined, {
-                  onSuccess: (blob) => downloadBlob(blob, 'firmalar.xlsx'),
-                })
-              }
-              aria-label={tr.crm.accounts.exportButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:opacity-50"
-            >
-              <Upload size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.accounts.importButton}>
-            <button
-              type="button"
-              onClick={() => navigate('/firmalar/ice-aktar')}
-              aria-label={tr.crm.accounts.importButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <Download size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.accounts.newButton}>
-            <button
-              type="button"
-              onClick={() => navigate('/firmalar/yeni')}
-              aria-label={tr.crm.accounts.newButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-            >
-              <Plus size={18} strokeWidth={3} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={ListFilter}
+            tooltip={tr.crm.accounts.filterButton}
+            onClick={() => setDrawerOpen(true)}
+          >
+            {hasActiveFilter && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+            )}
+          </CircleIconButton>
+          <CircleIconButton
+            icon={Upload}
+            tooltip={tr.crm.accounts.exportButton}
+            disabled={exportMutation.isPending}
+            onClick={() =>
+              exportMutation.mutate(undefined, {
+                onSuccess: (blob) => downloadBlob(blob, 'firmalar.xlsx'),
+              })
+            }
+            className="disabled:opacity-50"
+          />
+          <CircleIconButton
+            icon={Download}
+            tooltip={tr.crm.accounts.importButton}
+            onClick={() => navigate('/firmalar/ice-aktar')}
+          />
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.accounts.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => navigate('/firmalar/yeni')}
+          />
         </div>
       </div>
 
@@ -364,6 +343,21 @@ export function AccountsListPage() {
               onClear={() => {
                 setPage(1);
                 setNotContactedDaysInput('');
+              }}
+            />
+            <Select
+              label={tr.crm.accounts.filterDrawer.createdByLabel}
+              placeholder={tr.crm.accounts.filterDrawer.createdByPlaceholder}
+              value={createdById}
+              onChange={(event) => {
+                setPage(1);
+                setCreatedById(event.target.value);
+              }}
+              options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setCreatedById('');
               }}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>

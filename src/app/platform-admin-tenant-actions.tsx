@@ -1,9 +1,9 @@
 import { KeyRound } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { Modal } from '../components/ui/modal';
 import { TextField } from '../components/ui/text-field';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useResetTenantAdminPasswordMutation } from '../features/platform-admin/use-platform-admin';
 import { ApiError } from '../lib/api';
@@ -83,17 +83,12 @@ export function PlatformAdminTenantActions({
 
   return (
     <>
-      <Tooltip content={tr.platformAdmin.resetAdminPasswordTooltip}>
-        <button
-          type="button"
-          aria-label={tr.platformAdmin.resetAdminPasswordTooltip}
-          disabled={resetMutation.isPending}
-          onClick={handleResetPassword}
-          className="rounded-lg p-2 text-app-muted transition-colors hover:bg-app-bg hover:text-app-text disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <KeyRound size={16} />
-        </button>
-      </Tooltip>
+      <IconActionButton
+        icon={KeyRound}
+        tooltip={tr.platformAdmin.resetAdminPasswordTooltip}
+        disabled={resetMutation.isPending}
+        onClick={handleResetPassword}
+      />
       {result && (
         <ResetPasswordResultModal
           adminEmail={adminEmail}

@@ -1,7 +1,9 @@
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { CircleIconButton } from '../../components/ui/circle-icon-button';
+import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Modal } from '../../components/ui/modal';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { Tooltip } from '../../components/ui/tooltip';
@@ -78,16 +80,17 @@ export function RolesSettingsSection() {
             </Tooltip>
           ) : (
             <>
-              <Button
-                type="button"
-                variant="secondary"
+              <IconActionButton
+                icon={Pencil}
+                tooltip={tr.settings.roles.editButton}
                 onClick={() => setModalState({ mode: 'edit', role })}
-              >
-                {tr.settings.roles.editButton}
-              </Button>
-              <Button type="button" variant="danger" onClick={() => setRoleToDelete(role)}>
-                {tr.settings.roles.deleteButton}
-              </Button>
+              />
+              <IconActionButton
+                icon={Trash2}
+                tooltip={tr.settings.roles.deleteButton}
+                variant="danger"
+                onClick={() => setRoleToDelete(role)}
+              />
             </>
           )}
         </div>
@@ -104,16 +107,13 @@ export function RolesSettingsSection() {
             <p className="text-sm text-app-muted">{tr.settings.roles.subtitle}</p>
           </div>
           {isCompanyAdmin && (
-            <Tooltip content={tr.settings.roles.newRoleButton}>
-              <button
-                type="button"
-                onClick={() => setModalState({ mode: 'create' })}
-                aria-label={tr.settings.roles.newRoleButton}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-              >
-                <Plus size={18} strokeWidth={3} />
-              </button>
-            </Tooltip>
+            <CircleIconButton
+              icon={Plus}
+              tooltip={tr.settings.roles.newRoleButton}
+              variant="success"
+              strokeWidth={3}
+              onClick={() => setModalState({ mode: 'create' })}
+            />
           )}
         </div>
 

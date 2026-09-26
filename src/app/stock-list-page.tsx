@@ -3,6 +3,7 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
@@ -113,16 +114,11 @@ export function StockListContent() {
       className: 'w-px',
       required: true,
       render: (item) => (
-        <Tooltip content={tr.crm.stock.editTooltip}>
-          <button
-            type="button"
-            aria-label={tr.crm.stock.editTooltip}
-            onClick={() => setEditingId(item.id)}
-            className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-          >
-            <Pencil size={16} />
-          </button>
-        </Tooltip>
+        <IconActionButton
+          icon={Pencil}
+          tooltip={tr.crm.stock.editTooltip}
+          onClick={() => setEditingId(item.id)}
+        />
       ),
     },
   ];

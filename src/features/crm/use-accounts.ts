@@ -18,6 +18,7 @@ export function useAccountsQuery(
     sort?: string;
     from?: string;
     notContactedDays?: number;
+    createdById?: string;
   } = {},
 ) {
   return useQuery({

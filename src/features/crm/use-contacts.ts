@@ -19,6 +19,7 @@ export function useContactsQuery(
     accountId?: string;
     status?: ContactStatus;
     sort?: string;
+    createdById?: string;
   } = {},
 ) {
   return useQuery({

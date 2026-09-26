@@ -7,8 +7,8 @@ import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picke
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useDeleteProductMutation, useProductsQuery } from '../features/crm/use-products';
@@ -102,30 +102,17 @@ export function ProductsListContent() {
       required: true,
       render: (p) => (
         <div className="flex items-center gap-1">
-          <Tooltip content={tr.crm.products.editTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                navigate(`/urunler/duzenle/${p.id}`, { state: backState });
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-            >
-              <Pencil size={16} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.products.deleteTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setDeletingProduct(p);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-            >
-              <Trash2 size={16} />
-            </button>
-          </Tooltip>
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.products.editTooltip}
+            onClick={() => navigate(`/urunler/duzenle/${p.id}`, { state: backState })}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.products.deleteTooltip}
+            variant="danger"
+            onClick={() => setDeletingProduct(p)}
+          />
         </div>
       ),
     },

@@ -5,10 +5,11 @@ import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Table, type TableColumn } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useContactQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
 import { InteractionStatusSelect } from '../features/crm/interaction-status-select';
@@ -136,30 +137,17 @@ export function ContactDetailPage() {
       render: (interaction) =>
         interaction.createdById === meQuery.data?.id ? (
           <div className="flex items-center gap-1">
-            <Tooltip content={tr.crm.interactions.editTooltip}>
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  navigate(`/gorusmeler/duzenle/${interaction.id}`);
-                }}
-                className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-              >
-                <Pencil size={16} />
-              </button>
-            </Tooltip>
-            <Tooltip content={tr.crm.interactions.deleteTooltip}>
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setDeletingInteraction(interaction);
-                }}
-                className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-              >
-                <Trash2 size={16} />
-              </button>
-            </Tooltip>
+            <IconActionButton
+              icon={Pencil}
+              tooltip={tr.crm.interactions.editTooltip}
+              onClick={() => navigate(`/gorusmeler/duzenle/${interaction.id}`)}
+            />
+            <IconActionButton
+              icon={Trash2}
+              tooltip={tr.crm.interactions.deleteTooltip}
+              variant="danger"
+              onClick={() => setDeletingInteraction(interaction)}
+            />
           </div>
         ) : null,
     },
@@ -204,26 +192,17 @@ export function ContactDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <Tooltip content={tr.crm.contacts.editButton}>
-            <button
-              type="button"
-              onClick={() => navigate(`/kisiler/duzenle/${id}`)}
-              aria-label={tr.crm.contacts.editButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <Pencil size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.contacts.deleteButton}>
-            <button
-              type="button"
-              onClick={handleDelete}
-              aria-label={tr.crm.contacts.deleteButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-[#ff5c5c] transition-colors hover:bg-[#141c33]"
-            >
-              <Trash2 size={18} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={Pencil}
+            tooltip={tr.crm.contacts.editButton}
+            onClick={() => navigate(`/kisiler/duzenle/${id}`)}
+          />
+          <CircleIconButton
+            icon={Trash2}
+            tooltip={tr.crm.contacts.deleteButton}
+            variant="danger"
+            onClick={handleDelete}
+          />
         </div>
       </div>
 

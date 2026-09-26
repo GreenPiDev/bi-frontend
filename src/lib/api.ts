@@ -820,6 +820,7 @@ export function listAccounts(
     sort?: string;
     from?: string;
     notContactedDays?: number;
+    createdById?: string;
   } = {},
 ): Promise<PagedResult<Account>> {
   const query = new URLSearchParams();
@@ -829,6 +830,7 @@ export function listAccounts(
   if (params.sort) query.set('sort', params.sort);
   if (params.from) query.set('from', params.from);
   if (params.notContactedDays) query.set('notContactedDays', String(params.notContactedDays));
+  if (params.createdById) query.set('createdById', params.createdById);
   const qs = query.toString();
   return request(`/accounts${qs ? `?${qs}` : ''}`);
 }
@@ -891,6 +893,7 @@ export function listContacts(
     accountId?: string;
     status?: ContactStatus;
     sort?: string;
+    createdById?: string;
   } = {},
 ): Promise<PagedResult<Contact>> {
   const query = new URLSearchParams();
@@ -900,6 +903,7 @@ export function listContacts(
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   if (params.sort) query.set('sort', params.sort);
+  if (params.createdById) query.set('createdById', params.createdById);
   const qs = query.toString();
   return request(`/contacts${qs ? `?${qs}` : ''}`);
 }

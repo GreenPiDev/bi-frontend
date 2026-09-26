@@ -869,6 +869,8 @@ export const tr = {
         lastNDaysPlaceholder: 'Örn. 10',
         notContactedDaysLabel: 'Son kaç gündür görüşme yapılmayanlar',
         notContactedDaysPlaceholder: 'Örn. 7',
+        createdByLabel: 'Oluşturan',
+        createdByPlaceholder: 'Tüm kullanıcılar',
         apply: 'Uygula',
         reset: 'Sıfırla',
       },
@@ -1013,6 +1015,8 @@ export const tr = {
         accountPlaceholder: 'Tüm firmalar',
         statusLabel: 'Durum',
         statusPlaceholder: 'Tüm durumlar',
+        createdByLabel: 'Oluşturan',
+        createdByPlaceholder: 'Tüm kullanıcılar',
         reset: 'Sıfırla',
       },
       form: {

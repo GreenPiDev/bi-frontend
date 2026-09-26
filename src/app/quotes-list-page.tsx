@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { hasPermission } from '../features/auth/permissions';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -220,30 +221,17 @@ export function QuotesListPage() {
         if (q.status === 'DRAFT' || q.status === 'PENDING_APPROVAL') {
           return (
             <div className="flex items-center gap-1">
-              <Tooltip content={tr.crm.quotes.editTooltip}>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    navigate(`/teklifler/duzenle/${q.id}`);
-                  }}
-                  className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-                >
-                  <Pencil size={16} />
-                </button>
-              </Tooltip>
-              <Tooltip content={tr.crm.quotes.deleteTooltip}>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setDeletingQuote(q);
-                  }}
-                  className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </Tooltip>
+              <IconActionButton
+                icon={Pencil}
+                tooltip={tr.crm.quotes.editTooltip}
+                onClick={() => navigate(`/teklifler/duzenle/${q.id}`)}
+              />
+              <IconActionButton
+                icon={Trash2}
+                tooltip={tr.crm.quotes.deleteTooltip}
+                variant="danger"
+                onClick={() => setDeletingQuote(q)}
+              />
             </div>
           );
         }
@@ -287,16 +275,14 @@ export function QuotesListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.quotes.subtitle}</p>
         </div>
-        <Tooltip content={tr.crm.quotes.newButton}>
-          <button
-            type="button"
-            onClick={() => navigate('/teklifler/yeni')}
-            aria-label={tr.crm.quotes.newButton}
-            className="mt-1 flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-          >
-            <Plus size={18} strokeWidth={3} />
-          </button>
-        </Tooltip>
+        <CircleIconButton
+          icon={Plus}
+          tooltip={tr.crm.quotes.newButton}
+          variant="success"
+          strokeWidth={3}
+          onClick={() => navigate('/teklifler/yeni')}
+          className="mt-1"
+        />
       </div>
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">

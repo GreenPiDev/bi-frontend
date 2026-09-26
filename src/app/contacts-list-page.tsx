@@ -10,8 +10,9 @@ import { Drawer } from '../components/ui/drawer';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -21,6 +22,7 @@ import {
   useUpdateContactMutation,
 } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
+import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Contact, type ContactStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -79,8 +81,10 @@ export function ContactsListPage() {
   const [filterResetKey, setFilterResetKey] = useState(0);
   const [accountId, setAccountId] = useState('');
   const [status, setStatus] = useState<ContactStatus | ''>('');
+  const [createdById, setCreatedById] = useState('');
   const [sort, setSort] = useState<TableSort | null>(null);
   const meQuery = useMeQuery();
+  const usersQuery = useUsersQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const contactsQuery = useContactsQuery({
     page,
@@ -88,16 +92,18 @@ export function ContactsListPage() {
     q: q || undefined,
     accountId: accountId || undefined,
     status: status || undefined,
+    createdById: createdById || undefined,
     sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const exportMutation = useExportEntityMutation('contacts');
   const deleteMutation = useDeleteContactMutation();
-  const hasActiveFilter = Boolean(accountId) || Boolean(status);
+  const hasActiveFilter = Boolean(accountId) || Boolean(status) || Boolean(createdById);
 
   function resetFilters() {
     setPage(1);
     setAccountId('');
     setStatus('');
+    setCreatedById('');
     setFilterResetKey((k) => k + 1);
   }
 
@@ -168,30 +174,17 @@ export function ContactsListPage() {
       required: true,
       render: (c) => (
         <div className="flex items-center gap-1">
-          <Tooltip content={tr.crm.contacts.editTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                navigate(`/kisiler/duzenle/${c.id}`);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-app-text"
-            >
-              <Pencil size={16} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.contacts.deleteTooltip}>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                setDeletingContact(c);
-              }}
-              className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-            >
-              <Trash2 size={16} />
-            </button>
-          </Tooltip>
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.contacts.editTooltip}
+            onClick={() => navigate(`/kisiler/duzenle/${c.id}`)}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.contacts.deleteTooltip}
+            variant="danger"
+            onClick={() => setDeletingContact(c)}
+          />
         </div>
       ),
     },
@@ -215,54 +208,38 @@ export function ContactsListPage() {
           <p className="mt-1 text-sm text-app-muted">{tr.crm.contacts.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <Tooltip content={tr.crm.contacts.filterButton}>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              aria-label={tr.crm.contacts.filterButton}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <ListFilter size={18} />
-              {hasActiveFilter && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
-              )}
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.contacts.exportButton}>
-            <button
-              type="button"
-              disabled={exportMutation.isPending}
-              onClick={() =>
-                exportMutation.mutate(undefined, {
-                  onSuccess: (blob) => downloadBlob(blob, 'kisiler.xlsx'),
-                })
-              }
-              aria-label={tr.crm.contacts.exportButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:opacity-50"
-            >
-              <Upload size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.contacts.importButton}>
-            <button
-              type="button"
-              onClick={() => navigate('/kisiler/ice-aktar')}
-              aria-label={tr.crm.contacts.importButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <Download size={18} />
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.contacts.newButton}>
-            <button
-              type="button"
-              onClick={() => navigate('/kisiler/yeni')}
-              aria-label={tr.crm.contacts.newButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-            >
-              <Plus size={18} strokeWidth={3} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={ListFilter}
+            tooltip={tr.crm.contacts.filterButton}
+            onClick={() => setDrawerOpen(true)}
+          >
+            {hasActiveFilter && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+            )}
+          </CircleIconButton>
+          <CircleIconButton
+            icon={Upload}
+            tooltip={tr.crm.contacts.exportButton}
+            disabled={exportMutation.isPending}
+            onClick={() =>
+              exportMutation.mutate(undefined, {
+                onSuccess: (blob) => downloadBlob(blob, 'kisiler.xlsx'),
+              })
+            }
+            className="disabled:opacity-50"
+          />
+          <CircleIconButton
+            icon={Download}
+            tooltip={tr.crm.contacts.importButton}
+            onClick={() => navigate('/kisiler/ice-aktar')}
+          />
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.contacts.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => navigate('/kisiler/yeni')}
+          />
         </div>
       </div>
 
@@ -345,6 +322,21 @@ export function ContactsListPage() {
               onClear={() => {
                 setPage(1);
                 setStatus('');
+              }}
+            />
+            <Select
+              label={tr.crm.contacts.filterDrawer.createdByLabel}
+              placeholder={tr.crm.contacts.filterDrawer.createdByPlaceholder}
+              value={createdById}
+              onChange={(event) => {
+                setPage(1);
+                setCreatedById(event.target.value);
+              }}
+              options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setCreatedById('');
               }}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>

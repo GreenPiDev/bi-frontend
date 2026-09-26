@@ -8,8 +8,8 @@ import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import {
@@ -69,18 +69,12 @@ export function DashboardsListPage() {
             required: true,
             render: (dashboard: DashboardSummary) => (
               <div className="flex items-center gap-1">
-                <Tooltip content={tr.dashboards.list.deleteButton}>
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setDeletingDashboard(dashboard);
-                    }}
-                    className="rounded-lg p-2 text-app-muted hover:bg-app-bg hover:text-red-600"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </Tooltip>
+                <IconActionButton
+                  icon={Trash2}
+                  tooltip={tr.dashboards.list.deleteButton}
+                  variant="danger"
+                  onClick={() => setDeletingDashboard(dashboard)}
+                />
               </div>
             ),
           } satisfies TableColumn<DashboardSummary>,

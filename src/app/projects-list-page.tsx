@@ -2,10 +2,10 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useProjectsQuery } from '../features/crm/use-projects';
@@ -70,16 +70,14 @@ export function ProjectsListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.projects.subtitle}</p>
         </div>
-        <Tooltip content={tr.crm.projects.newButton}>
-          <button
-            type="button"
-            onClick={() => navigate('/projeler/yeni')}
-            aria-label={tr.crm.projects.newButton}
-            className="mt-1 flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-          >
-            <Plus size={18} strokeWidth={3} />
-          </button>
-        </Tooltip>
+        <CircleIconButton
+          icon={Plus}
+          tooltip={tr.crm.projects.newButton}
+          variant="success"
+          strokeWidth={3}
+          onClick={() => navigate('/projeler/yeni')}
+          className="mt-1"
+        />
       </div>
 
       <div className="mt-4 flex justify-end">

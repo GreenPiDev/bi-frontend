@@ -9,9 +9,9 @@ import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
@@ -230,16 +230,11 @@ export function QuoteDetailPage() {
         </div>
         {!isPrintMode && (
           <div className="flex items-center gap-2 pt-1">
-            <Tooltip content={tr.crm.quotes.detail.createMessageTooltip}>
-              <button
-                type="button"
-                onClick={() => setIsMessageModalOpen(true)}
-                aria-label={tr.crm.quotes.detail.createMessageTooltip}
-                className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-              >
-                <Mail size={18} />
-              </button>
-            </Tooltip>
+            <CircleIconButton
+              icon={Mail}
+              tooltip={tr.crm.quotes.detail.createMessageTooltip}
+              onClick={() => setIsMessageModalOpen(true)}
+            />
             {quote.status === 'PENDING_APPROVAL' && canApprove && (
               <>
                 <Button type="button" onClick={handleApprove} disabled={approveMutation.isPending}>
@@ -256,17 +251,12 @@ export function QuoteDetailPage() {
               </>
             )}
             {(quote.status === 'DRAFT' || quote.status === 'APPROVED') && (
-              <Tooltip content={tr.crm.quotes.detail.exportPdfButton}>
-                <button
-                  type="button"
-                  onClick={() => exportPdfMutation.mutate()}
-                  disabled={exportPdfMutation.isPending}
-                  aria-label={tr.crm.quotes.detail.exportPdfButton}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <FileDown size={18} />
-                </button>
-              </Tooltip>
+              <CircleIconButton
+                icon={FileDown}
+                tooltip={tr.crm.quotes.detail.exportPdfButton}
+                onClick={() => exportPdfMutation.mutate()}
+                disabled={exportPdfMutation.isPending}
+              />
             )}
           </div>
         )}

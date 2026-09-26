@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
-import { Tooltip } from '../components/ui/tooltip';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { MessagesFilterDrawer } from '../features/crm/messages-filter-drawer';
@@ -232,29 +232,22 @@ export function MessagesListPage() {
           <p className="mt-1 text-sm text-app-muted">{tr.crm.messages.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 pt-1">
-          <Tooltip content={tr.crm.messages.filterButton}>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              aria-label={tr.crm.messages.filterButton}
-              className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33]"
-            >
-              <ListFilter size={18} />
-              {hasActiveFilter && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
-              )}
-            </button>
-          </Tooltip>
-          <Tooltip content={tr.crm.messages.newButton}>
-            <button
-              type="button"
-              onClick={() => setNewMessageOpen(true)}
-              aria-label={tr.crm.messages.newButton}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] text-app-success transition-colors hover:bg-[#141c33]"
-            >
-              <Plus size={18} strokeWidth={3} />
-            </button>
-          </Tooltip>
+          <CircleIconButton
+            icon={ListFilter}
+            tooltip={tr.crm.messages.filterButton}
+            onClick={() => setDrawerOpen(true)}
+          >
+            {hasActiveFilter && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+            )}
+          </CircleIconButton>
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.messages.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => setNewMessageOpen(true)}
+          />
         </div>
       </div>
 
