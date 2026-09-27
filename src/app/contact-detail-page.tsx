@@ -117,7 +117,7 @@ export function ContactDetailPage() {
     {
       key: 'type',
       header: tr.crm.interactions.typeColumn,
-      render: (interaction) => tr.crm.interactions.typeOptions[interaction.type],
+      render: (interaction) => interaction.type,
     },
     {
       key: 'status',

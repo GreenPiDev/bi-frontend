@@ -1058,6 +1058,37 @@ export function deleteBrandOption(id: string): Promise<void> {
   return request(`/brand-options/${id}`, { method: 'DELETE' });
 }
 
+export interface InteractionTypeOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listInteractionTypeOptions(): Promise<InteractionTypeOption[]> {
+  return request('/interaction-type-options');
+}
+
+export function createInteractionTypeOption(label: string): Promise<InteractionTypeOption> {
+  return request('/interaction-type-options', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updateInteractionTypeOption(
+  id: string,
+  label: string,
+): Promise<InteractionTypeOption> {
+  return request(`/interaction-type-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deleteInteractionTypeOption(id: string): Promise<void> {
+  return request(`/interaction-type-options/${id}`, { method: 'DELETE' });
+}
+
 export interface PaymentMethodOption {
   id: string;
   label: string;
@@ -1259,6 +1290,45 @@ export function runProductImport(
   return request(`/product-imports/${productListId}`, { method: 'POST', body: formData });
 }
 
+// --- Görüşme İçe Aktarma (marka/kaynak-bağımsız, accounts/product-imports ile aynı sihirbaz) --
+
+export interface InteractionImportRawPreview {
+  rows: string[][];
+}
+
+export type InteractionImportPreview = ImportPreview;
+export type InteractionImportResult = ImportResult;
+
+export function previewInteractionImportRaw(file: File): Promise<InteractionImportRawPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/interaction-imports/preview', { method: 'POST', body: formData });
+}
+
+export function previewInteractionImportMapped(
+  file: File,
+  headerRowIndex: number,
+): Promise<InteractionImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  return request('/interaction-imports/preview', { method: 'POST', body: formData });
+}
+
+export function runInteractionImport(
+  file: File,
+  headerRowIndex: number,
+  mapping: Record<string, string>,
+  attributeColumns: string[],
+): Promise<InteractionImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  formData.append('mapping', JSON.stringify(mapping));
+  formData.append('attributeColumns', JSON.stringify(attributeColumns));
+  return request('/interaction-imports', { method: 'POST', body: formData });
+}
+
 // --- Kullanicilar / Davetler -----------------------------------------------
 
 export function listUsers(): Promise<SafeUser[]> {
@@ -1448,7 +1518,10 @@ export function deleteCalendarEvent(id: string): Promise<void> {
   return request(`/calendar-events/${id}`, { method: 'DELETE' });
 }
 
-export type InteractionType = 'CALL' | 'VISIT' | 'MEETING' | 'EMAIL' | 'OTHER';
+/** Eskiden 5 sabit degerli bir union'du - artik tenant'in /settings?tab=crm'de yonettigi
+ * dinamik InteractionTypeOption listesine karsi dogrulanan serbest metin (bkz.
+ * schema.prisma Interaction.type yorumu, InteractionTypeSelect). */
+export type InteractionType = string;
 export type InteractionStatus = 'OPEN' | 'CLOSED';
 export type OpportunityStage = 'NEW' | 'QUALIFIED' | 'PROPOSAL' | 'WON' | 'LOST';
 export type CurrencyCode = 'TRY' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'JPY';
@@ -1482,11 +1555,13 @@ export interface Interaction {
   account: Account | null;
   contact: Contact | null;
   type: InteractionType;
-  notes: string;
+  subject: string | null;
+  notes: string | null;
   occurredAt: string;
   status: InteractionStatus;
   accountAutoCreated: boolean;
   contactAutoCreated: boolean;
+  customFields: Record<string, string> | null;
   participants: InteractionParticipant[];
   opportunity: Opportunity | null;
   createdById: string;
@@ -1501,7 +1576,8 @@ export interface CreateInteractionInput {
   contactId?: string;
   contactName?: string;
   type: InteractionType;
-  notes: string;
+  subject?: string;
+  notes?: string;
   occurredAt: string;
   participants?: { name: string; isInternal: boolean; note?: string }[];
   opportunity?: {
@@ -1520,6 +1596,7 @@ export interface CreateInteractionInput {
 
 export interface UpdateInteractionInput {
   type?: InteractionType;
+  subject?: string;
   notes?: string;
   occurredAt?: string;
   status?: InteractionStatus;
@@ -2257,6 +2334,41 @@ export function setConversationStar(conversationId: string, starred: boolean): P
 
 export function listAssignableMessageUsers(): Promise<AssignableUser[]> {
   return request('/messages/assignable-users');
+}
+
+// --- Bildirimler -------------------------------------------------------------
+
+/** Yeni bir bildirim turu eklendikce buraya da eklenir (bkz. CLAUDE.md, backend
+ * NotificationType enum'iyla birebir esler). */
+export type NotificationType = 'CALENDAR_REMINDER_ASSIGNED' | 'CALENDAR_REMINDERS_DUE_TODAY';
+
+export interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  relatedEntityType: string | null;
+  relatedEntityId: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export function listUnreadNotifications(): Promise<Notification[]> {
+  return request('/notifications/unread');
+}
+
+export function listNotifications(
+  params: { page?: number; pageSize?: number } = {},
+): Promise<PagedResult<Notification>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  const qs = query.toString();
+  return request(`/notifications${qs ? `?${qs}` : ''}`);
+}
+
+export function markNotificationRead(id: string): Promise<void> {
+  return request(`/notifications/${id}/read`, { method: 'PATCH' });
 }
 
 // --- Önbellek --------------------------------------------------------------

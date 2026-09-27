@@ -1,4 +1,4 @@
-import { ListFilter, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, ListFilter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -19,6 +19,7 @@ import { ContactAutocomplete } from '../features/crm/contact-autocomplete';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { InteractionStatusSelect } from '../features/crm/interaction-status-select';
+import { useInteractionTypeOptionsQuery } from '../features/crm/use-interaction-type-options';
 import {
   useDeleteInteractionMutation,
   useInteractionCreatorsQuery,
@@ -27,10 +28,6 @@ import {
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction, type InteractionType } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const TYPE_OPTIONS: { value: InteractionType; label: string }[] = (
-  ['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const
-).map((type) => ({ value: type, label: tr.crm.interactions.typeOptions[type] }));
 
 export function InteractionsListPage() {
   const navigate = useNavigate();
@@ -64,6 +61,10 @@ export function InteractionsListPage() {
     Boolean(from) ||
     Boolean(to);
   const meQuery = useMeQuery();
+  const interactionTypeOptionsQuery = useInteractionTypeOptionsQuery();
+  const TYPE_OPTIONS: { value: InteractionType; label: string }[] = (
+    interactionTypeOptionsQuery.data ?? []
+  ).map((option) => ({ value: option.label, label: option.label }));
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const interactionsQuery = useInteractionsQuery({
     page,
@@ -133,7 +134,7 @@ export function InteractionsListPage() {
     {
       key: 'type',
       header: tr.crm.interactions.typeColumn,
-      render: (i) => tr.crm.interactions.typeOptions[i.type],
+      render: (i) => i.type,
     },
     {
       key: 'status',
@@ -201,6 +202,11 @@ export function InteractionsListPage() {
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
             )}
           </CircleIconButton>
+          <CircleIconButton
+            icon={Download}
+            tooltip={tr.crm.interactions.importButton}
+            onClick={() => navigate('/gorusmeler/ice-aktar')}
+          />
           <CircleIconButton
             icon={Plus}
             tooltip={tr.crm.interactions.newButton}

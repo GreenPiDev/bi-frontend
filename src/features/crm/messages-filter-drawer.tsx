@@ -33,7 +33,7 @@ export function MessagesFilterDrawer({ filters, onClose }: MessagesFilterDrawerP
   }));
   const interactionOptions = (interactionsQuery.data?.data ?? []).map((interaction) => ({
     value: interaction.id,
-    label: `${interaction.account?.name ?? tr.crm.interactions.detail.noAccountFallback} — ${tr.crm.interactions.typeOptions[interaction.type]} (${new Date(interaction.occurredAt).toLocaleDateString('tr-TR')})`,
+    label: `${interaction.account?.name ?? tr.crm.interactions.detail.noAccountFallback} — ${interaction.type} (${new Date(interaction.occurredAt).toLocaleDateString('tr-TR')})`,
   }));
 
   return (

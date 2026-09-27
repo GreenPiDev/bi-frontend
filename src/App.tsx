@@ -19,6 +19,7 @@ import { DatasetsListPage } from './app/datasets-list-page';
 import { InteractionDetailPage } from './app/interaction-detail-page';
 import { InteractionEditPage } from './app/interaction-edit-page';
 import { InteractionFormPage } from './app/interaction-form-page';
+import { InteractionImportPage } from './app/interaction-import-page';
 import { InteractionsListPage } from './app/interactions-list-page';
 import { InventoryManagementPage } from './app/inventory-management-page';
 import { LoginPage } from './app/login-page';
@@ -346,6 +347,14 @@ function App() {
           element={
             <TenantPageRoute pageKey="interactions">
               <InteractionFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/gorusmeler/ice-aktar"
+          element={
+            <TenantPageRoute pageKey="interactions">
+              <InteractionImportPage />
             </TenantPageRoute>
           }
         />

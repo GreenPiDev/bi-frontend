@@ -7,9 +7,10 @@ import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { DateTimeField } from '../components/ui/date-time-field';
 import { FormError } from '../components/ui/form-error';
-import { Select } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
+import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { InteractionTypeSelect } from '../features/crm/interaction-type-select';
 import {
   useInteractionQuery,
   useUpdateInteractionMutation,
@@ -17,11 +18,6 @@ import {
 import { interactionEditFormSchema, type InteractionEditFormValues } from '../features/crm/schemas';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-const TYPE_OPTIONS = (['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const).map((type) => ({
-  value: type,
-  label: tr.crm.interactions.typeOptions[type],
-}));
 
 /** occurredAt backend'den UTC ISO string olarak gelir - DateTimeField ise native
  * datetime-local input'u gibi yerel saat bekler (bkz. date-time-field.tsx). Duz
@@ -57,7 +53,8 @@ export function InteractionEditPage() {
     if (interactionQuery.data) {
       reset({
         type: interactionQuery.data.type,
-        notes: interactionQuery.data.notes,
+        subject: interactionQuery.data.subject ?? undefined,
+        notes: interactionQuery.data.notes ?? undefined,
         occurredAt: toDatetimeLocal(interactionQuery.data.occurredAt),
       });
     }
@@ -100,13 +97,23 @@ export function InteractionEditPage() {
           <FormError message={apiErrorMessage} />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Select
-              label={tr.crm.interactions.form.typeLabel}
-              required
-              hint={tr.crm.interactions.form.typeHint}
-              options={TYPE_OPTIONS}
-              error={errors.type?.message}
-              {...register('type')}
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <InteractionTypeSelect
+                  label={tr.crm.interactions.form.typeLabel}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  error={errors.type?.message}
+                />
+              )}
+            />
+            <TextField
+              label={tr.crm.interactions.form.subjectLabel}
+              hint={tr.crm.interactions.form.subjectHint}
+              error={errors.subject?.message}
+              {...register('subject')}
             />
             <Controller
               name="occurredAt"
@@ -126,7 +133,6 @@ export function InteractionEditPage() {
             <div className="sm:col-span-2">
               <TextareaField
                 label={tr.crm.interactions.form.notesLabel}
-                required
                 rows={4}
                 hint={tr.crm.interactions.form.notesHint}
                 error={errors.notes?.message}

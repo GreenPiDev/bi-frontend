@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type IbanOption } from '../../lib/api';
 import { formatIbanInput, normalizeIban, validateIban } from '../../lib/iban-validation';
 import { tr } from '../../i18n/tr';
+import { CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY } from './tenant-settings.constants';
 import {
   useCreateDepartmentOptionMutation,
   useDeleteDepartmentOptionMutation,
@@ -23,6 +24,12 @@ import {
   useIbanOptionsQuery,
   useUpdateIbanOptionMutation,
 } from './use-iban-options';
+import {
+  useCreateInteractionTypeOptionMutation,
+  useDeleteInteractionTypeOptionMutation,
+  useInteractionTypeOptionsQuery,
+  useUpdateInteractionTypeOptionMutation,
+} from './use-interaction-type-options';
 import {
   useCreatePaymentMethodOptionMutation,
   useDeletePaymentMethodOptionMutation,
@@ -60,7 +67,6 @@ import {
   useUpdateTitleOptionMutation,
 } from './use-title-options';
 
-const THRESHOLD_KEY = 'crm.contactInactivityThresholdDays';
 const POST_SALE_FOLLOW_UP_DAYS_KEY = 'crm.postSaleFollowUpDays';
 
 const MAX_LOGO_SIZE_BYTES = 1.5 * 1024 * 1024;
@@ -511,6 +517,29 @@ function PaymentMethodOptionsManager() {
   );
 }
 
+function InteractionTypeOptionsManager() {
+  return (
+    <OptionListManager
+      title={tr.settings.crm.interactionTypeOptions.title}
+      subtitle={tr.settings.crm.interactionTypeOptions.subtitle}
+      addPlaceholder={tr.settings.crm.interactionTypeOptions.addPlaceholder}
+      addButtonLabel={tr.settings.crm.interactionTypeOptions.addButton}
+      emptyText={tr.settings.crm.interactionTypeOptions.empty}
+      editButtonLabel={tr.settings.crm.interactionTypeOptions.editButton}
+      saveButtonLabel={tr.settings.crm.interactionTypeOptions.saveButton}
+      cancelButtonLabel={tr.settings.crm.interactionTypeOptions.cancelButton}
+      deleteButtonLabel={tr.settings.crm.interactionTypeOptions.deleteButton}
+      addSuccessMessage={tr.settings.crm.interactionTypeOptions.addSuccess}
+      editSuccessMessage={tr.settings.crm.interactionTypeOptions.editSuccess}
+      deleteSuccessMessage={tr.settings.crm.interactionTypeOptions.deleteSuccess}
+      optionsQuery={useInteractionTypeOptionsQuery()}
+      createMutation={useCreateInteractionTypeOptionMutation()}
+      updateMutation={useUpdateInteractionTypeOptionMutation()}
+      deleteMutation={useDeleteInteractionTypeOptionMutation()}
+    />
+  );
+}
+
 interface IbanFormState {
   bankName: string;
   accountHolderName: string;
@@ -769,7 +798,9 @@ function InactivityThresholdSetting() {
   const updateMutation = useUpdateTenantSettingMutation();
   const [value, setValue] = useState('');
 
-  const currentSetting = settingsQuery.data?.find((setting) => setting.key === THRESHOLD_KEY);
+  const currentSetting = settingsQuery.data?.find(
+    (setting) => setting.key === CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY,
+  );
 
   const [prevSettingValue, setPrevSettingValue] = useState<unknown>(undefined);
   if (currentSetting && currentSetting.value !== prevSettingValue) {
@@ -783,7 +814,7 @@ function InactivityThresholdSetting() {
       return;
     }
     updateMutation.mutate(
-      { key: THRESHOLD_KEY, value: days },
+      { key: CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY, value: days },
       {
         onSuccess: () => toast.success(tr.settings.crm.inactivityThreshold.saveSuccess),
         onError: (error) => {
@@ -917,6 +948,13 @@ export function CrmSettingsSection() {
       </div>
       <div className="mt-3 border-t border-app-border">
         <BrandOptionsManager />
+      </div>
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.interactionCreationGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
+        <InteractionTypeOptionsManager />
       </div>
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">

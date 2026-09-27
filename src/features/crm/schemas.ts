@@ -93,8 +93,9 @@ export const interactionFormSchema = z
   .object({
     accountName: z.string().max(200).optional(),
     contactName: z.string().max(200).optional(),
-    type: z.enum(['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER']),
-    notes: z.string().min(1, 'Notlar gerekli.').max(5000),
+    type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
+    subject: z.string().max(200).optional(),
+    notes: z.string().max(5000).optional(),
     occurredAt: z.string().optional(),
     hasOpportunity: z.boolean().optional(),
     opportunityName: z.string().max(200).optional(),
@@ -152,8 +153,9 @@ export type InteractionFormValues = z.infer<typeof interactionFormSchema>;
 // katilimci, firsat ve hatirlatma alanlari olusturma sonrasi degistirilemez) - bu yuzden
 // duzenleme formu, olusturma formunun (interactionFormSchema) bir alt kumesi.
 export const interactionEditFormSchema = z.object({
-  type: z.enum(['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER']),
-  notes: z.string().min(1, 'Notlar gerekli.').max(5000),
+  type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
+  subject: z.string().max(200).optional(),
+  notes: z.string().max(5000).optional(),
   occurredAt: z.string().min(1, 'Tarih gerekli.'),
 });
 

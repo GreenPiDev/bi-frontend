@@ -185,7 +185,7 @@ export function AccountDetailPage() {
                             onClick={() => navigate(`/gorusmeler/${interaction.id}`)}
                             className="text-sm font-semibold text-app-brand hover:underline"
                           >
-                            {tr.crm.interactions.typeOptions[interaction.type]} ·{' '}
+                            {interaction.type} ·{' '}
                             {new Date(interaction.occurredAt).toLocaleString('tr-TR')}
                           </button>
                         </li>

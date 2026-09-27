@@ -4,12 +4,16 @@ import {
   previewAccountImportMapped,
   previewAccountImportRaw,
   previewImport,
+  previewInteractionImportMapped,
+  previewInteractionImportRaw,
   runAccountImport,
   runImport,
+  runInteractionImport,
   type ImportEntity,
 } from '../../lib/api';
 import { ACCOUNTS_QUERY_KEY } from './use-accounts';
 import { CONTACTS_QUERY_KEY } from './use-contacts';
+import { INTERACTIONS_QUERY_KEY } from './use-interactions';
 
 export function usePreviewImportMutation() {
   return useMutation({
@@ -63,6 +67,40 @@ export function useRunAccountImportMutation() {
       attributeColumns: string[];
     }) => runAccountImport(file, headerRowIndex, mapping, attributeColumns),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY });
+    },
+  });
+}
+
+export function usePreviewInteractionImportRawMutation() {
+  return useMutation({
+    mutationFn: (file: File) => previewInteractionImportRaw(file),
+  });
+}
+
+export function usePreviewInteractionImportMappedMutation() {
+  return useMutation({
+    mutationFn: ({ file, headerRowIndex }: { file: File; headerRowIndex: number }) =>
+      previewInteractionImportMapped(file, headerRowIndex),
+  });
+}
+
+export function useRunInteractionImportMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      file,
+      headerRowIndex,
+      mapping,
+      attributeColumns,
+    }: {
+      file: File;
+      headerRowIndex: number;
+      mapping: Record<string, string>;
+      attributeColumns: string[];
+    }) => runInteractionImport(file, headerRowIndex, mapping, attributeColumns),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: INTERACTIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY });
     },
   });

@@ -14,6 +14,7 @@ import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { InteractionTypeSelect } from '../features/crm/interaction-type-select';
 import { NewContactModal } from '../features/crm/new-contact-modal';
 import { useAccountQuery, useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
@@ -30,11 +31,6 @@ import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const ACCOUNT_SEARCH_PAGE_SIZE = 20;
-
-const TYPE_OPTIONS = (['CALL', 'VISIT', 'MEETING', 'EMAIL', 'OTHER'] as const).map((type) => ({
-  value: type,
-  label: tr.crm.interactions.typeOptions[type],
-}));
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
@@ -67,7 +63,7 @@ export function InteractionFormPage() {
   } = useForm<InteractionFormValues>({
     resolver: zodResolver(interactionFormSchema),
     defaultValues: {
-      type: 'CALL',
+      type: '',
       occurredAt: '',
       participants: [],
       hasOpportunity: false,
@@ -121,7 +117,8 @@ export function InteractionFormPage() {
       ...(accountName ? (matchedAccount ? { accountId: matchedAccount.id } : { accountName }) : {}),
       ...(contactName ? (matchedContact ? { contactId: matchedContact.id } : { contactName }) : {}),
       type: values.type,
-      notes: values.notes,
+      subject: values.subject?.trim() || undefined,
+      notes: values.notes?.trim() || undefined,
       occurredAt: new Date(values.occurredAt as string).toISOString(),
       participants: (values.participants ?? [])
         .filter((p) => p.name.trim().length > 0)
@@ -234,18 +231,27 @@ export function InteractionFormPage() {
                 />
               )}
             />
-            <Select
-              label={tr.crm.interactions.form.typeLabel}
-              required
-              hint={tr.crm.interactions.form.typeHint}
-              options={TYPE_OPTIONS}
-              error={errors.type?.message}
-              {...register('type')}
+            <Controller
+              name="type"
+              control={control}
+              render={({ field }) => (
+                <InteractionTypeSelect
+                  label={tr.crm.interactions.form.typeLabel}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  error={errors.type?.message}
+                />
+              )}
+            />
+            <TextField
+              label={tr.crm.interactions.form.subjectLabel}
+              hint={tr.crm.interactions.form.subjectHint}
+              error={errors.subject?.message}
+              {...register('subject')}
             />
             <div className="sm:col-span-2">
               <TextareaField
                 label={tr.crm.interactions.form.notesLabel}
-                required
                 rows={4}
                 hint={tr.crm.interactions.form.notesHint}
                 error={errors.notes?.message}

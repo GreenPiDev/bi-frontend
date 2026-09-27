@@ -30,15 +30,19 @@ import {
   useInteractionQuery,
   useUpdateInteractionMutation,
 } from '../features/crm/use-interactions';
-import { ApiError, type InteractionParticipant, type InteractionType } from '../lib/api';
+import { ApiError, type InteractionParticipant } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-const TYPE_ICONS: Record<InteractionType, typeof Phone> = {
-  CALL: Phone,
-  VISIT: MapPin,
-  MEETING: Video,
-  EMAIL: Mail,
-  OTHER: MoreHorizontal,
+/** Gorusme sekli artik dinamik/serbest metin oldugundan (bkz. schema.prisma
+ * Interaction.type yorumu) sabit bir enum-anahtarli ikon eslemesi mumkun degil - eski 5
+ * varsayilan etiket icin ayni ikonlar korunur, tenant'in tanimladigi yeni bir gorusme
+ * sekli icin varsayilan (MoreHorizontal) ikon kullanilir. */
+const TYPE_ICONS: Record<string, typeof Phone> = {
+  Telefon: Phone,
+  Ziyaret: MapPin,
+  Toplantı: Video,
+  'E-posta': Mail,
+  Diğer: MoreHorizontal,
 };
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
@@ -166,7 +170,7 @@ export function InteractionDetailPage() {
   }
 
   const interaction = interactionQuery.data;
-  const TypeIcon = TYPE_ICONS[interaction.type];
+  const TypeIcon = TYPE_ICONS[interaction.type] ?? MoreHorizontal;
   const occurredAt = new Date(interaction.occurredAt);
   const title = interaction.account
     ? interaction.account.name
@@ -258,7 +262,7 @@ export function InteractionDetailPage() {
         <MetaCell label={tr.crm.interactions.typeColumn}>
           <span className="inline-flex items-center gap-1.5">
             <TypeIcon size={14} className="text-app-muted" />
-            {tr.crm.interactions.typeOptions[interaction.type]}
+            {interaction.type}
           </span>
         </MetaCell>
         <MetaCell label={tr.crm.interactions.dateColumn}>
@@ -278,10 +282,27 @@ export function InteractionDetailPage() {
 
       <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr] lg:divide-x lg:divide-app-border">
         <div className="min-w-0 lg:pr-8">
+          {interaction.subject && (
+            <h2 className="mb-6 text-2xl font-bold text-app-text">{interaction.subject}</h2>
+          )}
           <SectionHeader>{tr.crm.interactions.detail.notesTitle}</SectionHeader>
           <p className="text-sm leading-relaxed whitespace-pre-wrap text-app-text">
             {interaction.notes}
           </p>
+
+          {interaction.customFields && Object.keys(interaction.customFields).length > 0 && (
+            <div className="mt-6 border-t border-app-border pt-6">
+              <SectionHeader>{tr.crm.interactions.detail.customFieldsTitle}</SectionHeader>
+              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {Object.entries(interaction.customFields).map(([key, value]) => (
+                  <div key={key}>
+                    <dt className="text-xs font-semibold uppercase text-app-muted">{key}</dt>
+                    <dd className="mt-1 text-sm text-app-text">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
         </div>
 
         <div className="flex min-w-0 flex-col gap-6 lg:pl-8">
