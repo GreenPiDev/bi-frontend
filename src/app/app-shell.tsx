@@ -31,6 +31,7 @@ import { MessagingWidget } from '../features/crm/messaging-widget';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
 import { useUnreadConversationsTotal } from '../features/crm/use-messages';
+import { NotificationBell } from '../features/notifications/notification-bell';
 import { tr } from '../i18n/tr';
 
 interface NavItem {
@@ -228,6 +229,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
       <header className="fixed inset-x-0 top-0 z-[100] flex h-16 items-center justify-between border-b border-app-border bg-app-surface px-5">
         <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
         <div className="flex items-center gap-4">
+          <NotificationBell />
           {meQuery.data && (
             <div className="hidden items-center gap-2 sm:flex">
               {meQuery.data.avatarUrl ? (

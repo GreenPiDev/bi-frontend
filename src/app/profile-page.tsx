@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
@@ -9,6 +10,7 @@ import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/hor
 import { PageHelp } from '../components/ui/page-help';
 import { PasswordField } from '../components/ui/password-field';
 import { Select } from '../components/ui/select';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -24,7 +26,12 @@ import {
   type ChangePasswordFormValues,
   type UpdateProfileFormValues,
 } from '../features/auth/schemas';
-import { ApiError } from '../lib/api';
+import { resolveNotificationRoute } from '../features/notifications/notification-routes';
+import {
+  useMarkNotificationReadMutation,
+  useNotificationsQuery,
+} from '../features/notifications/use-notifications';
+import { ApiError, type Notification } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -122,6 +129,11 @@ export function ProfilePage() {
                   key: 'security',
                   label: tr.profile.tabs.security,
                   content: <ChangePasswordForm />,
+                },
+                {
+                  key: 'notifications',
+                  label: tr.profile.tabs.notifications,
+                  content: <NotificationsSection />,
                 },
               ] satisfies HorizontalTabItem[]
             }
@@ -382,6 +394,101 @@ function ChangePasswordForm() {
             : tr.profile.passwordSection.submit}
         </Button>
       </form>
+    </section>
+  );
+}
+
+const notificationDateFormatter = new Intl.DateTimeFormat('tr-TR', {
+  dateStyle: 'long',
+  timeStyle: 'short',
+});
+
+/** /profile?tab=notifications - okunmus/okunmamis TUM bildirimlerin sayfalanmis
+ * listesi (bkz. header'daki zil ikonu, ki o sadece okunmamislari gosterir). */
+function NotificationsSection() {
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
+  const navigate = useNavigate();
+  const notificationsQuery = useNotificationsQuery({ page, pageSize });
+  const markReadMutation = useMarkNotificationReadMutation();
+
+  function handleRowClick(row: Notification) {
+    const route = resolveNotificationRoute(row);
+    if (route) navigate(route);
+  }
+
+  const columns: TableColumn<Notification>[] = [
+    {
+      key: 'status',
+      header: '',
+      className: 'w-4',
+      render: (row) => (
+        <span
+          className={
+            row.readAt
+              ? 'inline-block h-2 w-2 rounded-full bg-app-bg-muted'
+              : 'inline-block h-2 w-2 rounded-full bg-app-primary'
+          }
+        />
+      ),
+    },
+    {
+      key: 'title',
+      header: tr.profile.tabs.notifications,
+      render: (row) => (
+        <div>
+          <p className={row.readAt ? 'text-app-muted' : 'font-semibold text-app-text'}>
+            {row.title}
+          </p>
+          <p className="text-xs text-app-muted">
+            {notificationDateFormatter.format(new Date(row.createdAt))}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'text-right',
+      render: (row) =>
+        row.readAt ? (
+          <span className="text-xs text-app-muted">{tr.notifications.read}</span>
+        ) : (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              markReadMutation.mutate(row.id);
+            }}
+            disabled={markReadMutation.isPending && markReadMutation.variables === row.id}
+            className="text-xs font-semibold text-app-primary hover:underline disabled:opacity-50"
+          >
+            {tr.notifications.markAsRead}
+          </button>
+        ),
+    },
+  ];
+
+  return (
+    <section className="p-4">
+      <h2 className="mb-4 text-base font-bold text-app-text">{tr.notifications.fullListTitle}</h2>
+      <Table
+        columns={columns}
+        data={notificationsQuery.data?.data ?? []}
+        keyField={(row) => row.id}
+        isLoading={notificationsQuery.isPending}
+        loadingMessage={tr.common.loading}
+        emptyMessage={tr.notifications.fullListEmpty}
+        onRowClick={handleRowClick}
+      />
+      {notificationsQuery.data && notificationsQuery.data.meta.totalPages > 1 && (
+        <Pagination
+          page={page}
+          totalPages={notificationsQuery.data.meta.totalPages}
+          onPrevious={() => setPage((value) => Math.max(1, value - 1))}
+          onNext={() => setPage((value) => value + 1)}
+        />
+      )}
     </section>
   );
 }

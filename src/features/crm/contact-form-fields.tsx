@@ -8,6 +8,11 @@ import { PhoneField } from './phone-field';
 import type { ContactFormValues } from './schemas';
 import { TitleSelect } from './title-select';
 import { tr } from '../../i18n/tr';
+import { useTenantSettingsQuery } from './use-tenant-settings';
+import {
+  CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY,
+  DEFAULT_CONTACT_INACTIVITY_THRESHOLD_DAYS,
+} from './tenant-settings.constants';
 
 const STATUS_OPTIONS = [
   { value: 'ACTIVE', label: tr.crm.contacts.statusActive },
@@ -21,6 +26,14 @@ interface ContactFormFieldsProps {
 }
 
 export function ContactFormFields({ register, control, errors }: ContactFormFieldsProps) {
+  const settingsQuery = useTenantSettingsQuery();
+  const thresholdSetting = settingsQuery.data?.find(
+    (setting) => setting.key === CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY,
+  );
+  const thresholdDays = Number(
+    thresholdSetting?.value ?? DEFAULT_CONTACT_INACTIVITY_THRESHOLD_DAYS,
+  );
+
   return (
     <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
       <TextField
@@ -112,7 +125,7 @@ export function ContactFormFields({ register, control, errors }: ContactFormFiel
         render={({ field }) => (
           <DateField
             label={tr.crm.contacts.form.lastContactedAtLabel}
-            hint={tr.crm.contacts.form.lastContactedAtHint}
+            hint={tr.crm.contacts.form.lastContactedAtHint(thresholdDays)}
             error={errors.lastContactedAt?.message}
             value={field.value ?? ''}
             onChange={field.onChange}
