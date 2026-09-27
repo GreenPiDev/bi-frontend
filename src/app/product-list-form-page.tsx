@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -7,7 +8,7 @@ import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { Switch } from '../components/ui/switch';
-import { Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -18,6 +19,7 @@ import {
 import { useProductsQuery } from '../features/crm/use-products';
 import { productListFormSchema, type ProductListFormValues } from '../features/crm/schemas';
 import { ApiError, type Product, type ProductListInput } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 export function ProductListFormPage() {
@@ -34,7 +36,13 @@ export function ProductListFormPage() {
   const createMutation = useCreateProductListMutation();
   const updateMutation = useUpdateProductListMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
-  const productsQuery = useProductsQuery({ productListId: id, pageSize: 100 }, { enabled: isEdit });
+  const [productPage, setProductPage] = useState(1);
+  const [productQInput, setProductQInput] = useState('');
+  const productQ = useDebouncedValue(productQInput.trim());
+  const productsQuery = useProductsQuery(
+    { productListId: id, page: productPage, pageSize: 25, q: productQ || undefined },
+    { enabled: isEdit },
+  );
 
   // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar (Faz B) - bu listedeki
   // ürünlerde görülen tüm anahtarların birleşimi kadar sütun eklenir; bir üründe o anahtar
@@ -185,6 +193,22 @@ export function ProductListFormPage() {
                 </Button>
               </div>
             </div>
+            <div className="relative mt-3 w-full">
+              <Search
+                size={16}
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+              />
+              <input
+                type="search"
+                value={productQInput}
+                onChange={(event) => {
+                  setProductPage(1);
+                  setProductQInput(event.target.value);
+                }}
+                placeholder={tr.crm.productLists.productsSection.searchPlaceholder}
+                className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              />
+            </div>
             <div className="mt-3">
               <Table
                 columns={productColumns}
@@ -198,6 +222,15 @@ export function ProductListFormPage() {
                 emptyMessage={tr.crm.productLists.productsSection.empty}
               />
             </div>
+
+            {productsQuery.data && productsQuery.data.data.length > 0 && (
+              <Pagination
+                page={productsQuery.data.meta.page}
+                totalPages={productsQuery.data.meta.totalPages}
+                onPrevious={() => setProductPage((p) => p - 1)}
+                onNext={() => setProductPage((p) => p + 1)}
+              />
+            )}
           </div>
         )}
       </div>
