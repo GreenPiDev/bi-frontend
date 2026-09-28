@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -10,18 +10,24 @@ import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
+import { AddOptionModal } from '../features/crm/add-option-modal';
 import { BrandSelect } from '../features/crm/brand-select';
 import { CategorySelect } from '../features/crm/category-select';
 import { ProductListSelect } from '../features/crm/product-list-select';
 import { UnitSelect } from '../features/crm/unit-select';
+import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
+import { useCreateProductCategoryOptionMutation } from '../features/crm/use-product-categories';
 import {
   useCreateProductMutation,
   useProductQuery,
   useUpdateProductMutation,
 } from '../features/crm/use-products';
+import { useCreateUnitOptionMutation } from '../features/crm/use-unit-options';
 import { productFormSchema, type ProductFormValues } from '../features/crm/schemas';
 import { ApiError, type ProductInput } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+type OptionFieldKind = 'unit' | 'category' | 'brand';
 
 export function ProductFormPage() {
   const { id } = useParams();
@@ -36,12 +42,21 @@ export function ProductFormPage() {
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
+  const createUnitOptionMutation = useCreateUnitOptionMutation();
+  const createCategoryOptionMutation = useCreateProductCategoryOptionMutation();
+  const createBrandOptionMutation = useCreateBrandOptionMutation();
+  // Birim/Kategori/Marka icin "+ Yeni ..." modallari bilincli olarak <form>'un DISINDA
+  // render edilir (asagida) - Select'lerin kendi icinde render edilselerdi modal'in
+  // <form>'u disardaki urun formunun <form>'una ic ice girer, "Kaydet" native submit'e
+  // dusup sayfayi yeniler ve eklenen deger hic kaydedilmez (bkz. kullanici bildirimi).
+  const [activeOptionModal, setActiveOptionModal] = useState<OptionFieldKind | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -167,6 +182,7 @@ export function ProductFormPage() {
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={errors.unit?.message}
+                onRequestAddNew={() => setActiveOptionModal('unit')}
               />
             )}
           />
@@ -178,6 +194,7 @@ export function ProductFormPage() {
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={errors.category?.message}
+                onRequestAddNew={() => setActiveOptionModal('category')}
               />
             )}
           />
@@ -189,6 +206,7 @@ export function ProductFormPage() {
                 value={field.value ?? ''}
                 onChange={field.onChange}
                 error={errors.brand?.message}
+                onRequestAddNew={() => setActiveOptionModal('brand')}
               />
             )}
           />
@@ -269,6 +287,49 @@ export function ProductFormPage() {
           </div>
         </form>
       </div>
+
+      {activeOptionModal === 'unit' && (
+        <AddOptionModal
+          title={tr.crm.products.form.unitNewModalTitle}
+          fieldLabel={tr.crm.products.form.unitNewFieldLabel}
+          placeholder={tr.crm.products.form.unitNewPlaceholder}
+          successMessage={tr.crm.products.form.unitNewSuccess}
+          createMutation={createUnitOptionMutation}
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(label) => {
+            setValue('unit', label, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
+      {activeOptionModal === 'category' && (
+        <AddOptionModal
+          title={tr.crm.products.form.categoryNewModalTitle}
+          fieldLabel={tr.crm.products.form.categoryNewFieldLabel}
+          placeholder={tr.crm.products.form.categoryNewPlaceholder}
+          successMessage={tr.crm.products.form.categoryNewSuccess}
+          createMutation={createCategoryOptionMutation}
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(label) => {
+            setValue('category', label, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
+      {activeOptionModal === 'brand' && (
+        <AddOptionModal
+          title={tr.crm.products.form.brandNewModalTitle}
+          fieldLabel={tr.crm.products.form.brandNewFieldLabel}
+          placeholder={tr.crm.products.form.brandNewPlaceholder}
+          successMessage={tr.crm.products.form.brandNewSuccess}
+          createMutation={createBrandOptionMutation}
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(label) => {
+            setValue('brand', label, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

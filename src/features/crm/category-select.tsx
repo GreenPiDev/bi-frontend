@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useProductCategoryOptionsQuery } from './use-product-categories';
@@ -7,6 +8,12 @@ interface CategorySelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 kategori tanımlıysa, select'in yanında ayarlara gitmeden tek
+   * bir yeni kategori eklemeye yarayan "+ Yeni Kategori" butonu gösterilir. Modal'ın
+   * kendisi bu bileşenin dışında (sayfa seviyesinde, dış `<form>`'un dışında) render
+   * edilir - aksi halde iç içe `<form>` oluşur ve "Kaydet" native form submit'e düşüp
+   * sayfayı yeniler (bkz. kullanıcı bildirimi). */
+  onRequestAddNew?: () => void;
 }
 
 /** Marka/Departman/Ünvan alanlarıyla (`BrandSelect`/`DepartmentSelect`/`TitleSelect`)
@@ -14,7 +21,7 @@ interface CategorySelectProps {
  * sekmede) yönlendiren bir mesaj/link gösterilir. Kategori oradan eklenince
  * `useProductCategoryOptionsRealtimeSync` bu sorguyu invalidate eder ve dropdown sayfa
  * yenilenmeden otomatik güncellenir. */
-export function CategorySelect({ value, onChange, error }: CategorySelectProps) {
+export function CategorySelect({ value, onChange, error, onRequestAddNew }: CategorySelectProps) {
   const categoryOptionsQuery = useProductCategoryOptionsQuery();
   const options = categoryOptionsQuery.data ?? [];
 
@@ -48,6 +55,13 @@ export function CategorySelect({ value, onChange, error }: CategorySelectProps) 
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="secondary" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.products.form.categoryNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

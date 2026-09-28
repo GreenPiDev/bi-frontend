@@ -1,7 +1,8 @@
 import { clsx } from 'clsx';
-import { Link2, Send, Star, X } from 'lucide-react';
+import { Link2, Paperclip, Send, Star, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatFileSize } from './format-file-size';
 import { RELATED_ENTITY_PATH } from './message-related-entity-paths';
 import {
   useConversationQuery,
@@ -157,6 +158,29 @@ export function MessagingChatPanel({
                 )}
               >
                 {message.body}
+                {message.attachments.length > 0 && (
+                  <ul className={clsx('mt-1.5 flex flex-col gap-1', message.body && 'pt-1.5')}>
+                    {message.attachments.map((attachment) => (
+                      <li key={attachment.id}>
+                        <a
+                          href={attachment.url ?? undefined}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={tr.crm.messages.detail.downloadAttachmentAria}
+                          className={clsx(
+                            'inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs hover:underline',
+                            isMine
+                              ? 'border-white/30 text-white'
+                              : 'border-app-border bg-app-bg text-app-primary',
+                          )}
+                        >
+                          <Paperclip size={12} />
+                          {attachment.fileName} ({formatFileSize(attachment.sizeBytes)})
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <p className={clsx('text-[10px] text-app-muted', isMine && 'text-right')}>
                 {!isMine && `${displayUserName(message.senderId)} · `}

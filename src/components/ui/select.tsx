@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
-import { forwardRef, type SelectHTMLAttributes } from 'react';
+import { forwardRef, type ReactNode, type SelectHTMLAttributes } from 'react';
 import { ClearFieldButton } from './clear-field-button';
 
 export interface SelectOption {
@@ -21,6 +21,10 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
    * kullanimlari etkilemez. */
   clearable?: boolean;
   onClear?: () => void;
+  /** Select kutusunun yanina, ayni satira yerlestirilecek bir aksiyon (or. "+ Yeni
+   * Birim" butonu) - `Autocomplete`'in `trailingAction`'iyla ayni desen, buton
+   * label/hint'i degil sadece select kutusunu hizalar. */
+  trailingAction?: ReactNode;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
@@ -35,6 +39,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     placeholder,
     clearable,
     onClear,
+    trailingAction,
     ...props
   },
   ref,
@@ -51,36 +56,39 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           </span>
         )}
       </label>
-      <div className="relative">
-        <select
-          ref={ref}
-          id={selectId}
-          className={clsx(
-            'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
-            clearable && 'appearance-none pr-16',
-            error && 'border-app-danger',
-            className,
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <select
+            ref={ref}
+            id={selectId}
+            className={clsx(
+              'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
+              clearable && 'appearance-none pr-16',
+              error && 'border-app-danger',
+              className,
+            )}
+            aria-invalid={Boolean(error)}
+            {...props}
+          >
+            {placeholder && <option value="">{placeholder}</option>}
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {clearable && (
+            <div className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2">
+              <ChevronDown size={16} className="text-app-muted" />
+            </div>
           )}
-          aria-invalid={Boolean(error)}
-          {...props}
-        >
-          {placeholder && <option value="">{placeholder}</option>}
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        {clearable && (
-          <div className="pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2">
-            <ChevronDown size={16} className="text-app-muted" />
-          </div>
-        )}
-        {showClear && (
-          <div className="absolute top-1/2 right-8 -translate-y-1/2">
-            <ClearFieldButton onClick={() => onClear?.()} label={label} />
-          </div>
-        )}
+          {showClear && (
+            <div className="absolute top-1/2 right-8 -translate-y-1/2">
+              <ClearFieldButton onClick={() => onClear?.()} label={label} />
+            </div>
+          )}
+        </div>
+        {trailingAction}
       </div>
       {error ? (
         <p className="text-xs text-app-danger">{error}</p>

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useUnitOptionsQuery } from './use-unit-options';
@@ -7,6 +8,12 @@ interface UnitSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 birim tanımlıysa, select'in yanında ayarlara gitmeden tek bir
+   * yeni birim eklemeye yarayan "+ Yeni Birim" butonu gösterilir. Modal'ın kendisi bu
+   * bileşenin dışında (sayfa seviyesinde, dış `<form>`'un dışında) render edilir -
+   * aksi halde iç içe `<form>` oluşur ve "Kaydet" native form submit'e düşüp sayfayı
+   * yeniler (bkz. kullanıcı bildirimi). */
+  onRequestAddNew?: () => void;
 }
 
 /** Marka/Kategori alanlarıyla (`BrandSelect`/`CategorySelect`) aynı desen: tenant henüz
@@ -14,7 +21,7 @@ interface UnitSelectProps {
  * gösterilir. Birim oradan eklenince `useUnitOptionsRealtimeSync` bu sorguyu invalidate
  * eder ve dropdown sayfa yenilenmeden otomatik güncellenir. Fark: birim zorunlu bir alan
  * (`required`), marka/kategori opsiyonel. */
-export function UnitSelect({ value, onChange, error }: UnitSelectProps) {
+export function UnitSelect({ value, onChange, error, onRequestAddNew }: UnitSelectProps) {
   const unitOptionsQuery = useUnitOptionsQuery();
   const options = unitOptionsQuery.data ?? [];
 
@@ -52,6 +59,13 @@ export function UnitSelect({ value, onChange, error }: UnitSelectProps) {
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="secondary" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.products.form.unitNewButton}
+          </Button>
+        )
+      }
     />
   );
 }
