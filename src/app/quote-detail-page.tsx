@@ -73,6 +73,160 @@ function SectionHeader({ children }: { children: ReactNode }) {
   );
 }
 
+export function QuoteContentBody({
+  quote,
+  isPrintMode = false,
+  onOpportunityClick,
+}: {
+  quote: Quote;
+  isPrintMode?: boolean;
+  onOpportunityClick: (opportunityId: string) => void;
+}) {
+  const totals = computeTotals(quote);
+
+  const itemColumns: TableColumn<QuoteItem>[] = [
+    {
+      key: 'product',
+      header: tr.crm.products.nameColumn,
+      render: (item) => item.product.name,
+    },
+    {
+      key: 'quantity',
+      header: tr.crm.quotes.detail.quantityColumn,
+      className: 'text-app-muted',
+      render: (item) => item.quantity,
+    },
+    {
+      key: 'unitPrice',
+      header: tr.crm.quotes.detail.unitPriceColumn,
+      className: 'text-app-muted',
+      render: (item) => currency.format(Number(item.unitPrice)),
+    },
+    {
+      key: 'discountPct',
+      header: tr.crm.quotes.detail.discountColumn,
+      className: 'text-app-muted',
+      render: (item) => `%${item.discountPct}`,
+    },
+    {
+      key: 'vatPct',
+      header: tr.crm.quotes.detail.vatColumn,
+      className: 'text-app-muted',
+      render: (item) => `%${item.vatPct}`,
+    },
+    {
+      key: 'lineTotal',
+      header: tr.crm.quotes.detail.lineTotalColumn,
+      className: 'text-right',
+      render: (item) => currency.format(lineTotal(item)),
+    },
+  ];
+
+  return (
+    <>
+      <div className="grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-4 sm:divide-x sm:divide-app-border">
+        <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
+          {dateFormatter.format(new Date(quote.quoteDate))}
+        </MetaCell>
+        <MetaCell label={tr.crm.quotes.detail.leadTimeLabel}>
+          {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
+        </MetaCell>
+        <MetaCell label={tr.crm.quotes.detail.paymentMethodLabel}>
+          {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
+        </MetaCell>
+        <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
+          {currency.format(totals.grandTotal)}
+        </MetaCell>
+      </div>
+
+      <div className="mt-8">
+        <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
+        <Table
+          columns={itemColumns}
+          data={quote.items}
+          keyField={(item) => item.id}
+          emptyMessage={tr.crm.quotes.form.summaryEmpty}
+        />
+
+        <div className="mt-4 flex flex-col items-end gap-1.5 text-sm">
+          <div className="flex w-64 justify-between">
+            <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
+            <span className="text-app-text">{currency.format(totals.subtotal)}</span>
+          </div>
+          <div className="flex w-64 justify-between">
+            <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
+            <span className="text-app-text">{currency.format(totals.vatTotal)}</span>
+          </div>
+          <div className="flex w-64 justify-between border-t border-app-border pt-1.5 text-base font-bold">
+            <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
+            <span className="text-app-text">{currency.format(totals.grandTotal)}</span>
+          </div>
+        </div>
+      </div>
+
+      {(quote.salesTerms || quote.deliveryTerms) && (
+        <div className="print-page-break mt-8 flex flex-col gap-4 border-t border-app-border pt-6">
+          {quote.salesTerms && (
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <SectionHeader>{tr.crm.quotes.detail.salesTermsTitle}</SectionHeader>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+                {quote.salesTerms}
+              </p>
+            </div>
+          )}
+          {quote.deliveryTerms && (
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <SectionHeader>{tr.crm.quotes.detail.deliveryTermsTitle}</SectionHeader>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+                {quote.deliveryTerms}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {quote.ibanNumber && (
+        <div className="print-page-break mt-8 border-t border-app-border pt-6">
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
+            <div
+              className={clsx(
+                'gap-4',
+                isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-4',
+              )}
+            >
+              <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
+              <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
+                {quote.ibanAccountHolderName}
+              </MetaCell>
+              {quote.ibanAccountNumber && (
+                <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
+                  {quote.ibanAccountNumber}
+                </MetaCell>
+              )}
+              <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
+                <span className="break-all">{formatIbanInput(quote.ibanNumber)}</span>
+              </MetaCell>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {quote.opportunity && (
+        <div className="mt-8 border-t border-app-border pt-6">
+          <SectionHeader>{tr.crm.quotes.detail.opportunityTitle}</SectionHeader>
+          <InfoLinkRow
+            label={tr.crm.opportunities.stageColumn}
+            value={quote.opportunity.name}
+            suffix={tr.crm.opportunities.stageOptions[quote.opportunity.stage]}
+            onClick={() => onOpportunityClick(quote.opportunity!.id)}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
 function InfoLinkRow({
   label,
   value,
@@ -144,46 +298,7 @@ export function QuoteDetailPage() {
   }
 
   const quote = quoteQuery.data;
-  const totals = computeTotals(quote);
   const canApprove = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
-
-  const itemColumns: TableColumn<QuoteItem>[] = [
-    {
-      key: 'product',
-      header: tr.crm.products.nameColumn,
-      render: (item) => item.product.name,
-    },
-    {
-      key: 'quantity',
-      header: tr.crm.quotes.detail.quantityColumn,
-      className: 'text-app-muted',
-      render: (item) => item.quantity,
-    },
-    {
-      key: 'unitPrice',
-      header: tr.crm.quotes.detail.unitPriceColumn,
-      className: 'text-app-muted',
-      render: (item) => currency.format(Number(item.unitPrice)),
-    },
-    {
-      key: 'discountPct',
-      header: tr.crm.quotes.detail.discountColumn,
-      className: 'text-app-muted',
-      render: (item) => `%${item.discountPct}`,
-    },
-    {
-      key: 'vatPct',
-      header: tr.crm.quotes.detail.vatColumn,
-      className: 'text-app-muted',
-      render: (item) => `%${item.vatPct}`,
-    },
-    {
-      key: 'lineTotal',
-      header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'text-right',
-      render: (item) => currency.format(lineTotal(item)),
-    },
-  ];
 
   function handleSendForApproval() {
     sendForApprovalMutation.mutate(
@@ -298,105 +413,13 @@ export function QuoteDetailPage() {
         )}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-4 sm:divide-x sm:divide-app-border">
-        <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
-          {dateFormatter.format(new Date(quote.quoteDate))}
-        </MetaCell>
-        <MetaCell label={tr.crm.quotes.detail.leadTimeLabel}>
-          {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
-        </MetaCell>
-        <MetaCell label={tr.crm.quotes.detail.paymentMethodLabel}>
-          {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
-        </MetaCell>
-        <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
-          {currency.format(totals.grandTotal)}
-        </MetaCell>
-      </div>
-
-      <div className="mt-8">
-        <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
-        <Table
-          columns={itemColumns}
-          data={quote.items}
-          keyField={(item) => item.id}
-          emptyMessage={tr.crm.quotes.form.summaryEmpty}
+      <div className="mt-6">
+        <QuoteContentBody
+          quote={quote}
+          isPrintMode={isPrintMode}
+          onOpportunityClick={(opportunityId) => navigate(`/firsatlar/${opportunityId}`)}
         />
-
-        <div className="mt-4 flex flex-col items-end gap-1.5 text-sm">
-          <div className="flex w-64 justify-between">
-            <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
-            <span className="text-app-text">{currency.format(totals.subtotal)}</span>
-          </div>
-          <div className="flex w-64 justify-between">
-            <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
-            <span className="text-app-text">{currency.format(totals.vatTotal)}</span>
-          </div>
-          <div className="flex w-64 justify-between border-t border-app-border pt-1.5 text-base font-bold">
-            <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
-            <span className="text-app-text">{currency.format(totals.grandTotal)}</span>
-          </div>
-        </div>
       </div>
-
-      {(quote.salesTerms || quote.deliveryTerms) && (
-        <div className="print-page-break mt-8 flex flex-col gap-4 border-t border-app-border pt-6">
-          {quote.salesTerms && (
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-              <SectionHeader>{tr.crm.quotes.detail.salesTermsTitle}</SectionHeader>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
-                {quote.salesTerms}
-              </p>
-            </div>
-          )}
-          {quote.deliveryTerms && (
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-              <SectionHeader>{tr.crm.quotes.detail.deliveryTermsTitle}</SectionHeader>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
-                {quote.deliveryTerms}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {quote.ibanNumber && (
-        <div className="print-page-break mt-8 border-t border-app-border pt-6">
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
-            <div
-              className={clsx(
-                'gap-4',
-                isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-4',
-              )}
-            >
-              <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
-              <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
-                {quote.ibanAccountHolderName}
-              </MetaCell>
-              {quote.ibanAccountNumber && (
-                <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
-                  {quote.ibanAccountNumber}
-                </MetaCell>
-              )}
-              <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
-                <span className="break-all">{formatIbanInput(quote.ibanNumber)}</span>
-              </MetaCell>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!isPrintMode && quote.opportunity && (
-        <div className="mt-8 border-t border-app-border pt-6">
-          <SectionHeader>{tr.crm.quotes.detail.opportunityTitle}</SectionHeader>
-          <InfoLinkRow
-            label={tr.crm.opportunities.stageColumn}
-            value={quote.opportunity.name}
-            suffix={tr.crm.opportunities.stageOptions[quote.opportunity.stage]}
-            onClick={() => navigate(`/firsatlar/${quote.opportunity?.id}`)}
-          />
-        </div>
-      )}
 
       {!isPrintMode && quote.status === 'DRAFT' && (
         <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">

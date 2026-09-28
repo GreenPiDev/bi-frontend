@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { QuoteViewModal } from './quote-view-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
@@ -37,6 +39,7 @@ export function PurchaseOrderDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const purchaseOrderQuery = usePurchaseOrderQuery(id);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
   if (purchaseOrderQuery.isPending) {
     return (
@@ -69,7 +72,7 @@ export function PurchaseOrderDetailPage() {
         {purchaseOrder.quoteId && (
           <button
             type="button"
-            onClick={() => navigate(`/teklifler/${purchaseOrder.quoteId}`)}
+            onClick={() => setIsQuoteModalOpen(true)}
             className="text-sm font-semibold text-app-brand hover:underline"
           >
             {tr.crm.purchaseOrders.detail.relatedQuoteLink}
@@ -100,6 +103,13 @@ export function PurchaseOrderDetailPage() {
           />
         </div>
       </div>
+
+      {isQuoteModalOpen && purchaseOrder.quoteId && (
+        <QuoteViewModal
+          quoteId={purchaseOrder.quoteId}
+          onClose={() => setIsQuoteModalOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }
