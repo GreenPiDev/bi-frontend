@@ -1,0 +1,121 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { PurchaseOrderCreatePage } from './purchase-order-create-page';
+import { ToastProvider } from '../components/ui/toast';
+import * as api from '../lib/api';
+
+function renderPage() {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/siparisler/yeni']}>
+          <Routes>
+            <Route path="/siparisler" element={<div>list-page</div>} />
+            <Route path="/siparisler/yeni" element={<PurchaseOrderCreatePage />} />
+            <Route path="/siparisler/:id" element={<div>detail-page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
+    </QueryClientProvider>,
+  );
+}
+
+const quote: api.Quote = {
+  id: 'q1',
+  quoteNumber: 'TEK-2026-09-07-001',
+  quoteDate: '2026-09-07T00:00:00.000Z',
+  leadTime: null,
+  paymentMethod: null,
+  title: null,
+  salesTerms: null,
+  deliveryTerms: null,
+  ibanBankName: null,
+  ibanAccountHolderName: null,
+  ibanAccountNumber: null,
+  ibanNumber: null,
+  accountId: 'acc-1',
+  account: {
+    id: 'acc-1',
+    name: 'Acme A.S.',
+    taxNumber: null,
+    createdByName: null,
+    taxOffice: null,
+    sector: [],
+    accountTypes: [],
+    website: null,
+    phone: null,
+    email: null,
+    address: null,
+    city: null,
+    landlinePhone: null,
+    district: null,
+    ownerId: null,
+    missingCriticalFields: [],
+    customFields: null,
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+  },
+  contactId: null,
+  contact: null,
+  projectId: null,
+  status: 'APPROVED',
+  approvedAt: '2026-09-01T00:00:00.000Z',
+  approvedById: 'u1',
+  createdById: 'u1',
+  createdByName: 'Admin',
+  items: [],
+  opportunity: null,
+  createdAt: '2026-08-01T00:00:00.000Z',
+  updatedAt: '2026-08-01T00:00:00.000Z',
+};
+
+const purchaseOrder: api.PurchaseOrder = {
+  id: 'po-new',
+  orderNumber: 'SIP-2026-09-28-001',
+  quoteId: null,
+  quote: null,
+  status: 'DRAFT',
+  createdById: 'u1',
+  items: [],
+  createdAt: '2026-09-28T00:00:00.000Z',
+  updatedAt: '2026-09-28T00:00:00.000Z',
+};
+
+describe('PurchaseOrderCreatePage', () => {
+  beforeEach(() => {
+    vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
+    vi.spyOn(api, 'listAccounts').mockResolvedValue({
+      data: [quote.account],
+      meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+    });
+    vi.spyOn(api, 'listQuotes').mockResolvedValue({
+      data: [quote],
+      meta: { page: 1, pageSize: 100, total: 1, totalPages: 1 },
+    });
+  });
+
+  it('teklif secilmeden manuel kalemlerle siparis olusturur', async () => {
+    const createSpy = vi.spyOn(api, 'createPurchaseOrder').mockResolvedValue(purchaseOrder);
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByText('Yeni Sipariş');
+    await user.type(screen.getByLabelText('Açıklama'), 'Ofis sarf malzemesi');
+    await user.clear(screen.getByLabelText(/Miktar/));
+    await user.type(screen.getByLabelText(/Miktar/), '2');
+    await user.click(screen.getByRole('button', { name: 'Sipariş Oluştur' }));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalled());
+    const [input] = createSpy.mock.calls[0];
+    expect(input.quoteId).toBeUndefined();
+    expect(input.items).toEqual([
+      { productId: undefined, description: 'Ofis sarf malzemesi', quantity: 2 },
+    ]);
+
+    expect(await screen.findByText('detail-page')).toBeInTheDocument();
+  });
+});

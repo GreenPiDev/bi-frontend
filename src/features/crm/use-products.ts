@@ -4,6 +4,7 @@ import {
   createProduct,
   deleteProduct,
   getProduct,
+  getProductAttributeKeys,
   listProducts,
   updateProduct,
   type ProductInput,
@@ -12,13 +13,28 @@ import {
 export const PRODUCTS_QUERY_KEY = ['products'];
 
 export function useProductsQuery(
-  params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    productListId?: string;
+    brand?: string;
+    category?: string;
+    attr?: Record<string, string>;
+  } = {},
   options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...PRODUCTS_QUERY_KEY, params],
     queryFn: () => listProducts(params),
     enabled: options.enabled ?? true,
+  });
+}
+
+export function useProductAttributeKeysQuery() {
+  return useQuery({
+    queryKey: ['products', 'attribute-keys'],
+    queryFn: () => getProductAttributeKeys(),
   });
 }
 

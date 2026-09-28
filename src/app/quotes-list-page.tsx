@@ -116,6 +116,9 @@ export function QuotesListPage() {
   const [pendingStatusChange, setPendingStatusChange] = useState<
     { quote: Quote; status: QuoteStatus } | undefined
   >(undefined);
+  const [pendingPurchaseOrderQuote, setPendingPurchaseOrderQuote] = useState<Quote | undefined>(
+    undefined,
+  );
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const quotesQuery = useQuotesQuery({ page, pageSize, status: status || undefined });
   const statusCounts = useQuoteStatusCounts(STATUS_OPTIONS.map((option) => option.value));
@@ -132,10 +135,12 @@ export function QuotesListPage() {
     'CREATE',
   );
 
-  function handleCreatePurchaseOrder(quoteId: string) {
-    createPurchaseOrderMutation.mutate(quoteId, {
+  function handleConfirmCreatePurchaseOrder() {
+    if (!pendingPurchaseOrderQuote) return;
+    createPurchaseOrderMutation.mutate(pendingPurchaseOrderQuote.id, {
       onSuccess: (purchaseOrder) => {
         toast.success(tr.crm.quotes.createPurchaseOrderSuccess);
+        setPendingPurchaseOrderQuote(undefined);
         navigate(`/siparisler/${purchaseOrder.id}`);
       },
       onError: (error) => {
@@ -241,13 +246,15 @@ export function QuotesListPage() {
               type="button"
               variant="secondary"
               className="whitespace-nowrap"
-              disabled={createPurchaseOrderMutation.isPending}
+              disabled={
+                createPurchaseOrderMutation.isPending && pendingPurchaseOrderQuote?.id === q.id
+              }
               onClick={(event) => {
                 event.stopPropagation();
-                handleCreatePurchaseOrder(q.id);
+                setPendingPurchaseOrderQuote(q);
               }}
             >
-              {createPurchaseOrderMutation.isPending
+              {createPurchaseOrderMutation.isPending && pendingPurchaseOrderQuote?.id === q.id
                 ? tr.crm.quotes.createPurchaseOrderBusy
                 : tr.crm.quotes.createPurchaseOrderButton}
             </Button>
@@ -318,6 +325,7 @@ export function QuotesListPage() {
         <Pagination
           page={quotesQuery.data.meta.page}
           totalPages={quotesQuery.data.meta.totalPages}
+          total={quotesQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
@@ -344,6 +352,16 @@ export function QuotesListPage() {
           isPending={confirmStatusMutation.isPending}
           onConfirm={handleConfirmStatusChange}
           onCancel={() => setPendingStatusChange(undefined)}
+        />
+      )}
+      {pendingPurchaseOrderQuote && (
+        <ConfirmModal
+          title={tr.crm.quotes.createPurchaseOrderConfirmTitle}
+          message={tr.crm.quotes.createPurchaseOrderConfirm(pendingPurchaseOrderQuote.quoteNumber)}
+          confirmLabel={tr.crm.quotes.createPurchaseOrderConfirmButton}
+          isPending={createPurchaseOrderMutation.isPending}
+          onConfirm={handleConfirmCreatePurchaseOrder}
+          onCancel={() => setPendingPurchaseOrderQuote(undefined)}
         />
       )}
     </AppShell>

@@ -1,15 +1,17 @@
-import { Plus } from 'lucide-react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
-import { useProjectsQuery } from '../features/crm/use-projects';
-import type { Project } from '../lib/api';
+import { useDeleteProjectMutation, useProjectsQuery } from '../features/crm/use-projects';
+import { ApiError, type Project } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 function formatCurrency(value: string | null): string {
@@ -19,40 +21,75 @@ function formatCurrency(value: string | null): string {
   );
 }
 
-const ALL_COLUMNS: TableColumn<Project>[] = [
-  {
-    key: 'projectNumber',
-    header: tr.crm.projects.numberColumn,
-    className: 'font-semibold text-app-text',
-    required: true,
-    render: (p) => p.projectNumber,
-  },
-  {
-    key: 'name',
-    header: tr.crm.projects.nameColumn,
-    required: true,
-    render: (p) => p.name,
-  },
-  {
-    key: 'estimatedBudget',
-    header: tr.crm.projects.estimatedBudgetColumn,
-    className: 'text-app-muted',
-    render: (p) => formatCurrency(p.estimatedBudget),
-  },
-  {
-    key: 'actualCost',
-    header: tr.crm.projects.actualCostColumn,
-    className: 'text-app-muted',
-    render: (p) => formatCurrency(p.actualCost),
-  },
-];
-
 export function ProjectsListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const projectsQuery = useProjectsQuery({ page, pageSize });
+  const deleteMutation = useDeleteProjectMutation();
+
+  function handleDelete(project: Project) {
+    if (!window.confirm(tr.crm.projects.deleteConfirm)) {
+      return;
+    }
+    deleteMutation.mutate(project.id, {
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.projects.deleteError);
+      },
+    });
+  }
+
+  const ALL_COLUMNS: TableColumn<Project>[] = [
+    {
+      key: 'projectNumber',
+      header: tr.crm.projects.numberColumn,
+      className: 'font-semibold text-app-text',
+      required: true,
+      render: (p) => p.projectNumber,
+    },
+    {
+      key: 'name',
+      header: tr.crm.projects.nameColumn,
+      required: true,
+      render: (p) => p.name,
+    },
+    {
+      key: 'estimatedBudget',
+      header: tr.crm.projects.estimatedBudgetColumn,
+      className: 'text-app-muted',
+      render: (p) => formatCurrency(p.estimatedBudget),
+    },
+    {
+      key: 'actualCost',
+      header: tr.crm.projects.actualCostColumn,
+      className: 'text-app-muted',
+      render: (p) => formatCurrency(p.actualCost),
+    },
+    {
+      key: 'actions',
+      header: tr.crm.projects.actionsColumn,
+      className: 'w-px',
+      required: true,
+      render: (p) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.projects.detail.editButton}
+            onClick={() => navigate(`/projeler/${p.id}/duzenle`)}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.projects.detail.deleteButton}
+            variant="danger"
+            onClick={() => handleDelete(p)}
+          />
+        </div>
+      ),
+    },
+  ];
+
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
     useColumnVisibility(
       'projects',
@@ -102,6 +139,7 @@ export function ProjectsListPage() {
         <Pagination
           page={projectsQuery.data.meta.page}
           totalPages={projectsQuery.data.meta.totalPages}
+          total={projectsQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

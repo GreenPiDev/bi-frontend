@@ -176,12 +176,19 @@ interface PaginationProps {
   totalPages: number;
   onPrevious: () => void;
   onNext: () => void;
+  /** Verilirse "Sayfa X / Y" yanina toplam kayit sayisi da eklenir (orn. liste
+   * sayfalarindaki `meta.total`). Verilmezse eski davranis (sadece sayfa bilgisi) korunur. */
+  total?: number;
 }
 
-export function Pagination({ page, totalPages, onPrevious, onNext }: PaginationProps) {
+export function Pagination({ page, totalPages, onPrevious, onNext, total }: PaginationProps) {
   return (
     <div className="mt-4 flex items-center justify-between text-sm text-app-muted">
-      <span>{tr.common.pageOf(page, totalPages)}</span>
+      <span>
+        {total === undefined
+          ? tr.common.pageOf(page, totalPages)
+          : tr.common.pageOfWithTotal(page, totalPages, total)}
+      </span>
       <div className="flex gap-2">
         <Button type="button" variant="secondary" disabled={page <= 1} onClick={onPrevious}>
           {tr.common.previous}

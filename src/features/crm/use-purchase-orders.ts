@@ -1,10 +1,12 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createPurchaseOrder,
   createPurchaseOrderFromQuote,
   deletePurchaseOrder,
   getPurchaseOrder,
   listPurchaseOrders,
   updatePurchaseOrder,
+  type CreatePurchaseOrderInput,
   type PurchaseOrderStatus,
   type UpdatePurchaseOrderInput,
 } from '../../lib/api';
@@ -66,6 +68,16 @@ export function useCreatePurchaseOrderFromQuoteMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (quoteId: string) => createPurchaseOrderFromQuote(quoteId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PURCHASE_ORDERS_QUERY_KEY });
+    },
+  });
+}
+
+export function useCreatePurchaseOrderMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreatePurchaseOrderInput) => createPurchaseOrder(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PURCHASE_ORDERS_QUERY_KEY });
     },

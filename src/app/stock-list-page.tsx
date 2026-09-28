@@ -184,6 +184,7 @@ export function StockListContent() {
         <Pagination
           page={stockItemsQuery.data.meta.page}
           totalPages={stockItemsQuery.data.meta.totalPages}
+          total={stockItemsQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

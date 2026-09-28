@@ -1,12 +1,14 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useBrandOptionsRealtimeSync } from '../features/crm/use-brand-options-realtime-sync';
 import { useCalendarEventsRealtimeSync } from '../features/crm/use-calendar-events-realtime-sync';
 import { useDepartmentOptionsRealtimeSync } from '../features/crm/use-department-options-realtime-sync';
 import { useIbanOptionsRealtimeSync } from '../features/crm/use-iban-options-realtime-sync';
 import { useInteractionTypeOptionsRealtimeSync } from '../features/crm/use-interaction-type-options-realtime-sync';
 import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
 import { usePaymentMethodOptionsRealtimeSync } from '../features/crm/use-payment-method-options-realtime-sync';
+import { useProductCategoryOptionsRealtimeSync } from '../features/crm/use-product-categories-realtime-sync';
 import { useSectorOptionsRealtimeSync } from '../features/crm/use-sector-options-realtime-sync';
 import { useTitleOptionsRealtimeSync } from '../features/crm/use-title-options-realtime-sync';
 import { useNotificationsRealtimeSync } from '../features/notifications/use-notifications-realtime-sync';
@@ -33,6 +35,8 @@ export function ProtectedRoute({
   useCalendarEventsRealtimeSync();
   useSectorOptionsRealtimeSync();
   useDepartmentOptionsRealtimeSync();
+  useBrandOptionsRealtimeSync();
+  useProductCategoryOptionsRealtimeSync();
   useTitleOptionsRealtimeSync();
   usePaymentMethodOptionsRealtimeSync();
   useIbanOptionsRealtimeSync();

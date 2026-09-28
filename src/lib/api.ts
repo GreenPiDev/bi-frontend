@@ -1810,15 +1810,34 @@ export interface ProductInput {
 }
 
 export function listProducts(
-  params: { page?: number; pageSize?: number; q?: string; productListId?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    productListId?: string;
+    brand?: string;
+    category?: string;
+    attr?: Record<string, string>;
+  } = {},
 ): Promise<PagedResult<Product>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
   if (params.productListId) query.set('productListId', params.productListId);
+  if (params.brand) query.set('brand', params.brand);
+  if (params.category) query.set('category', params.category);
+  if (params.attr) {
+    for (const [key, value] of Object.entries(params.attr)) {
+      if (value) query.set(`attr[${key}]`, value);
+    }
+  }
   const qs = query.toString();
   return request(`/products${qs ? `?${qs}` : ''}`);
+}
+
+export function getProductAttributeKeys(): Promise<string[]> {
+  return request('/products/attribute-keys');
 }
 
 export function getProduct(id: string): Promise<Product> {
@@ -1868,6 +1887,12 @@ export interface Quote {
   account: Account;
   contactId: string | null;
   contact: Contact | null;
+  /** Bir proje birden fazla teklifle iliskilendirilebilir, ama bir teklif en fazla
+   * bir projeye bagli olur (FK burada) - bkz. Project.quotes. */
+  projectId: string | null;
+  /** Sadece bazi uclarda (orn. siparis detayinda) nested olarak doner, her zaman
+   * gelmeyebilir. */
+  project?: Project | null;
   status: QuoteStatus;
   quoteDate: string;
   leadTime: string | null;
@@ -1960,21 +1985,23 @@ export interface Project {
   id: string;
   projectNumber: string;
   accountId: string;
-  quoteId: string | null;
   name: string;
   estimatedBudget: string;
   actualCost: string | null;
   createdById: string;
   createdAt: string;
   updatedAt: string;
+  quotes: Quote[];
 }
 
 export interface ProjectInput {
   accountId: string;
-  quoteId?: string;
   name: string;
   estimatedBudget: number;
   actualCost?: number;
+  /** Sadece guncellemede anlamli - projeyle iliskilendirilecek tekliflerin tam
+   * listesi (replace semantigi), bkz. UpdateProjectDto. */
+  quoteIds?: string[];
 }
 
 export function listProjects(
@@ -2101,10 +2128,12 @@ export interface PurchaseOrderItem {
 export interface PurchaseOrder {
   id: string;
   orderNumber: string;
-  quoteId: string;
-  quote: Quote;
-  projectId: string | null;
-  project: Project | null;
+  quoteId: string | null;
+  /** Siparisin kendi projectId alani YOK - proje iliskisi her zaman quote.project
+   * uzerinden okunur (bkz. Quote.project doc comment'i). quoteId opsiyonel oldugu
+   * icin (ad-hoc, 2026-09-28: /siparisler/yeni'den teklifsiz siparis) quote da
+   * null olabilir. */
+  quote: (Quote & { project: Project | null }) | null;
   status: PurchaseOrderStatus;
   createdById: string;
   items: PurchaseOrderItem[];
@@ -2123,6 +2152,18 @@ export interface PurchaseOrderItemInput {
 export interface UpdatePurchaseOrderInput {
   items?: PurchaseOrderItemInput[];
   status?: PurchaseOrderStatus;
+  quoteId?: string | null;
+}
+
+export interface CreatePurchaseOrderItemInput {
+  productId?: string;
+  description: string;
+  quantity: number;
+}
+
+export interface CreatePurchaseOrderInput {
+  quoteId?: string;
+  items: CreatePurchaseOrderItemInput[];
 }
 
 export function listPurchaseOrders(
@@ -2150,6 +2191,10 @@ export function getPurchaseOrder(id: string): Promise<PurchaseOrder> {
 
 export function createPurchaseOrderFromQuote(quoteId: string): Promise<PurchaseOrder> {
   return request(`/quotes/${quoteId}/create-purchase-order`, { method: 'POST' });
+}
+
+export function createPurchaseOrder(input: CreatePurchaseOrderInput): Promise<PurchaseOrder> {
+  return request('/purchase-orders', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export function updatePurchaseOrder(

@@ -577,6 +577,7 @@ export function QuoteFormPage() {
                     <Pagination
                       page={productsQuery.data.meta.page}
                       totalPages={productsQuery.data.meta.totalPages}
+                      total={productsQuery.data.meta.total}
                       onPrevious={() => setPickerPage((p) => p - 1)}
                       onNext={() => setPickerPage((p) => p + 1)}
                     />

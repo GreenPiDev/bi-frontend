@@ -1,13 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PurchaseOrderDetailPage } from './purchase-order-detail-page';
+import { PurchaseOrderEditPage } from './purchase-order-edit-page';
 import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
-function renderPage(initialPath = '/siparisler/po-1') {
+function renderPage(initialPath = '/siparisler/duzenle/po-1') {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
@@ -15,8 +15,8 @@ function renderPage(initialPath = '/siparisler/po-1') {
         <MemoryRouter initialEntries={[initialPath]}>
           <Routes>
             <Route path="/siparisler" element={<div>list-page</div>} />
-            <Route path="/siparisler/:id" element={<PurchaseOrderDetailPage />} />
-            <Route path="/teklifler/:id" element={<div>quote-detail-page</div>} />
+            <Route path="/siparisler/duzenle/:id" element={<PurchaseOrderEditPage />} />
+            <Route path="/siparisler/:id" element={<div>detail-page</div>} />
           </Routes>
         </MemoryRouter>
       </ToastProvider>
@@ -116,28 +116,44 @@ const purchaseOrder: api.PurchaseOrder = {
   updatedAt: '2026-09-07T00:00:00.000Z',
 };
 
-describe('PurchaseOrderDetailPage', () => {
+describe('PurchaseOrderEditPage', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
+    vi.spyOn(api, 'listProducts').mockResolvedValue({
+      data: [product],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+    vi.spyOn(api, 'getProduct').mockResolvedValue(product);
   });
 
-  it('siparis basligini ve kalemlerini salt-okunur gosterir', async () => {
+  it('siparis basligini ve kalemlerini duzenlenebilir gosterir', async () => {
     vi.spyOn(api, 'getPurchaseOrder').mockResolvedValue(purchaseOrder);
     renderPage();
 
     expect(await screen.findByText('SIP-2026-09-07-001')).toBeInTheDocument();
-    expect(screen.getAllByText('Widget').length).toBeGreaterThan(0);
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Kaydet' })).not.toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Widget')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('3')).toBeInTheDocument();
   });
 
-  it('teklif linkine tiklayinca teklif detayina gider', async () => {
+  it('ek kalem eklenip kaydedilince guncelleme cagrisi yapilir', async () => {
     vi.spyOn(api, 'getPurchaseOrder').mockResolvedValue(purchaseOrder);
+    const updateSpy = vi.spyOn(api, 'updatePurchaseOrder').mockResolvedValue(purchaseOrder);
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(await screen.findByText('İlişkili teklifi gör'));
-    expect(await screen.findByText('quote-detail-page')).toBeInTheDocument();
+    await screen.findByText('SIP-2026-09-07-001');
+    await user.click(screen.getByRole('button', { name: 'Ek Kalem Ekle' }));
+
+    const descriptionInputs = screen.getAllByLabelText(/Açıklama/);
+    await user.type(descriptionInputs[descriptionInputs.length - 1], 'Ekstra kalem');
+
+    await user.click(screen.getByRole('button', { name: 'Kaydet' }));
+
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
+    const [, input] = updateSpy.mock.calls[0];
+    expect(input.items).toHaveLength(2);
+    expect(input.items?.[1]).toMatchObject({ description: 'Ekstra kalem', source: 'EXTRA' });
+
+    expect(await screen.findByText('detail-page')).toBeInTheDocument();
   });
 });

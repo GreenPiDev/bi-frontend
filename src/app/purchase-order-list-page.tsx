@@ -1,15 +1,21 @@
 import { clsx } from 'clsx';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
+import { hasPermission } from '../features/auth/permissions';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
+  useDeletePurchaseOrderMutation,
   usePurchaseOrderStatusCounts,
   usePurchaseOrdersQuery,
   useUpdatePurchaseOrderMutation,
@@ -69,39 +75,9 @@ function PurchaseOrderStatusSelect({ order }: { order: PurchaseOrder }) {
   );
 }
 
-const ALL_COLUMNS: TableColumn<PurchaseOrder>[] = [
-  {
-    key: 'orderNumber',
-    header: tr.crm.purchaseOrders.numberColumn,
-    className: 'font-semibold text-app-text',
-    required: true,
-    render: (order) => order.orderNumber,
-  },
-  {
-    key: 'quote',
-    header: tr.crm.purchaseOrders.quoteColumn,
-    render: (order) => order.quote?.quoteNumber ?? '—',
-  },
-  {
-    key: 'project',
-    header: tr.crm.purchaseOrders.projectColumn,
-    render: (order) => order.project?.name ?? tr.crm.purchaseOrders.noProject,
-  },
-  {
-    key: 'status',
-    header: tr.crm.purchaseOrders.statusColumn,
-    render: (order) => <PurchaseOrderStatusSelect order={order} />,
-  },
-  {
-    key: 'createdAt',
-    header: tr.crm.purchaseOrders.createdAtColumn,
-    className: 'text-app-muted',
-    render: (order) => formatDate(order.createdAt),
-  },
-];
-
 export function PurchaseOrderListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<PurchaseOrderStatus | ''>('');
@@ -121,6 +97,78 @@ export function PurchaseOrderListPage() {
     '': statusCounts.all,
     ...statusCounts.counts,
   };
+  const deleteMutation = useDeletePurchaseOrderMutation();
+  const [deletingOrder, setDeletingOrder] = useState<PurchaseOrder | undefined>(undefined);
+  const canCreatePurchaseOrder = hasPermission(
+    meQuery.data?.permissions,
+    'purchase-orders',
+    'CREATE',
+  );
+
+  function handleConfirmDelete() {
+    if (!deletingOrder) return;
+    deleteMutation.mutate(deletingOrder.id, {
+      onSuccess: () => {
+        setDeletingOrder(undefined);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.purchaseOrders.deleteError);
+      },
+    });
+  }
+
+  const ALL_COLUMNS: TableColumn<PurchaseOrder>[] = [
+    {
+      key: 'orderNumber',
+      header: tr.crm.purchaseOrders.numberColumn,
+      className: 'font-semibold text-app-text',
+      required: true,
+      render: (order) => order.orderNumber,
+    },
+    {
+      key: 'quote',
+      header: tr.crm.purchaseOrders.quoteColumn,
+      render: (order) => order.quote?.quoteNumber ?? '—',
+    },
+    {
+      key: 'project',
+      header: tr.crm.purchaseOrders.projectColumn,
+      render: (order) => order.quote?.project?.name ?? tr.crm.purchaseOrders.noProject,
+    },
+    {
+      key: 'status',
+      header: tr.crm.purchaseOrders.statusColumn,
+      render: (order) => <PurchaseOrderStatusSelect order={order} />,
+    },
+    {
+      key: 'createdAt',
+      header: tr.crm.purchaseOrders.createdAtColumn,
+      className: 'text-app-muted',
+      render: (order) => formatDate(order.createdAt),
+    },
+    {
+      key: 'actions',
+      header: tr.crm.purchaseOrders.actionsColumn,
+      className: 'w-px',
+      required: true,
+      render: (order) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.purchaseOrders.detail.editButton}
+            onClick={() => navigate(`/siparisler/duzenle/${order.id}`)}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.purchaseOrders.detail.deleteButton}
+            variant="danger"
+            onClick={() => setDeletingOrder(order)}
+          />
+        </div>
+      ),
+    },
+  ];
+
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
     useColumnVisibility(
       'purchase-orders',
@@ -138,6 +186,16 @@ export function PurchaseOrderListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.purchaseOrders.subtitle}</p>
         </div>
+        {canCreatePurchaseOrder && (
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.purchaseOrders.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => navigate('/siparisler/yeni')}
+            className="mt-1"
+          />
+        )}
       </div>
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
@@ -173,8 +231,20 @@ export function PurchaseOrderListPage() {
         <Pagination
           page={purchaseOrdersQuery.data.meta.page}
           totalPages={purchaseOrdersQuery.data.meta.totalPages}
+          total={purchaseOrdersQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
+        />
+      )}
+
+      {deletingOrder && (
+        <ConfirmModal
+          title={tr.crm.purchaseOrders.deleteConfirmTitle}
+          message={tr.crm.purchaseOrders.deleteConfirm}
+          confirmLabel={tr.crm.purchaseOrders.detail.deleteButton}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeletingOrder(undefined)}
         />
       )}
     </AppShell>

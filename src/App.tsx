@@ -48,7 +48,9 @@ import { ProjectsListPage } from './app/projects-list-page';
 import { ProtectedRoute } from './app/protected-route';
 import { PostSaleCaseDetailPage } from './app/post-sale-case-detail-page';
 import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
+import { PurchaseOrderCreatePage } from './app/purchase-order-create-page';
 import { PurchaseOrderDetailPage } from './app/purchase-order-detail-page';
+import { PurchaseOrderEditPage } from './app/purchase-order-edit-page';
 import { PurchaseOrderListPage } from './app/purchase-order-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteEditPage } from './app/quote-edit-page';
@@ -507,6 +509,22 @@ function App() {
           element={
             <TenantPageRoute pageKey="purchase-orders">
               <PurchaseOrderListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/siparisler/yeni"
+          element={
+            <TenantPageRoute pageKey="purchase-orders">
+              <PurchaseOrderCreatePage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/siparisler/duzenle/:id"
+          element={
+            <TenantPageRoute pageKey="purchase-orders">
+              <PurchaseOrderEditPage />
             </TenantPageRoute>
           }
         />

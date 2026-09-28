@@ -297,6 +297,7 @@ export function AccountsListPage() {
         <Pagination
           page={accountsQuery.data.meta.page}
           totalPages={accountsQuery.data.meta.totalPages}
+          total={accountsQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

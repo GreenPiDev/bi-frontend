@@ -485,6 +485,7 @@ function NotificationsSection() {
         <Pagination
           page={page}
           totalPages={notificationsQuery.data.meta.totalPages}
+          total={notificationsQuery.data.meta.total}
           onPrevious={() => setPage((value) => Math.max(1, value - 1))}
           onNext={() => setPage((value) => value + 1)}
         />

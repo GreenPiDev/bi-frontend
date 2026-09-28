@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ListFilter, Plus } from 'lucide-react';
+import { ListFilter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -11,11 +11,13 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { DateField } from '../components/ui/date-field';
 import { TextField } from '../components/ui/text-field';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
+  useDeleteOpportunityMutation,
   useOpportunitiesQuery,
   useOpportunityStageCounts,
   useUpdateOpportunityMutation,
@@ -79,46 +81,10 @@ function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
   );
 }
 
-const ALL_COLUMNS: TableColumn<Opportunity>[] = [
-  {
-    key: 'name',
-    header: tr.crm.opportunities.nameColumn,
-    required: true,
-    render: (o) => <span className="font-semibold text-app-text">{o.name}</span>,
-  },
-  {
-    key: 'stage',
-    header: tr.crm.opportunities.stageColumn,
-    render: (o) => <OpportunityStageSelect opportunity={o} />,
-  },
-  {
-    key: 'estimatedValue',
-    header: tr.crm.opportunities.valueColumn,
-    className: 'text-app-muted',
-    render: (o) =>
-      o.estimatedValue
-        ? new Intl.NumberFormat('tr-TR', {
-            style: 'currency',
-            currency: o.estimatedValueCurrency,
-          }).format(Number(o.estimatedValue))
-        : '—',
-  },
-  {
-    key: 'description',
-    header: tr.crm.opportunities.descriptionColumn,
-    className: 'text-app-muted',
-    render: (o) => (o.description ? truncate(o.description, DESCRIPTION_TRUNCATE_LENGTH) : '—'),
-  },
-  {
-    key: 'occurredAt',
-    header: tr.crm.opportunities.occurredAtColumn,
-    className: 'text-app-muted',
-    render: (o) => new Date(o.occurredAt).toLocaleDateString('tr-TR'),
-  },
-];
-
 export function OpportunitiesListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
+  const deleteMutation = useDeleteOpportunityMutation();
   const [page, setPage] = useState(1);
   const [stage, setStage] = useState<OpportunityStage | ''>('');
   const [minEstimatedValueInput, setMinEstimatedValueInput] = useState('');
@@ -154,6 +120,77 @@ export function OpportunitiesListPage() {
     '': stageCounts.all,
     ...stageCounts.counts,
   };
+
+  function handleDelete(opportunity: Opportunity) {
+    if (!window.confirm(tr.crm.opportunities.deleteConfirm)) {
+      return;
+    }
+    deleteMutation.mutate(opportunity.id, {
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.opportunities.deleteError);
+      },
+    });
+  }
+
+  const ALL_COLUMNS: TableColumn<Opportunity>[] = [
+    {
+      key: 'name',
+      header: tr.crm.opportunities.nameColumn,
+      required: true,
+      render: (o) => <span className="font-semibold text-app-text">{o.name}</span>,
+    },
+    {
+      key: 'stage',
+      header: tr.crm.opportunities.stageColumn,
+      render: (o) => <OpportunityStageSelect opportunity={o} />,
+    },
+    {
+      key: 'estimatedValue',
+      header: tr.crm.opportunities.valueColumn,
+      className: 'text-app-muted',
+      render: (o) =>
+        o.estimatedValue
+          ? new Intl.NumberFormat('tr-TR', {
+              style: 'currency',
+              currency: o.estimatedValueCurrency,
+            }).format(Number(o.estimatedValue))
+          : '—',
+    },
+    {
+      key: 'description',
+      header: tr.crm.opportunities.descriptionColumn,
+      className: 'text-app-muted',
+      render: (o) => (o.description ? truncate(o.description, DESCRIPTION_TRUNCATE_LENGTH) : '—'),
+    },
+    {
+      key: 'occurredAt',
+      header: tr.crm.opportunities.occurredAtColumn,
+      className: 'text-app-muted',
+      render: (o) => new Date(o.occurredAt).toLocaleDateString('tr-TR'),
+    },
+    {
+      key: 'actions',
+      header: tr.crm.opportunities.actionsColumn,
+      className: 'w-px',
+      required: true,
+      render: (o) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.opportunities.detail.editButton}
+            onClick={() => navigate(`/firsatlar/${o.id}/duzenle`)}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.opportunities.detail.deleteButton}
+            variant="danger"
+            onClick={() => handleDelete(o)}
+          />
+        </div>
+      ),
+    },
+  ];
+
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
     useColumnVisibility(
       'opportunities',
@@ -233,6 +270,7 @@ export function OpportunitiesListPage() {
         <Pagination
           page={opportunitiesQuery.data.meta.page}
           totalPages={opportunitiesQuery.data.meta.totalPages}
+          total={opportunitiesQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

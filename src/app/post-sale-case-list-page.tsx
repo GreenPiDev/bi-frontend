@@ -13,7 +13,6 @@ import {
   useMarkPostSaleFeedbackMutation,
   usePostSaleCaseStatusCounts,
   usePostSaleCasesQuery,
-  useSendPostSaleSurveyMutation,
 } from '../features/crm/use-post-sale-cases';
 import { ApiError, type PostSaleCase, type PostSaleCaseStatus } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -30,16 +29,15 @@ const STATUS_TEXT_CLASS: Record<PostSaleCaseStatus, string> = {
 
 /** "Durum" gercekte reminderSentAt/feedbackReceivedAt zaman damgalarindan hesaplanir
  * (bkz. post-sale-cases.service.ts computeStatus) - serbestce her degere atlanabilen bir
- * alan degil, sadece ileri yonlu iki gercek aksiyon var: anket gonder (BEKLEMEDE ->
- * HATIRLATILDI) ve geri bildirim isaretle (HATIRLATILDI -> GERI_BILDIRIM_ALINDI). Bu
- * yuzden /teklifler'deki QuoteStatusSelect'in aksine dropdown sadece bir sonraki adimi
- * secenek olarak sunar; GERI_BILDIRIM_ALINDI (geri donusu olmayan son durum) kilitli
- * duz metin olarak gosterilir. */
+ * alan degil. HATIRLATILDI, gunluk bir arka plan isinin (S2, satis temsilcisine e-posta)
+ * set ettigi bir ara durum - manuel tetiklenemez, bu yuzden dropdown'da secenek olarak
+ * SUNULMAZ. Elle yapilabilecek tek gercek aksiyon "geri bildirim isaretle"dir (dogrudan
+ * GERI_BILDIRIM_ALINDI'ye gecirir, BEKLEMEDE'den de HATIRLATILDI'den de mumkun). Bu son
+ * durum geri donusu olmadigi icin, /teklifler'deki QuoteStatusSelect'teki kilitli-durum
+ * deseniyle ayni sekilde kilitli duz metin olarak gosterilir. */
 function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase }) {
   const toast = useToast();
-  const sendSurveyMutation = useSendPostSaleSurveyMutation(postSaleCase.id);
   const markFeedbackMutation = useMarkPostSaleFeedbackMutation(postSaleCase.id);
-  const isPending = sendSurveyMutation.isPending || markFeedbackMutation.isPending;
 
   if (postSaleCase.status === 'GERI_BILDIRIM_ALINDI') {
     return (
@@ -49,28 +47,13 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
     );
   }
 
-  const nextStatus: PostSaleCaseStatus =
-    postSaleCase.status === 'BEKLEMEDE' ? 'HATIRLATILDI' : 'GERI_BILDIRIM_ALINDI';
-
   return (
     <select
       value={postSaleCase.status}
       onClick={(event) => event.stopPropagation()}
       onChange={(event) => {
         const status = event.target.value as PostSaleCaseStatus;
-        if (status === postSaleCase.status) return;
-        if (status === 'HATIRLATILDI') {
-          sendSurveyMutation.mutate(
-            {},
-            {
-              onSuccess: () => toast.success(tr.crm.postSaleCases.detail.sendSurveySuccess),
-              onError: (error) => {
-                toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-              },
-            },
-          );
-          return;
-        }
+        if (status !== 'GERI_BILDIRIM_ALINDI') return;
         markFeedbackMutation.mutate(
           {},
           {
@@ -81,7 +64,7 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
           },
         );
       }}
-      disabled={isPending}
+      disabled={markFeedbackMutation.isPending}
       className={clsx(
         'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
         STATUS_TEXT_CLASS[postSaleCase.status],
@@ -90,7 +73,9 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
       <option value={postSaleCase.status}>
         {tr.crm.postSaleCases.statusOptions[postSaleCase.status]}
       </option>
-      <option value={nextStatus}>{tr.crm.postSaleCases.statusOptions[nextStatus]}</option>
+      <option value="GERI_BILDIRIM_ALINDI">
+        {tr.crm.postSaleCases.statusOptions.GERI_BILDIRIM_ALINDI}
+      </option>
     </select>
   );
 }
@@ -183,6 +168,7 @@ export function PostSaleCaseListPage() {
         <Pagination
           page={casesQuery.data.meta.page}
           totalPages={casesQuery.data.meta.totalPages}
+          total={casesQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

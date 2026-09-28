@@ -287,6 +287,7 @@ export function ContactsListPage() {
         <Pagination
           page={contactsQuery.data.meta.page}
           totalPages={contactsQuery.data.meta.totalPages}
+          total={contactsQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

@@ -140,20 +140,11 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
   const unreadConversationsTotal = useUnreadConversationsTotal(canAccessMessages);
 
   const navItems: NavItem[] = [
-    ...(canAccessPage('dashboards')
-      ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
-      : []),
-    ...(canAccessPage('datasets')
-      ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
-      : []),
     ...(canAccessPage('accounts')
       ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
       : []),
     ...(canAccessPage('contacts')
       ? [{ label: tr.shell.nav.contacts, icon: Contact2, path: '/kisiler' }]
-      : []),
-    ...(canAccessPage('calendar')
-      ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
       : []),
     ...(canAccessPage('interactions')
       ? [{ label: tr.shell.nav.interactions, icon: MessageCircle, path: '/gorusmeler' }]
@@ -161,8 +152,8 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     ...(canAccessPage('opportunities')
       ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
       : []),
-    ...(canAccessPage('quotes')
-      ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
+    ...(canAccessPage('calendar')
+      ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
       : []),
     ...(canAccessMessages
       ? [
@@ -174,17 +165,26 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           },
         ]
       : []),
-    ...(canAccessPage('post-sale-cases')
-      ? [{ label: tr.shell.nav.postSaleSupport, icon: HeartHandshake, path: '/satis-sonrasi' }]
-      : []),
     ...(canAccessPage('projects')
       ? [{ label: tr.shell.nav.projects, icon: Briefcase, path: '/projeler' }]
+      : []),
+    ...(canAccessPage('quotes')
+      ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
       : []),
     ...(canAccessPage('purchase-orders')
       ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
       : []),
+    ...(canAccessPage('post-sale-cases')
+      ? [{ label: tr.shell.nav.postSaleSupport, icon: HeartHandshake, path: '/satis-sonrasi' }]
+      : []),
     ...(canAccessPage('stock') || canAccessPage('product-lists') || canAccessPage('products')
       ? [{ label: tr.shell.nav.inventory, icon: Warehouse, path: '/envanter' }]
+      : []),
+    ...(canAccessPage('datasets')
+      ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
+      : []),
+    ...(canAccessPage('dashboards')
+      ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
       : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     ...(canAccessPage('settings')

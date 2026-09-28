@@ -7,7 +7,7 @@ import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
-import { Select } from '../components/ui/select';
+import { MultiSelect } from '../components/ui/multi-select';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { useQuotesQuery } from '../features/crm/use-quotes';
@@ -48,7 +48,10 @@ export function ProjectFormPage() {
   const actualCostField = register('actualCost');
 
   const selectedAccountId = watch('accountId');
-  const quotesQuery = useQuotesQuery({ accountId: selectedAccountId || undefined });
+  const quotesQuery = useQuotesQuery(
+    { accountId: selectedAccountId || undefined, pageSize: 100 },
+    { enabled: isEdit },
+  );
   const quoteOptions = (quotesQuery.data?.data ?? []).map((quote) => ({
     value: quote.id,
     label: quote.quoteNumber,
@@ -58,7 +61,7 @@ export function ProjectFormPage() {
     if (projectQuery.data) {
       reset({
         accountId: projectQuery.data.accountId,
-        quoteId: projectQuery.data.quoteId ?? undefined,
+        quoteIds: projectQuery.data.quotes.map((quote) => quote.id),
         name: projectQuery.data.name,
         estimatedBudget: projectQuery.data.estimatedBudget,
         actualCost: projectQuery.data.actualCost ?? undefined,
@@ -77,10 +80,10 @@ export function ProjectFormPage() {
   const onSubmit = handleSubmit((values) => {
     const input = {
       accountId: values.accountId,
-      quoteId: values.quoteId || undefined,
       name: values.name,
       estimatedBudget: Number(values.estimatedBudget),
       actualCost: values.actualCost ? Number(values.actualCost) : undefined,
+      ...(isEdit ? { quoteIds: values.quoteIds ?? [] } : {}),
     };
     mutation.mutate(input, {
       onSuccess: (project) => {
@@ -128,14 +131,25 @@ export function ProjectFormPage() {
               />
             )}
           />
-          <Select
-            label={tr.crm.projects.form.quoteLabel}
-            placeholder={tr.crm.projects.form.quotePlaceholder}
-            hint={tr.crm.projects.form.quoteHint}
-            options={quoteOptions}
-            error={errors.quoteId?.message}
-            {...register('quoteId')}
-          />
+          {isEdit && (
+            <Controller
+              name="quoteIds"
+              control={control}
+              defaultValue={[]}
+              render={({ field }) => (
+                <MultiSelect
+                  label={tr.crm.projects.form.quoteLabel}
+                  placeholder={tr.crm.projects.form.quotePlaceholder}
+                  hint={tr.crm.projects.form.quoteHint}
+                  options={quoteOptions}
+                  error={errors.quoteIds?.message}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  showChips
+                />
+              )}
+            />
+          )}
           <TextField
             label={tr.crm.projects.form.nameLabel}
             required

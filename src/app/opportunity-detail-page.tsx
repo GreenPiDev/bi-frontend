@@ -1,21 +1,15 @@
-import { Pencil, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
-import { CircleIconButton } from '../components/ui/circle-icon-button';
-import {
-  useDeleteOpportunityMutation,
-  useOpportunityQuery,
-} from '../features/crm/use-opportunities';
+import { useOpportunityQuery } from '../features/crm/use-opportunities';
 import { tr } from '../i18n/tr';
 
 export function OpportunityDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const opportunityQuery = useOpportunityQuery(id);
-  const deleteMutation = useDeleteOpportunityMutation();
 
   if (opportunityQuery.isPending) {
     return (
@@ -30,13 +24,6 @@ export function OpportunityDetailPage() {
   }
 
   const opportunity = opportunityQuery.data;
-
-  function handleDelete() {
-    if (!window.confirm(tr.crm.opportunities.deleteConfirm)) {
-      return;
-    }
-    deleteMutation.mutate(id, { onSuccess: () => navigate('/firsatlar') });
-  }
 
   return (
     <AppShell>
@@ -57,19 +44,6 @@ export function OpportunityDetailPage() {
               }).format(Number(opportunity.estimatedValue))}
             </p>
           )}
-        </div>
-        <div className="flex items-center gap-2 pt-1">
-          <CircleIconButton
-            icon={Pencil}
-            tooltip={tr.crm.opportunities.detail.editButton}
-            onClick={() => navigate(`/firsatlar/${id}/duzenle`)}
-          />
-          <CircleIconButton
-            icon={Trash2}
-            tooltip={tr.crm.opportunities.detail.deleteButton}
-            variant="danger"
-            onClick={handleDelete}
-          />
         </div>
       </div>
 

@@ -218,14 +218,14 @@ export function InteractionImportPage() {
                           <option value="ignore">
                             {tr.crm.interactionImports.assignmentIgnore}
                           </option>
-                          <option value="attribute">
-                            {tr.crm.interactionImports.assignmentAttribute}
-                          </option>
                           {TARGET_FIELDS.map((field) => (
                             <option key={field} value={field}>
                               {tr.crm.interactionImports.fieldLabels[field]}
                             </option>
                           ))}
+                          <option value="attribute">
+                            {tr.crm.interactionImports.assignmentAttribute}
+                          </option>
                         </select>
                       </td>
                     </tr>

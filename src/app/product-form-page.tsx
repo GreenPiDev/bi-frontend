@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
-import { Autocomplete } from '../components/ui/autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -11,8 +10,8 @@ import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
-import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
-import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
+import { BrandSelect } from '../features/crm/brand-select';
+import { CategorySelect } from '../features/crm/category-select';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
   useCreateProductMutation,
@@ -32,8 +31,6 @@ export function ProductFormPage() {
   const toast = useToast();
   const productQuery = useProductQuery(id ?? '');
   const productListsQuery = useProductListsQuery();
-  const categoryOptionsQuery = useProductCategoryOptionsQuery();
-  const brandOptionsQuery = useBrandOptionsQuery();
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -167,18 +164,10 @@ export function ProductFormPage() {
             name="category"
             control={control}
             render={({ field }) => (
-              <Autocomplete
-                label={tr.crm.products.form.categoryLabel}
-                placeholder={tr.crm.products.form.categoryPlaceholder}
+              <CategorySelect
                 value={field.value ?? ''}
                 onChange={field.onChange}
-                options={(categoryOptionsQuery.data ?? []).map((option) => option.label)}
                 error={errors.category?.message}
-                hint={
-                  (categoryOptionsQuery.data?.length ?? 0) > 0
-                    ? tr.crm.products.form.categoryHintRestricted
-                    : tr.crm.products.form.categoryHintFree
-                }
               />
             )}
           />
@@ -186,18 +175,10 @@ export function ProductFormPage() {
             name="brand"
             control={control}
             render={({ field }) => (
-              <Autocomplete
-                label={tr.crm.products.form.brandLabel}
-                placeholder={tr.crm.products.form.brandPlaceholder}
+              <BrandSelect
                 value={field.value ?? ''}
                 onChange={field.onChange}
-                options={(brandOptionsQuery.data ?? []).map((option) => option.label)}
                 error={errors.brand?.message}
-                hint={
-                  (brandOptionsQuery.data?.length ?? 0) > 0
-                    ? tr.crm.products.form.brandHintRestricted
-                    : tr.crm.products.form.brandHintFree
-                }
               />
             )}
           />

@@ -106,6 +106,7 @@ export function ProductListsListContent() {
         <Pagination
           page={productListsQuery.data.meta.page}
           totalPages={productListsQuery.data.meta.totalPages}
+          total={productListsQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

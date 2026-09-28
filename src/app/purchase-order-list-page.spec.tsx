@@ -15,6 +15,7 @@ function renderPurchaseOrderListPage() {
         <MemoryRouter initialEntries={['/siparisler']}>
           <Routes>
             <Route path="/siparisler" element={<PurchaseOrderListPage />} />
+            <Route path="/siparisler/duzenle/:id" element={<div>edit-page</div>} />
             <Route path="/siparisler/:id" element={<div>detail-page</div>} />
           </Routes>
         </MemoryRouter>
@@ -60,6 +61,7 @@ const quote: api.Quote = {
   },
   contactId: null,
   contact: null,
+  projectId: null,
   status: 'APPROVED',
   approvedAt: '2026-09-01T00:00:00.000Z',
   approvedById: 'u1',
@@ -75,14 +77,25 @@ const purchaseOrder: api.PurchaseOrder = {
   id: 'po-1',
   orderNumber: 'SIP-2026-09-07-001',
   quoteId: 'q1',
-  quote,
-  projectId: null,
-  project: null,
+  quote: { ...quote, project: null },
   status: 'DRAFT',
   createdById: 'u1',
   items: [],
   createdAt: '2026-09-07T00:00:00.000Z',
   updatedAt: '2026-09-07T00:00:00.000Z',
+};
+
+const project: api.Project = {
+  id: 'proj-1',
+  projectNumber: 'PRJ-2026-09-07-001',
+  accountId: 'acc-1',
+  name: 'Saha Elektrik Tesisati',
+  estimatedBudget: '10000',
+  actualCost: null,
+  createdById: 'u1',
+  createdAt: '2026-09-07T00:00:00.000Z',
+  updatedAt: '2026-09-07T00:00:00.000Z',
+  quotes: [],
 };
 
 describe('PurchaseOrderListPage', () => {
@@ -112,5 +125,28 @@ describe('PurchaseOrderListPage', () => {
     expect(screen.getByText('TEK-2026-09-07-001')).toBeInTheDocument();
     await user.click(screen.getByText('SIP-2026-09-07-001'));
     expect(await screen.findByText('detail-page')).toBeInTheDocument();
+  });
+
+  it('siparisin teklifi bir projeye bagliysa "Proje" kolonunda proje adini gosterir', async () => {
+    vi.spyOn(api, 'listPurchaseOrders').mockResolvedValue({
+      data: [{ ...purchaseOrder, quote: { ...quote, project } }],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+    renderPurchaseOrderListPage();
+
+    expect(await screen.findByText('Saha Elektrik Tesisati')).toBeInTheDocument();
+  });
+
+  it('duzenle ikonuna tiklayinca duzenleme sayfasina gider', async () => {
+    vi.spyOn(api, 'listPurchaseOrders').mockResolvedValue({
+      data: [purchaseOrder],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
+    const user = userEvent.setup();
+    renderPurchaseOrderListPage();
+
+    await screen.findByText('SIP-2026-09-07-001');
+    await user.click(screen.getByRole('button', { name: 'Düzenle' }));
+    expect(await screen.findByText('edit-page')).toBeInTheDocument();
   });
 });

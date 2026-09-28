@@ -14,14 +14,7 @@ export const accountFormSchema = z
       .array(z.enum(['CUSTOMER', 'SUPPLIER', 'CONTRACTOR', 'SUBCONTRACTOR']))
       .max(4)
       .optional(),
-    website: z
-      .string()
-      .max(300)
-      .optional()
-      .refine(
-        (value) => !value || /^https?:\/\//.test(value),
-        'Web sitesi http(s):// ile başlamalı.',
-      ),
+    website: z.string().max(300).optional(),
     phone: z.string().max(50).optional(),
     landlinePhone: z
       .string()
@@ -188,10 +181,11 @@ export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;
 
 export const projectFormSchema = z.object({
   accountId: z.string().min(1, 'Firma gerekli.'),
-  quoteId: z.string().optional(),
   name: z.string().min(2, 'Proje adı en az 2 karakter olmalı.').max(200),
   estimatedBudget: z.string().min(1, 'Tahmini bütçe gerekli.'),
   actualCost: z.string().optional(),
+  /** Sadece proje düzenlenirken gösterilir/gönderilir (bkz. project-form-page.tsx). */
+  quoteIds: z.array(z.string()).optional(),
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -256,6 +250,9 @@ export const quoteFormSchema = z
 export type QuoteFormValues = z.infer<typeof quoteFormSchema>;
 
 export const purchaseOrderFormSchema = z.object({
+  /** UI-only: teklif secicisini filtrelemek icin, gonderilen payload'a dahil edilmez. */
+  accountId: z.string().optional(),
+  quoteId: z.string().optional(),
   items: z.array(
     z.object({
       id: z.string().optional(),
@@ -268,6 +265,24 @@ export const purchaseOrderFormSchema = z.object({
 });
 
 export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
+
+/** /siparisler/yeni - teklif zorunlu degil (bkz. CreatePurchaseOrderSchema, backend).
+ * Kalemler her zaman EXTRA kaynaklidir, `source` alani formda yok. */
+export const purchaseOrderCreateFormSchema = z.object({
+  accountId: z.string().optional(),
+  quoteId: z.string().optional(),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().optional(),
+        description: z.string().max(300),
+        quantity: z.string().min(1, 'Miktar gerekli.'),
+      }),
+    )
+    .min(1, 'En az bir kalem eklemelisiniz.'),
+});
+
+export type PurchaseOrderCreateFormValues = z.infer<typeof purchaseOrderCreateFormSchema>;
 
 /** Hem "Yeni Mesaj" modali hem `/mesajlar/:id`'deki satir-ici yanit karti icin ortak
  * sema (bkz. features/crm/message-compose-form.tsx). Konu, sadece yeni bir konusma

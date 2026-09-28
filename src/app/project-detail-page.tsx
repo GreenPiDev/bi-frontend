@@ -1,4 +1,4 @@
-import { Mail, Pencil, Trash2 } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -6,7 +6,7 @@ import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { PageHelp } from '../components/ui/page-help';
-import { useDeleteProjectMutation, useProjectQuery } from '../features/crm/use-projects';
+import { useProjectQuery } from '../features/crm/use-projects';
 import { tr } from '../i18n/tr';
 
 function formatCurrency(value: string | null): string {
@@ -20,7 +20,6 @@ export function ProjectDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const projectQuery = useProjectQuery(id);
-  const deleteMutation = useDeleteProjectMutation();
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   if (projectQuery.isPending) {
@@ -36,13 +35,6 @@ export function ProjectDetailPage() {
   }
 
   const project = projectQuery.data;
-
-  function handleDelete() {
-    if (!window.confirm(tr.crm.projects.deleteConfirm)) {
-      return;
-    }
-    deleteMutation.mutate(id, { onSuccess: () => navigate('/projeler') });
-  }
 
   return (
     <AppShell>
@@ -61,17 +53,6 @@ export function ProjectDetailPage() {
             icon={Mail}
             tooltip={tr.crm.projects.detail.createMessageTooltip}
             onClick={() => setIsMessageModalOpen(true)}
-          />
-          <CircleIconButton
-            icon={Pencil}
-            tooltip={tr.crm.projects.detail.editButton}
-            onClick={() => navigate(`/projeler/${id}/duzenle`)}
-          />
-          <CircleIconButton
-            icon={Trash2}
-            tooltip={tr.crm.projects.detail.deleteButton}
-            variant="danger"
-            onClick={handleDelete}
           />
         </div>
       </div>
@@ -94,17 +75,28 @@ export function ProjectDetailPage() {
           </div>
         </dl>
 
-        {project.quoteId && (
-          <div className="border-t border-app-border p-6">
-            <button
-              type="button"
-              onClick={() => navigate(`/teklifler/${project.quoteId}`)}
-              className="text-sm font-semibold text-app-brand hover:underline"
-            >
-              {tr.crm.projects.detail.relatedQuoteLink}
-            </button>
-          </div>
-        )}
+        <div className="border-t border-app-border p-6">
+          <h2 className="text-xs font-semibold uppercase text-app-muted">
+            {tr.crm.projects.detail.relatedQuotesTitle}
+          </h2>
+          {project.quotes.length === 0 ? (
+            <p className="mt-2 text-sm text-app-muted">{tr.crm.projects.detail.noRelatedQuotes}</p>
+          ) : (
+            <ul className="mt-2 flex flex-col gap-1.5">
+              {project.quotes.map((quote) => (
+                <li key={quote.id}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/teklifler/${quote.id}`)}
+                    className="text-sm font-semibold text-app-brand hover:underline"
+                  >
+                    {quote.quoteNumber}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {isMessageModalOpen && (

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
-import { ChevronRight, FileDown, Mail } from 'lucide-react';
+import { Check, ChevronRight, FileDown, Mail, Send, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -8,8 +8,8 @@ import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
@@ -19,6 +19,7 @@ import {
   useApproveQuoteMutation,
   useQuoteQuery,
   useRejectQuoteMutation,
+  useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
@@ -113,11 +114,15 @@ export function QuoteDetailPage() {
   const [searchParams] = useSearchParams();
   const isPrintMode = searchParams.get('print') === '1';
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'APPROVED' | 'REJECTED' | undefined>(
+    undefined,
+  );
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery();
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
+  const sendForApprovalMutation = useUpdateQuoteMutation(id);
   const exportPdfMutation = useMutation({
     mutationFn: () => exportQuotePdf(id),
     onSuccess: (blob) => downloadBlob(blob, `${quoteQuery.data?.quoteNumber ?? 'teklif'}.pdf`),
@@ -180,18 +185,36 @@ export function QuoteDetailPage() {
     },
   ];
 
-  function handleApprove() {
+  function handleSendForApproval() {
+    sendForApprovalMutation.mutate(
+      { status: 'PENDING_APPROVAL' },
+      {
+        onSuccess: () => toast.success(tr.crm.quotes.detail.sendForApprovalSuccess),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
+  function handleConfirmApprove() {
     approveMutation.mutate(undefined, {
-      onSuccess: () => toast.success(tr.crm.quotes.detail.approveSuccess),
+      onSuccess: () => {
+        toast.success(tr.crm.quotes.detail.approveSuccess);
+        setPendingAction(undefined);
+      },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
     });
   }
 
-  function handleReject() {
+  function handleConfirmReject() {
     rejectMutation.mutate(undefined, {
-      onSuccess: () => toast.success(tr.crm.quotes.detail.rejectSuccess),
+      onSuccess: () => {
+        toast.success(tr.crm.quotes.detail.rejectSuccess);
+        setPendingAction(undefined);
+      },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
@@ -235,27 +258,40 @@ export function QuoteDetailPage() {
               tooltip={tr.crm.quotes.detail.createMessageTooltip}
               onClick={() => setIsMessageModalOpen(true)}
             />
-            {quote.status === 'PENDING_APPROVAL' && canApprove && (
-              <>
-                <Button type="button" onClick={handleApprove} disabled={approveMutation.isPending}>
-                  {tr.crm.quotes.detail.approveButton}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleReject}
-                  disabled={rejectMutation.isPending}
-                >
-                  {tr.crm.quotes.detail.rejectButton}
-                </Button>
-              </>
-            )}
-            {(quote.status === 'DRAFT' || quote.status === 'APPROVED') && (
+            {(quote.status === 'DRAFT' ||
+              quote.status === 'PENDING_APPROVAL' ||
+              quote.status === 'APPROVED') && (
               <CircleIconButton
                 icon={FileDown}
                 tooltip={tr.crm.quotes.detail.exportPdfButton}
                 onClick={() => exportPdfMutation.mutate()}
                 disabled={exportPdfMutation.isPending}
+              />
+            )}
+            {quote.status === 'PENDING_APPROVAL' && canApprove && (
+              <>
+                <CircleIconButton
+                  icon={Check}
+                  variant="success"
+                  tooltip={tr.crm.quotes.detail.approveButton}
+                  onClick={() => setPendingAction('APPROVED')}
+                  disabled={approveMutation.isPending}
+                />
+                <CircleIconButton
+                  icon={X}
+                  variant="danger"
+                  tooltip={tr.crm.quotes.detail.rejectButton}
+                  onClick={() => setPendingAction('REJECTED')}
+                  disabled={rejectMutation.isPending}
+                />
+              </>
+            )}
+            {quote.status === 'DRAFT' && (
+              <CircleIconButton
+                icon={Send}
+                tooltip={tr.crm.quotes.detail.sendForApprovalButton}
+                onClick={handleSendForApproval}
+                disabled={sendForApprovalMutation.isPending}
               />
             )}
           </div>
@@ -276,12 +312,6 @@ export function QuoteDetailPage() {
           {currency.format(totals.grandTotal)}
         </MetaCell>
       </div>
-
-      {!isPrintMode && quote.status === 'PENDING_APPROVAL' && (
-        <p className="mt-4 rounded-lg bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
-          {tr.crm.quotes.detail.pendingApprovalNotice}
-        </p>
-      )}
 
       <div className="mt-8">
         <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
@@ -366,6 +396,49 @@ export function QuoteDetailPage() {
             onClick={() => navigate(`/firsatlar/${quote.opportunity?.id}`)}
           />
         </div>
+      )}
+
+      {!isPrintMode && quote.status === 'DRAFT' && (
+        <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
+          <CircleIconButton
+            icon={Send}
+            tooltip={tr.crm.quotes.detail.sendForApprovalButton}
+            onClick={handleSendForApproval}
+            disabled={sendForApprovalMutation.isPending}
+          />
+        </div>
+      )}
+
+      {!isPrintMode && quote.status === 'PENDING_APPROVAL' && canApprove && (
+        <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
+          <CircleIconButton
+            icon={Check}
+            variant="success"
+            tooltip={tr.crm.quotes.detail.approveButton}
+            onClick={() => setPendingAction('APPROVED')}
+            disabled={approveMutation.isPending}
+          />
+          <CircleIconButton
+            icon={X}
+            variant="danger"
+            tooltip={tr.crm.quotes.detail.rejectButton}
+            onClick={() => setPendingAction('REJECTED')}
+            disabled={rejectMutation.isPending}
+          />
+        </div>
+      )}
+
+      {pendingAction && (
+        <ConfirmModal
+          title={tr.crm.quotes.statusChangeConfirmTitle}
+          message={tr.crm.quotes.statusChangeConfirm(tr.crm.quotes.statusOptions[pendingAction])}
+          confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
+          isPending={
+            pendingAction === 'APPROVED' ? approveMutation.isPending : rejectMutation.isPending
+          }
+          onConfirm={pendingAction === 'APPROVED' ? handleConfirmApprove : handleConfirmReject}
+          onCancel={() => setPendingAction(undefined)}
+        />
       )}
 
       {isMessageModalOpen && (

@@ -250,6 +250,7 @@ export function InteractionsListPage() {
         <Pagination
           page={interactionsQuery.data.meta.page}
           totalPages={interactionsQuery.data.meta.totalPages}
+          total={interactionsQuery.data.meta.total}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

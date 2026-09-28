@@ -336,6 +336,7 @@ export function MessagesListPage() {
         <Pagination
           page={messagesQuery.data.meta.page}
           totalPages={messagesQuery.data.meta.totalPages}
+          total={messagesQuery.data.meta.total}
           onPrevious={() => goToPage(page - 1)}
           onNext={() => goToPage(page + 1)}
         />

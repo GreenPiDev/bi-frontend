@@ -55,6 +55,7 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     account,
     contactId: null,
     contact: null,
+    projectId: null,
     status: 'DRAFT',
     quoteDate: '2026-09-07T00:00:00.000Z',
     leadTime: null,
@@ -129,9 +130,10 @@ describe('QuotesListPage', () => {
       id: 'po-1',
       orderNumber: 'SIP-2026-09-07-001',
       quoteId: 'q-approved',
-      quote: makeQuote({ id: 'q-approved', quoteNumber: 'TEK-A', status: 'APPROVED' }),
-      projectId: null,
-      project: null,
+      quote: {
+        ...makeQuote({ id: 'q-approved', quoteNumber: 'TEK-A', status: 'APPROVED' }),
+        project: null,
+      },
       status: 'DRAFT',
       createdById: 'u1',
       items: [],
@@ -143,6 +145,9 @@ describe('QuotesListPage', () => {
 
     const button = await screen.findByRole('button', { name: 'Satın Alma Siparişi Oluştur' });
     await user.click(button);
+
+    const confirmButton = await screen.findByRole('button', { name: 'Oluştur' });
+    await user.click(confirmButton);
 
     await waitFor(() => expect(createSpy).toHaveBeenCalledWith('q-approved'));
     expect(await screen.findByText('purchase-order-detail-page')).toBeInTheDocument();
