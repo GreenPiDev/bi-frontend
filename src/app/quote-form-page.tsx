@@ -7,6 +7,7 @@ import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { FormError } from '../components/ui/form-error';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
@@ -16,10 +17,11 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
-import { useProductsQuery } from '../features/crm/use-products';
+import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
 import { ApiError, type CreateQuoteInput, type OpportunityStage, type Product } from '../lib/api';
@@ -98,6 +100,7 @@ export function QuoteFormPage() {
     { enabled: Boolean(selectedProductListId) },
   );
   const pickerProducts = productsQuery.data?.data ?? [];
+  const pickerAttributeKeysQuery = useProductAttributeKeysQuery();
 
   // Sağdaki özet, arama/sayfalama boyunca görünürden çıkan ürünleri de doğru
   // gösterebilsin diye görülen her ürün burada biriktirilir (id -> Product).
@@ -268,35 +271,92 @@ export function QuoteFormPage() {
   const apiErrorMessage =
     createMutation.error instanceof ApiError ? createMutation.error.message : undefined;
 
-  const pickerColumns: TableColumn<Product>[] = [
+  const pickerAttributeKeys = [...(pickerAttributeKeysQuery.data ?? [])].sort();
+  const pickerAttributeColumns: TableColumn<Product>[] = pickerAttributeKeys.map((key) => ({
+    key: `attr:${key}`,
+    header: key,
+    className: 'text-app-muted',
+    render: (product) => product.attributes?.[key] ?? '—',
+  }));
+
+  const ALL_PICKER_COLUMNS: TableColumn<Product>[] = [
     {
       key: 'product',
       header: tr.crm.quotes.form.pickerProductColumn,
-      render: (product) => (
-        <>
-          {product.name}
-          {product.sku && (
-            <span className="ml-1.5 font-normal text-app-muted">({product.sku})</span>
-          )}
-        </>
-      ),
+      required: true,
+      render: (product) => product.name,
+    },
+    {
+      key: 'sku',
+      header: tr.crm.products.skuColumn,
+      className: 'text-app-muted',
+      render: (product) => product.sku ?? '—',
     },
     {
       key: 'unit',
       header: tr.crm.quotes.form.pickerUnitColumn,
-      className: 'w-24 text-app-muted',
+      className: 'text-app-muted',
       render: (product) => product.unit,
+    },
+    {
+      key: 'category',
+      header: tr.crm.products.categoryColumn,
+      className: 'text-app-muted',
+      render: (product) => product.category ?? '—',
+    },
+    {
+      key: 'brand',
+      header: tr.crm.products.brandColumn,
+      className: 'text-app-muted',
+      render: (product) => product.brand ?? '—',
+    },
+    {
+      key: 'maxDiscountPct',
+      header: tr.crm.products.maxDiscountColumn,
+      className: 'text-app-muted',
+      render: (product) => (product.maxDiscountPct ? `%${product.maxDiscountPct}` : '—'),
     },
     {
       key: 'price',
       header: tr.crm.quotes.form.pickerPriceColumn,
-      className: 'w-32 text-app-muted',
+      className: 'text-app-muted',
       render: (product) =>
         product.price !== null
           ? `${plainNumber.format(Number(product.price))} ${product.currency}`
           : '—',
     },
+    {
+      key: 'costPrice',
+      header: tr.crm.products.costPriceColumn,
+      className: 'text-app-muted',
+      render: (product) => (product.costPrice != null ? product.costPrice : '—'),
+    },
+    {
+      key: 'minStockLevel',
+      header: tr.crm.products.minStockLevelColumn,
+      className: 'text-app-muted',
+      render: (product) => (product.minStockLevel != null ? product.minStockLevel : '—'),
+    },
+    {
+      key: 'description',
+      header: tr.crm.products.descriptionColumn,
+      className: 'text-app-muted',
+      render: (product) => product.description ?? '—',
+    },
+    ...pickerAttributeColumns,
   ];
+
+  const {
+    isColumnVisible: isPickerColumnVisible,
+    optionalColumns: optionalPickerColumns,
+    visibleOptionalKeys: visiblePickerKeys,
+    setVisibleOptionalKeys: setVisiblePickerKeys,
+  } = useColumnVisibility(
+    'quote-product-picker',
+    ALL_PICKER_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    ['price'],
+  );
+  const pickerColumns = ALL_PICKER_COLUMNS.filter((c) => isPickerColumnVisible(c.key));
 
   function renderEntryPanel(product: Product) {
     return (
@@ -533,20 +593,27 @@ export function QuoteFormPage() {
                 <>
                   <p className="mt-1 text-xs text-app-muted">{tr.crm.quotes.form.pickerHint}</p>
 
-                  <div className="relative mt-3">
-                    <Search
-                      size={16}
-                      className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-                    />
-                    <input
-                      type="search"
-                      value={pickerQuery}
-                      onChange={(event) => {
-                        setPickerPage(1);
-                        setPickerQuery(event.target.value);
-                      }}
-                      placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
-                      className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                  <div className="mt-3 flex flex-wrap items-end gap-3">
+                    <div className="relative flex-1">
+                      <Search
+                        size={16}
+                        className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+                      />
+                      <input
+                        type="search"
+                        value={pickerQuery}
+                        onChange={(event) => {
+                          setPickerPage(1);
+                          setPickerQuery(event.target.value);
+                        }}
+                        placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
+                        className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                      />
+                    </div>
+                    <ColumnVisibilityPicker
+                      columns={optionalPickerColumns}
+                      value={visiblePickerKeys}
+                      onChange={setVisiblePickerKeys}
                     />
                   </div>
 

@@ -33,17 +33,22 @@ export function ContactAutocomplete({
 }: ContactAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
-  const searchQuery = useContactsQuery({ q: debouncedQuery || undefined, pageSize: PAGE_SIZE });
+  const searchQuery = useContactsQuery(
+    { q: debouncedQuery || undefined, pageSize: PAGE_SIZE },
+    { enabled: Boolean(debouncedQuery) },
+  );
   const selectedContactQuery = useContactQuery(value ?? '');
   const selectedContact = selectedContactQuery.data;
 
   const displayValue =
     typedQuery ??
     (selectedContact ? `${selectedContact.firstName} ${selectedContact.lastName}` : '');
-  const options = (searchQuery.data?.data ?? []).map((contact) => ({
-    id: contact.id,
-    label: `${contact.firstName} ${contact.lastName}`,
-  }));
+  const options = debouncedQuery
+    ? (searchQuery.data?.data ?? []).map((contact) => ({
+        id: contact.id,
+        label: `${contact.firstName} ${contact.lastName}`,
+      }))
+    : [];
 
   return (
     <AsyncAutocomplete

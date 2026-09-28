@@ -16,7 +16,7 @@ export function ClearFieldButton({ onClick, label }: { onClick: () => void; labe
         event.stopPropagation();
         onClick();
       }}
-      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-app-bg-muted text-app-muted transition-colors hover:bg-app-border hover:text-app-text"
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-app-bg-muted text-app-danger transition-colors hover:bg-app-danger hover:text-white"
     >
       <X size={12} strokeWidth={2.5} />
     </button>

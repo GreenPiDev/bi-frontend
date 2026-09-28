@@ -126,12 +126,12 @@ export function ProductsListContent() {
   }
 
   // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar (Faz B) - farklı ürün
-  // listelerinde (markalarda) farklı anahtarlar olabilir, o yüzden sayfadaki ürünlerden
-  // görülen tüm anahtarların birleşimi kadar sütun eklenir; bir üründe o anahtar yoksa
-  // hücre boş kalır (bkz. docs/VARSAYIMLAR.md V40).
-  const attributeKeys = [
-    ...new Set((productsQuery.data?.data ?? []).flatMap((p) => Object.keys(p.attributes ?? {}))),
-  ].sort();
+  // listelerinde (markalarda) farklı anahtarlar olabilir. Kolon seçenekleri, sadece o anki
+  // sayfada yüklenen ürünler değil tüm katalogdaki anahtarlar (attributeKeysQuery, filtre
+  // çekmecesiyle aynı tenant-geneli uç) üzerinden kurulur - aksi halde başka sayfadaki bir
+  // üründe olan özel alan, kullanıcı o sayfaya gelene kadar gösterilecek kolonlar listesinde
+  // hiç görünmezdi. Bir üründe o anahtar yoksa hücre boş kalır.
+  const attributeKeys = [...(attributeKeysQuery.data ?? [])].sort();
   const attributeColumns: TableColumn<Product>[] = attributeKeys.map((key) => ({
     key: `attr:${key}`,
     header: key,
@@ -196,6 +196,36 @@ export function ProductsListContent() {
       header: tr.crm.products.maxDiscountColumn,
       className: 'text-app-muted',
       render: (p) => (p.maxDiscountPct ? `%${p.maxDiscountPct}` : '—'),
+    },
+    {
+      key: 'price',
+      header: tr.crm.products.priceColumn,
+      className: 'text-app-muted',
+      render: (p) => (p.price != null ? p.price : '—'),
+    },
+    {
+      key: 'currency',
+      header: tr.crm.products.currencyColumn,
+      className: 'text-app-muted',
+      render: (p) => p.currency ?? '—',
+    },
+    {
+      key: 'costPrice',
+      header: tr.crm.products.costPriceColumn,
+      className: 'text-app-muted',
+      render: (p) => (p.costPrice != null ? p.costPrice : '—'),
+    },
+    {
+      key: 'minStockLevel',
+      header: tr.crm.products.minStockLevelColumn,
+      className: 'text-app-muted',
+      render: (p) => (p.minStockLevel != null ? p.minStockLevel : '—'),
+    },
+    {
+      key: 'description',
+      header: tr.crm.products.descriptionColumn,
+      className: 'text-app-muted',
+      render: (p) => p.description ?? '—',
     },
     ...attributeColumns,
     {

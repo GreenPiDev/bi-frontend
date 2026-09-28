@@ -38,14 +38,19 @@ export function AccountAutocomplete({
 }: AccountAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
-  const searchQuery = useAccountsQuery({ q: debouncedQuery || undefined, pageSize: PAGE_SIZE });
+  const searchQuery = useAccountsQuery(
+    { q: debouncedQuery || undefined, pageSize: PAGE_SIZE },
+    { enabled: Boolean(debouncedQuery) },
+  );
   const selectedAccountQuery = useAccountQuery(value ?? '');
 
   const displayValue = typedQuery ?? selectedAccountQuery.data?.name ?? '';
-  const options = (searchQuery.data?.data ?? []).map((account) => ({
-    id: account.id,
-    label: account.name,
-  }));
+  const options = debouncedQuery
+    ? (searchQuery.data?.data ?? []).map((account) => ({
+        id: account.id,
+        label: account.name,
+      }))
+    : [];
 
   return (
     <AsyncAutocomplete

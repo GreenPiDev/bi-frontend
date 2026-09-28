@@ -9,8 +9,10 @@ import { useInteractionTypeOptionsRealtimeSync } from '../features/crm/use-inter
 import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
 import { usePaymentMethodOptionsRealtimeSync } from '../features/crm/use-payment-method-options-realtime-sync';
 import { useProductCategoryOptionsRealtimeSync } from '../features/crm/use-product-categories-realtime-sync';
+import { useProductListsRealtimeSync } from '../features/crm/use-product-lists-realtime-sync';
 import { useSectorOptionsRealtimeSync } from '../features/crm/use-sector-options-realtime-sync';
 import { useTitleOptionsRealtimeSync } from '../features/crm/use-title-options-realtime-sync';
+import { useUnitOptionsRealtimeSync } from '../features/crm/use-unit-options-realtime-sync';
 import { useNotificationsRealtimeSync } from '../features/notifications/use-notifications-realtime-sync';
 import { useModuleAccessRealtimeSync } from '../features/platform-admin/use-module-access-realtime-sync';
 import { tr } from '../i18n/tr';
@@ -36,7 +38,9 @@ export function ProtectedRoute({
   useSectorOptionsRealtimeSync();
   useDepartmentOptionsRealtimeSync();
   useBrandOptionsRealtimeSync();
+  useUnitOptionsRealtimeSync();
   useProductCategoryOptionsRealtimeSync();
+  useProductListsRealtimeSync();
   useTitleOptionsRealtimeSync();
   usePaymentMethodOptionsRealtimeSync();
   useIbanOptionsRealtimeSync();

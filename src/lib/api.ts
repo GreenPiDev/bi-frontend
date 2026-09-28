@@ -1058,6 +1058,34 @@ export function deleteBrandOption(id: string): Promise<void> {
   return request(`/brand-options/${id}`, { method: 'DELETE' });
 }
 
+export interface UnitOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listUnitOptions(): Promise<UnitOption[]> {
+  return request('/unit-options');
+}
+
+export function createUnitOption(label: string): Promise<UnitOption> {
+  return request('/unit-options', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updateUnitOption(id: string, label: string): Promise<UnitOption> {
+  return request(`/unit-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deleteUnitOption(id: string): Promise<void> {
+  return request(`/unit-options/${id}`, { method: 'DELETE' });
+}
+
 export interface InteractionTypeOption {
   id: string;
   label: string;

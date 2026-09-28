@@ -256,6 +256,9 @@ export const purchaseOrderFormSchema = z.object({
   items: z.array(
     z.object({
       id: z.string().optional(),
+      /** UI-only: urun secicisini o listedeki urunlerle sinirlamak icin, payload'a
+       * dahil edilmez. */
+      productListId: z.string().optional(),
       productId: z.string().optional(),
       description: z.string().max(300),
       quantity: z.string().min(1, 'Miktar gerekli.'),
@@ -274,6 +277,7 @@ export const purchaseOrderCreateFormSchema = z.object({
   items: z
     .array(
       z.object({
+        productListId: z.string().optional(),
         productId: z.string().optional(),
         description: z.string().max(300),
         quantity: z.string().min(1, 'Miktar gerekli.'),

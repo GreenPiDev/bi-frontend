@@ -15,6 +15,7 @@ import { Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { ProductAutocomplete } from '../features/crm/product-autocomplete';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useQuotesQuery } from '../features/crm/use-quotes';
 import { useCreatePurchaseOrderMutation } from '../features/crm/use-purchase-orders';
 import {
@@ -56,6 +57,11 @@ export function PurchaseOrderCreatePage() {
     defaultValues: { items: [{ description: '', quantity: '1', productId: undefined }] },
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const productListsQuery = useProductListsQuery({ pageSize: 100 });
+  const productListOptions = (productListsQuery.data?.data ?? []).map((productList) => ({
+    value: productList.id,
+    label: productList.name,
+  }));
 
   const selectedAccountId = watch('accountId');
   const quotesQuery = useQuotesQuery(
@@ -71,24 +77,61 @@ export function PurchaseOrderCreatePage() {
 
   const itemColumns: TableColumn<ItemRow>[] = [
     {
-      key: 'product',
-      header: tr.crm.purchaseOrders.detail.productColumn,
-      className: 'align-top min-w-[180px]',
+      key: 'productList',
+      header: tr.crm.purchaseOrders.detail.productListColumn,
+      className: 'align-top min-w-[160px]',
       render: (row) => (
         <Controller
           control={control}
-          name={`items.${row.index}.productId` as const}
+          name={`items.${row.index}.productListId` as const}
           render={({ field }) => (
-            <ProductAutocomplete
-              label={tr.crm.purchaseOrders.detail.productColumn}
-              placeholder={tr.crm.purchaseOrders.detail.productPlaceholder}
-              value={field.value}
-              onChange={field.onChange}
+            <Select
+              label={tr.crm.purchaseOrders.detail.productListColumn}
+              placeholder={tr.crm.purchaseOrders.detail.productListPlaceholder}
+              options={productListOptions}
               clearable
+              onClear={() => {
+                field.onChange('');
+                setValue(`items.${row.index}.productId` as const, undefined);
+              }}
+              value={field.value ?? ''}
+              onChange={(event) => {
+                field.onChange(event.target.value);
+                setValue(`items.${row.index}.productId` as const, undefined);
+              }}
             />
           )}
         />
       ),
+    },
+    {
+      key: 'product',
+      header: tr.crm.purchaseOrders.detail.productColumn,
+      className: 'align-top min-w-[180px]',
+      render: (row) => {
+        const productListId = watch(`items.${row.index}.productListId` as const);
+        return (
+          <Controller
+            control={control}
+            name={`items.${row.index}.productId` as const}
+            render={({ field }) => (
+              <ProductAutocomplete
+                label={tr.crm.purchaseOrders.detail.productColumn}
+                placeholder={
+                  productListId
+                    ? tr.crm.purchaseOrders.detail.productPlaceholder
+                    : tr.crm.purchaseOrders.detail.productDisabledPlaceholder
+                }
+                value={field.value}
+                onChange={field.onChange}
+                productListId={productListId || undefined}
+                disabled={!productListId}
+                clearable
+              />
+            )}
+          />
+        );
+      },
     },
     {
       key: 'description',
@@ -223,7 +266,14 @@ export function PurchaseOrderCreatePage() {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => append({ description: '', quantity: '1', productId: undefined })}
+            onClick={() =>
+              append({
+                description: '',
+                quantity: '1',
+                productId: undefined,
+                productListId: undefined,
+              })
+            }
           >
             {tr.crm.purchaseOrders.detail.addExtraItem}
           </Button>

@@ -20,10 +20,12 @@ export function useAccountsQuery(
     notContactedDays?: number;
     createdById?: string;
   } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...ACCOUNTS_QUERY_KEY, params],
     queryFn: () => listAccounts(params),
+    enabled: options.enabled ?? true,
   });
 }
 

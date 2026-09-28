@@ -12,6 +12,10 @@ interface ProductAutocompleteProps {
   required?: boolean;
   hint?: string;
   clearable?: boolean;
+  /** Verilirse arama sadece bu urun listesindeki urunlerle sinirlanir (siparis
+   * kalemi satirlarinda "once urun listesi, sonra urun" akisi icin). */
+  productListId?: string;
+  disabled?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -33,17 +37,24 @@ export function ProductAutocomplete({
   required,
   hint,
   clearable,
+  productListId,
+  disabled,
 }: ProductAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
-  const searchQuery = useProductsQuery({ q: debouncedQuery || undefined, pageSize: PAGE_SIZE });
+  const searchQuery = useProductsQuery(
+    { q: debouncedQuery || undefined, pageSize: PAGE_SIZE, productListId },
+    { enabled: !disabled && Boolean(debouncedQuery) },
+  );
   const selectedProductQuery = useProductQuery(value ?? '');
 
   const displayValue = typedQuery ?? selectedProductQuery.data?.name ?? '';
-  const options = (searchQuery.data?.data ?? []).map((product) => ({
-    id: product.id,
-    label: product.name,
-  }));
+  const options = debouncedQuery
+    ? (searchQuery.data?.data ?? []).map((product) => ({
+        id: product.id,
+        label: product.name,
+      }))
+    : [];
 
   return (
     <AsyncAutocomplete
@@ -65,6 +76,7 @@ export function ProductAutocomplete({
       required={required}
       hint={hint}
       clearable={clearable}
+      disabled={disabled}
       onClear={
         clearable
           ? () => {

@@ -29,8 +29,9 @@ export function ProductListFormPage() {
   const location = useLocation();
   const backTo = (location.state as { from?: string } | null)?.from ?? '/urun-listeleri';
   // Bu sayfadan /urunler/:id veya /urunler/yeni'ye gidilirse, oradaki "geri dön" bu
-  // formun kendi URL'ine dönmeli.
-  const productBackState = { from: `${location.pathname}${location.search}` };
+  // formun kendi URL'ine dönmeli. productListId, /urunler/yeni'de "Ürün Listesi"
+  // dropdown'ının bu listeyle önceden dolu gelmesi için taşınıyor.
+  const productBackState = { from: `${location.pathname}${location.search}`, productListId: id };
   const toast = useToast();
   const productListQuery = useProductListQuery(id ?? '');
   const createMutation = useCreateProductListMutation();

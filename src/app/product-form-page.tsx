@@ -12,7 +12,8 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
 import { BrandSelect } from '../features/crm/brand-select';
 import { CategorySelect } from '../features/crm/category-select';
-import { useProductListsQuery } from '../features/crm/use-product-lists';
+import { ProductListSelect } from '../features/crm/product-list-select';
+import { UnitSelect } from '../features/crm/unit-select';
 import {
   useCreateProductMutation,
   useProductQuery,
@@ -27,10 +28,11 @@ export function ProductFormPage() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const location = useLocation();
-  const backTo = (location.state as { from?: string } | null)?.from ?? '/urunler';
+  const locationState = location.state as { from?: string; productListId?: string } | null;
+  const backTo = locationState?.from ?? '/urunler';
+  const preselectedProductListId = locationState?.productListId;
   const toast = useToast();
   const productQuery = useProductQuery(id ?? '');
-  const productListsQuery = useProductListsQuery();
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
@@ -43,7 +45,11 @@ export function ProductFormPage() {
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: { unit: 'adet', currency: 'TRY' },
+    defaultValues: {
+      unit: '',
+      currency: 'TRY',
+      productListId: preselectedProductListId,
+    },
   });
 
   const minStockLevelField = register('minStockLevel');
@@ -129,16 +135,16 @@ export function ProductFormPage() {
           <div className="sm:col-span-2">
             <FormError message={apiErrorMessage} />
           </div>
-          <Select
-            label={tr.crm.products.form.productListLabel}
-            required
-            hint={tr.crm.products.form.productListHint}
-            error={errors.productListId?.message}
-            options={(productListsQuery.data?.data ?? []).map((productList) => ({
-              value: productList.id,
-              label: productList.name,
-            }))}
-            {...register('productListId')}
+          <Controller
+            name="productListId"
+            control={control}
+            render={({ field }) => (
+              <ProductListSelect
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.productListId?.message}
+              />
+            )}
           />
           <TextField
             label={tr.crm.products.form.nameLabel}
@@ -153,12 +159,16 @@ export function ProductFormPage() {
             error={errors.sku?.message}
             {...register('sku')}
           />
-          <TextField
-            label={tr.crm.products.form.unitLabel}
-            required
-            hint={tr.crm.products.form.unitHint}
-            error={errors.unit?.message}
-            {...register('unit')}
+          <Controller
+            name="unit"
+            control={control}
+            render={({ field }) => (
+              <UnitSelect
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.unit?.message}
+              />
+            )}
           />
           <Controller
             name="category"

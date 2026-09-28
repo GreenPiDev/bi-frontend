@@ -21,10 +21,12 @@ export function useContactsQuery(
     sort?: string;
     createdById?: string;
   } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, params],
     queryFn: () => listContacts(params),
+    enabled: options.enabled ?? true,
   });
 }
 

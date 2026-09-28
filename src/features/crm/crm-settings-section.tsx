@@ -49,6 +49,12 @@ import {
   useUpdateBrandOptionMutation,
 } from './use-brand-options';
 import {
+  useCreateUnitOptionMutation,
+  useDeleteUnitOptionMutation,
+  useUnitOptionsQuery,
+  useUpdateUnitOptionMutation,
+} from './use-unit-options';
+import {
   useCreateSectorOptionMutation,
   useDeleteSectorOptionMutation,
   useSectorOptionsQuery,
@@ -490,6 +496,29 @@ function BrandOptionsManager() {
       createMutation={useCreateBrandOptionMutation()}
       updateMutation={useUpdateBrandOptionMutation()}
       deleteMutation={useDeleteBrandOptionMutation()}
+    />
+  );
+}
+
+function UnitOptionsManager() {
+  return (
+    <OptionListManager
+      title={tr.settings.crm.unitOptions.title}
+      subtitle={tr.settings.crm.unitOptions.subtitle}
+      addPlaceholder={tr.settings.crm.unitOptions.addPlaceholder}
+      addButtonLabel={tr.settings.crm.unitOptions.addButton}
+      emptyText={tr.settings.crm.unitOptions.empty}
+      editButtonLabel={tr.settings.crm.unitOptions.editButton}
+      saveButtonLabel={tr.settings.crm.unitOptions.saveButton}
+      cancelButtonLabel={tr.settings.crm.unitOptions.cancelButton}
+      deleteButtonLabel={tr.settings.crm.unitOptions.deleteButton}
+      addSuccessMessage={tr.settings.crm.unitOptions.addSuccess}
+      editSuccessMessage={tr.settings.crm.unitOptions.editSuccess}
+      deleteSuccessMessage={tr.settings.crm.unitOptions.deleteSuccess}
+      optionsQuery={useUnitOptionsQuery()}
+      createMutation={useCreateUnitOptionMutation()}
+      updateMutation={useUpdateUnitOptionMutation()}
+      deleteMutation={useDeleteUnitOptionMutation()}
     />
   );
 }
@@ -948,6 +977,9 @@ export function CrmSettingsSection() {
       </div>
       <div className="mt-3 border-t border-app-border">
         <BrandOptionsManager />
+      </div>
+      <div className="mt-3 border-t border-app-border">
+        <UnitOptionsManager />
       </div>
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">

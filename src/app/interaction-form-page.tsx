@@ -89,10 +89,10 @@ export function InteractionFormPage() {
   // adi yazildiginda da (orn. "Demsan") o firma bulunabilir ve M2'nin "zaten var olan
   // firmayi tekrar olusturma" garantisi de dogru calisir.
   const debouncedAccountName = useDebouncedValue(accountNameValue);
-  const accountsQuery = useAccountsQuery({
-    q: debouncedAccountName || undefined,
-    pageSize: ACCOUNT_SEARCH_PAGE_SIZE,
-  });
+  const accountsQuery = useAccountsQuery(
+    { q: debouncedAccountName || undefined, pageSize: ACCOUNT_SEARCH_PAGE_SIZE },
+    { enabled: Boolean(debouncedAccountName) },
+  );
   const matchedAccount = (accountsQuery.data?.data ?? []).find(
     (account) => account.name.toLowerCase() === accountNameValue.trim().toLowerCase(),
   );

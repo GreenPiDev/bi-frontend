@@ -11,16 +11,22 @@ export interface ColumnVisibilityDef {
  * Liste sayfalarindaki "Gosterilecek kolonlar" seceneginin backend'e baglanmasi -
  * kullanici bazli (User.columnPreferences JSON, pageKey -> gorunur opsiyonel kolon
  * anahtarlari), mevcut PATCH /users/me + useMeQuery cache'i uzerinden calisir. Tercih
- * hic ayarlanmamissa (kayit yoksa) tum opsiyonel kolonlar varsayilan olarak gorunur.
+ * hic ayarlanmamissa (kayit yoksa), `defaultVisibleKeys` verilmisse o alt kume, verilmemisse
+ * tum opsiyonel kolonlar varsayilan olarak gorunur (orn. /teklifler/yeni'deki urun secici
+ * varsayilan olarak sadece "Fiyat" gostersin istendi - bkz. quote-form-page.tsx).
  */
-export function useColumnVisibility(pageKey: string, columns: ColumnVisibilityDef[]) {
+export function useColumnVisibility(
+  pageKey: string,
+  columns: ColumnVisibilityDef[],
+  defaultVisibleKeys?: string[],
+) {
   const meQuery = useMeQuery();
   const updateMutation = useUpdateProfileMutation();
 
   const requiredKeys = columns.filter((c) => c.required).map((c) => c.key);
   const optionalColumns = columns.filter((c) => !c.required);
   const savedKeys = meQuery.data?.columnPreferences?.[pageKey];
-  const visibleOptionalKeys = savedKeys ?? optionalColumns.map((c) => c.key);
+  const visibleOptionalKeys = savedKeys ?? defaultVisibleKeys ?? optionalColumns.map((c) => c.key);
   const visibleKeySet = new Set([...requiredKeys, ...visibleOptionalKeys]);
 
   function setVisibleOptionalKeys(nextKeys: string[]) {
