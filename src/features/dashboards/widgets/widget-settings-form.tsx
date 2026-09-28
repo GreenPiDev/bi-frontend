@@ -40,7 +40,7 @@ export function WidgetSettingsForm({
           id="widget-type"
           value={type}
           onChange={(event) => setType(event.target.value as WidgetType)}
-          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         >
           {WIDGET_TYPES.map((widgetType) => (
             <option key={widgetType} value={widgetType}>

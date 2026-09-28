@@ -78,7 +78,7 @@ export function LandlineField({
         onChange={handleChange}
         placeholder="0(___) ___ __ __"
         className={clsx(
-          'rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
+          'rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',
           error && 'border-app-danger',
         )}
       />

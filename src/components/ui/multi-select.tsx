@@ -95,7 +95,7 @@ export function MultiSelect({
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         className={clsx(
-          'flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:ring-2 focus:ring-app-primary',
+          'flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
           error && 'border-app-danger',
           value.length === 0 ? 'text-app-muted' : 'text-app-text',
         )}

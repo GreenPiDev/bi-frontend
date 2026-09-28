@@ -256,7 +256,7 @@ export function ContactsListPage() {
             setQInput(event.target.value);
           }}
           placeholder={tr.crm.contacts.searchPlaceholder}
-          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
         />
       </div>
 

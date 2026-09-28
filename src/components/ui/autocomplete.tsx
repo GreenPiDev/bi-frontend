@@ -101,7 +101,7 @@ export function Autocomplete({
             }}
             onKeyDown={handleKeyDown}
             className={clsx(
-              'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 pr-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
+              'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 pr-9 text-sm text-app-text outline-none focus:border-app-primary',
               error && 'border-app-danger',
             )}
             aria-invalid={Boolean(error)}

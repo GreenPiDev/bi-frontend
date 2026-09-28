@@ -302,7 +302,7 @@ function OptionListManager({
           onChange={(event) => setLabel(event.target.value)}
           onKeyDown={(event) => event.key === 'Enter' && handleAdd()}
           placeholder={addPlaceholder}
-          className="flex-1 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="flex-1 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         />
         <Button type="button" disabled={createMutation.isPending} onClick={handleAdd}>
           {addButtonLabel}
@@ -330,7 +330,7 @@ function OptionListManager({
                       cancelEdit();
                     }
                   }}
-                  className="rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                  className="rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-sm text-app-text outline-none focus:border-app-primary"
                 />
                 <button
                   type="button"
@@ -870,7 +870,7 @@ function InactivityThresholdSetting() {
               min={1}
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
             />
           </div>
           <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
@@ -934,7 +934,7 @@ function PostSaleFollowUpDaysSetting() {
               min={1}
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
             />
           </div>
           <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>

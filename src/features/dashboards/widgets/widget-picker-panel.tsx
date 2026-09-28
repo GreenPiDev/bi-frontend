@@ -65,7 +65,7 @@ export function WidgetPickerPanel({ dashboardId, layout, onCreated }: WidgetPick
           id="widget-dataset"
           value={datasetId}
           onChange={(event) => selectDataset(event.target.value)}
-          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         >
           <option value="">{tr.dashboards.editor.datasetPlaceholder}</option>
           {datasetsQuery.data?.map((dataset) => (
@@ -86,7 +86,7 @@ export function WidgetPickerPanel({ dashboardId, layout, onCreated }: WidgetPick
               id="widget-measure"
               value={measureFieldId}
               onChange={(event) => setMeasureFieldId(event.target.value)}
-              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
             >
               <option value="">—</option>
               {measures.map((field) => (
@@ -105,7 +105,7 @@ export function WidgetPickerPanel({ dashboardId, layout, onCreated }: WidgetPick
               id="widget-dimension"
               value={dimensionFieldId}
               onChange={(event) => setDimensionFieldId(event.target.value)}
-              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
             >
               <option value="">{tr.dashboards.editor.dimensionNone}</option>
               {dimensions.map((field) => (

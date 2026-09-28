@@ -58,7 +58,7 @@ function FilterValueInput({
         type={inputType}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+        className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-app-primary"
       />
     </div>
   );
@@ -140,7 +140,7 @@ function DashboardFilterForm({ datasets, onAdd, onCancel }: DashboardFilterFormP
           id="dash-filter-dataset"
           value={datasetId}
           onChange={(event) => selectDataset(event.target.value)}
-          className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-app-primary"
         >
           <option value="">{tr.dashboards.filters.datasetPlaceholder}</option>
           {datasets.map((d) => (
@@ -160,7 +160,7 @@ function DashboardFilterForm({ datasets, onAdd, onCancel }: DashboardFilterFormP
             id="dash-filter-field"
             value={fieldName}
             onChange={(event) => selectField(event.target.value)}
-            className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-app-primary"
           >
             <option value="">{tr.dashboards.filters.fieldPlaceholder}</option>
             {fields.map((f) => (
@@ -181,7 +181,7 @@ function DashboardFilterForm({ datasets, onAdd, onCancel }: DashboardFilterFormP
             id="dash-filter-operator"
             value={op}
             onChange={(event) => setOp(event.target.value as FilterOperator)}
-            className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-app-primary"
           >
             {operators.map((o) => (
               <option key={o} value={o}>

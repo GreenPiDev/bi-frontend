@@ -155,7 +155,7 @@ export function DateTimeField({
             aria-label={label}
             onClick={() => (open ? closeMenu() : setOpen(true))}
             className={clsx(
-              'flex w-full items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:ring-2 focus:ring-app-primary',
+              'flex w-full items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
               error && 'border-app-danger',
               datePart ? 'text-app-text' : 'text-app-muted',
             )}
@@ -184,7 +184,7 @@ export function DateTimeField({
           disabled={!datePart}
           aria-label="Saat"
           className={clsx(
-            'w-32 rounded-lg border border-app-border bg-app-surface px-3 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary disabled:opacity-50',
+            'w-32 rounded-lg border border-app-border bg-app-surface px-3 py-2.5 text-sm text-app-text outline-none focus:border-app-primary disabled:opacity-50',
             error && 'border-app-danger',
           )}
         />

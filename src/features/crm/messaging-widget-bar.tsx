@@ -114,7 +114,7 @@ export function MessagingWidgetBar({
                 value={q}
                 onChange={(event) => onQChange(event.target.value)}
                 placeholder={tr.crm.messages.searchPlaceholder}
-                className="w-full rounded-lg border border-app-border bg-app-bg py-1.5 pr-2 pl-8 text-xs text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                className="w-full rounded-lg border border-app-border bg-app-bg py-1.5 pr-2 pl-8 text-xs text-app-text outline-none focus:border-app-primary"
               />
             </div>
             <button

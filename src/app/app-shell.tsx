@@ -280,7 +280,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
               placeholder={tr.shell.searchPlaceholder}
               aria-label={tr.shell.searchPlaceholder}
               className={clsx(
-                'h-9 rounded-lg border border-app-border bg-app-bg pl-8 pr-2 text-sm text-app-text outline-none transition-[width,opacity] duration-200 focus:ring-2 focus:ring-app-primary',
+                'h-9 rounded-lg border border-app-border bg-app-bg pl-8 pr-2 text-sm text-app-text outline-none transition-[width,opacity] duration-200 focus:border-app-primary',
                 sidebarOpen ? 'w-full opacity-100' : 'w-9 opacity-0',
               )}
             />

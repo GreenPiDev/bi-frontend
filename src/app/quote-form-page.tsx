@@ -17,9 +17,12 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
+import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
+import { AddOptionModal } from '../features/crm/add-option-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
+import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
@@ -62,6 +65,13 @@ export function QuoteFormPage() {
   const contactsQuery = useContactsQuery();
   const productListsQuery = useProductListsQuery();
   const createMutation = useCreateQuoteMutation();
+  const createPaymentMethodOptionMutation = useCreatePaymentMethodOptionMutation();
+  // Odeme Yontemi/IBAN icin "+ Yeni ..." modallari, urun formundaki
+  // Birim/Kategori/Marka desenindeki gibi bilincli olarak <form>'un DISINDA render
+  // edilir - Select'lerin kendi icinde render edilselerdi modal'in <form>'u disardaki
+  // teklif formunun <form>'una ic ice girer, "Kaydet" native submit'e dusup sayfayi
+  // yeniler ve eklenen deger hic kaydedilmez (bkz. product-form-page.tsx).
+  const [activeOptionModal, setActiveOptionModal] = useState<'paymentMethod' | 'iban' | null>(null);
 
   const {
     register,
@@ -546,6 +556,8 @@ export function QuoteFormPage() {
               paymentMethod: errors.paymentMethod?.message,
               ibanOptionId: errors.ibanOptionId?.message,
             }}
+            onRequestAddPaymentMethod={() => setActiveOptionModal('paymentMethod')}
+            onRequestAddIban={() => setActiveOptionModal('iban')}
           />
 
           <TextField
@@ -607,7 +619,7 @@ export function QuoteFormPage() {
                           setPickerQuery(event.target.value);
                         }}
                         placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
-                        className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                        className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
                       />
                     </div>
                     <ColumnVisibilityPicker
@@ -771,6 +783,30 @@ export function QuoteFormPage() {
           </div>
         </form>
       </div>
+
+      {activeOptionModal === 'paymentMethod' && (
+        <AddOptionModal
+          title={tr.crm.quotes.form.paymentMethodNewModalTitle}
+          fieldLabel={tr.crm.quotes.form.paymentMethodNewFieldLabel}
+          placeholder={tr.crm.quotes.form.paymentMethodNewPlaceholder}
+          successMessage={tr.crm.quotes.form.paymentMethodNewSuccess}
+          createMutation={createPaymentMethodOptionMutation}
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(label) => {
+            setValue('paymentMethod', label, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
+      {activeOptionModal === 'iban' && (
+        <AddIbanOptionModal
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(option) => {
+            setValue('ibanOptionId', option.id, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

@@ -57,7 +57,7 @@ export function CategorySelect({ value, onChange, error, onRequestAddNew }: Cate
       options={options.map((option) => ({ value: option.label, label: option.label }))}
       trailingAction={
         onRequestAddNew && (
-          <Button type="button" variant="secondary" className="shrink-0" onClick={onRequestAddNew}>
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
             {tr.crm.products.form.categoryNewButton}
           </Button>
         )

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useIbanOptionsQuery } from './use-iban-options';
@@ -8,6 +9,11 @@ interface IbanSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 banka hesabı tanımlıysa, select'in yanında ayarlara
+   * gitmeden tek bir yeni banka hesabı eklemeye yarayan "+ Yeni ..." butonu
+   * gösterilir - Birim/Kategori/Marka alanlarıyla aynı desen, bkz.
+   * category-select.tsx. */
+  onRequestAddNew?: () => void;
 }
 
 function maskIban(iban: string): string {
@@ -20,7 +26,7 @@ function maskIban(iban: string): string {
  * IBAN oradan eklenince `useIbanOptionsRealtimeSync` bu sorguyu invalidate eder
  * ve dropdown sayfa yenilenmeden otomatik guncellenir (departman/odeme yontemi
  * alanlariyla ayni desen, bkz. department-select.tsx). */
-export function IbanSelect({ label, value, onChange, error }: IbanSelectProps) {
+export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: IbanSelectProps) {
   const optionsQuery = useIbanOptionsQuery();
   const options = optionsQuery.data ?? [];
 
@@ -55,6 +61,13 @@ export function IbanSelect({ label, value, onChange, error }: IbanSelectProps) {
         value: option.id,
         label: `${option.bankName} • ${option.accountHolderName} • ${maskIban(option.iban)}`,
       }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.quotes.form.ibanNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

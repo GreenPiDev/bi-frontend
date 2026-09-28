@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { usePaymentMethodOptionsQuery } from './use-payment-method-options';
@@ -8,6 +9,11 @@ interface PaymentMethodSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 ödeme yöntemi tanımlıysa, select'in yanında ayarlara
+   * gitmeden tek bir yeni ödeme yöntemi eklemeye yarayan "+ Yeni ..." butonu
+   * gösterilir - Birim/Kategori/Marka alanlarıyla (`UnitSelect` vb.) aynı desen,
+   * bkz. category-select.tsx. */
+  onRequestAddNew?: () => void;
 }
 
 /** Odeme yontemi dropdown'u - sadece /settings?tab=crm'de tanimlanan listeden
@@ -16,7 +22,13 @@ interface PaymentMethodSelectProps {
  * yontemi oradan eklenince `usePaymentMethodOptionsRealtimeSync` bu sorguyu
  * invalidate eder ve dropdown sayfa yenilenmeden otomatik guncellenir (departman
  * alaniyla ayni desen, bkz. department-select.tsx). */
-export function PaymentMethodSelect({ label, value, onChange, error }: PaymentMethodSelectProps) {
+export function PaymentMethodSelect({
+  label,
+  value,
+  onChange,
+  error,
+  onRequestAddNew,
+}: PaymentMethodSelectProps) {
   const optionsQuery = usePaymentMethodOptionsQuery();
   const options = optionsQuery.data ?? [];
 
@@ -48,6 +60,13 @@ export function PaymentMethodSelect({ label, value, onChange, error }: PaymentMe
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.quotes.form.paymentMethodNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

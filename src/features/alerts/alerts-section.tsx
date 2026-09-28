@@ -52,7 +52,7 @@ function AlertForm({ onCancel }: { onCancel: () => void }) {
           id="alert-dashboard"
           value={dashboardId}
           onChange={(event) => selectDashboard(event.target.value)}
-          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         >
           <option value="">{tr.settings.reports.dashboardPlaceholder}</option>
           {dashboardsQuery.data?.map((d) => (
@@ -72,7 +72,7 @@ function AlertForm({ onCancel }: { onCancel: () => void }) {
             id="alert-widget"
             value={widgetId}
             onChange={(event) => setWidgetId(event.target.value)}
-            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
           >
             <option value="">{tr.settings.alerts.widgetPlaceholder}</option>
             {dashboardQuery.data?.widgets.map((w) => (
@@ -93,7 +93,7 @@ function AlertForm({ onCancel }: { onCancel: () => void }) {
             id="alert-operator"
             value={operator}
             onChange={(event) => setOperator(event.target.value as AlertOperator)}
-            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
           >
             {OPERATORS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -112,7 +112,7 @@ function AlertForm({ onCancel }: { onCancel: () => void }) {
             type="number"
             value={threshold}
             onChange={(event) => setThreshold(event.target.value)}
-            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
           />
         </div>
       </div>
@@ -127,7 +127,7 @@ function AlertForm({ onCancel }: { onCancel: () => void }) {
           value={recipients}
           onChange={(event) => setRecipients(event.target.value)}
           placeholder={tr.settings.reports.recipientsPlaceholder}
-          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         />
       </div>
 

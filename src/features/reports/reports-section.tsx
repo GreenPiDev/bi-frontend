@@ -58,7 +58,7 @@ function ReportForm({ onCancel }: { onCancel: () => void }) {
           id="report-dashboard"
           value={dashboardId}
           onChange={(event) => setDashboardId(event.target.value)}
-          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         >
           <option value="">{tr.settings.reports.dashboardPlaceholder}</option>
           {dashboardsQuery.data?.map((d) => (
@@ -78,7 +78,7 @@ function ReportForm({ onCancel }: { onCancel: () => void }) {
             id="report-frequency"
             value={frequency}
             onChange={(event) => setFrequency(event.target.value as ReportFrequency)}
-            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
           >
             <option value="daily">{tr.settings.reports.daily}</option>
             <option value="weekly">{tr.settings.reports.weekly}</option>
@@ -94,7 +94,7 @@ function ReportForm({ onCancel }: { onCancel: () => void }) {
               id="report-weekday"
               value={weekday}
               onChange={(event) => setWeekday(Number(event.target.value))}
-              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+              className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
             >
               {WEEKDAYS.map((d) => (
                 <option key={d.value} value={d.value}>
@@ -114,7 +114,7 @@ function ReportForm({ onCancel }: { onCancel: () => void }) {
             type="time"
             value={time}
             onChange={(event) => setTime(event.target.value)}
-            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
           />
         </div>
       </div>
@@ -129,7 +129,7 @@ function ReportForm({ onCancel }: { onCancel: () => void }) {
           value={recipients}
           onChange={(event) => setRecipients(event.target.value)}
           placeholder={tr.settings.reports.recipientsPlaceholder}
-          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         />
       </div>
 

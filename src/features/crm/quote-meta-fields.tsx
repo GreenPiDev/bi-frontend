@@ -37,6 +37,12 @@ interface QuoteMetaFieldsProps {
    * henuz yeni bir secim yapmadiysa gosterilecek bilgi notu - bkz. IbanOption doc
    * comment'i (snapshot, FK degil, bu yuzden mevcut secim otomatik isaretlenemez). */
   ibanCurrentInfo?: { bankName: string; ibanNumber: string } | null;
+  /** Verilirse (ve en az 1 deger tanimliysa) PaymentMethodSelect/IbanSelect'in
+   * yaninda ayarlara gitmeden yeni deger eklemeye yarayan "+ Yeni ..." butonu
+   * gosterilir - sadece /teklifler/yeni bu callback'leri gecer, /teklifler/duzenle
+   * eski davranisinda kalir (bkz. kullanici istegi). */
+  onRequestAddPaymentMethod?: () => void;
+  onRequestAddIban?: () => void;
 }
 
 /** /teklifler/yeni ve /teklifler/duzenle/:id arasinda paylasilan "teklif meta
@@ -49,6 +55,8 @@ export function QuoteMetaFields({
   onChange,
   errors,
   ibanCurrentInfo,
+  onRequestAddPaymentMethod,
+  onRequestAddIban,
 }: QuoteMetaFieldsProps) {
   return (
     <div className="grid grid-cols-1 gap-4 border-t border-app-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -83,6 +91,7 @@ export function QuoteMetaFields({
         value={values.paymentMethod}
         onChange={(value) => onChange('paymentMethod', value)}
         error={errors?.paymentMethod}
+        onRequestAddNew={onRequestAddPaymentMethod}
       />
       <div>
         <IbanSelect
@@ -90,6 +99,7 @@ export function QuoteMetaFields({
           value={values.ibanOptionId}
           onChange={(value) => onChange('ibanOptionId', value)}
           error={errors?.ibanOptionId}
+          onRequestAddNew={onRequestAddIban}
         />
         {!values.ibanOptionId && ibanCurrentInfo && (
           <p className="mt-1.5 text-xs text-app-muted">

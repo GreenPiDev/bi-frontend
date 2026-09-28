@@ -142,7 +142,7 @@ export function OnboardingPage() {
           <input
             value={edit.label}
             onChange={(event) => updateField(field.id, { label: event.target.value })}
-            className="w-full rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="w-full rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:border-app-primary"
           />
         );
       },
@@ -158,7 +158,7 @@ export function OnboardingPage() {
             onChange={(event) =>
               updateField(field.id, { type: event.target.value as DatasetFieldType })
             }
-            className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:border-app-primary"
           >
             {Object.entries(tr.datasets.detail.types).map(([value, label]) => (
               <option key={value} value={value}>
@@ -180,7 +180,7 @@ export function OnboardingPage() {
             onChange={(event) =>
               updateField(field.id, { role: event.target.value as DatasetFieldRole })
             }
-            className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+            className="rounded-md border border-app-border bg-app-surface px-2 py-1.5 text-sm text-app-text outline-none focus:border-app-primary"
           >
             {Object.entries(tr.datasets.detail.roles).map(([value, label]) => (
               <option key={value} value={value}>
@@ -235,7 +235,7 @@ export function OnboardingPage() {
                     type="file"
                     accept=".csv,.xlsx"
                     onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                    className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+                    className="rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
                   />
                   {fileError && <p className="text-xs text-app-danger">{fileError}</p>}
                 </div>

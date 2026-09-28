@@ -128,7 +128,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
           value={viewMonth}
           onChange={(event) => setViewMonth(Number(event.target.value))}
           aria-label="Ay"
-          className="min-w-0 flex-1 rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="min-w-0 flex-1 rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:border-app-primary"
         >
           {months.map((name, index) => (
             <option key={name} value={index}>
@@ -140,7 +140,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
           value={viewYear}
           onChange={(event) => setViewYear(Number(event.target.value))}
           aria-label="Yıl"
-          className="min-w-0 flex-1 rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="min-w-0 flex-1 rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:border-app-primary"
         >
           {years.map((year) => (
             <option key={year} value={year}>

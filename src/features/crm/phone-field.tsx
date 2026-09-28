@@ -91,7 +91,7 @@ export function PhoneField({ label, value, onChange, error, required, hint }: Ph
             setCode(event.target.value);
             emit(event.target.value, number);
           }}
-          className="w-28 shrink-0 rounded-lg border border-app-border bg-app-surface px-2 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
+          className="w-28 shrink-0 rounded-lg border border-app-border bg-app-surface px-2 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
         >
           {COUNTRY_CODES.map((country) => (
             <option key={country.code} value={country.code}>
@@ -105,7 +105,7 @@ export function PhoneField({ label, value, onChange, error, required, hint }: Ph
           onChange={handleNumberChange}
           placeholder="5xx xxx xx xx"
           className={clsx(
-            'flex-1 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary',
+            'flex-1 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',
             error && 'border-app-danger',
           )}
         />
