@@ -29,13 +29,13 @@ import { useCreateQuoteMutation } from '../features/crm/use-quotes';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
 import { ApiError, type CreateQuoteInput, type OpportunityStage, type Product } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
+import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
 
-const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
 const plainNumber = new Intl.NumberFormat('tr-TR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -138,6 +138,9 @@ export function QuoteFormPage() {
       .filter((product) => product.price !== null)
       .map((product) => [product.id, Number(product.price)]),
   );
+  const productCurrencyById = new Map(
+    Object.values(productCatalog).map((product) => [product.id, product.currency]),
+  );
 
   // Ürün satırına tıklayınca altında açılan miktar/iskonto/KDV giriş paneli.
   const [entryProductId, setEntryProductId] = useState<string | null>(null);
@@ -219,13 +222,19 @@ export function QuoteFormPage() {
     const isDefaultPrice = manualPrice === undefined && productPrice !== undefined;
     const discountPct = Number(item.discountPct) || 0;
     const vatPct = Number(item.vatPct) || 0;
-    const lineSubtotal = quantity * unitPrice * (1 - discountPct / 100);
-    const lineTotal = lineSubtotal * (1 + vatPct / 100);
+    const currency = productCurrencyById.get(item.productId) ?? 'TRY';
+    const { lineSubtotal, lineTotal } = computeLineTotal({
+      quantity,
+      unitPrice,
+      discountPct,
+      vatPct,
+    });
     return {
       index,
       productName: productNameById.get(item.productId),
       quantity,
       unitPrice,
+      currency,
       isDefaultPrice,
       discountPct,
       vatPct,
@@ -234,9 +243,7 @@ export function QuoteFormPage() {
     };
   });
   type SummaryRow = (typeof summaryRows)[number];
-  const summarySubtotal = summaryRows.reduce((sum, row) => sum + row.lineSubtotal, 0);
-  const summaryGrandTotal = summaryRows.reduce((sum, row) => sum + row.lineTotal, 0);
-  const summaryVatTotal = summaryGrandTotal - summarySubtotal;
+  const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
 
   const onSubmit = handleSubmit((values) => {
     const input: CreateQuoteInput = {
@@ -448,7 +455,7 @@ export function QuoteFormPage() {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
       className: 'w-24 align-top font-semibold whitespace-nowrap text-app-text',
-      render: (row) => currency.format(row.lineTotal),
+      render: (row) => formatCurrencyAmount(row.lineTotal, row.currency),
     },
     {
       key: 'actions',
@@ -692,19 +699,28 @@ export function QuoteFormPage() {
                   />
                 )}
 
-                <div className="flex flex-col gap-1.5 border-t border-app-border pt-4 text-sm">
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.subtotalLabel}</span>
-                    <span>{currency.format(summarySubtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
-                    <span>{currency.format(summaryVatTotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-app-text">
-                    <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
-                    <span>{currency.format(summaryGrandTotal)}</span>
-                  </div>
+                <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">
+                  {summaryTotalsByCurrency.map((totals) => (
+                    <div key={totals.currency} className="flex min-w-40 flex-1 flex-col gap-1.5">
+                      {summaryTotalsByCurrency.length > 1 && (
+                        <span className="text-xs font-semibold text-app-muted">
+                          {totals.currency}
+                        </span>
+                      )}
+                      <div className="flex justify-between text-app-muted">
+                        <span>{tr.crm.quotes.detail.subtotalLabel}</span>
+                        <span>{formatCurrencyAmount(totals.subtotal, totals.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-app-muted">
+                        <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
+                        <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-base font-bold text-app-text">
+                        <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
+                        <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </aside>

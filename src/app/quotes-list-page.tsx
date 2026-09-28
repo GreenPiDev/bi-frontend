@@ -23,6 +23,7 @@ import {
 } from '../features/crm/use-quotes';
 import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
 import { ApiError, type Quote, type QuoteStatus } from '../lib/api';
+import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
@@ -98,12 +99,16 @@ function QuoteStatusSelect({
   );
 }
 
-function quoteTotal(quote: Quote): number {
-  return quote.items.reduce((sum, item) => {
-    const lineSubtotal = Number(item.quantity) * Number(item.unitPrice);
-    const discounted = lineSubtotal * (1 - Number(item.discountPct) / 100);
-    return sum + discounted * (1 + Number(item.vatPct) / 100);
-  }, 0);
+function quoteTotalsByCurrency(quote: Quote) {
+  return groupQuoteItemTotals(
+    quote.items.map((item) => ({
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discountPct: Number(item.discountPct),
+      vatPct: Number(item.vatPct),
+      currency: item.currency,
+    })),
+  );
 }
 
 export function QuotesListPage() {
@@ -206,10 +211,13 @@ export function QuotesListPage() {
       key: 'total',
       header: tr.crm.quotes.totalColumn,
       className: 'text-app-muted',
-      render: (q) =>
-        new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
-          quoteTotal(q),
-        ),
+      render: (q) => (
+        <div className="flex flex-col">
+          {quoteTotalsByCurrency(q).map((t) => (
+            <span key={t.currency}>{formatCurrencyAmount(t.grandTotal, t.currency)}</span>
+          ))}
+        </div>
+      ),
     },
     {
       key: 'createdByName',

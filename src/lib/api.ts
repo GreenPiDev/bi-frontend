@@ -1947,6 +1947,7 @@ export interface QuoteItem {
   product: Product;
   quantity: string;
   unitPrice: string;
+  currency: string;
   discountPct: string;
   discountNote: string | null;
   vatPct: string;

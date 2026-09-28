@@ -18,9 +18,9 @@ import { useProductsQuery } from '../features/crm/use-products';
 import { useQuoteQuery, useUpdateQuoteMutation } from '../features/crm/use-quotes';
 import { ApiError, type Product } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
+import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
-const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
 const plainNumber = new Intl.NumberFormat('tr-TR', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -39,6 +39,7 @@ interface EditableItem {
   productName: string;
   quantity: string;
   unitPrice: string;
+  currency: string;
   discountPct: string;
   vatPct: string;
 }
@@ -81,6 +82,7 @@ export function QuoteEditPage() {
         productName: item.product.name,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
+        currency: item.currency,
         discountPct: item.discountPct,
         vatPct: item.vatPct,
       })),
@@ -143,6 +145,7 @@ export function QuoteEditPage() {
         productName: product.name,
         quantity: addQuantity || '1',
         unitPrice: addUnitPrice,
+        currency: product.currency,
         discountPct: addDiscountPct || '0',
         vatPct: addVatPct || '0',
       },
@@ -199,13 +202,19 @@ export function QuoteEditPage() {
     const unitPrice = Number(item.unitPrice) || 0;
     const discountPct = Number(item.discountPct) || 0;
     const vatPct = Number(item.vatPct) || 0;
-    const lineSubtotal = quantity * unitPrice * (1 - discountPct / 100);
-    const lineTotal = lineSubtotal * (1 + vatPct / 100);
+    const { lineSubtotal, lineTotal } = computeLineTotal({
+      quantity,
+      unitPrice,
+      discountPct,
+      vatPct,
+    });
     return {
       index,
       productId: item.productId,
       productName: item.productName,
       quantity,
+      unitPrice,
+      currency: item.currency,
       discountPct,
       vatPct,
       lineSubtotal,
@@ -213,9 +222,7 @@ export function QuoteEditPage() {
     };
   });
   type SummaryRow = (typeof summaryRows)[number];
-  const summarySubtotal = summaryRows.reduce((sum, row) => sum + row.lineSubtotal, 0);
-  const summaryGrandTotal = summaryRows.reduce((sum, row) => sum + row.lineTotal, 0);
-  const summaryVatTotal = summaryGrandTotal - summarySubtotal;
+  const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
 
   function handleSubmit() {
     if (!items || items.length === 0) {
@@ -385,7 +392,7 @@ export function QuoteEditPage() {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
       className: 'w-24 align-top font-semibold whitespace-nowrap text-app-text',
-      render: (row) => currency.format(row.lineTotal),
+      render: (row) => formatCurrencyAmount(row.lineTotal, row.currency),
     },
     {
       key: 'actions',
@@ -609,19 +616,28 @@ export function QuoteEditPage() {
                   />
                 )}
 
-                <div className="flex flex-col gap-1.5 border-t border-app-border pt-4 text-sm">
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.subtotalLabel}</span>
-                    <span>{currency.format(summarySubtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
-                    <span>{currency.format(summaryVatTotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-app-text">
-                    <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
-                    <span>{currency.format(summaryGrandTotal)}</span>
-                  </div>
+                <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">
+                  {summaryTotalsByCurrency.map((totals) => (
+                    <div key={totals.currency} className="flex min-w-40 flex-1 flex-col gap-1.5">
+                      {summaryTotalsByCurrency.length > 1 && (
+                        <span className="text-xs font-semibold text-app-muted">
+                          {totals.currency}
+                        </span>
+                      )}
+                      <div className="flex justify-between text-app-muted">
+                        <span>{tr.crm.quotes.detail.subtotalLabel}</span>
+                        <span>{formatCurrencyAmount(totals.subtotal, totals.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-app-muted">
+                        <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
+                        <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-base font-bold text-app-text">
+                        <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
+                        <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="flex flex-col gap-2 pt-2">

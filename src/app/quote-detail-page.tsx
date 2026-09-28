@@ -25,6 +25,7 @@ import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
+import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<QuoteStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
@@ -34,23 +35,27 @@ const STATUS_BADGE_VARIANT: Record<QuoteStatus, 'success' | 'warning' | 'danger'
   REJECTED: 'danger',
 };
 
-const currency = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
 function lineTotal(item: QuoteItem): number {
-  const subtotal = Number(item.quantity) * Number(item.unitPrice);
-  const discounted = subtotal * (1 - Number(item.discountPct) / 100);
-  return discounted * (1 + Number(item.vatPct) / 100);
+  return computeLineTotal({
+    quantity: Number(item.quantity),
+    unitPrice: Number(item.unitPrice),
+    discountPct: Number(item.discountPct),
+    vatPct: Number(item.vatPct),
+  }).lineTotal;
 }
 
 function computeTotals(quote: Quote) {
-  const subtotal = quote.items.reduce(
-    (sum, item) =>
-      sum + Number(item.quantity) * Number(item.unitPrice) * (1 - Number(item.discountPct) / 100),
-    0,
+  return groupQuoteItemTotals(
+    quote.items.map((item) => ({
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discountPct: Number(item.discountPct),
+      vatPct: Number(item.vatPct),
+      currency: item.currency,
+    })),
   );
-  const grandTotal = quote.items.reduce((sum, item) => sum + lineTotal(item), 0);
-  return { subtotal, vatTotal: grandTotal - subtotal, grandTotal };
 }
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
@@ -100,7 +105,7 @@ export function QuoteContentBody({
       key: 'unitPrice',
       header: tr.crm.quotes.detail.unitPriceColumn,
       className: 'text-app-muted',
-      render: (item) => currency.format(Number(item.unitPrice)),
+      render: (item) => formatCurrencyAmount(Number(item.unitPrice), item.currency),
     },
     {
       key: 'discountPct',
@@ -118,7 +123,7 @@ export function QuoteContentBody({
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
       className: 'text-right',
-      render: (item) => currency.format(lineTotal(item)),
+      render: (item) => formatCurrencyAmount(lineTotal(item), item.currency),
     },
   ];
 
@@ -135,7 +140,7 @@ export function QuoteContentBody({
           {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
         </MetaCell>
         <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
-          {currency.format(totals.grandTotal)}
+          {totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ')}
         </MetaCell>
       </div>
 
@@ -148,19 +153,34 @@ export function QuoteContentBody({
           emptyMessage={tr.crm.quotes.form.summaryEmpty}
         />
 
-        <div className="mt-4 flex flex-col items-end gap-1.5 text-sm">
-          <div className="flex w-64 justify-between">
-            <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
-            <span className="text-app-text">{currency.format(totals.subtotal)}</span>
-          </div>
-          <div className="flex w-64 justify-between">
-            <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
-            <span className="text-app-text">{currency.format(totals.vatTotal)}</span>
-          </div>
-          <div className="flex w-64 justify-between border-t border-app-border pt-1.5 text-base font-bold">
-            <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
-            <span className="text-app-text">{currency.format(totals.grandTotal)}</span>
-          </div>
+        <div className="mt-4 flex flex-wrap justify-end gap-4 text-xs">
+          {totals.map((t) => (
+            <div key={t.currency} className="flex w-44 flex-col gap-1">
+              {totals.length > 1 && (
+                <span className="text-right text-[11px] font-semibold text-app-muted">
+                  {t.currency}
+                </span>
+              )}
+              <div className="flex justify-between">
+                <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
+                <span className="text-app-text">
+                  {formatCurrencyAmount(t.subtotal, t.currency)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
+                <span className="text-app-text">
+                  {formatCurrencyAmount(t.vatTotal, t.currency)}
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-app-border pt-1 text-sm font-bold">
+                <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
+                <span className="text-app-text">
+                  {formatCurrencyAmount(t.grandTotal, t.currency)}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
