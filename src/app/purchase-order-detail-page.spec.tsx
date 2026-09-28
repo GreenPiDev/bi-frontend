@@ -16,7 +16,6 @@ function renderPage(initialPath = '/siparisler/po-1') {
           <Routes>
             <Route path="/siparisler" element={<div>list-page</div>} />
             <Route path="/siparisler/:id" element={<PurchaseOrderDetailPage />} />
-            <Route path="/teklifler/:id" element={<div>quote-detail-page</div>} />
           </Routes>
         </MemoryRouter>
       </ToastProvider>
@@ -133,12 +132,13 @@ describe('PurchaseOrderDetailPage', () => {
     expect(screen.queryByRole('button', { name: 'Kaydet' })).not.toBeInTheDocument();
   });
 
-  it('teklif linkine tiklayinca teklif detayina gider', async () => {
+  it('teklif linkine tiklayinca teklif onizleme modalini acar', async () => {
     vi.spyOn(api, 'getPurchaseOrder').mockResolvedValue(purchaseOrder);
+    vi.spyOn(api, 'getQuote').mockResolvedValue(quote);
     const user = userEvent.setup();
     renderPage();
 
     await user.click(await screen.findByText('İlişkili teklifi gör'));
-    expect(await screen.findByText('quote-detail-page')).toBeInTheDocument();
+    expect(await screen.findByText(quote.quoteNumber)).toBeInTheDocument();
   });
 });
