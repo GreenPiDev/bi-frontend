@@ -1282,7 +1282,10 @@ export interface ProductImportPreview {
   totalRows: number;
 }
 
-export type ProductImportResult = ImportResult;
+export interface ProductImportResult extends ImportResult {
+  created: number;
+  updated: number;
+}
 export type NumberFormat = 'tr' | 'en';
 
 export function previewProductImportRaw(file: File): Promise<ProductImportRawPreview> {
@@ -1820,6 +1823,15 @@ export interface Product {
   costPrice: string | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt: string | null;
+}
+
+/** /products listesinde (GET /products) donen ek alan - /envanter?tab=stock'taki ayni
+ * StockItem 1:1 iliskisinin urun listesine yansitilmis hali (bkz. CLAUDE.md, kullanici
+ * talebi: stok durumu products sayfasinda da gorunsun/renklendirilsin). Sadece liste
+ * ucunda var, create/update/getById cevaplarinda yok - Product tipi bu yuzden ayrildi. */
+export interface ProductWithStock extends Product {
+  stockQuantity: string;
 }
 
 export interface ProductInput {
@@ -1846,8 +1858,9 @@ export function listProducts(
     brand?: string;
     category?: string;
     attr?: Record<string, string>;
+    includeDeleted?: boolean;
   } = {},
-): Promise<PagedResult<Product>> {
+): Promise<PagedResult<ProductWithStock>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
@@ -1860,6 +1873,7 @@ export function listProducts(
       if (value) query.set(`attr[${key}]`, value);
     }
   }
+  if (params.includeDeleted) query.set('includeDeleted', 'true');
   const qs = query.toString();
   return request(`/products${qs ? `?${qs}` : ''}`);
 }
@@ -1884,6 +1898,29 @@ export function deleteProduct(id: string): Promise<void> {
   return request(`/products/${id}`, { method: 'DELETE' });
 }
 
+export interface ProductPriceMovement {
+  id: string;
+  productId: string;
+  productName: string;
+  userName: string;
+  userEmail: string;
+  previousPrice: number | null;
+  previousCurrency: string | null;
+  price: number | null;
+  currency: string;
+  createdAt: string;
+}
+
+export function listProductPriceHistory(
+  params: { productId?: string; userId?: string } = {},
+): Promise<ProductPriceMovement[]> {
+  const query = new URLSearchParams();
+  if (params.productId) query.set('productId', params.productId);
+  if (params.userId) query.set('userId', params.userId);
+  const qs = query.toString();
+  return request(`/products/price-history${qs ? `?${qs}` : ''}`);
+}
+
 export function bulkMoveProducts(
   productIds: string[],
   targetProductListId: string,
@@ -1891,6 +1928,13 @@ export function bulkMoveProducts(
   return request('/products/bulk-move', {
     method: 'PATCH',
     body: JSON.stringify({ productIds, targetProductListId }),
+  });
+}
+
+export function bulkDeleteProducts(productIds: string[]): Promise<{ deletedCount: number }> {
+  return request('/products/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ productIds }),
   });
 }
 
@@ -2260,11 +2304,38 @@ export function listLowStockItems(): Promise<StockItem[]> {
   return request('/stock-items/low-stock');
 }
 
-export function upsertStockItem(productId: string, quantity: number): Promise<StockItem> {
+export function upsertStockItem(
+  productId: string,
+  quantity: number,
+  note?: string,
+): Promise<StockItem> {
   return request(`/stock-items/${productId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ quantity }),
+    body: JSON.stringify({ quantity, note: note || undefined }),
   });
+}
+
+export interface StockMovement {
+  id: string;
+  productId: string;
+  productName: string;
+  userName: string;
+  userEmail: string;
+  note: string | null;
+  previousQuantity: number;
+  quantity: number;
+  delta: number;
+  createdAt: string;
+}
+
+export function listStockHistory(
+  params: { productId?: string; userId?: string } = {},
+): Promise<StockMovement[]> {
+  const query = new URLSearchParams();
+  if (params.productId) query.set('productId', params.productId);
+  if (params.userId) query.set('userId', params.userId);
+  const qs = query.toString();
+  return request(`/stock-items/history${qs ? `?${qs}` : ''}`);
 }
 
 export type MessageRelatedEntity = 'PROJECT' | 'QUOTE' | 'INTERACTION';

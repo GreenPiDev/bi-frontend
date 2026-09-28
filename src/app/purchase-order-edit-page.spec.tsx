@@ -89,9 +89,12 @@ const product: api.Product = {
   category: null,
   brand: null,
   costPrice: null,
+  deletedAt: null,
   createdAt: '2026-08-01T00:00:00.000Z',
   updatedAt: '2026-08-01T00:00:00.000Z',
 };
+
+const productWithStock: api.ProductWithStock = { ...product, stockQuantity: '0' };
 
 const purchaseOrder: api.PurchaseOrder = {
   id: 'po-1',
@@ -120,7 +123,7 @@ describe('PurchaseOrderEditPage', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
     vi.spyOn(api, 'listProducts').mockResolvedValue({
-      data: [product],
+      data: [productWithStock],
       meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
     });
     vi.spyOn(api, 'getProduct').mockResolvedValue(product);

@@ -1,16 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  bulkDeleteProducts,
   bulkMoveProducts,
   createProduct,
   deleteProduct,
   getProduct,
   getProductAttributeKeys,
+  listProductPriceHistory,
   listProducts,
   updateProduct,
   type ProductInput,
 } from '../../lib/api';
 
 export const PRODUCTS_QUERY_KEY = ['products'];
+export const PRODUCT_PRICE_HISTORY_QUERY_KEY = ['products', 'price-history'];
 
 export function useProductsQuery(
   params: {
@@ -21,6 +24,7 @@ export function useProductsQuery(
     brand?: string;
     category?: string;
     attr?: Record<string, string>;
+    includeDeleted?: boolean;
   } = {},
   options: { enabled?: boolean } = {},
 ) {
@@ -46,12 +50,24 @@ export function useProductQuery(id: string) {
   });
 }
 
+export function usePriceHistoryQuery(
+  params: { productId?: string; userId?: string } = {},
+  options: { enabled?: boolean } = {},
+) {
+  return useQuery({
+    queryKey: [...PRODUCT_PRICE_HISTORY_QUERY_KEY, params],
+    queryFn: () => listProductPriceHistory(params),
+    enabled: options.enabled ?? true,
+  });
+}
+
 export function useCreateProductMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: ProductInput) => createProduct(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: PRODUCT_PRICE_HISTORY_QUERY_KEY });
     },
   });
 }
@@ -63,6 +79,7 @@ export function useUpdateProductMutation(id: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['products', id] });
+      void queryClient.invalidateQueries({ queryKey: PRODUCT_PRICE_HISTORY_QUERY_KEY });
     },
   });
 }
@@ -87,6 +104,16 @@ export function useBulkMoveProductsMutation() {
       productIds: string[];
       targetProductListId: string;
     }) => bulkMoveProducts(productIds, targetProductListId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+  });
+}
+
+export function useBulkDeleteProductsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (productIds: string[]) => bulkDeleteProducts(productIds),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
     },

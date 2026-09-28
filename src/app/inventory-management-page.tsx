@@ -1,6 +1,8 @@
 import { AppShell } from './app-shell';
+import { PriceHistoryContent } from './product-price-history-page';
 import { ProductListsListContent } from './product-lists-list-page';
 import { ProductsListContent } from './products-list-page';
+import { StockHistoryContent } from './stock-history-page';
 import { StockListContent } from './stock-list-page';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
@@ -44,6 +46,24 @@ export function InventoryManagementPage() {
       : []),
     ...(stockAccessible
       ? [{ key: 'stock', label: tr.inventory.tabs.stock, content: <StockListContent /> }]
+      : []),
+    ...(stockAccessible
+      ? [
+          {
+            key: 'stockHistory',
+            label: tr.inventory.tabs.stockHistory,
+            content: <StockHistoryContent />,
+          },
+        ]
+      : []),
+    ...(productsAccessible
+      ? [
+          {
+            key: 'priceHistory',
+            label: tr.inventory.tabs.priceHistory,
+            content: <PriceHistoryContent />,
+          },
+        ]
       : []),
   ];
 

@@ -70,7 +70,7 @@ describe('StockListPage', () => {
     expect(screen.queryByText('Düşük Stok')).not.toBeInTheDocument();
   });
 
-  it('duzenle ikonuna tiklayinca satir icin miktar girisi acilir, kaydedince upsert cagrisi yapilir', async () => {
+  it('duzenle ikonuna tiklayinca stok guncelleme modali acilir, kaydedince not ile birlikte upsert cagrisi yapilir', async () => {
     vi.spyOn(api, 'listStockItems').mockResolvedValue({
       data: [okItem],
       meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
@@ -91,10 +91,11 @@ describe('StockListPage', () => {
     const quantityInput = await screen.findByDisplayValue('50');
     await user.clear(quantityInput);
     await user.type(quantityInput, '75');
+    await user.type(screen.getByLabelText('Not'), 'Sayim farki');
     await user.click(screen.getByRole('button', { name: 'Kaydet' }));
 
-    await waitFor(() => expect(upsertSpy).toHaveBeenCalledWith('p2', 75));
-    // kayittan sonra satir tekrar salt-okunur moda doner
+    await waitFor(() => expect(upsertSpy).toHaveBeenCalledWith('p2', 75, 'Sayim farki'));
+    // kayittan sonra modal kapanir
     expect(screen.queryByDisplayValue('75')).not.toBeInTheDocument();
   });
 });

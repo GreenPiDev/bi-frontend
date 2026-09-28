@@ -266,7 +266,7 @@ export function ProductImportPage() {
         {result && (
           <div className="mt-6">
             <h2 className="text-sm font-bold text-app-text">{tr.crm.productImports.stepResult}</h2>
-            <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-3 grid grid-cols-5 gap-3 text-center">
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.totalRows}</p>
                 <p className="text-xs text-app-muted">{tr.crm.productImports.totalRowsLabel}</p>
@@ -274,6 +274,14 @@ export function ProductImportPage() {
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.imported}</p>
                 <p className="text-xs text-app-muted">{tr.crm.productImports.importedLabel}</p>
+              </div>
+              <div className="rounded-lg border border-app-border p-3">
+                <p className="text-lg font-bold text-app-text">{result.created}</p>
+                <p className="text-xs text-app-muted">{tr.crm.productImports.createdLabel}</p>
+              </div>
+              <div className="rounded-lg border border-app-border p-3">
+                <p className="text-lg font-bold text-app-text">{result.updated}</p>
+                <p className="text-xs text-app-muted">{tr.crm.productImports.updatedLabel}</p>
               </div>
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.errors.length}</p>

@@ -7,8 +7,10 @@ import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
+import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
+import { Switch } from '../components/ui/switch';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -19,12 +21,15 @@ import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
 import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
+  useBulkDeleteProductsMutation,
   useBulkMoveProductsMutation,
   useDeleteProductMutation,
   useProductAttributeKeysQuery,
   useProductsQuery,
 } from '../features/crm/use-products';
-import { ApiError, type Product } from '../lib/api';
+import { sortByStockStatus, stockStatusRowClassName } from '../features/crm/stock-status';
+import { StockStatusLegend } from '../features/crm/stock-status-legend';
+import { ApiError, type ProductWithStock } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -41,9 +46,11 @@ export function ProductsListContent() {
   const [filterCategory, setFilterCategory] = useState('');
   const [attrFilters, setAttrFilters] = useState<Record<string, string>>({});
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [deletingProduct, setDeletingProduct] = useState<Product | undefined>(undefined);
+  const [deletingProduct, setDeletingProduct] = useState<ProductWithStock | undefined>(undefined);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [moveTargetListId, setMoveTargetListId] = useState('');
+  const [showDeleted, setShowDeleted] = useState(false);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const activeAttrFilters = Object.fromEntries(
@@ -57,6 +64,7 @@ export function ProductsListContent() {
     brand: filterBrand || undefined,
     category: filterCategory || undefined,
     attr: Object.keys(activeAttrFilters).length > 0 ? activeAttrFilters : undefined,
+    includeDeleted: showDeleted,
   });
   const productListsQuery = useProductListsQuery();
   const brandOptionsQuery = useBrandOptionsQuery();
@@ -64,6 +72,7 @@ export function ProductsListContent() {
   const attributeKeysQuery = useProductAttributeKeysQuery();
   const deleteMutation = useDeleteProductMutation();
   const bulkMoveMutation = useBulkMoveProductsMutation();
+  const bulkDeleteMutation = useBulkDeleteProductsMutation();
   const hasActiveFilter =
     Boolean(filterListId) ||
     Boolean(filterBrand) ||
@@ -125,6 +134,20 @@ export function ProductsListContent() {
     );
   }
 
+  function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    bulkDeleteMutation.mutate([...selectedIds], {
+      onSuccess: () => {
+        toast.success(tr.crm.products.bulkDeleteSuccess);
+        setSelectedIds(new Set());
+        setBulkDeleteConfirmOpen(false);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
   // İçe aktarma sırasında "özel alan olarak sakla" seçilen kolonlar (Faz B) - farklı ürün
   // listelerinde (markalarda) farklı anahtarlar olabilir. Kolon seçenekleri, sadece o anki
   // sayfada yüklenen ürünler değil tüm katalogdaki anahtarlar (attributeKeysQuery, filtre
@@ -132,14 +155,14 @@ export function ProductsListContent() {
   // üründe olan özel alan, kullanıcı o sayfaya gelene kadar gösterilecek kolonlar listesinde
   // hiç görünmezdi. Bir üründe o anahtar yoksa hücre boş kalır.
   const attributeKeys = [...(attributeKeysQuery.data ?? [])].sort();
-  const attributeColumns: TableColumn<Product>[] = attributeKeys.map((key) => ({
+  const attributeColumns: TableColumn<ProductWithStock>[] = attributeKeys.map((key) => ({
     key: `attr:${key}`,
     header: key,
     className: 'text-app-muted',
     render: (p) => p.attributes?.[key] ?? '—',
   }));
 
-  const ALL_COLUMNS: TableColumn<Product>[] = [
+  const ALL_COLUMNS: TableColumn<ProductWithStock>[] = [
     {
       key: 'select',
       header: tr.crm.products.selectColumn,
@@ -149,6 +172,7 @@ export function ProductsListContent() {
         <input
           type="checkbox"
           checked={selectedIds.has(p.id)}
+          disabled={Boolean(p.deletedAt)}
           onChange={() => toggleSelected(p.id)}
           onClick={(event) => event.stopPropagation()}
           className="h-4 w-4 rounded border-app-border"
@@ -159,7 +183,12 @@ export function ProductsListContent() {
       key: 'name',
       header: tr.crm.products.nameColumn,
       required: true,
-      render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
+      render: (p) => (
+        <span className="flex items-center gap-1.5">
+          <span className="font-semibold text-app-text">{p.name}</span>
+          {p.deletedAt && <Badge variant="danger">{tr.crm.products.deletedBadge}</Badge>}
+        </span>
+      ),
     },
     {
       key: 'productList',
@@ -216,6 +245,12 @@ export function ProductsListContent() {
       render: (p) => (p.costPrice != null ? p.costPrice : '—'),
     },
     {
+      key: 'stockQuantity',
+      header: tr.crm.products.stockQuantityColumn,
+      required: true,
+      render: (p) => p.stockQuantity,
+    },
+    {
       key: 'minStockLevel',
       header: tr.crm.products.minStockLevelColumn,
       className: 'text-app-muted',
@@ -233,21 +268,24 @@ export function ProductsListContent() {
       header: tr.crm.products.actionsColumn,
       className: 'w-px',
       required: true,
-      render: (p) => (
-        <div className="flex items-center gap-1">
-          <IconActionButton
-            icon={Pencil}
-            tooltip={tr.crm.products.editTooltip}
-            onClick={() => navigate(`/urunler/duzenle/${p.id}`, { state: backState })}
-          />
-          <IconActionButton
-            icon={Trash2}
-            tooltip={tr.crm.products.deleteTooltip}
-            variant="danger"
-            onClick={() => setDeletingProduct(p)}
-          />
-        </div>
-      ),
+      render: (p) =>
+        p.deletedAt ? (
+          <span className="text-app-muted">—</span>
+        ) : (
+          <div className="flex items-center gap-1">
+            <IconActionButton
+              icon={Pencil}
+              tooltip={tr.crm.products.editTooltip}
+              onClick={() => navigate(`/urunler/duzenle/${p.id}`, { state: backState })}
+            />
+            <IconActionButton
+              icon={Trash2}
+              tooltip={tr.crm.products.deleteTooltip}
+              variant="danger"
+              onClick={() => setDeletingProduct(p)}
+            />
+          </div>
+        ),
     },
   ];
 
@@ -301,7 +339,20 @@ export function ProductsListContent() {
         />
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={showDeleted}
+            onChange={(checked) => {
+              setPage(1);
+              setShowDeleted(checked);
+            }}
+            label={tr.crm.products.showDeletedLabel}
+          />
+          <span className="text-sm font-semibold text-app-text">
+            {tr.crm.products.showDeletedLabel}
+          </span>
+        </div>
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}
@@ -336,17 +387,30 @@ export function ProductsListContent() {
           <Button type="button" variant="secondary" onClick={() => setSelectedIds(new Set())}>
             {tr.crm.products.clearSelection}
           </Button>
+          <Button type="button" variant="danger" onClick={() => setBulkDeleteConfirmOpen(true)}>
+            {tr.crm.products.bulkDeleteButton}
+          </Button>
         </div>
       )}
 
+      <StockStatusLegend />
+
       <Table
         columns={columns}
-        data={productsQuery.data?.data ?? []}
+        data={sortByStockStatus(productsQuery.data?.data ?? [], (product) => ({
+          quantity: product.stockQuantity,
+          minStockLevel: product.minStockLevel,
+        }))}
         keyField={(product) => product.id}
         onRowClick={(product) => navigate(`/urunler/${product.id}`, { state: backState })}
         isLoading={productsQuery.isPending}
         loadingMessage={tr.crm.products.loading}
         emptyMessage={tr.crm.products.empty}
+        rowClassName={(product) =>
+          product.deletedAt
+            ? 'opacity-50 bg-app-bg-muted'
+            : stockStatusRowClassName(product.stockQuantity, product.minStockLevel)
+        }
       />
 
       {productsQuery.data && productsQuery.data.data.length > 0 && (
@@ -442,6 +506,17 @@ export function ProductsListContent() {
           isPending={deleteMutation.isPending}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeletingProduct(undefined)}
+        />
+      )}
+
+      {bulkDeleteConfirmOpen && (
+        <ConfirmModal
+          title={tr.crm.products.bulkDeleteConfirmTitle}
+          message={tr.crm.products.bulkDeleteConfirm(selectedIds.size)}
+          confirmLabel={tr.crm.products.bulkDeleteButton}
+          isPending={bulkDeleteMutation.isPending}
+          onConfirm={handleBulkDelete}
+          onCancel={() => setBulkDeleteConfirmOpen(false)}
         />
       )}
     </>

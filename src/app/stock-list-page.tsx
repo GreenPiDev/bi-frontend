@@ -1,71 +1,28 @@
 import { AlertTriangle, Pencil, Search } from 'lucide-react';
-import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { useState } from 'react';
 import { AppShell } from './app-shell';
-import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Tooltip } from '../components/ui/tooltip';
-import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useLowStockItemsQuery, useStockItemsQuery } from '../features/crm/use-stock-items';
 import {
-  useLowStockItemsQuery,
-  useStockItemsQuery,
-  useUpsertStockItemMutation,
-} from '../features/crm/use-stock-items';
-import { ApiError, type StockItem } from '../lib/api';
+  isLowStock,
+  sortByStockStatus,
+  stockStatusRowClassName,
+} from '../features/crm/stock-status';
+import { StockStatusLegend } from '../features/crm/stock-status-legend';
+import { StockUpdateModal } from './stock-update-modal';
+import type { StockItem } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
-function isLowStock(item: StockItem): boolean {
-  return item.product.minStockLevel !== null && Number(item.quantity) <= item.product.minStockLevel;
-}
-
-function QuantityEditor({ item, onDone }: { item: StockItem; onDone: () => void }) {
-  const toast = useToast();
-  const [value, setValue] = useState(item.quantity);
-  const mutation = useUpsertStockItemMutation();
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    mutation.mutate(
-      { productId: item.productId, quantity: Number(value) },
-      {
-        onSuccess: () => {
-          toast.success(tr.crm.stock.saveSuccess);
-          onDone();
-        },
-        onError: (error) => {
-          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-        },
-      },
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <input
-        type="text"
-        inputMode="decimal"
-        autoFocus
-        value={value}
-        onChange={(event: ChangeEvent<HTMLInputElement>) =>
-          setValue(event.target.value.replace(/[^0-9.]/g, ''))
-        }
-        className="w-24 rounded-lg border border-app-border bg-app-surface px-3 py-1.5 text-sm text-app-text outline-none focus:ring-2 focus:ring-app-primary"
-      />
-      <Button type="submit" variant="secondary" disabled={mutation.isPending}>
-        {mutation.isPending ? tr.crm.stock.saving : tr.crm.stock.save}
-      </Button>
-    </form>
-  );
-}
-
 export function StockListContent() {
   const [page, setPage] = useState(1);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const meQuery = useMeQuery();
@@ -82,7 +39,7 @@ export function StockListContent() {
       required: true,
       render: (item) => (
         <span className="flex items-center gap-1.5">
-          {(lowStockIds.has(item.id) || isLowStock(item)) && (
+          {(lowStockIds.has(item.id) || isLowStock(item.quantity, item.product.minStockLevel)) && (
             <Tooltip content={tr.crm.stock.lowStockTooltip}>
               <AlertTriangle size={14} className="shrink-0 animate-pulse text-red-600" />
             </Tooltip>
@@ -95,12 +52,7 @@ export function StockListContent() {
       key: 'quantity',
       header: tr.crm.stock.quantityColumn,
       required: true,
-      render: (item) =>
-        editingId === item.id ? (
-          <QuantityEditor item={item} onDone={() => setEditingId(null)} />
-        ) : (
-          item.quantity
-        ),
+      render: (item) => item.quantity,
     },
     {
       key: 'minStockLevel',
@@ -117,7 +69,7 @@ export function StockListContent() {
         <IconActionButton
           icon={Pencil}
           tooltip={tr.crm.stock.editTooltip}
-          onClick={() => setEditingId(item.id)}
+          onClick={() => setEditingItem(item)}
         />
       ),
     },
@@ -171,13 +123,19 @@ export function StockListContent() {
         />
       </div>
 
+      <StockStatusLegend />
+
       <Table
         columns={columns}
-        data={stockItemsQuery.data?.data ?? []}
+        data={sortByStockStatus(stockItemsQuery.data?.data ?? [], (item) => ({
+          quantity: item.quantity,
+          minStockLevel: item.product.minStockLevel,
+        }))}
         keyField={(item) => item.id}
         isLoading={stockItemsQuery.isPending}
         loadingMessage={tr.crm.stock.loading}
         emptyMessage={tr.crm.stock.empty}
+        rowClassName={(item) => stockStatusRowClassName(item.quantity, item.product.minStockLevel)}
       />
 
       {stockItemsQuery.data && stockItemsQuery.data.data.length > 0 && (
@@ -189,6 +147,8 @@ export function StockListContent() {
           onNext={() => setPage((p) => p + 1)}
         />
       )}
+
+      {editingItem && <StockUpdateModal item={editingItem} onClose={() => setEditingItem(null)} />}
     </>
   );
 }
