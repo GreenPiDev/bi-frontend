@@ -6,25 +6,23 @@ import type { MessageRelatedEntity } from '../../lib/api';
  * state'i tutar, her iki tuketici de kendi `useMessagesQuery` cagrisinda `queryParams`'i
  * kullanir. */
 export function useMessagesFilterState() {
-  const [box, setBox] = useState<'inbox' | 'sent' | undefined>(undefined);
   const [relatedEntity, setRelatedEntity] = useState<MessageRelatedEntity[]>([]);
   const [quoteIds, setQuoteIds] = useState<string[]>([]);
   const [projectIds, setProjectIds] = useState<string[]>([]);
   const [interactionIds, setInteractionIds] = useState<string[]>([]);
   const [recipientUserId, setRecipientUserId] = useState<string | undefined>(undefined);
+  const [isMeetingReport, setIsMeetingReport] = useState(false);
 
   function reset() {
-    setBox(undefined);
     setRelatedEntity([]);
     setQuoteIds([]);
     setProjectIds([]);
     setInteractionIds([]);
     setRecipientUserId(undefined);
+    setIsMeetingReport(false);
   }
 
   return {
-    box,
-    setBox,
     relatedEntity,
     setRelatedEntity,
     quoteIds,
@@ -35,14 +33,16 @@ export function useMessagesFilterState() {
     setInteractionIds,
     recipientUserId,
     setRecipientUserId,
+    isMeetingReport,
+    setIsMeetingReport,
     reset,
     queryParams: {
-      box,
       relatedEntity: relatedEntity.length ? relatedEntity : undefined,
       quoteIds: quoteIds.length ? quoteIds : undefined,
       projectIds: projectIds.length ? projectIds : undefined,
       interactionIds: interactionIds.length ? interactionIds : undefined,
       recipientUserId,
+      isMeetingReport: isMeetingReport || undefined,
     },
   };
 }

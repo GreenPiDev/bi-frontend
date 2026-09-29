@@ -67,6 +67,7 @@ describe('CalendarPage', () => {
       startAt: '2026-09-10T09:00:00.000Z',
       endAt: '2026-09-10T10:00:00.000Z',
       allDay: false,
+      isMeeting: false,
       createdById: 'user-1',
       attendees: [],
     });
@@ -74,7 +75,7 @@ describe('CalendarPage', () => {
     renderCalendarPage();
 
     await user.click(await screen.findByRole('button', { name: 'Yeni Hatırlatıcı' }));
-    const dialog = within(await screen.findByRole('dialog', { name: 'Yeni Etkinlik' }));
+    const dialog = within(await screen.findByRole('dialog', { name: 'Yeni Hatırlatıcı' }));
     await user.type(await dialog.findByLabelText('Başlık', { exact: false }), 'Yeni gorusme');
 
     await user.click(dialog.getByLabelText('Tarih ve Saat'));
@@ -96,6 +97,7 @@ describe('CalendarPage', () => {
         startAt: '2026-09-10T10:00:00.000Z',
         endAt: '2026-09-10T11:00:00.000Z',
         allDay: false,
+        isMeeting: false,
         createdById: 'user-1',
         attendees: [
           {

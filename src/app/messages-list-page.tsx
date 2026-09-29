@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
@@ -45,12 +46,12 @@ export function MessagesListPage() {
   const [newMessageOpen, setNewMessageOpen] = useState(false);
 
   const hasActiveFilter =
-    Boolean(filters.box) ||
     filters.relatedEntity.length > 0 ||
     filters.quoteIds.length > 0 ||
     filters.projectIds.length > 0 ||
     filters.interactionIds.length > 0 ||
-    Boolean(filters.recipientUserId);
+    Boolean(filters.recipientUserId) ||
+    filters.isMeetingReport;
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const messagesQuery = useMessagesQuery({
     page,
@@ -186,11 +187,32 @@ export function MessagesListPage() {
       ),
     },
     {
+      key: 'to',
+      header: tr.crm.messages.toColumn,
+      className: 'text-app-muted',
+      render: (conversation) => (
+        <div className="flex flex-col">
+          {conversation.lastMessage.recipients
+            .filter((recipient) => recipient.kind === 'TO')
+            .map((recipient) => (
+              <span key={recipient.id}>{displayUserName(recipient.userId)}</span>
+            ))}
+        </div>
+      ),
+    },
+    {
       key: 'subject',
       header: tr.crm.messages.subjectColumn,
       className: 'max-w-xs truncate text-app-muted',
       required: true,
-      render: (conversation) => conversation.lastMessage.subject,
+      render: (conversation) => (
+        <span className="flex items-center gap-1.5">
+          {conversation.lastMessage.subject}
+          {conversation.lastMessage.isMeetingReport && (
+            <Badge variant="info">{tr.crm.messages.filterDrawer.meetingReportBadge}</Badge>
+          )}
+        </span>
+      ),
     },
     {
       key: 'record',

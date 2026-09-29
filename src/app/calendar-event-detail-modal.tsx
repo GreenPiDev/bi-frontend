@@ -8,6 +8,7 @@ import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-ev
 import type { AssignableUser, CalendarAttendeeStatus, CalendarEvent } from '../lib/api';
 import { displayEventTitle } from '../lib/calendar-event-title';
 import { tr } from '../i18n/tr';
+import { NewMessageModal } from './new-message-modal';
 
 const STATUS_BADGE_VARIANT: Record<CalendarAttendeeStatus, 'warning' | 'success' | 'danger'> = {
   PENDING: 'warning',
@@ -61,6 +62,8 @@ export function CalendarEventDetailModal({
   // initializer'i istisna, bir kere mount'ta calisir (bkz. calendar-page.tsx).
   const [now] = useState(() => Date.now());
   const isPast = new Date(event.endAt).getTime() < now;
+  const hasStarted = new Date(event.startAt).getTime() < now;
+  const [meetingReportOpen, setMeetingReportOpen] = useState(false);
 
   // Olusturan, katilimci olarak eklenmemis olsa bile (ornegin baskalarina atayip
   // kendini eklemediyse) etkinlikle ilgili herkes gorunsun diye listeye dahil edilir.
@@ -193,7 +196,38 @@ export function CalendarEventDetailModal({
             </ul>
           )}
         </div>
+
+        {event.isMeeting && (
+          <div>
+            <Button
+              type="button"
+              className="w-full"
+              disabled={!hasStarted}
+              onClick={() => setMeetingReportOpen(true)}
+            >
+              {tr.crm.calendar.detail.meetingReportButton}
+            </Button>
+            {!hasStarted && (
+              <p className="mt-1.5 text-xs text-app-muted">
+                {tr.crm.calendar.detail.meetingReportDisabledHint}
+              </p>
+            )}
+          </div>
+        )}
       </div>
+
+      {meetingReportOpen && (
+        <NewMessageModal
+          title={tr.crm.calendar.detail.meetingReportModalTitle}
+          onClose={() => setMeetingReportOpen(false)}
+          defaultToUserIds={displayedAttendees
+            .map((attendee) => attendee.userId)
+            .filter((userId) => userId !== currentUserId)}
+          defaultSubject={`${event.title} Toplantı Notları`}
+          bodyLabel={tr.crm.messages.form.meetingNotesLabel}
+          meetingEventId={event.id}
+        />
+      )}
     </Modal>
   );
 }

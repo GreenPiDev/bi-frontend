@@ -24,12 +24,12 @@ export function useMessagesQuery(
     page?: number;
     pageSize?: number;
     q?: string;
-    box?: 'inbox' | 'sent';
     relatedEntity?: MessageRelatedEntity[];
     quoteIds?: string[];
     projectIds?: string[];
     interactionIds?: string[];
     recipientUserId?: string;
+    isMeetingReport?: boolean;
   } = {},
   options: { enabled?: boolean } = {},
 ) {

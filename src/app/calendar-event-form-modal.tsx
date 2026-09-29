@@ -58,11 +58,13 @@ export function CalendarEventFormModal({
           reminderType: event.reminderType ?? undefined,
           description: event.description ?? undefined,
           startAt: toDatetimeLocal(event.startAt),
+          isMeeting: event.isMeeting,
           attendeeUserIds: event.attendees.map((a) => a.userId),
         }
       : {
           title: '',
           startAt: defaultStart ? toDatetimeLocal(defaultStart.toISOString()) : '',
+          isMeeting: false,
           attendeeUserIds: meQuery.data ? [meQuery.data.id] : [],
         },
   });
@@ -76,6 +78,7 @@ export function CalendarEventFormModal({
       startAt,
       endAt: startAt,
       allDay: false,
+      isMeeting: values.isMeeting ?? false,
       attendees: (values.attendeeUserIds ?? []).map((userId) => ({ userId })),
     };
     mutation.mutate(input, {
@@ -132,6 +135,10 @@ export function CalendarEventFormModal({
             />
           )}
         />
+        <label className="flex items-center gap-2 text-sm font-semibold text-app-text">
+          <input type="checkbox" className="accent-app-primary" {...register('isMeeting')} />
+          {tr.crm.calendar.form.isMeetingLabel}
+        </label>
         <TextareaField
           label={tr.crm.calendar.form.descriptionLabel}
           rows={3}

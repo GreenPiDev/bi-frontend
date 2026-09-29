@@ -39,18 +39,6 @@ export function MessagesFilterDrawer({ filters, onClose }: MessagesFilterDrawerP
   return (
     <Drawer title={tr.crm.messages.filterDrawer.title} onClose={onClose}>
       <div className="flex flex-col gap-4">
-        <Select
-          label={tr.crm.messages.filterDrawer.boxLabel}
-          value={filters.box ?? ''}
-          onChange={(event) =>
-            filters.setBox((event.target.value || undefined) as 'inbox' | 'sent' | undefined)
-          }
-          options={[
-            { value: 'inbox', label: tr.crm.messages.filterDrawer.boxInboxOption },
-            { value: 'sent', label: tr.crm.messages.filterDrawer.boxSentOption },
-          ]}
-          placeholder={tr.crm.messages.filterDrawer.boxAllOption}
-        />
         <MultiSelect
           label={tr.crm.messages.filterDrawer.relatedEntityLabel}
           value={filters.relatedEntity}
@@ -90,6 +78,15 @@ export function MessagesFilterDrawer({ filters, onClose }: MessagesFilterDrawerP
           options={(usersQuery.data ?? []).map((user) => ({ value: user.id, label: user.name }))}
           placeholder={tr.crm.messages.filterDrawer.recipientAllOption}
         />
+        <label className="flex items-center gap-2 text-sm text-app-text">
+          <input
+            type="checkbox"
+            className="accent-app-primary"
+            checked={filters.isMeetingReport}
+            onChange={(event) => filters.setIsMeetingReport(event.target.checked)}
+          />
+          {tr.crm.messages.filterDrawer.meetingReportLabel}
+        </label>
         <Button type="button" variant="secondary" onClick={filters.reset}>
           {tr.crm.messages.filterDrawer.reset}
         </Button>

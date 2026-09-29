@@ -78,6 +78,7 @@ export const calendarEventFormSchema = z.object({
   reminderType: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
   startAt: z.string().min(1, 'Tarih ve saat gerekli.'),
+  isMeeting: z.boolean().optional(),
   attendeeUserIds: z.array(z.string()).max(50).optional(),
 });
 
@@ -217,7 +218,7 @@ export type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export const quoteFormSchema = z
   .object({
-    accountId: z.string().min(1, 'Firma gerekli.'),
+    accountId: z.string({ message: 'Firma gerekli.' }).min(1, 'Firma gerekli.'),
     contactId: z.string().optional(),
     quoteDate: z.string().min(1, 'Teklif tarihi gerekli.'),
     productListId: z.string().min(1, 'Ürün listesi gerekli.'),

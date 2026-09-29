@@ -1530,6 +1530,7 @@ export interface CalendarEvent {
   startAt: string;
   endAt: string;
   allDay: boolean;
+  isMeeting: boolean;
   createdById: string;
   attendees: CalendarEventAttendee[];
 }
@@ -1546,6 +1547,7 @@ export interface CalendarEventInput {
   startAt: string;
   endAt: string;
   allDay?: boolean;
+  isMeeting?: boolean;
   attendees?: CalendarEventAttendeeInput[];
 }
 
@@ -2491,6 +2493,7 @@ export interface Message {
   sentAt: string;
   relatedEntity: MessageRelatedEntity | null;
   relatedEntityId: string | null;
+  isMeetingReport: boolean;
   recipients: MessageRecipient[];
   attachments: MessageAttachment[];
   createdAt: string;
@@ -2537,6 +2540,9 @@ export interface CreateMessageInput {
   relatedEntityId?: string;
   conversationId?: string;
   attachments?: UploadedMessageAttachment[];
+  /** Ajanda'daki "Toplanti Raporu Olustur" akisi: verilirse, mesaj olusturulduktan
+   * sonra alicilara MEETING_REPORT_SENT bildirimi gonderilir. */
+  meetingEventId?: string;
 }
 
 export function listMessages(
@@ -2544,24 +2550,24 @@ export function listMessages(
     page?: number;
     pageSize?: number;
     q?: string;
-    box?: 'inbox' | 'sent';
     relatedEntity?: MessageRelatedEntity[];
     quoteIds?: string[];
     projectIds?: string[];
     interactionIds?: string[];
     recipientUserId?: string;
+    isMeetingReport?: boolean;
   } = {},
 ): Promise<PagedResult<ConversationSummary>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
-  if (params.box) query.set('box', params.box);
   for (const type of params.relatedEntity ?? []) query.append('relatedEntity', type);
   for (const id of params.quoteIds ?? []) query.append('quoteIds', id);
   for (const id of params.projectIds ?? []) query.append('projectIds', id);
   for (const id of params.interactionIds ?? []) query.append('interactionIds', id);
   if (params.recipientUserId) query.set('recipientUserId', params.recipientUserId);
+  if (params.isMeetingReport) query.set('isMeetingReport', 'true');
   const qs = query.toString();
   return request(`/messages${qs ? `?${qs}` : ''}`);
 }
@@ -2610,7 +2616,14 @@ export function listAssignableMessageUsers(): Promise<AssignableUser[]> {
 
 /** Yeni bir bildirim turu eklendikce buraya da eklenir (bkz. CLAUDE.md, backend
  * NotificationType enum'iyla birebir esler). */
-export type NotificationType = 'CALENDAR_REMINDER_ASSIGNED' | 'CALENDAR_REMINDERS_DUE_TODAY';
+export type NotificationType =
+  | 'CALENDAR_REMINDER_ASSIGNED'
+  | 'CALENDAR_REMINDERS_DUE_TODAY'
+  | 'CONTACT_INACTIVITY_ALERT'
+  | 'CALENDAR_EVENT_INVITE'
+  | 'CALENDAR_EVENT_RESPONSE'
+  | 'CALENDAR_EVENT_UPDATED'
+  | 'MEETING_REPORT_SENT';
 
 export interface Notification {
   id: string;

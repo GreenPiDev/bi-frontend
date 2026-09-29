@@ -1,4 +1,4 @@
-import { KeyRound, Pencil, Plus, UserCheck, UserX } from 'lucide-react';
+import { Copy, KeyRound, Pencil, Plus, UserCheck, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
@@ -237,6 +237,11 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
   const [deactivatingUser, setDeactivatingUser] = useState<SafeUser | null>(null);
   const [resetResult, setResetResult] = useState<{ email: string; password: string } | null>(null);
 
+  async function handleCopyEmail(email: string) {
+    await navigator.clipboard.writeText(email);
+    toast.success(tr.settings.roles.users.emailCopiedToast);
+  }
+
   function handleResetPassword(user: SafeUser) {
     resetPasswordMutation.mutate(user.id, {
       onSuccess: (res) => {
@@ -294,7 +299,21 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
         </div>
       ),
     },
-    { key: 'email', header: tr.settings.roles.users.emailColumn, render: (u) => u.email },
+    {
+      key: 'email',
+      header: tr.settings.roles.users.emailColumn,
+      render: (u) => (
+        <div className="flex items-center gap-1">
+          <span>{u.email}</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.settings.roles.users.copyEmailButton}
+            iconSize={14}
+            onClick={() => void handleCopyEmail(u.email)}
+          />
+        </div>
+      ),
+    },
     {
       key: 'roles',
       header: tr.settings.roles.users.rolesColumn,

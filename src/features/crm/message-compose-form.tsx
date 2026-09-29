@@ -46,6 +46,14 @@ interface MessageComposeFormProps {
   defaultToUserIds?: string[];
   defaultRelatedEntity?: MessageComposeFormValues['relatedEntity'];
   defaultRelatedEntityId?: string;
+  /** Konu alaninin on-dolu degeri (ör. "Toplanti Raporu Olustur" akisinda hatirlatici
+   * basligi). Kullanici hala duzenleyebilir, sadece varsayilan deger degisir. */
+  defaultSubject?: string;
+  /** "Mesaj" alaninin etiketini degistirir (varsayilan tr.crm.messages.form.bodyLabel). */
+  bodyLabel?: string;
+  /** Verilirse, mesaj olusturulunca alicilara MEETING_REPORT_SENT bildirimi gonderilir
+   * (bkz. MessagesService.create). */
+  meetingEventId?: string;
   onCancel?: () => void;
   onSuccess: () => void;
 }
@@ -59,6 +67,9 @@ export function MessageComposeForm({
   defaultToUserIds = [],
   defaultRelatedEntity,
   defaultRelatedEntityId,
+  defaultSubject,
+  bodyLabel,
+  meetingEventId,
   onCancel,
   onSuccess,
 }: MessageComposeFormProps) {
@@ -82,7 +93,7 @@ export function MessageComposeForm({
   } = useForm<MessageComposeFormValues>({
     resolver: zodResolver(messageComposeSchema),
     defaultValues: {
-      subject: '',
+      subject: defaultSubject ?? '',
       body: '',
       toUserIds: defaultToUserIds,
       ccUserIds: [],
@@ -250,6 +261,7 @@ export function MessageComposeForm({
         toUserIds: values.toUserIds,
         ccUserIds: values.ccUserIds ?? [],
         attachments: attachments.length > 0 ? attachments : undefined,
+        meetingEventId,
         ...(isNewConversation
           ? {
               subject: values.subject,
@@ -322,7 +334,7 @@ export function MessageComposeForm({
         />
       )}
       <TextareaField
-        label={tr.crm.messages.form.bodyLabel}
+        label={bodyLabel ?? tr.crm.messages.form.bodyLabel}
         placeholder={tr.crm.messages.form.bodyPlaceholder}
         required
         error={errors.body?.message}
