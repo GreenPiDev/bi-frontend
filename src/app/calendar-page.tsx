@@ -10,13 +10,27 @@ import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
+import { useMeQuery } from '../features/auth/use-auth';
 import {
   useCalendarEventsQuery,
   useDeleteCalendarEventMutation,
 } from '../features/crm/use-calendar-events';
 import { ApiError, type CalendarEvent } from '../lib/api';
 import { displayEventTitle } from '../lib/calendar-event-title';
+import { getCalendarEventVisibility } from '../lib/calendar-event-visibility';
 import { tr } from '../i18n/tr';
+
+const CHIP_CLASS_BY_VISIBILITY: Record<'private' | 'assigned' | 'shared', string> = {
+  private: 'bg-violet-500/10 text-violet-700 hover:bg-violet-500/20',
+  assigned: 'bg-amber-500/10 text-amber-700 hover:bg-amber-500/20',
+  shared: 'bg-app-brand/10 text-app-brand hover:bg-app-brand/20',
+};
+
+const ROW_CLASS_BY_VISIBILITY: Record<'private' | 'assigned' | 'shared', string | undefined> = {
+  private: 'bg-violet-50 hover:bg-violet-100',
+  assigned: 'bg-amber-50 hover:bg-amber-100',
+  shared: undefined,
+};
 
 type ViewMode = 'month' | 'list';
 
@@ -69,6 +83,8 @@ export function CalendarPage() {
   const [dayEventsFor, setDayEventsFor] = useState<Date | null>(null);
   const toast = useToast();
   const deleteMutation = useDeleteCalendarEventMutation();
+  const meQuery = useMeQuery();
+  const currentUserId = meQuery.data?.id;
   // Date.now() render sirasinda dogrudan cagrilamaz (react-hooks/purity) - lazy useState
   // initializer'i istisna, bir kere mount'ta calisir.
   const [now] = useState(() => Date.now());
@@ -126,6 +142,32 @@ export function CalendarPage() {
             <PageHelp text={tr.help.calendar} />
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.calendar.subtitle}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span
+              className={clsx(
+                'rounded px-1.5 py-0.5 text-[11px] font-semibold',
+                CHIP_CLASS_BY_VISIBILITY.private,
+              )}
+            >
+              {tr.crm.calendar.legendPrivate}
+            </span>
+            <span
+              className={clsx(
+                'rounded px-1.5 py-0.5 text-[11px] font-semibold',
+                CHIP_CLASS_BY_VISIBILITY.assigned,
+              )}
+            >
+              {tr.crm.calendar.legendAssigned}
+            </span>
+            <span
+              className={clsx(
+                'rounded px-1.5 py-0.5 text-[11px] font-semibold',
+                CHIP_CLASS_BY_VISIBILITY.shared,
+              )}
+            >
+              {tr.crm.calendar.legendShared}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
@@ -238,7 +280,10 @@ export function CalendarPage() {
                         clickEvent.stopPropagation();
                         setSelectedEvent(event);
                       }}
-                      className="truncate rounded bg-app-brand/10 px-1.5 py-0.5 text-[11px] font-semibold text-app-brand hover:bg-app-brand/20"
+                      className={clsx(
+                        'truncate rounded px-1.5 py-0.5 text-[11px] font-semibold',
+                        CHIP_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, currentUserId)],
+                      )}
                     >
                       {displayEventTitle(event.title)}
                     </span>
@@ -280,7 +325,9 @@ export function CalendarPage() {
           loadingMessage={tr.crm.calendar.loading}
           emptyMessage={tr.crm.calendar.empty}
           rowClassName={(event) =>
-            new Date(event.endAt).getTime() < now ? 'bg-red-50 hover:bg-red-100' : undefined
+            new Date(event.endAt).getTime() < now
+              ? 'bg-red-50 hover:bg-red-100'
+              : ROW_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, currentUserId)]
           }
         />
       )}

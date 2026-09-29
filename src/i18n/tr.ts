@@ -1149,6 +1149,9 @@ export const tr = {
       deleteError: 'Etkinlik silinemedi.',
       allDayLabel: 'Tüm gün',
       attendeesLabel: 'Katılımcılar',
+      legendPrivate: 'Bana Özel',
+      legendAssigned: 'Bana atanan',
+      legendShared: 'Paylaşımlı',
       dayEventsModal: {
         empty: 'Bu günde etkinlik yok.',
       },
@@ -1175,6 +1178,7 @@ export const tr = {
         noAttendees: 'Katılımcı eklenmemiş.',
         whenLabel: 'Tarih & Saat',
         descriptionLabel: 'Not',
+        creatorNote: 'Oluşturan',
       },
     },
     interactions: {

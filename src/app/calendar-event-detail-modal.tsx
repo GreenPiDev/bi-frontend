@@ -46,6 +46,16 @@ export function CalendarEventDetailModal({
   const [now] = useState(() => Date.now());
   const isPast = new Date(event.endAt).getTime() < now;
 
+  // Olusturan, katilimci olarak eklenmemis olsa bile (ornegin baskalarina atayip
+  // kendini eklemediyse) etkinlikle ilgili herkes gorunsun diye listeye dahil edilir.
+  const isCreatorListed = event.attendees.some((a) => a.userId === event.createdById);
+  const displayedAttendees = isCreatorListed
+    ? event.attendees
+    : [
+        { id: `creator-${event.createdById}`, userId: event.createdById, note: null },
+        ...event.attendees,
+      ];
+
   return (
     <Modal
       title={displayEventTitle(event.title)}
@@ -92,13 +102,14 @@ export function CalendarEventDetailModal({
             <Users size={15} />
             {tr.crm.calendar.attendeesLabel}
           </h3>
-          {event.attendees.length === 0 ? (
+          {displayedAttendees.length === 0 ? (
             <p className="mt-1.5 text-sm text-app-muted">{tr.crm.calendar.detail.noAttendees}</p>
           ) : (
             <ul className="mt-2 flex flex-wrap gap-2">
-              {event.attendees.map((attendee) => {
+              {displayedAttendees.map((attendee) => {
                 const user = usersById.get(attendee.userId);
                 const name = user?.name ?? attendee.userId;
+                const isCreator = attendee.userId === event.createdById;
                 const avatar = user?.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
                 ) : (
@@ -106,17 +117,27 @@ export function CalendarEventDetailModal({
                     {initialOf(name)}
                   </span>
                 );
+                const nameLine = (
+                  <span className="flex flex-col leading-tight">
+                    <span className="text-xs font-semibold text-app-text">{name}</span>
+                    {isCreator && (
+                      <span className="text-[10px] text-app-muted">
+                        {tr.crm.calendar.detail.creatorNote}
+                      </span>
+                    )}
+                  </span>
+                );
                 const content = attendee.note ? (
                   <Tooltip content={attendee.note}>
                     <span className="flex items-center gap-1.5">
                       {avatar}
-                      <span className="text-xs font-semibold text-app-text">{name}</span>
+                      {nameLine}
                     </span>
                   </Tooltip>
                 ) : (
                   <>
                     {avatar}
-                    <span className="text-xs font-semibold text-app-text">{name}</span>
+                    {nameLine}
                   </>
                 );
                 return (

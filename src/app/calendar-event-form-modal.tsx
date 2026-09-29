@@ -7,6 +7,7 @@ import { MultiSelect } from '../components/ui/multi-select';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { useMeQuery } from '../features/auth/use-auth';
 import { calendarEventFormSchema, type CalendarEventFormValues } from '../features/crm/schemas';
 import {
   useAssignableCalendarUsersQuery,
@@ -37,6 +38,7 @@ export function CalendarEventFormModal({
 }: CalendarEventFormModalProps) {
   const isEdit = Boolean(event);
   const toast = useToast();
+  const meQuery = useMeQuery();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const createMutation = useCreateCalendarEventMutation();
   const updateMutation = useUpdateCalendarEventMutation(event?.id ?? '');
@@ -59,7 +61,7 @@ export function CalendarEventFormModal({
       : {
           title: '',
           startAt: defaultStart ? toDatetimeLocal(defaultStart.toISOString()) : '',
-          attendeeUserIds: [],
+          attendeeUserIds: meQuery.data ? [meQuery.data.id] : [],
         },
   });
 
