@@ -63,13 +63,13 @@ export function NewProductModal({
       sku: cleaned.sku,
       unit: cleaned.unit,
       minStockLevel: cleaned.minStockLevel ? Number(cleaned.minStockLevel) : undefined,
-      maxDiscountPct: cleaned.maxDiscountPct ? Number(cleaned.maxDiscountPct) : null,
-      price: cleaned.price ? Number(cleaned.price) : null,
+      maxDiscountPct: cleaned.maxDiscountPct ? Number(cleaned.maxDiscountPct) : undefined,
+      price: Number(cleaned.price),
       currency: cleaned.currency,
-      description: cleaned.description ?? null,
-      category: cleaned.category ?? null,
-      brand: cleaned.brand ?? null,
-      costPrice: cleaned.costPrice ? Number(cleaned.costPrice) : null,
+      description: cleaned.description ?? undefined,
+      category: cleaned.category ?? undefined,
+      brand: cleaned.brand ?? undefined,
+      costPrice: cleaned.costPrice ? Number(cleaned.costPrice) : undefined,
     };
 
     createMutation.mutate(input, {

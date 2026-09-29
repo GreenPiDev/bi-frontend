@@ -205,7 +205,7 @@ export const productFormSchema = z.object({
   unit: z.string().min(1, 'Birim gerekli.').max(50),
   minStockLevel: z.string().optional(),
   maxDiscountPct: z.string().optional(),
-  price: z.string().optional(),
+  price: z.string().min(1, 'Fiyat gerekli.'),
   currency: z.string().min(1, 'Para birimi gerekli.').max(3),
   description: z.string().max(2000).optional(),
   category: z.string().max(100).optional(),

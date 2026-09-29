@@ -89,6 +89,11 @@ export function ProductFormPage() {
   }
 
   const onSubmit = handleSubmit(async (values) => {
+    // Olusturma seması (`CreateProductSchema`) bu alanlarda `null` kabul etmiyor, sadece
+    // `undefined` - guncelleme semasi (`UpdateProductSchema`) ise `null`'ı alanı temizlemek
+    // icin kullanıyor. Bos deger bu yuzden moda gore farkli temsil edilir (bkz. kullanici
+    // bildirimi, /urunler/yeni'de bos opsiyonel alanla submit engelleniyordu).
+    const emptyValue = isEdit ? null : undefined;
     const input: ProductInput = {
       productListId: values.productListId,
       name: values.name,
@@ -97,15 +102,17 @@ export function ProductFormPage() {
       minStockLevel: values.minStockLevel ? Number(values.minStockLevel) : undefined,
       maxDiscountPct:
         values.maxDiscountPct === undefined || values.maxDiscountPct === ''
-          ? null
+          ? emptyValue
           : Number(values.maxDiscountPct),
-      price: values.price === undefined || values.price === '' ? null : Number(values.price),
+      price: Number(values.price),
       currency: values.currency,
-      description: values.description || null,
-      category: values.category || null,
-      brand: values.brand || null,
+      description: values.description || emptyValue,
+      category: values.category || emptyValue,
+      brand: values.brand || emptyValue,
       costPrice:
-        values.costPrice === undefined || values.costPrice === '' ? null : Number(values.costPrice),
+        values.costPrice === undefined || values.costPrice === ''
+          ? emptyValue
+          : Number(values.costPrice),
     };
 
     try {

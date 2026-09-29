@@ -1798,8 +1798,7 @@ export const tr = {
         descriptionLabel: 'Açıklama',
         descriptionHint: 'Ürün hakkında kısa bir açıklama (opsiyonel).',
         priceLabel: 'Fiyat',
-        priceHint:
-          'Bu ürünün satış fiyatı, teklif satırlarında varsayılan olarak kullanılır (opsiyonel).',
+        priceHint: 'Bu ürünün satış fiyatı, teklif satırlarında varsayılan olarak kullanılır.',
         currencyLabel: 'Para Birimi',
         costPriceLabel: 'Maliyet',
         costPriceHint: 'Bu ürünün birim maliyeti, satış fiyatı değil (opsiyonel).',

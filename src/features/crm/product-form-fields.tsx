@@ -109,6 +109,7 @@ export function ProductFormFields({
         type="text"
         inputMode="decimal"
         label={tr.crm.products.form.priceLabel}
+        required
         hint={tr.crm.products.form.priceHint}
         error={errors.price?.message}
         {...priceField}
