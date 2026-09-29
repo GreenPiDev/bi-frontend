@@ -2,7 +2,7 @@ import { Bell } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resolveNotificationRoute } from './notification-routes';
-import { useMarkNotificationReadMutation, useUnreadNotificationsQuery } from './use-notifications';
+import { useSetNotificationReadMutation, useUnreadNotificationsQuery } from './use-notifications';
 import type { Notification } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 
@@ -25,7 +25,7 @@ export function NotificationBell() {
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const unreadQuery = useUnreadNotificationsQuery();
-  const markReadMutation = useMarkNotificationReadMutation();
+  const markReadMutation = useSetNotificationReadMutation();
   const unread = unreadQuery.data ?? [];
 
   useEffect(() => {
@@ -73,9 +73,9 @@ export function NotificationBell() {
               <NotificationRow
                 key={notification.id}
                 notification={notification}
-                onMarkRead={() => markReadMutation.mutate(notification.id)}
+                onMarkRead={() => markReadMutation.mutate({ id: notification.id })}
                 isMarking={
-                  markReadMutation.isPending && markReadMutation.variables === notification.id
+                  markReadMutation.isPending && markReadMutation.variables?.id === notification.id
                 }
                 onNavigate={() => setOpen(false)}
               />

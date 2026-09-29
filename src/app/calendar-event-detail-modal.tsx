@@ -37,6 +37,7 @@ function initialOf(name: string): string {
 
 interface CalendarEventDetailModalProps {
   event: CalendarEvent;
+  currentUserId: string | undefined;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -45,11 +46,13 @@ interface CalendarEventDetailModalProps {
 
 export function CalendarEventDetailModal({
   event,
+  currentUserId,
   onClose,
   onEdit,
   onDelete,
   isDeleting,
 }: CalendarEventDetailModalProps) {
+  const isCreator = event.createdById === currentUserId;
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const usersById = new Map<string, AssignableUser>(
     (assignableUsersQuery.data ?? []).map((u) => [u.id, u]),
@@ -85,9 +88,11 @@ export function CalendarEventDetailModal({
           <Button variant="secondary" type="button" onClick={onClose}>
             {tr.crm.calendar.detail.close}
           </Button>
-          <Button variant="danger" type="button" disabled={isDeleting} onClick={onDelete}>
-            {tr.crm.calendar.detail.deleteButton}
-          </Button>
+          {isCreator && (
+            <Button variant="danger" type="button" disabled={isDeleting} onClick={onDelete}>
+              {tr.crm.calendar.detail.deleteButton}
+            </Button>
+          )}
           <Button type="button" onClick={onEdit}>
             {tr.crm.calendar.detail.editButton}
           </Button>

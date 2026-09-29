@@ -2637,8 +2637,11 @@ export function listNotifications(
   return request(`/notifications${qs ? `?${qs}` : ''}`);
 }
 
-export function markNotificationRead(id: string): Promise<void> {
-  return request(`/notifications/${id}/read`, { method: 'PATCH' });
+export function setNotificationRead(id: string, read = true): Promise<void> {
+  return request(`/notifications/${id}/read`, {
+    method: 'PATCH',
+    body: JSON.stringify({ read }),
+  });
 }
 
 // --- Önbellek --------------------------------------------------------------

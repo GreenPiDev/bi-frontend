@@ -177,6 +177,17 @@ export const tr = {
     fullListEmpty: 'Henüz bir bildiriminiz yok.',
     read: 'Okundu',
     unread: 'Okunmadı',
+    selectRowAria: 'Bildirimi seç',
+    selectAllAria: 'Sayfadaki tüm bildirimleri seç',
+    bulkBar: {
+      selectedCount: (count: number) => `${count} bildirim seçili`,
+      markRead: 'Okundu olarak işaretle',
+      markUnread: 'Okunmadı olarak işaretle',
+      clearSelection: 'Seçimi temizle',
+    },
+    markAsUnread: 'Okunmadı olarak işaretle',
+    readStatusUpdateSuccess: 'Bildirim durumu güncellendi.',
+    readStatusUpdateError: 'Bildirim durumu güncellenemedi.',
   },
   inventory: {
     title: 'Envanter Yönetimi',
@@ -1170,6 +1181,11 @@ export const tr = {
     calendar: {
       title: 'Ajanda',
       subtitle: 'Görüşme, hatırlatma ve görevlerinizi tek takvimde yönetin.',
+      tabs: {
+        calendar: 'Takvim',
+        sentInvites: 'Gönderdiğim Davetler',
+        pendingInvites: 'Bekleyen Davetler',
+      },
       newButton: 'Yeni Hatırlatıcı',
       monthView: 'Ay Görünümü',
       listView: 'Liste Görünümü',
@@ -1181,6 +1197,7 @@ export const tr = {
       weekdays: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
       moreEvents: (count: number) => `+${count} daha`,
       showAllLabel: 'Tümünü Göster',
+      deleteConfirmTitle: 'Etkinliği sil',
       deleteConfirm: 'Bu etkinliği silmek istediğinize emin misiniz?',
       deleteError: 'Etkinlik silinemedi.',
       allDayLabel: 'Tüm gün',

@@ -35,8 +35,8 @@ import {
 } from '../features/auth/schemas';
 import { resolveNotificationRoute } from '../features/notifications/notification-routes';
 import {
-  useMarkNotificationReadMutation,
   useNotificationsQuery,
+  useSetNotificationReadMutation,
 } from '../features/notifications/use-notifications';
 import { ApiError, type CalendarShareUser, type Notification } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -78,7 +78,7 @@ export function ProfilePage() {
                         name={profileQuery.data.name}
                       />
 
-                      <section className="p-4">
+                      <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
                         <h2 className="mb-4 text-base font-bold text-app-text">
                           {tr.profile.infoSection.title}
                         </h2>
@@ -198,7 +198,7 @@ function AvatarSection({ avatarUrl, name }: { avatarUrl: string | null; name: st
   }
 
   return (
-    <section className="p-4">
+    <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
       <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
       <div className="flex items-center gap-4">
         {avatarUrl ? (
@@ -278,7 +278,7 @@ function ListSettingsSection({ defaultPageSize }: { defaultPageSize: number }) {
   }
 
   return (
-    <section className="p-4">
+    <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
       <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
       <div className="max-w-xs">
         <Select
@@ -318,7 +318,7 @@ function ProfileEditForm({ name, email }: { name: string; email: string }) {
     updateMutation.error instanceof ApiError ? updateMutation.error.message : undefined;
 
   return (
-    <section className="border-t border-app-border p-4">
+    <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.profile.editSection.title}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />
@@ -500,8 +500,64 @@ function NotificationsSection() {
   const [page, setPage] = useState(1);
   const pageSize = 25;
   const navigate = useNavigate();
+  const toast = useToast();
   const notificationsQuery = useNotificationsQuery({ page, pageSize });
-  const markReadMutation = useMarkNotificationReadMutation();
+  const setReadMutation = useSetNotificationReadMutation();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+
+  const rows = notificationsQuery.data?.data ?? [];
+
+  function goToPage(newPage: number) {
+    setSelectedIds(new Set());
+    setPage(newPage);
+  }
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  const allOnPageSelected = rows.length > 0 && rows.every((row) => selectedIds.has(row.id));
+
+  function toggleSelectAllOnPage() {
+    setSelectedIds(allOnPageSelected ? new Set() : new Set(rows.map((row) => row.id)));
+  }
+
+  function handleSetRead(id: string, read: boolean) {
+    setReadMutation.mutate(
+      { id, read },
+      {
+        onSuccess: () => toast.success(tr.notifications.readStatusUpdateSuccess),
+        onError: () => toast.error(tr.notifications.readStatusUpdateError),
+      },
+    );
+  }
+
+  async function handleBulkSetRead(read: boolean) {
+    setBulkPending(true);
+    try {
+      const results = await Promise.allSettled(
+        Array.from(selectedIds).map((id) => setReadMutation.mutateAsync({ id, read })),
+      );
+      const hasFailure = results.some((result) => result.status === 'rejected');
+      if (hasFailure) {
+        toast.error(tr.notifications.readStatusUpdateError);
+      } else {
+        toast.success(tr.notifications.readStatusUpdateSuccess);
+      }
+      setSelectedIds(new Set());
+    } finally {
+      setBulkPending(false);
+    }
+  }
 
   function handleRowClick(row: Notification) {
     const route = resolveNotificationRoute(row);
@@ -510,16 +566,17 @@ function NotificationsSection() {
 
   const columns: TableColumn<Notification>[] = [
     {
-      key: 'status',
+      key: 'select',
       header: '',
-      className: 'w-4',
+      className: 'w-8',
       render: (row) => (
-        <span
-          className={
-            row.readAt
-              ? 'inline-block h-2 w-2 rounded-full bg-app-bg-muted'
-              : 'inline-block h-2 w-2 rounded-full bg-app-primary'
-          }
+        <input
+          type="checkbox"
+          checked={selectedIds.has(row.id)}
+          onChange={() => toggleSelected(row.id)}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={tr.notifications.selectRowAria}
+          className="accent-app-primary"
         />
       ),
     },
@@ -541,31 +598,91 @@ function NotificationsSection() {
       key: 'actions',
       header: '',
       className: 'text-right',
-      render: (row) =>
-        row.readAt ? (
-          <span className="text-xs text-app-muted">{tr.notifications.read}</span>
+      render: (row) => {
+        const isPending = setReadMutation.isPending && setReadMutation.variables?.id === row.id;
+        return row.readAt ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleSetRead(row.id, false);
+            }}
+            disabled={isPending}
+            className="text-xs font-semibold text-app-primary hover:underline disabled:opacity-50"
+          >
+            {tr.notifications.markAsUnread}
+          </button>
         ) : (
           <button
             type="button"
             onClick={(event) => {
               event.stopPropagation();
-              markReadMutation.mutate(row.id);
+              handleSetRead(row.id, true);
             }}
-            disabled={markReadMutation.isPending && markReadMutation.variables === row.id}
+            disabled={isPending}
             className="text-xs font-semibold text-app-primary hover:underline disabled:opacity-50"
           >
             {tr.notifications.markAsRead}
           </button>
-        ),
+        );
+      },
     },
   ];
 
   return (
     <section className="p-4">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.notifications.fullListTitle}</h2>
+
+      {rows.length > 0 && (
+        <label className="mb-2 flex items-center gap-2 text-sm text-app-muted">
+          <input
+            type="checkbox"
+            checked={allOnPageSelected}
+            onChange={toggleSelectAllOnPage}
+            aria-label={tr.notifications.selectAllAria}
+            className="accent-app-primary"
+          />
+          {tr.notifications.selectAllAria}
+        </label>
+      )}
+
+      {selectedIds.size > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-2.5">
+          <span className="text-sm text-app-text">
+            {tr.notifications.bulkBar.selectedCount(selectedIds.size)}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleBulkSetRead(true)}
+              disabled={bulkPending}
+            >
+              {tr.notifications.bulkBar.markRead}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleBulkSetRead(false)}
+              disabled={bulkPending}
+            >
+              {tr.notifications.bulkBar.markUnread}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setSelectedIds(new Set())}
+              disabled={bulkPending}
+            >
+              {tr.notifications.bulkBar.clearSelection}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Table
         columns={columns}
-        data={notificationsQuery.data?.data ?? []}
+        data={rows}
         keyField={(row) => row.id}
         isLoading={notificationsQuery.isPending}
         loadingMessage={tr.common.loading}
@@ -577,8 +694,8 @@ function NotificationsSection() {
           page={page}
           totalPages={notificationsQuery.data.meta.totalPages}
           total={notificationsQuery.data.meta.total}
-          onPrevious={() => setPage((value) => Math.max(1, value - 1))}
-          onNext={() => setPage((value) => value + 1)}
+          onPrevious={() => goToPage(Math.max(1, page - 1))}
+          onNext={() => goToPage(page + 1)}
         />
       )}
     </section>

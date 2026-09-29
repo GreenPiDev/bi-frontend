@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { listNotifications, listUnreadNotifications, markNotificationRead } from '../../lib/api';
+import { listNotifications, listUnreadNotifications, setNotificationRead } from '../../lib/api';
 
 /** Zil ikonundaki dropdown ve kirmizi rozet ayni sorguyu paylasir - okunmamis
  * bildirim sayisi listenin uzunlugudur, ayri bir "count" ucuna gerek yok. */
@@ -20,10 +20,11 @@ export function useNotificationsQuery(params: { page?: number; pageSize?: number
   });
 }
 
-export function useMarkNotificationReadMutation() {
+export function useSetNotificationReadMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => markNotificationRead(id),
+    mutationFn: ({ id, read = true }: { id: string; read?: boolean }) =>
+      setNotificationRead(id, read),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY });
