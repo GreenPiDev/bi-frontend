@@ -28,7 +28,7 @@ import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals'
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
-  ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED'] as const
+  ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'REVIZE'] as const
 ).map((status) => ({ value: status, label: tr.crm.quotes.statusOptions[status] }));
 
 const STATUS_TEXT_CLASS: Record<QuoteStatus, string> = {
@@ -36,6 +36,7 @@ const STATUS_TEXT_CLASS: Record<QuoteStatus, string> = {
   PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
   APPROVED: 'text-app-success',
   REJECTED: 'text-app-danger',
+  REVIZE: 'text-orange-600 dark:text-orange-400',
 };
 
 const CONFIRM_REQUIRED_STATUSES: readonly QuoteStatus[] = ['APPROVED', 'REJECTED'];
@@ -223,7 +224,7 @@ export function QuotesListPage() {
       className: 'w-px',
       required: true,
       render: (q) => {
-        if (q.status === 'DRAFT' || q.status === 'PENDING_APPROVAL') {
+        if (q.status === 'DRAFT' || q.status === 'PENDING_APPROVAL' || q.status === 'REVIZE') {
           return (
             <div className="flex items-center gap-1">
               <IconActionButton

@@ -28,11 +28,15 @@ import { formatIbanInput } from '../lib/iban-validation';
 import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
-const STATUS_BADGE_VARIANT: Record<QuoteStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
+const STATUS_BADGE_VARIANT: Record<
+  QuoteStatus,
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+> = {
   DRAFT: 'neutral',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',
+  REVIZE: 'orange',
 };
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');

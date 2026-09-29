@@ -6,11 +6,15 @@ import { useQuoteQuery } from '../features/crm/use-quotes';
 import type { QuoteStatus } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-const STATUS_BADGE_VARIANT: Record<QuoteStatus, 'success' | 'warning' | 'danger' | 'neutral'> = {
+const STATUS_BADGE_VARIANT: Record<
+  QuoteStatus,
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+> = {
   DRAFT: 'neutral',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',
+  REVIZE: 'orange',
 };
 
 export function QuoteViewModal({ quoteId, onClose }: { quoteId: string; onClose: () => void }) {

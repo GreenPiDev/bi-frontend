@@ -1863,6 +1863,7 @@ export const tr = {
         PENDING_APPROVAL: 'Onay Bekliyor',
         APPROVED: 'Onaylandı',
         REJECTED: 'Reddedildi',
+        REVIZE: 'Revize',
       },
       detail: {
         back: 'Tekliflere dön',

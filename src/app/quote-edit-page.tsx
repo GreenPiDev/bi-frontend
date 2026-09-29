@@ -272,7 +272,8 @@ export function QuoteEditPage() {
   }
 
   const quote = quoteQuery.data;
-  const isEditable = quote.status === 'DRAFT' || quote.status === 'PENDING_APPROVAL';
+  const isEditable =
+    quote.status === 'DRAFT' || quote.status === 'PENDING_APPROVAL' || quote.status === 'REVIZE';
 
   if (!isEditable) {
     return (

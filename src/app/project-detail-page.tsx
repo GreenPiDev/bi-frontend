@@ -22,11 +22,15 @@ function formatCurrency(value: string | null): string {
   );
 }
 
-const QUOTE_STATUS_BADGE_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+const QUOTE_STATUS_BADGE_VARIANT: Record<
+  string,
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+> = {
   DRAFT: 'neutral',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',
+  REVIZE: 'orange',
 };
 
 function SectionHeader({ children }: { children: ReactNode }) {

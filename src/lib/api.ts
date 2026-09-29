@@ -2065,7 +2065,7 @@ export function bulkDeleteProducts(productIds: string[]): Promise<{ deletedCount
   });
 }
 
-export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
+export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'REVIZE';
 
 export interface QuoteItem {
   id: string;

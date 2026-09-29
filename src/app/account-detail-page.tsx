@@ -19,11 +19,15 @@ import { tr } from '../i18n/tr';
 
 const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
 
-const QUOTE_STATUS_BADGE_VARIANT: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+const QUOTE_STATUS_BADGE_VARIANT: Record<
+  string,
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+> = {
   DRAFT: 'neutral',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',
+  REVIZE: 'orange',
 };
 
 const INTERACTION_STATUS_BADGE_VARIANT: Record<string, 'success' | 'neutral'> = {
