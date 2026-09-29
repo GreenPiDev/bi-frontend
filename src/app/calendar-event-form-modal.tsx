@@ -8,6 +8,7 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
+import { ReminderTypeSelect } from '../features/crm/reminder-type-select';
 import { calendarEventFormSchema, type CalendarEventFormValues } from '../features/crm/schemas';
 import {
   useAssignableCalendarUsersQuery,
@@ -54,6 +55,7 @@ export function CalendarEventFormModal({
     defaultValues: event
       ? {
           title: event.title,
+          reminderType: event.reminderType ?? undefined,
           description: event.description ?? undefined,
           startAt: toDatetimeLocal(event.startAt),
           attendeeUserIds: event.attendees.map((a) => a.userId),
@@ -69,6 +71,7 @@ export function CalendarEventFormModal({
     const startAt = new Date(values.startAt).toISOString();
     const input = {
       title: values.title,
+      reminderType: values.reminderType || undefined,
       description: values.description || undefined,
       startAt,
       endAt: startAt,
@@ -115,6 +118,18 @@ export function CalendarEventFormModal({
           hint="En az 2, en fazla 200 karakter olmalı."
           required
           {...register('title')}
+        />
+        <Controller
+          name="reminderType"
+          control={control}
+          render={({ field }) => (
+            <ReminderTypeSelect
+              label={tr.crm.calendar.form.reminderTypeLabel}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              error={errors.reminderType?.message}
+            />
+          )}
         />
         <TextareaField
           label={tr.crm.calendar.form.descriptionLabel}

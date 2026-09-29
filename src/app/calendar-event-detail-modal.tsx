@@ -1,4 +1,4 @@
-import { CalendarClock, StickyNote, Users } from 'lucide-react';
+import { CalendarClock, StickyNote, Tag, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
@@ -86,6 +86,16 @@ export function CalendarEventDetailModal({
             {isPast && ` · ${tr.crm.calendar.detail.pastBadge}`}
           </p>
         </div>
+
+        {event.reminderType && (
+          <div>
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-app-muted">
+              <Tag size={15} />
+              {tr.crm.calendar.form.reminderTypeLabel}
+            </h3>
+            <p className="mt-2 text-sm text-app-text">{event.reminderType}</p>
+          </div>
+        )}
 
         {event.description && (
           <div>

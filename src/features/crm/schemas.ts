@@ -75,6 +75,7 @@ export type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 export const calendarEventFormSchema = z.object({
   title: z.string().min(2, 'Başlık en az 2 karakter olmalı.').max(200),
+  reminderType: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
   startAt: z.string().min(1, 'Tarih ve saat gerekli.'),
   attendeeUserIds: z.array(z.string()).max(50).optional(),

@@ -55,6 +55,12 @@ import {
   useUpdateUnitOptionMutation,
 } from './use-unit-options';
 import {
+  useCreateReminderTypeOptionMutation,
+  useDeleteReminderTypeOptionMutation,
+  useReminderTypeOptionsQuery,
+  useUpdateReminderTypeOptionMutation,
+} from './use-reminder-type-options';
+import {
   useCreateSectorOptionMutation,
   useDeleteSectorOptionMutation,
   useSectorOptionsQuery,
@@ -569,6 +575,29 @@ function InteractionTypeOptionsManager() {
   );
 }
 
+function ReminderTypeOptionsManager() {
+  return (
+    <OptionListManager
+      title={tr.settings.crm.reminderTypeOptions.title}
+      subtitle={tr.settings.crm.reminderTypeOptions.subtitle}
+      addPlaceholder={tr.settings.crm.reminderTypeOptions.addPlaceholder}
+      addButtonLabel={tr.settings.crm.reminderTypeOptions.addButton}
+      emptyText={tr.settings.crm.reminderTypeOptions.empty}
+      editButtonLabel={tr.settings.crm.reminderTypeOptions.editButton}
+      saveButtonLabel={tr.settings.crm.reminderTypeOptions.saveButton}
+      cancelButtonLabel={tr.settings.crm.reminderTypeOptions.cancelButton}
+      deleteButtonLabel={tr.settings.crm.reminderTypeOptions.deleteButton}
+      addSuccessMessage={tr.settings.crm.reminderTypeOptions.addSuccess}
+      editSuccessMessage={tr.settings.crm.reminderTypeOptions.editSuccess}
+      deleteSuccessMessage={tr.settings.crm.reminderTypeOptions.deleteSuccess}
+      optionsQuery={useReminderTypeOptionsQuery()}
+      createMutation={useCreateReminderTypeOptionMutation()}
+      updateMutation={useUpdateReminderTypeOptionMutation()}
+      deleteMutation={useDeleteReminderTypeOptionMutation()}
+    />
+  );
+}
+
 interface IbanFormState {
   bankName: string;
   accountHolderName: string;
@@ -1000,6 +1029,13 @@ export function CrmSettingsSection() {
       </div>
       <div className="mt-3 border-t border-app-border">
         <IbanOptionsManager />
+      </div>
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.calendarGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
+        <ReminderTypeOptionsManager />
       </div>
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">

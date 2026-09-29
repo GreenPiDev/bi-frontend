@@ -1117,6 +1117,34 @@ export function deleteInteractionTypeOption(id: string): Promise<void> {
   return request(`/interaction-type-options/${id}`, { method: 'DELETE' });
 }
 
+export interface ReminderTypeOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listReminderTypeOptions(): Promise<ReminderTypeOption[]> {
+  return request('/reminder-type-options');
+}
+
+export function createReminderTypeOption(label: string): Promise<ReminderTypeOption> {
+  return request('/reminder-type-options', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updateReminderTypeOption(id: string, label: string): Promise<ReminderTypeOption> {
+  return request(`/reminder-type-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deleteReminderTypeOption(id: string): Promise<void> {
+  return request(`/reminder-type-options/${id}`, { method: 'DELETE' });
+}
+
 export interface PaymentMethodOption {
   id: string;
   label: string;
@@ -1485,6 +1513,7 @@ export interface CalendarEvent {
   id: string;
   title: string;
   description: string | null;
+  reminderType: string | null;
   startAt: string;
   endAt: string;
   allDay: boolean;
@@ -1500,6 +1529,7 @@ export interface CalendarEventAttendeeInput {
 export interface CalendarEventInput {
   title: string;
   description?: string;
+  reminderType?: string;
   startAt: string;
   endAt: string;
   allDay?: boolean;
