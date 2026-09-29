@@ -5,6 +5,7 @@ import {
   listStockItems,
   upsertStockItem,
 } from '../../lib/api';
+import { PRODUCTS_QUERY_KEY } from './use-products';
 
 export const STOCK_ITEMS_QUERY_KEY = ['stock-items'];
 export const LOW_STOCK_ITEMS_QUERY_KEY = ['stock-items', 'low-stock'];
@@ -47,6 +48,7 @@ export function useUpsertStockItemMutation() {
       void queryClient.invalidateQueries({ queryKey: STOCK_ITEMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: LOW_STOCK_ITEMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: STOCK_HISTORY_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
     },
   });
 }

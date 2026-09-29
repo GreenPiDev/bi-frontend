@@ -1,15 +1,48 @@
-import { useLocation, useParams } from 'react-router-dom';
+import { Pencil, Trash2 } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
+import { Badge } from '../components/ui/badge';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
-import { useProductQuery } from '../features/crm/use-products';
+import { useToast } from '../components/ui/toast-context';
+import { useDeleteProductMutation, useProductQuery } from '../features/crm/use-products';
+import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
+import { ProductPriceMovements } from './product-price-history-page';
+
+function MetaCell({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">{label}</p>
+      <div className="mt-1.5 text-sm font-medium text-app-text">{children}</div>
+    </div>
+  );
+}
+
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <span className="shrink-0 text-[11px] font-bold tracking-wide text-app-muted uppercase">
+        {children}
+      </span>
+      <span className="h-px flex-1 bg-app-border" />
+    </div>
+  );
+}
 
 export function ProductDetailPage() {
   const { id = '' } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
+  const toast = useToast();
   const backTo = (location.state as { from?: string } | null)?.from ?? '/urunler';
   const productQuery = useProductQuery(id);
+  const deleteMutation = useDeleteProductMutation();
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   if (productQuery.isPending) {
     return (
@@ -25,68 +58,123 @@ export function ProductDetailPage() {
 
   const product = productQuery.data;
 
-  const fields: { label: string; value: string }[] = [
-    { label: tr.crm.products.detail.skuLabel, value: product.sku ?? '—' },
-    { label: tr.crm.products.detail.unitLabel, value: product.unit },
-    { label: tr.crm.products.detail.categoryLabel, value: product.category ?? '—' },
-    { label: tr.crm.products.detail.brandLabel, value: product.brand ?? '—' },
-    {
-      label: tr.crm.products.detail.priceLabel,
-      value: product.price ? `${product.price} ${product.currency}` : '—',
-    },
-    {
-      label: tr.crm.products.detail.costPriceLabel,
-      value: product.costPrice ? `₺${product.costPrice}` : '—',
-    },
-    {
-      label: tr.crm.products.detail.minStockLevelLabel,
-      value: product.minStockLevel !== null ? String(product.minStockLevel) : '—',
-    },
-    {
-      label: tr.crm.products.detail.maxDiscountPctLabel,
-      value: product.maxDiscountPct ? `%${product.maxDiscountPct}` : '—',
-    },
-  ];
+  function handleDelete() {
+    deleteMutation.mutate(product.id, {
+      onSuccess: () => {
+        toast.success(tr.crm.products.deleteSuccess);
+        navigate(backTo);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        setIsDeleteConfirmOpen(false);
+      },
+    });
+  }
+
+  const attributeEntries = Object.entries(product.attributes ?? {});
 
   return (
     <AppShell>
       <BackLink to={backTo} label={tr.crm.products.detail.back} />
 
-      <div className="mt-6 flex items-start gap-4">
-        <h1 className="text-xl font-bold text-app-text">{product.name}</h1>
-        <PageHelp text={tr.help.productDetail} />
+      <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{product.name}</h1>
+            <PageHelp text={tr.help.productDetail} />
+            {product.deletedAt && <Badge variant="danger">{tr.crm.products.deletedBadge}</Badge>}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-app-muted">
+            <span>{product.productList.name}</span>
+            {product.brand && (
+              <>
+                <span className="text-app-border">•</span>
+                <Badge variant="info">{product.brand}</Badge>
+              </>
+            )}
+            {product.sku && (
+              <>
+                <span className="text-app-border">•</span>
+                <span>
+                  {tr.crm.products.detail.skuLabel}: {product.sku}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {!product.deletedAt && (
+          <div className="flex items-center gap-2 pt-1">
+            <CircleIconButton
+              icon={Pencil}
+              tooltip={tr.crm.products.detail.editButton}
+              onClick={() =>
+                navigate(`/urunler/duzenle/${product.id}`, { state: { from: backTo } })
+              }
+            />
+            <CircleIconButton
+              icon={Trash2}
+              tooltip={tr.crm.products.detail.deleteButton}
+              variant="danger"
+              onClick={() => setIsDeleteConfirmOpen(true)}
+            />
+          </div>
+        )}
       </div>
 
       {product.description && (
-        <p className="mt-4 max-w-2xl text-sm text-app-muted">{product.description}</p>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-app-muted">
+          {product.description}
+        </p>
       )}
 
-      <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-app-border p-6 sm:grid-cols-2 lg:grid-cols-3">
-        {fields.map((field) => (
-          <div key={field.label}>
-            <dt className="text-xs font-semibold uppercase text-app-muted">{field.label}</dt>
-            <dd className="mt-1 text-sm text-app-text">{field.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-5 sm:grid-cols-3 lg:grid-cols-6 sm:divide-x sm:divide-app-border">
+        <MetaCell label={tr.crm.products.detail.unitLabel}>{product.unit}</MetaCell>
+        <MetaCell label={tr.crm.products.detail.categoryLabel}>{product.category ?? '—'}</MetaCell>
+        <MetaCell label={tr.crm.products.detail.priceLabel}>
+          {product.price ? `${product.price} ${product.currency}` : '—'}
+        </MetaCell>
+        <MetaCell label={tr.crm.products.detail.costPriceLabel}>
+          {product.costPrice ? `₺${product.costPrice}` : '—'}
+        </MetaCell>
+        <MetaCell label={tr.crm.products.detail.minStockLevelLabel}>
+          {product.minStockLevel !== null ? String(product.minStockLevel) : '—'}
+        </MetaCell>
+        <MetaCell label={tr.crm.products.detail.maxDiscountPctLabel}>
+          {product.maxDiscountPct ? `%${product.maxDiscountPct}` : '—'}
+        </MetaCell>
+      </div>
 
-      <div className="border-t border-app-border p-6">
-        <h2 className="text-sm font-bold text-app-text">
-          {tr.crm.products.detail.attributesTitle}
-        </h2>
-        {product.attributes && Object.keys(product.attributes).length > 0 ? (
-          <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(product.attributes).map(([key, value]) => (
-              <div key={key}>
-                <dt className="text-xs font-semibold uppercase text-app-muted">{key}</dt>
-                <dd className="mt-1 text-sm text-app-text">{value}</dd>
-              </div>
+      <div className="mt-8">
+        <SectionHeader>{tr.crm.products.detail.attributesTitle}</SectionHeader>
+        {attributeEntries.length > 0 ? (
+          <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {attributeEntries.map(([key, value]) => (
+              <MetaCell key={key} label={key}>
+                {value}
+              </MetaCell>
             ))}
           </dl>
         ) : (
-          <p className="mt-2 text-sm text-app-muted">{tr.crm.products.detail.attributesEmpty}</p>
+          <p className="text-sm text-app-muted">{tr.crm.products.detail.attributesEmpty}</p>
         )}
       </div>
+
+      <div className="mt-8 border-t border-app-border pt-6">
+        <SectionHeader>{tr.crm.products.detail.priceHistoryTitle}</SectionHeader>
+        <ProductPriceMovements productId={product.id} />
+      </div>
+
+      {isDeleteConfirmOpen && (
+        <ConfirmModal
+          title={tr.crm.products.deleteConfirmTitle}
+          message={tr.crm.products.deleteConfirm}
+          confirmLabel={tr.crm.products.detail.deleteButton}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleDelete}
+          onCancel={() => setIsDeleteConfirmOpen(false)}
+        />
+      )}
     </AppShell>
   );
 }

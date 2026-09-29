@@ -19,7 +19,7 @@ function formatPrice(price: number | null, currency: string) {
   return `${price} ${currency}`;
 }
 
-function ProductPriceMovements({ productId }: { productId: string }) {
+export function ProductPriceMovements({ productId }: { productId: string }) {
   const historyQuery = usePriceHistoryQuery({ productId }, { enabled: Boolean(productId) });
 
   const columns: TableColumn<ProductPriceMovement>[] = [

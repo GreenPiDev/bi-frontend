@@ -41,7 +41,7 @@ export function StockListContent() {
         <span className="flex items-center gap-1.5">
           {(lowStockIds.has(item.id) || isLowStock(item.quantity, item.product.minStockLevel)) && (
             <Tooltip content={tr.crm.stock.lowStockTooltip}>
-              <AlertTriangle size={14} className="shrink-0 animate-pulse text-red-600" />
+              <AlertTriangle size={18} strokeWidth={2.5} className="shrink-0 text-red-600" />
             </Tooltip>
           )}
           {item.product.name}

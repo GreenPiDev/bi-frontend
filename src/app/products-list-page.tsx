@@ -1,4 +1,4 @@
-import { ListFilter, Pencil, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, ListFilter, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -13,11 +13,13 @@ import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
+import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
+import { ProductUnitSelect } from '../features/crm/product-unit-select';
 import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import {
@@ -27,7 +29,11 @@ import {
   useProductAttributeKeysQuery,
   useProductsQuery,
 } from '../features/crm/use-products';
-import { sortByStockStatus, stockStatusRowClassName } from '../features/crm/stock-status';
+import {
+  isLowStock,
+  sortByStockStatus,
+  stockStatusRowClassName,
+} from '../features/crm/stock-status';
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
 import { ApiError, type ProductWithStock } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -185,6 +191,11 @@ export function ProductsListContent() {
       required: true,
       render: (p) => (
         <span className="flex items-center gap-1.5">
+          {isLowStock(p.stockQuantity, p.minStockLevel) && (
+            <Tooltip content={tr.crm.stock.lowStockTooltip}>
+              <AlertTriangle size={18} strokeWidth={2.5} className="shrink-0 text-red-600" />
+            </Tooltip>
+          )}
           <span className="font-semibold text-app-text">{p.name}</span>
           {p.deletedAt && <Badge variant="danger">{tr.crm.products.deletedBadge}</Badge>}
         </span>
@@ -206,7 +217,7 @@ export function ProductsListContent() {
       key: 'unit',
       header: tr.crm.products.unitColumn,
       className: 'text-app-muted',
-      render: (p) => p.unit,
+      render: (p) => <ProductUnitSelect product={p} />,
     },
     {
       key: 'category',
