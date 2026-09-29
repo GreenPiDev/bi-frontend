@@ -58,7 +58,10 @@ export function PurchaseOrderDetailPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/siparisler'} label={tr.crm.purchaseOrders.detail.back} />
+      <div className="flex flex-col items-start gap-1">
+        <BackLink to={'/teklifler'} label={tr.crm.purchaseOrders.detail.backToQuotes} />
+        <BackLink to={'/siparisler'} label={tr.crm.purchaseOrders.detail.back} />
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
         <h1 className="text-xl font-bold text-app-text">{purchaseOrder.orderNumber}</h1>

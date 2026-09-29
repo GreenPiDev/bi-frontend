@@ -2121,6 +2121,7 @@ export const tr = {
       },
       detail: {
         back: 'Siparişlere dön',
+        backToQuotes: 'Tekliflere dön',
         editButton: 'Düzenle',
         deleteButton: 'Sil',
         relatedQuoteLink: 'İlişkili teklifi gör',
