@@ -24,6 +24,7 @@ const ME: api.AuthenticatedUser = {
   name: 'Ben',
   roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
   isPlatformAdmin: false,
+  isActive: true,
   avatarUrl: null,
   defaultPageSize: 25,
   columnPreferences: null,

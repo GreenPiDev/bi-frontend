@@ -23,6 +23,7 @@ function safeUser(overrides: Pick<SafeUser, 'id' | 'email' | 'name' | 'roles'>):
   return {
     tenantId: 't1',
     isPlatformAdmin: false,
+    isActive: true,
     avatarUrl: null,
     defaultPageSize: 25,
     columnPreferences: null,

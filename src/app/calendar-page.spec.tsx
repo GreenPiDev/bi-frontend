@@ -28,6 +28,8 @@ describe('CalendarPage', () => {
     vi.spyOn(api, 'listAssignableCalendarUsers').mockResolvedValue([
       { id: 'user-1', name: 'Ayse Yilmaz', avatarUrl: null },
     ]);
+    vi.spyOn(api, 'listPendingCalendarInvites').mockResolvedValue([]);
+    vi.spyOn(api, 'listSentCalendarInvites').mockResolvedValue([]);
   });
 
   it('ay gorunumunde hafta gunlerini gosterir', async () => {
@@ -95,7 +97,16 @@ describe('CalendarPage', () => {
         endAt: '2026-09-10T11:00:00.000Z',
         allDay: false,
         createdById: 'user-1',
-        attendees: [{ id: 'att-1', userId: 'user-1', note: null }],
+        attendees: [
+          {
+            id: 'att-1',
+            userId: 'user-1',
+            note: null,
+            status: 'ACCEPTED',
+            responseNote: null,
+            respondedAt: '2026-09-01T00:00:00.000Z',
+          },
+        ],
       },
     ]);
     const user = userEvent.setup();

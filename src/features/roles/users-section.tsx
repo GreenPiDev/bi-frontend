@@ -1,12 +1,14 @@
-import { KeyRound, Pencil, Plus } from 'lucide-react';
+import { KeyRound, Pencil, Plus, UserCheck, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { CircleIconButton } from '../../components/ui/circle-icon-button';
+import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Modal } from '../../components/ui/modal';
 import { MultiSelect } from '../../components/ui/multi-select';
+import { Switch } from '../../components/ui/switch';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
 import { useToast } from '../../components/ui/toast-context';
@@ -15,6 +17,7 @@ import { tr } from '../../i18n/tr';
 import {
   useCreateUserMutation,
   useResetUserPasswordMutation,
+  useUpdateUserActiveMutation,
   useUpdateUserRoleMutation,
   useUsersQuery,
 } from './use-users';
@@ -225,10 +228,13 @@ function EditUserRolesModal({
 export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSectionProps) {
   const toast = useToast();
   const navigate = useNavigate();
-  const usersQuery = useUsersQuery();
+  const [showInactive, setShowInactive] = useState(false);
+  const usersQuery = useUsersQuery(showInactive);
   const resetPasswordMutation = useResetUserPasswordMutation();
+  const setActiveMutation = useUpdateUserActiveMutation();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SafeUser | null>(null);
+  const [deactivatingUser, setDeactivatingUser] = useState<SafeUser | null>(null);
   const [resetResult, setResetResult] = useState<{ email: string; password: string } | null>(null);
 
   function handleResetPassword(user: SafeUser) {
@@ -240,6 +246,35 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
     });
+  }
+
+  function handleActivate(user: SafeUser) {
+    setActiveMutation.mutate(
+      { userId: user.id, isActive: true },
+      {
+        onSuccess: () => toast.success(tr.settings.roles.users.activateSuccess),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
+  function handleConfirmDeactivate() {
+    if (!deactivatingUser) return;
+    setActiveMutation.mutate(
+      { userId: deactivatingUser.id, isActive: false },
+      {
+        onSuccess: () => {
+          toast.success(tr.settings.roles.users.deactivateSuccess);
+          setDeactivatingUser(null);
+        },
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+          setDeactivatingUser(null);
+        },
+      },
+    );
   }
 
   const columns: TableColumn<SafeUser>[] = [
@@ -271,6 +306,16 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
         </div>
       ),
     },
+    {
+      key: 'status',
+      header: tr.settings.roles.users.statusColumn,
+      render: (u) =>
+        u.isActive ? (
+          <Badge variant="success">{tr.settings.roles.users.activeStatus}</Badge>
+        ) : (
+          <Badge variant="danger">{tr.settings.roles.users.inactiveStatus}</Badge>
+        ),
+    },
     ...(isCompanyAdmin
       ? [
           {
@@ -292,6 +337,22 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
                   tooltip={tr.settings.roles.users.editRolesButton}
                   onClick={() => setEditingUser(u)}
                 />
+                {u.id !== currentUserId &&
+                  (u.isActive ? (
+                    <IconActionButton
+                      icon={UserX}
+                      tooltip={tr.settings.roles.users.deactivateButton}
+                      disabled={setActiveMutation.isPending}
+                      onClick={() => setDeactivatingUser(u)}
+                    />
+                  ) : (
+                    <IconActionButton
+                      icon={UserCheck}
+                      tooltip={tr.settings.roles.users.activateButton}
+                      disabled={setActiveMutation.isPending}
+                      onClick={() => handleActivate(u)}
+                    />
+                  ))}
               </div>
             ),
           } satisfies TableColumn<SafeUser>,
@@ -317,6 +378,17 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
         )}
       </div>
 
+      <div className="mb-3 flex items-center justify-end gap-2">
+        <Switch
+          checked={showInactive}
+          onChange={setShowInactive}
+          label={tr.settings.roles.users.showInactiveLabel}
+        />
+        <span className="text-sm font-semibold text-app-text">
+          {tr.settings.roles.users.showInactiveLabel}
+        </span>
+      </div>
+
       <Table
         columns={columns}
         data={usersQuery.data ?? []}
@@ -328,6 +400,16 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
       {inviteOpen && <AddUserModal roles={roles} onClose={() => setInviteOpen(false)} />}
       {editingUser && (
         <EditUserRolesModal user={editingUser} roles={roles} onClose={() => setEditingUser(null)} />
+      )}
+      {deactivatingUser && (
+        <ConfirmModal
+          title={tr.settings.roles.users.deactivateButton}
+          message={tr.settings.roles.users.deactivateConfirm}
+          confirmLabel={tr.settings.roles.users.deactivateButton}
+          isPending={setActiveMutation.isPending}
+          onConfirm={handleConfirmDeactivate}
+          onCancel={() => setDeactivatingUser(null)}
+        />
       )}
       {resetResult && (
         <CredentialsResultModal

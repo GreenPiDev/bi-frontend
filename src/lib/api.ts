@@ -19,6 +19,7 @@ export interface SafeUser {
   name: string;
   roles: SafeUserRole[];
   isPlatformAdmin: boolean;
+  isActive: boolean;
   avatarUrl: string | null;
   defaultPageSize: number;
   columnPreferences: Record<string, string[]> | null;
@@ -42,7 +43,6 @@ export interface AuthenticatedUser extends SafeUser {
 }
 
 export interface UserProfile extends SafeUser {
-  isActive: boolean;
   createdAt: string;
   lastLoginAt: string | null;
 }
@@ -1390,8 +1390,9 @@ export function runInteractionImport(
 
 // --- Kullanicilar / Davetler -----------------------------------------------
 
-export function listUsers(): Promise<SafeUser[]> {
-  return request('/users');
+export function listUsers(includeInactive = false): Promise<SafeUser[]> {
+  const query = includeInactive ? '?includeInactive=true' : '';
+  return request(`/users${query}`);
 }
 
 export interface CreateUserInput {
@@ -1414,6 +1415,13 @@ export function updateUserRole(userId: string, roleIds: string[]): Promise<SafeU
   return request(`/users/${userId}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ roleIds }),
+  });
+}
+
+export function updateUserActive(userId: string, isActive: boolean): Promise<SafeUser> {
+  return request(`/users/${userId}/active`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isActive }),
   });
 }
 
@@ -1503,10 +1511,15 @@ export function deleteRole(id: string): Promise<void> {
   return request(`/roles/${id}`, { method: 'DELETE' });
 }
 
+export type CalendarAttendeeStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
+
 export interface CalendarEventAttendee {
   id: string;
   userId: string;
   note: string | null;
+  status: CalendarAttendeeStatus;
+  responseNote: string | null;
+  respondedAt: string | null;
 }
 
 export interface CalendarEvent {
@@ -1609,6 +1622,56 @@ export function updateCalendarEvent(
 
 export function deleteCalendarEvent(id: string): Promise<void> {
   return request(`/calendar-events/${id}`, { method: 'DELETE' });
+}
+
+export interface PendingCalendarInvite {
+  attendeeId: string;
+  eventId: string;
+  eventTitle: string;
+  eventDescription: string | null;
+  startAt: string;
+  endAt: string;
+  allDay: boolean;
+  creatorId: string;
+  creatorName: string;
+}
+
+export interface SentCalendarInvite {
+  attendeeId: string;
+  eventId: string;
+  eventTitle: string;
+  startAt: string;
+  attendeeUserId: string;
+  attendeeName: string;
+  status: CalendarAttendeeStatus;
+  responseNote: string | null;
+  respondedAt: string | null;
+}
+
+export interface RespondToCalendarEventInput {
+  status: 'ACCEPTED' | 'DECLINED';
+  /** DECLINED'ta zorunlu, ACCEPTED'ta opsiyonel (bkz. RespondToCalendarEventSchema). */
+  responseNote?: string;
+}
+
+/** Ad-hoc (2026-09-29): katilimci daveti kabul/red akisi - /ajanda ustundeki panel
+ * ve altindaki "gonderdigim davetler" tablosu bu uclari kullanir. */
+export function listPendingCalendarInvites(): Promise<PendingCalendarInvite[]> {
+  return request('/calendar-events/pending-invites');
+}
+
+export function listSentCalendarInvites(): Promise<SentCalendarInvite[]> {
+  return request('/calendar-events/sent-invites');
+}
+
+export function respondToCalendarEvent(
+  eventId: string,
+  input: RespondToCalendarEventInput,
+): Promise<CalendarEvent> {
+  return request(`/calendar-events/${eventId}/respond`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
 }
 
 /** Eskiden 5 sabit degerli bir union'du - artik tenant'in /settings?tab=crm'de yonettigi

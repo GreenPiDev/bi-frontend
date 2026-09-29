@@ -1,12 +1,25 @@
 import { CalendarClock, StickyNote, Tag, Users } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { Tooltip } from '../components/ui/tooltip';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
-import type { AssignableUser, CalendarEvent } from '../lib/api';
+import type { AssignableUser, CalendarAttendeeStatus, CalendarEvent } from '../lib/api';
 import { displayEventTitle } from '../lib/calendar-event-title';
 import { tr } from '../i18n/tr';
+
+const STATUS_BADGE_VARIANT: Record<CalendarAttendeeStatus, 'warning' | 'success' | 'danger'> = {
+  PENDING: 'warning',
+  ACCEPTED: 'success',
+  DECLINED: 'danger',
+};
+
+const STATUS_LABEL: Record<CalendarAttendeeStatus, string> = {
+  PENDING: tr.crm.calendar.statusPending,
+  ACCEPTED: tr.crm.calendar.statusAccepted,
+  DECLINED: tr.crm.calendar.statusDeclined,
+};
 
 function formatRange(event: CalendarEvent): string {
   const formatter = new Intl.DateTimeFormat('tr-TR', {
@@ -52,7 +65,14 @@ export function CalendarEventDetailModal({
   const displayedAttendees = isCreatorListed
     ? event.attendees
     : [
-        { id: `creator-${event.createdById}`, userId: event.createdById, note: null },
+        {
+          id: `creator-${event.createdById}`,
+          userId: event.createdById,
+          note: null,
+          status: 'ACCEPTED' as const,
+          responseNote: null,
+          respondedAt: null,
+        },
         ...event.attendees,
       ];
 
@@ -137,8 +157,9 @@ export function CalendarEventDetailModal({
                     )}
                   </span>
                 );
-                const content = attendee.note ? (
-                  <Tooltip content={attendee.note}>
+                const tooltipText = attendee.responseNote ?? attendee.note ?? undefined;
+                const content = tooltipText ? (
+                  <Tooltip content={tooltipText}>
                     <span className="flex items-center gap-1.5">
                       {avatar}
                       {nameLine}
@@ -156,6 +177,11 @@ export function CalendarEventDetailModal({
                     className="flex items-center gap-1.5 rounded-full bg-app-bg-muted py-1 pr-3 pl-1"
                   >
                     {content}
+                    {!isCreator && (
+                      <Badge variant={STATUS_BADGE_VARIANT[attendee.status]} className="ml-0.5">
+                        {STATUS_LABEL[attendee.status]}
+                      </Badge>
+                    )}
                   </li>
                 );
               })}

@@ -25,6 +25,7 @@ describe('PlatformAdminPageModulesPage', () => {
       name: 'Admin Kisi',
       roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
       isPlatformAdmin: true,
+      isActive: true,
       avatarUrl: null,
       defaultPageSize: 25,
       columnPreferences: null,

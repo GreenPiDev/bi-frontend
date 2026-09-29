@@ -4,16 +4,17 @@ import {
   getUserStats,
   listUsers,
   resetUserPassword,
+  updateUserActive,
   updateUserRole,
   type CreateUserInput,
 } from '../../lib/api';
 
 const USERS_QUERY_KEY = ['users'];
 
-export function useUsersQuery() {
+export function useUsersQuery(includeInactive = false) {
   return useQuery({
-    queryKey: USERS_QUERY_KEY,
-    queryFn: () => listUsers(),
+    queryKey: [...USERS_QUERY_KEY, { includeInactive }],
+    queryFn: () => listUsers(includeInactive),
   });
 }
 
@@ -44,6 +45,15 @@ export function useUpdateUserRoleMutation() {
   return useMutation({
     mutationFn: ({ userId, roleIds }: { userId: string; roleIds: string[] }) =>
       updateUserRole(userId, roleIds),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY }),
+  });
+}
+
+export function useUpdateUserActiveMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
+      updateUserActive(userId, isActive),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: USERS_QUERY_KEY }),
   });
 }

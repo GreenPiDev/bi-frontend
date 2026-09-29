@@ -6,21 +6,45 @@ import { AppShell } from './app-shell';
 import { CalendarDayEventsModal } from './calendar-day-events-modal';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
 import { CalendarEventFormModal } from './calendar-event-form-modal';
+import { CalendarInviteRespondModal } from './calendar-invite-respond-modal';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table } from '../components/ui/table';
+import { TruncatedText } from '../components/ui/truncated-text';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   useCalendarEventsQuery,
   useDeleteCalendarEventMutation,
+  usePendingCalendarInvitesQuery,
+  useRespondToCalendarEventMutation,
+  useSentCalendarInvitesQuery,
 } from '../features/crm/use-calendar-events';
 import { useCalendarsSharedWithMeQuery } from '../features/crm/use-calendar-shares';
-import { ApiError, type CalendarEvent } from '../lib/api';
+import {
+  ApiError,
+  type CalendarAttendeeStatus,
+  type CalendarEvent,
+  type PendingCalendarInvite,
+  type SentCalendarInvite,
+} from '../lib/api';
 import { displayEventTitle } from '../lib/calendar-event-title';
 import { getCalendarEventVisibility } from '../lib/calendar-event-visibility';
 import { tr } from '../i18n/tr';
+
+const STATUS_BADGE_VARIANT: Record<CalendarAttendeeStatus, 'warning' | 'success' | 'danger'> = {
+  PENDING: 'warning',
+  ACCEPTED: 'success',
+  DECLINED: 'danger',
+};
+
+const STATUS_LABEL: Record<CalendarAttendeeStatus, string> = {
+  PENDING: tr.crm.calendar.statusPending,
+  ACCEPTED: tr.crm.calendar.statusAccepted,
+  DECLINED: tr.crm.calendar.statusDeclined,
+};
 
 const CHIP_CLASS_BY_VISIBILITY: Record<'private' | 'assigned' | 'shared', string> = {
   private: 'bg-violet-500/10 text-violet-700 hover:bg-violet-500/20',
@@ -83,8 +107,15 @@ export function CalendarPage() {
   const [creatingAt, setCreatingAt] = useState<Date | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [dayEventsFor, setDayEventsFor] = useState<Date | null>(null);
+  const [respondingInvite, setRespondingInvite] = useState<{
+    invite: PendingCalendarInvite;
+    mode: 'ACCEPT' | 'DECLINE';
+  } | null>(null);
   const toast = useToast();
   const deleteMutation = useDeleteCalendarEventMutation();
+  const pendingInvitesQuery = usePendingCalendarInvitesQuery();
+  const sentInvitesQuery = useSentCalendarInvitesQuery();
+  const respondMutation = useRespondToCalendarEventMutation();
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
   const sharedWithMeQuery = useCalendarsSharedWithMeQuery();
@@ -144,6 +175,32 @@ export function CalendarPage() {
         toast.error(error instanceof ApiError ? error.message : tr.crm.calendar.deleteError);
       },
     });
+  }
+
+  function handleRespondConfirm(responseNote: string | undefined) {
+    if (!respondingInvite) return;
+    const { invite, mode } = respondingInvite;
+    respondMutation.mutate(
+      {
+        eventId: invite.eventId,
+        input: { status: mode === 'ACCEPT' ? 'ACCEPTED' : 'DECLINED', responseNote },
+      },
+      {
+        onSuccess: () => {
+          toast.success(
+            mode === 'ACCEPT'
+              ? tr.crm.calendar.pendingInvites.acceptSuccess
+              : tr.crm.calendar.pendingInvites.declineSuccess,
+          );
+          setRespondingInvite(null);
+        },
+        onError: (error) => {
+          toast.error(
+            error instanceof ApiError ? error.message : tr.crm.calendar.pendingInvites.respondError,
+          );
+        },
+      },
+    );
   }
 
   const events = monthQuery.data ?? [];
@@ -242,6 +299,89 @@ export function CalendarPage() {
           />
         </div>
       </div>
+
+      {(pendingInvitesQuery.data?.length ?? 0) > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-sm font-bold text-app-text">
+            {tr.crm.calendar.pendingInvites.title}
+          </h2>
+          <Table<PendingCalendarInvite>
+            columns={[
+              {
+                key: 'creatorName',
+                header: tr.crm.calendar.pendingInvites.senderColumn,
+                render: (invite) => (
+                  <span className="text-sm text-app-text">{invite.creatorName}</span>
+                ),
+              },
+              {
+                key: 'startAt',
+                header: tr.crm.calendar.pendingInvites.dateColumn,
+                render: (invite) => (
+                  <span className="text-xs text-app-muted">
+                    {new Intl.DateTimeFormat('tr-TR', {
+                      dateStyle: 'medium',
+                      timeStyle: invite.allDay ? undefined : 'short',
+                    }).format(new Date(invite.startAt))}
+                  </span>
+                ),
+              },
+              {
+                key: 'eventTitle',
+                header: tr.crm.calendar.pendingInvites.titleColumn,
+                render: (invite) => (
+                  <span className="text-sm font-semibold text-app-text">
+                    {displayEventTitle(invite.eventTitle)}
+                  </span>
+                ),
+              },
+              {
+                key: 'eventDescription',
+                header: tr.crm.calendar.pendingInvites.descriptionColumn,
+                render: (invite) =>
+                  invite.eventDescription ? (
+                    <TruncatedText
+                      text={invite.eventDescription}
+                      modalTitle={tr.crm.calendar.pendingInvites.descriptionColumn}
+                    />
+                  ) : (
+                    <span className="text-app-muted">
+                      {tr.crm.calendar.pendingInvites.noDescription}
+                    </span>
+                  ),
+              },
+              {
+                key: 'actions',
+                header: tr.crm.calendar.pendingInvites.actionsColumn,
+                render: (invite) => (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={respondMutation.isPending}
+                      onClick={() => setRespondingInvite({ invite, mode: 'DECLINE' })}
+                    >
+                      {tr.crm.calendar.pendingInvites.declineButton}
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={respondMutation.isPending}
+                      onClick={() => setRespondingInvite({ invite, mode: 'ACCEPT' })}
+                    >
+                      {tr.crm.calendar.pendingInvites.acceptButton}
+                    </Button>
+                  </div>
+                ),
+              },
+            ]}
+            data={pendingInvitesQuery.data ?? []}
+            keyField={(invite) => invite.attendeeId}
+            isLoading={pendingInvitesQuery.isPending}
+            loadingMessage={tr.crm.calendar.loading}
+            emptyMessage={tr.crm.calendar.pendingInvites.empty}
+          />
+        </div>
+      )}
 
       {viewMode === 'month' ? (
         <div className="mt-6">
@@ -372,6 +512,82 @@ export function CalendarPage() {
               ? 'bg-red-50 hover:bg-red-100'
               : ROW_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, selectedUserId)]
           }
+        />
+      )}
+
+      {(sentInvitesQuery.data?.length ?? 0) > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-2 text-sm font-bold text-app-text">
+            {tr.crm.calendar.sentInvites.title}
+          </h2>
+          <Table<SentCalendarInvite>
+            columns={[
+              {
+                key: 'eventTitle',
+                header: tr.crm.calendar.sentInvites.eventColumn,
+                render: (invite) => (
+                  <span className="text-sm font-semibold text-app-text">
+                    {displayEventTitle(invite.eventTitle)}
+                  </span>
+                ),
+              },
+              {
+                key: 'attendeeName',
+                header: tr.crm.calendar.sentInvites.recipientColumn,
+                render: (invite) => (
+                  <span className="text-sm text-app-text">{invite.attendeeName}</span>
+                ),
+              },
+              {
+                key: 'status',
+                header: tr.crm.calendar.sentInvites.statusColumn,
+                render: (invite) => (
+                  <Badge variant={STATUS_BADGE_VARIANT[invite.status]}>
+                    {STATUS_LABEL[invite.status]}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'responseNote',
+                header: tr.crm.calendar.sentInvites.noteColumn,
+                render: (invite) =>
+                  invite.responseNote ? (
+                    <TruncatedText
+                      text={invite.responseNote}
+                      modalTitle={tr.crm.calendar.sentInvites.noteModalTitle}
+                    />
+                  ) : (
+                    <span className="text-app-muted">{tr.crm.calendar.sentInvites.noNote}</span>
+                  ),
+              },
+              {
+                key: 'startAt',
+                header: tr.crm.calendar.sentInvites.dateColumn,
+                render: (invite) => (
+                  <span className="text-xs text-app-muted">
+                    {new Intl.DateTimeFormat('tr-TR', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    }).format(new Date(invite.startAt))}
+                  </span>
+                ),
+              },
+            ]}
+            data={sentInvitesQuery.data ?? []}
+            keyField={(invite) => invite.attendeeId}
+            isLoading={sentInvitesQuery.isPending}
+            loadingMessage={tr.crm.calendar.loading}
+            emptyMessage={tr.crm.calendar.sentInvites.empty}
+          />
+        </div>
+      )}
+
+      {respondingInvite && (
+        <CalendarInviteRespondModal
+          mode={respondingInvite.mode}
+          isPending={respondMutation.isPending}
+          onConfirm={handleRespondConfirm}
+          onCancel={() => setRespondingInvite(null)}
         />
       )}
 

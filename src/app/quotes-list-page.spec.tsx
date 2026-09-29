@@ -86,6 +86,7 @@ const companyAdminUser: api.AuthenticatedUser = {
   name: 'Admin',
   roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
   isPlatformAdmin: false,
+  isActive: true,
   avatarUrl: null,
   defaultPageSize: 25,
   columnPreferences: null,

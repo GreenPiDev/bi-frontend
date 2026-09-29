@@ -5,11 +5,17 @@ import {
   getCalendarEvent,
   listAssignableCalendarUsers,
   listCalendarEvents,
+  listPendingCalendarInvites,
+  listSentCalendarInvites,
+  respondToCalendarEvent,
   updateCalendarEvent,
   type CalendarEventInput,
+  type RespondToCalendarEventInput,
 } from '../../lib/api';
 
 export const CALENDAR_EVENTS_QUERY_KEY = ['calendar-events'];
+export const PENDING_CALENDAR_INVITES_QUERY_KEY = ['calendar-events', 'pending-invites'];
+export const SENT_CALENDAR_INVITES_QUERY_KEY = ['calendar-events', 'sent-invites'];
 
 export function useAssignableCalendarUsersQuery() {
   return useQuery({
@@ -67,6 +73,33 @@ export function useDeleteCalendarEventMutation() {
     mutationFn: (id: string) => deleteCalendarEvent(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CALENDAR_EVENTS_QUERY_KEY });
+    },
+  });
+}
+
+export function usePendingCalendarInvitesQuery() {
+  return useQuery({
+    queryKey: PENDING_CALENDAR_INVITES_QUERY_KEY,
+    queryFn: () => listPendingCalendarInvites(),
+  });
+}
+
+export function useSentCalendarInvitesQuery() {
+  return useQuery({
+    queryKey: SENT_CALENDAR_INVITES_QUERY_KEY,
+    queryFn: () => listSentCalendarInvites(),
+  });
+}
+
+export function useRespondToCalendarEventMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, input }: { eventId: string; input: RespondToCalendarEventInput }) =>
+      respondToCalendarEvent(eventId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: CALENDAR_EVENTS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: PENDING_CALENDAR_INVITES_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: SENT_CALENDAR_INVITES_QUERY_KEY });
     },
   });
 }

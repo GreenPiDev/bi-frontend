@@ -10,6 +10,7 @@ export function createMockUser(overrides: Partial<AuthenticatedUser> = {}): Auth
     name: 'Test Kullanici',
     roles: [{ id: 'r1', name: 'COMPANYADMIN' }],
     isPlatformAdmin: false,
+    isActive: true,
     avatarUrl: null,
     defaultPageSize: 25,
     columnPreferences: null,

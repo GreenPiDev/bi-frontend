@@ -166,7 +166,7 @@ export function CalendarEventFormModal({
                 label: user.name,
               }))}
               error={errors.attendeeUserIds?.message}
-              hint="Opsiyonel, en fazla 50 kişi seçebilirsiniz."
+              hint={`Opsiyonel, en fazla 50 kişi seçebilirsiniz. ${tr.crm.calendar.form.attendeesInviteHint}`}
             />
           )}
         />
