@@ -19,6 +19,7 @@ import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
+import { ProductListInlineSelect } from '../features/crm/product-list-inline-select';
 import { ProductUnitSelect } from '../features/crm/product-unit-select';
 import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -205,7 +206,7 @@ export function ProductsListContent() {
       key: 'productList',
       header: tr.crm.products.productListColumn,
       className: 'text-app-muted',
-      render: (p) => p.productList.name,
+      render: (p) => <ProductListInlineSelect product={p} />,
     },
     {
       key: 'sku',
@@ -350,19 +351,24 @@ export function ProductsListContent() {
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-3">
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={showDeleted}
-            onChange={(checked) => {
-              setPage(1);
-              setShowDeleted(checked);
-            }}
-            label={tr.crm.products.showDeletedLabel}
-          />
-          <span className="text-sm font-semibold text-app-text">
+      <div className="mt-4 flex flex-wrap items-end justify-end gap-3">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-transparent select-none" aria-hidden="true">
             {tr.crm.products.showDeletedLabel}
           </span>
+          <div className="flex h-[42px] items-center gap-2">
+            <Switch
+              checked={showDeleted}
+              onChange={(checked) => {
+                setPage(1);
+                setShowDeleted(checked);
+              }}
+              label={tr.crm.products.showDeletedLabel}
+            />
+            <span className="text-sm font-semibold text-app-text">
+              {tr.crm.products.showDeletedLabel}
+            </span>
+          </div>
         </div>
         <ColumnVisibilityPicker
           columns={optionalColumns}

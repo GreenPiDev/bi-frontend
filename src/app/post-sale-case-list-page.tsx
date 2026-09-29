@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
+import { InlineSelect } from '../components/ui/inline-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
@@ -48,11 +49,25 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
   }
 
   return (
-    <select
+    <InlineSelect
       value={postSaleCase.status}
-      onClick={(event) => event.stopPropagation()}
-      onChange={(event) => {
-        const status = event.target.value as PostSaleCaseStatus;
+      options={[
+        {
+          value: postSaleCase.status,
+          label: tr.crm.postSaleCases.statusOptions[postSaleCase.status],
+        },
+        {
+          value: 'GERI_BILDIRIM_ALINDI',
+          label: tr.crm.postSaleCases.statusOptions.GERI_BILDIRIM_ALINDI,
+        },
+      ]}
+      disabled={markFeedbackMutation.isPending}
+      selectClassName={clsx(
+        'font-semibold disabled:opacity-80',
+        STATUS_TEXT_CLASS[postSaleCase.status],
+      )}
+      onChange={(value) => {
+        const status = value as PostSaleCaseStatus;
         if (status !== 'GERI_BILDIRIM_ALINDI') return;
         markFeedbackMutation.mutate(
           {},
@@ -64,19 +79,7 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
           },
         );
       }}
-      disabled={markFeedbackMutation.isPending}
-      className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
-        STATUS_TEXT_CLASS[postSaleCase.status],
-      )}
-    >
-      <option value={postSaleCase.status}>
-        {tr.crm.postSaleCases.statusOptions[postSaleCase.status]}
-      </option>
-      <option value="GERI_BILDIRIM_ALINDI">
-        {tr.crm.postSaleCases.statusOptions.GERI_BILDIRIM_ALINDI}
-      </option>
-    </select>
+    />
   );
 }
 

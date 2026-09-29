@@ -57,12 +57,12 @@ export function ReminderTypeSelect({ label, value, onChange, error }: ReminderTy
         trailingAction={
           <Button
             type="button"
-            variant="secondary"
+            variant="navy"
             className="shrink-0 !px-2.5"
             onClick={() => setIsQuickAddOpen(true)}
             aria-label={tr.crm.calendar.form.quickAddReminderType.title}
           >
-            <Plus size={16} />
+            <Plus size={16} className="text-app-success" />
           </Button>
         }
       />

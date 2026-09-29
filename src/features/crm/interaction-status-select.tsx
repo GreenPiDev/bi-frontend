@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { InlineSelect } from '../../components/ui/inline-select';
 import { useToast } from '../../components/ui/toast-context';
 import { useUpdateInteractionMutation } from './use-interactions';
 import { ApiError, type Interaction } from '../../lib/api';
@@ -9,11 +10,19 @@ export function InteractionStatusSelect({ interaction }: { interaction: Interact
   const updateMutation = useUpdateInteractionMutation(interaction.id);
 
   return (
-    <select
+    <InlineSelect
       value={interaction.status}
-      onClick={(event) => event.stopPropagation()}
-      onChange={(event) => {
-        const status = event.target.value as Interaction['status'];
+      options={[
+        { value: 'OPEN', label: tr.crm.interactions.statusOptions.OPEN },
+        { value: 'CLOSED', label: tr.crm.interactions.statusOptions.CLOSED },
+      ]}
+      disabled={updateMutation.isPending}
+      selectClassName={clsx(
+        'font-semibold disabled:opacity-50',
+        interaction.status === 'OPEN' ? 'text-app-success' : 'text-app-danger',
+      )}
+      onChange={(value) => {
+        const status = value as Interaction['status'];
         updateMutation.mutate(
           { status },
           {
@@ -26,14 +35,6 @@ export function InteractionStatusSelect({ interaction }: { interaction: Interact
           },
         );
       }}
-      disabled={updateMutation.isPending}
-      className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-50',
-        interaction.status === 'OPEN' ? 'text-app-success' : 'text-app-danger',
-      )}
-    >
-      <option value="OPEN">{tr.crm.interactions.statusOptions.OPEN}</option>
-      <option value="CLOSED">{tr.crm.interactions.statusOptions.CLOSED}</option>
-    </select>
+    />
   );
 }

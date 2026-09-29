@@ -19,6 +19,7 @@ import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
+import { NewProductModal } from '../features/crm/new-product-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
@@ -72,6 +73,7 @@ export function QuoteFormPage() {
   // teklif formunun <form>'una ic ice girer, "Kaydet" native submit'e dusup sayfayi
   // yeniler ve eklenen deger hic kaydedilmez (bkz. product-form-page.tsx).
   const [activeOptionModal, setActiveOptionModal] = useState<'paymentMethod' | 'iban' | null>(null);
+  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
 
   const {
     register,
@@ -170,6 +172,22 @@ export function QuoteFormPage() {
       vatPct: entryVatPct || '0',
     });
     setEntryProductId(null);
+  }
+
+  // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçtiği
+  // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
+  // varsayılan miktar/fiyatla doğrudan satır olarak eklenir - ayrıca "Teklife Ekle"
+  // panelinin açılmasına gerek yok.
+  function handleProductCreated(product: Product) {
+    setProductCatalog((prev) => ({ ...prev, [product.id]: product }));
+    append({
+      productId: product.id,
+      quantity: '1',
+      unitPrice: product.price ?? '',
+      discountPct: '0',
+      vatPct: '0',
+    });
+    setIsNewProductModalOpen(false);
   }
 
   // Teklif özeti tablosundaki mevcut satırlara tıklayınca açılan düzenleme paneli -
@@ -577,9 +595,19 @@ export function QuoteFormPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-lg border border-app-border bg-app-surface p-4">
-              <span className="text-sm font-semibold text-app-text">
-                {tr.crm.quotes.form.itemsSectionTitle}
-              </span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-app-text">
+                  {tr.crm.quotes.form.itemsSectionTitle}
+                </span>
+                <Button
+                  type="button"
+                  variant="navy"
+                  className="shrink-0"
+                  onClick={() => setIsNewProductModalOpen(true)}
+                >
+                  {tr.crm.quotes.form.newProductButton}
+                </Button>
+              </div>
               <FormError message={errors.items?.message} />
 
               <div className="mt-3">
@@ -821,6 +849,13 @@ export function QuoteFormPage() {
             setValue('ibanOptionId', option.id, { shouldValidate: true });
             setActiveOptionModal(null);
           }}
+        />
+      )}
+      {isNewProductModalOpen && (
+        <NewProductModal
+          defaultProductListId={selectedProductListId}
+          onClose={() => setIsNewProductModalOpen(false)}
+          onCreated={handleProductCreated}
         />
       )}
     </AppShell>

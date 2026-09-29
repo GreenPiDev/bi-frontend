@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { InlineSelect } from '../components/ui/inline-select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
@@ -63,11 +64,13 @@ function QuoteStatusSelect({
   }
 
   return (
-    <select
+    <InlineSelect
       value={quote.status}
-      onClick={(event) => event.stopPropagation()}
-      onChange={(event) => {
-        const status = event.target.value as QuoteStatus;
+      options={STATUS_OPTIONS}
+      disabled={updateMutation.isPending}
+      selectClassName={clsx('font-semibold disabled:opacity-80', STATUS_TEXT_CLASS[quote.status])}
+      onChange={(value) => {
+        const status = value as QuoteStatus;
         if (CONFIRM_REQUIRED_STATUSES.includes(status)) {
           onRequestConfirm(quote, status);
           return;
@@ -84,18 +87,7 @@ function QuoteStatusSelect({
           },
         );
       }}
-      disabled={updateMutation.isPending}
-      className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
-        STATUS_TEXT_CLASS[quote.status],
-      )}
-    >
-      {STATUS_OPTIONS.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    />
   );
 }
 

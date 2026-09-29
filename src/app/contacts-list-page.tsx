@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
+import { InlineSelect } from '../components/ui/inline-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
@@ -38,11 +39,19 @@ function ContactStatusSelect({ contact }: { contact: Contact }) {
   const updateMutation = useUpdateContactMutation(contact.id);
 
   return (
-    <select
+    <InlineSelect
       value={contact.status}
-      onClick={(event) => event.stopPropagation()}
-      onChange={(event) => {
-        const status = event.target.value as Contact['status'];
+      options={[
+        { value: 'ACTIVE', label: tr.crm.contacts.statusActive },
+        { value: 'INACTIVE', label: tr.crm.contacts.statusInactive },
+      ]}
+      disabled={updateMutation.isPending}
+      selectClassName={clsx(
+        'font-semibold disabled:opacity-80',
+        CONTACT_STATUS_TEXT_CLASS[contact.status],
+      )}
+      onChange={(value) => {
+        const status = value as Contact['status'];
         updateMutation.mutate(
           { status },
           {
@@ -55,15 +64,7 @@ function ContactStatusSelect({ contact }: { contact: Contact }) {
           },
         );
       }}
-      disabled={updateMutation.isPending}
-      className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-80',
-        CONTACT_STATUS_TEXT_CLASS[contact.status],
-      )}
-    >
-      <option value="ACTIVE">{tr.crm.contacts.statusActive}</option>
-      <option value="INACTIVE">{tr.crm.contacts.statusInactive}</option>
-    </select>
+    />
   );
 }
 

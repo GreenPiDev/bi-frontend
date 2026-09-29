@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
+import { InlineSelect } from '../components/ui/inline-select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { DateField } from '../components/ui/date-field';
 import { TextField } from '../components/ui/text-field';
@@ -49,11 +50,16 @@ function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
   const updateMutation = useUpdateOpportunityMutation(opportunity.id);
 
   return (
-    <select
+    <InlineSelect
       value={opportunity.stage}
-      onClick={(event) => event.stopPropagation()}
-      onChange={(event) => {
-        const stage = event.target.value as OpportunityStage;
+      options={STAGE_OPTIONS}
+      disabled={updateMutation.isPending}
+      selectClassName={clsx(
+        'font-semibold disabled:opacity-50',
+        STAGE_TEXT_CLASS[opportunity.stage],
+      )}
+      onChange={(value) => {
+        const stage = value as OpportunityStage;
         updateMutation.mutate(
           { stage },
           {
@@ -66,18 +72,7 @@ function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
           },
         );
       }}
-      disabled={updateMutation.isPending}
-      className={clsx(
-        'cursor-pointer rounded-md border-none bg-transparent px-2 py-1 -mx-2 -my-1 text-sm font-semibold outline-none transition-colors hover:bg-[#1a2440] hover:text-white focus:ring-2 focus:ring-app-primary disabled:cursor-not-allowed disabled:opacity-50',
-        STAGE_TEXT_CLASS[opportunity.stage],
-      )}
-    >
-      {STAGE_OPTIONS.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
+    />
   );
 }
 

@@ -16,6 +16,7 @@ import {
   useProductListQuery,
   useUpdateProductListMutation,
 } from '../features/crm/use-product-lists';
+import { ProductListInlineSelect } from '../features/crm/product-list-inline-select';
 import { useProductsQuery } from '../features/crm/use-products';
 import { productListFormSchema, type ProductListFormValues } from '../features/crm/schemas';
 import { ApiError, type Product, type ProductListInput } from '../lib/api';
@@ -56,6 +57,12 @@ export function ProductListFormPage() {
       key: 'name',
       header: tr.crm.products.nameColumn,
       render: (p) => <span className="font-semibold text-app-text">{p.name}</span>,
+    },
+    {
+      key: 'productList',
+      header: tr.crm.products.productListColumn,
+      className: 'text-app-muted',
+      render: (p) => <ProductListInlineSelect product={p} />,
     },
     {
       key: 'sku',

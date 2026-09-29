@@ -1665,6 +1665,9 @@ export const tr = {
       empty: 'Henüz ürün kaydı yok.',
       nameColumn: 'Ürün',
       productListColumn: 'Ürün Listesi',
+      productListMoveSuccess: (productName: string, targetListName: string) =>
+        `"${productName}" ürününü "${targetListName}" listesine taşıdınız.`,
+      productListUpdateError: 'Ürün listesi güncellenemedi.',
       skuColumn: 'SKU',
       unitColumn: 'Birim',
       unitUpdateSuccess: 'Birim güncellendi.',
@@ -1937,6 +1940,8 @@ export const tr = {
         pickerSearchPlaceholder: 'Ürün adına göre ara...',
         pickerLoading: 'Ürünler yükleniyor...',
         pickerEmpty: 'Ürün bulunamadı.',
+        newProductButton: '+ Yeni Ürün',
+        newProductCreatedAndAdded: 'Ürün oluşturuldu ve teklife eklendi.',
         pickerProductColumn: 'Ürün',
         pickerUnitColumn: 'Birim',
         pickerPriceColumn: 'Fiyat',

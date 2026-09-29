@@ -1,20 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
-import { Select } from '../components/ui/select';
-import { TextField } from '../components/ui/text-field';
-import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
 import { AddOptionModal } from '../features/crm/add-option-modal';
-import { BrandSelect } from '../features/crm/brand-select';
-import { CategorySelect } from '../features/crm/category-select';
-import { ProductListSelect } from '../features/crm/product-list-select';
-import { UnitSelect } from '../features/crm/unit-select';
+import { ProductFormFields } from '../features/crm/product-form-fields';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreateProductCategoryOptionMutation } from '../features/crm/use-product-categories';
 import {
@@ -66,11 +60,6 @@ export function ProductFormPage() {
       productListId: preselectedProductListId,
     },
   });
-
-  const minStockLevelField = register('minStockLevel');
-  const maxDiscountPctField = register('maxDiscountPct');
-  const costPriceField = register('costPrice');
-  const priceField = register('price');
 
   useEffect(() => {
     if (productQuery.data) {
@@ -142,142 +131,17 @@ export function ProductFormPage() {
           {isEdit ? tr.crm.products.form.editTitle : tr.crm.products.form.newTitle}
         </h1>
 
-        <form
-          onSubmit={onSubmit}
-          className="mt-6 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2"
-          noValidate
-        >
-          <div className="sm:col-span-2">
-            <FormError message={apiErrorMessage} />
-          </div>
-          <Controller
-            name="productListId"
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4" noValidate>
+          <FormError message={apiErrorMessage} />
+          <ProductFormFields
+            register={register}
             control={control}
-            render={({ field }) => (
-              <ProductListSelect
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                error={errors.productListId?.message}
-              />
-            )}
+            errors={errors}
+            onRequestAddUnit={() => setActiveOptionModal('unit')}
+            onRequestAddCategory={() => setActiveOptionModal('category')}
+            onRequestAddBrand={() => setActiveOptionModal('brand')}
           />
-          <TextField
-            label={tr.crm.products.form.nameLabel}
-            required
-            hint={tr.crm.products.form.nameHint}
-            error={errors.name?.message}
-            {...register('name')}
-          />
-          <TextField
-            label={tr.crm.products.form.skuLabel}
-            hint={tr.crm.products.form.skuHint}
-            error={errors.sku?.message}
-            {...register('sku')}
-          />
-          <Controller
-            name="unit"
-            control={control}
-            render={({ field }) => (
-              <UnitSelect
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                error={errors.unit?.message}
-                onRequestAddNew={() => setActiveOptionModal('unit')}
-              />
-            )}
-          />
-          <Controller
-            name="category"
-            control={control}
-            render={({ field }) => (
-              <CategorySelect
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                error={errors.category?.message}
-                onRequestAddNew={() => setActiveOptionModal('category')}
-              />
-            )}
-          />
-          <Controller
-            name="brand"
-            control={control}
-            render={({ field }) => (
-              <BrandSelect
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                error={errors.brand?.message}
-                onRequestAddNew={() => setActiveOptionModal('brand')}
-              />
-            )}
-          />
-          <div className="sm:col-span-2">
-            <TextareaField
-              label={tr.crm.products.form.descriptionLabel}
-              hint={tr.crm.products.form.descriptionHint}
-              error={errors.description?.message}
-              {...register('description')}
-            />
-          </div>
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.products.form.priceLabel}
-            hint={tr.crm.products.form.priceHint}
-            error={errors.price?.message}
-            {...priceField}
-            onChange={(event) => {
-              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
-              priceField.onChange(event);
-            }}
-          />
-          <Select
-            label={tr.crm.products.form.currencyLabel}
-            required
-            error={errors.currency?.message}
-            options={[
-              { value: 'TRY', label: 'TRY' },
-              { value: 'EUR', label: 'EUR' },
-              { value: 'USD', label: 'USD' },
-            ]}
-            {...register('currency')}
-          />
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.products.form.costPriceLabel}
-            hint={tr.crm.products.form.costPriceHint}
-            error={errors.costPrice?.message}
-            {...costPriceField}
-            onChange={(event) => {
-              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
-              costPriceField.onChange(event);
-            }}
-          />
-          <TextField
-            type="text"
-            inputMode="numeric"
-            label={tr.crm.products.form.minStockLevelLabel}
-            hint={tr.crm.products.form.minStockLevelHint}
-            error={errors.minStockLevel?.message}
-            {...minStockLevelField}
-            onChange={(event) => {
-              event.target.value = event.target.value.replace(/[^0-9]/g, '');
-              minStockLevelField.onChange(event);
-            }}
-          />
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.products.form.maxDiscountPctLabel}
-            hint={tr.crm.products.form.maxDiscountPctHint}
-            error={errors.maxDiscountPct?.message}
-            {...maxDiscountPctField}
-            onChange={(event) => {
-              event.target.value = event.target.value.replace(/[^0-9.]/g, '');
-              maxDiscountPctField.onChange(event);
-            }}
-          />
-          <div className="mt-1 flex gap-2 sm:col-span-2">
+          <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={isSaving}>
               {isSaving ? tr.crm.products.form.submitting : tr.crm.products.form.submit}
             </Button>
