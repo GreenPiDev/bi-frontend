@@ -135,10 +135,13 @@ export function CalendarEventFormModal({
             />
           )}
         />
-        <label className="flex items-center gap-2 text-sm font-semibold text-app-text">
-          <input type="checkbox" className="accent-app-primary" {...register('isMeeting')} />
-          {tr.crm.calendar.form.isMeetingLabel}
-        </label>
+        <div>
+          <label className="flex items-center gap-2 text-sm font-semibold text-app-text">
+            <input type="checkbox" className="accent-app-primary" {...register('isMeeting')} />
+            {tr.crm.calendar.form.isMeetingLabel}
+          </label>
+          <p className="mt-1 pl-6 text-xs text-app-muted">{tr.crm.calendar.form.isMeetingHint}</p>
+        </div>
         <TextareaField
           label={tr.crm.calendar.form.descriptionLabel}
           rows={3}

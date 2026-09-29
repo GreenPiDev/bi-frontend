@@ -1229,6 +1229,8 @@ export const tr = {
           submit: 'Ekle',
         },
         isMeetingLabel: 'Bu bir toplantıdır',
+        isMeetingHint:
+          'İşaretlenirse, etkinliğin tarihi geçtikten sonra bu kayıt üzerinden toplantı raporu oluşturulabilir.',
         descriptionLabel: 'Açıklama',
         startLabel: 'Tarih ve Saat',
         attendeesLabel: 'Katılımcılar',
