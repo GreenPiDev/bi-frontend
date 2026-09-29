@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useBrandOptionsRealtimeSync } from '../features/crm/use-brand-options-realtime-sync';
 import { useCalendarEventsRealtimeSync } from '../features/crm/use-calendar-events-realtime-sync';
+import { useCalendarSharesRealtimeSync } from '../features/crm/use-calendar-shares-realtime-sync';
 import { useDepartmentOptionsRealtimeSync } from '../features/crm/use-department-options-realtime-sync';
 import { useIbanOptionsRealtimeSync } from '../features/crm/use-iban-options-realtime-sync';
 import { useInteractionTypeOptionsRealtimeSync } from '../features/crm/use-interaction-type-options-realtime-sync';
@@ -36,6 +37,7 @@ export function ProtectedRoute({
   useModuleAccessRealtimeSync();
   useMessagesRealtimeSync();
   useCalendarEventsRealtimeSync();
+  useCalendarSharesRealtimeSync();
   useReminderTypeOptionsRealtimeSync();
   useSectorOptionsRealtimeSync();
   useDepartmentOptionsRealtimeSync();

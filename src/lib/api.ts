@@ -1547,14 +1547,46 @@ export function listAssignableCalendarUsers(): Promise<AssignableUser[]> {
 }
 
 export function listCalendarEvents(
-  params: { from?: string; to?: string; order?: 'asc' | 'desc' } = {},
+  params: {
+    from?: string;
+    to?: string;
+    order?: 'asc' | 'desc';
+    /** Verilmezse kendi ajandam (mevcut birlesik gorunum). Baska bir kullanicinin
+     * id'si verilirse, o kullanici bana ajandasini paylasmissa sadece onun
+     * katildigi etkinlikler doner (bkz. CalendarSharingSection / /ajanda dropdown). */
+    userId?: string;
+  } = {},
 ): Promise<CalendarEvent[]> {
   const query = new URLSearchParams();
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
   if (params.order) query.set('order', params.order);
+  if (params.userId) query.set('userId', params.userId);
   const qs = query.toString();
   return request(`/calendar-events${qs ? `?${qs}` : ''}`);
+}
+
+export interface CalendarShareUser {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+/** Ajandami kimlerin gorebildigi (ben owner'im) - /profile?tab=security. */
+export function getMyCalendarGrants(): Promise<CalendarShareUser[]> {
+  return request('/calendar-shares/my-grants');
+}
+
+export function updateMyCalendarGrants(viewerIds: string[]): Promise<CalendarShareUser[]> {
+  return request('/calendar-shares/my-grants', {
+    method: 'PUT',
+    body: JSON.stringify({ viewerIds }),
+  });
+}
+
+/** Kimlerin ajandasini gorebildigim (ben viewer'im) - /ajanda dropdown. */
+export function getCalendarsSharedWithMe(): Promise<CalendarShareUser[]> {
+  return request('/calendar-shares/shared-with-me');
 }
 
 export function getCalendarEvent(id: string): Promise<CalendarEvent> {

@@ -5,10 +5,10 @@ import {
   ChevronRight,
   Mail,
   MapPin,
-  MoreHorizontal,
   Pencil,
   Phone,
   RotateCcw,
+  Tag,
   Trash2,
   User,
   Video,
@@ -36,13 +36,14 @@ import { tr } from '../i18n/tr';
 /** Gorusme sekli artik dinamik/serbest metin oldugundan (bkz. schema.prisma
  * Interaction.type yorumu) sabit bir enum-anahtarli ikon eslemesi mumkun degil - eski 5
  * varsayilan etiket icin ayni ikonlar korunur, tenant'in tanimladigi yeni bir gorusme
- * sekli icin varsayilan (MoreHorizontal) ikon kullanilir. */
+ * sekli icin varsayilan (Tag) ikon kullanilir - MoreHorizontal (3 nokta) yanlislikla
+ * "daha fazla goster" aksiyonu gibi algilanabildigi icin tercih edilmedi. */
 const TYPE_ICONS: Record<string, typeof Phone> = {
   Telefon: Phone,
   Ziyaret: MapPin,
   Toplantı: Video,
   'E-posta': Mail,
-  Diğer: MoreHorizontal,
+  Diğer: Tag,
 };
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
@@ -170,7 +171,7 @@ export function InteractionDetailPage() {
   }
 
   const interaction = interactionQuery.data;
-  const TypeIcon = TYPE_ICONS[interaction.type] ?? MoreHorizontal;
+  const TypeIcon = TYPE_ICONS[interaction.type] ?? Tag;
   const occurredAt = new Date(interaction.occurredAt);
   const title = interaction.account
     ? interaction.account.name
@@ -247,7 +248,7 @@ export function InteractionDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-5 sm:divide-x sm:divide-app-border">
+      <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl border border-app-border bg-white p-5 sm:grid-cols-5 sm:divide-x sm:divide-app-border">
         <MetaCell label={tr.crm.interactions.statusColumn}>
           <span className="inline-flex items-center gap-1.5">
             <span
@@ -280,8 +281,8 @@ export function InteractionDetailPage() {
         </MetaCell>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr] lg:divide-x lg:divide-app-border">
-        <div className="min-w-0 lg:pr-8">
+      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[3fr_2fr]">
+        <div className="min-w-0 rounded-xl border border-app-border bg-white p-5">
           {interaction.subject && (
             <h2 className="mb-6 text-2xl font-bold text-app-text">{interaction.subject}</h2>
           )}
@@ -305,7 +306,7 @@ export function InteractionDetailPage() {
           )}
         </div>
 
-        <div className="flex min-w-0 flex-col gap-6 lg:pl-8">
+        <div className="flex min-w-0 flex-col gap-6 rounded-xl border border-app-border bg-white p-5">
           <div>
             <SectionHeader>{tr.crm.interactions.detail.participantsTitle}</SectionHeader>
             {interaction.participants.length === 0 ? (

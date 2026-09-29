@@ -19,7 +19,12 @@ export function useAssignableCalendarUsersQuery() {
 }
 
 export function useCalendarEventsQuery(
-  params: { from?: string; to?: string; order?: 'asc' | 'desc' } = {},
+  params: {
+    from?: string;
+    to?: string;
+    order?: 'asc' | 'desc';
+    userId?: string;
+  } = {},
 ) {
   return useQuery({
     queryKey: [...CALENDAR_EVENTS_QUERY_KEY, params],

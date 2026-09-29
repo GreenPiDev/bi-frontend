@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
+import { MultiSelect } from '../components/ui/multi-select';
 import { PageHelp } from '../components/ui/page-help';
 import { PasswordField } from '../components/ui/password-field';
 import { Select } from '../components/ui/select';
@@ -21,6 +23,11 @@ import {
   useUploadAvatarMutation,
 } from '../features/auth/use-auth';
 import {
+  useMyCalendarGrantsQuery,
+  useUpdateMyCalendarGrantsMutation,
+} from '../features/crm/use-calendar-shares';
+import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
+import {
   changePasswordFormSchema,
   updateProfileFormSchema,
   type ChangePasswordFormValues,
@@ -31,7 +38,7 @@ import {
   useMarkNotificationReadMutation,
   useNotificationsQuery,
 } from '../features/notifications/use-notifications';
-import { ApiError, type Notification } from '../lib/api';
+import { ApiError, type CalendarShareUser, type Notification } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -128,7 +135,12 @@ export function ProfilePage() {
                 {
                   key: 'security',
                   label: tr.profile.tabs.security,
-                  content: <ChangePasswordForm />,
+                  content: (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                      <ChangePasswordForm />
+                      <CalendarSharingSection currentUserId={profileQuery.data.id} />
+                    </div>
+                  ),
                 },
                 {
                   key: 'notifications',
@@ -360,7 +372,7 @@ function ChangePasswordForm() {
       : undefined;
 
   return (
-    <section className="p-4">
+    <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.profile.passwordSection.title}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <FormError message={apiErrorMessage} />
@@ -394,6 +406,85 @@ function ChangePasswordForm() {
             : tr.profile.passwordSection.submit}
         </Button>
       </form>
+    </section>
+  );
+}
+
+/** A2.3.1 G3'ün ajanda paylaşımı için ekli ad-hoc bölüm: kullanıcı, /ajanda
+ * dropdown'ından ajandasını görebilecek kişileri (çoklu seçim) yönetir. Diğer
+ * seçenekler `useAssignableCalendarUsersQuery` ile aynı desende tüm aktif tenant
+ * kullanıcılarından gelir, sadece kendisi listeden çıkarılır. */
+function CalendarSharingSection({ currentUserId }: { currentUserId: string }) {
+  const toast = useToast();
+  const strings = tr.profile.calendarSharingSection;
+  const usersQuery = useAssignableCalendarUsersQuery();
+  const grantsQuery = useMyCalendarGrantsQuery();
+  const updateMutation = useUpdateMyCalendarGrantsMutation();
+
+  const options = (usersQuery.data ?? [])
+    .filter((user) => user.id !== currentUserId)
+    .map((user) => ({ value: user.id, label: user.name }));
+  const grantedUsers = grantsQuery.data ?? [];
+  const value = grantedUsers.map((user) => user.id);
+
+  function handleChange(viewerIds: string[]) {
+    updateMutation.mutate(viewerIds, {
+      onSuccess: () => toast.success(strings.updateSuccess),
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
+  function handleRemove(userId: string) {
+    handleChange(value.filter((id) => id !== userId));
+  }
+
+  const columns: TableColumn<CalendarShareUser>[] = [
+    {
+      key: 'name',
+      header: strings.tableNameColumn,
+      render: (user) => <span className="text-sm text-app-text">{user.name}</span>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'text-right',
+      render: (user) => (
+        <button
+          type="button"
+          aria-label={strings.removeAction}
+          onClick={() => handleRemove(user.id)}
+          disabled={updateMutation.isPending}
+          className="text-app-muted hover:text-app-danger disabled:opacity-50"
+        >
+          <Trash2 size={16} />
+        </button>
+      ),
+    },
+  ];
+
+  return (
+    <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
+      <h2 className="mb-4 text-base font-bold text-app-text">{strings.title}</h2>
+      <MultiSelect
+        label={strings.label}
+        hint={strings.hint}
+        placeholder={strings.placeholder}
+        options={options}
+        value={value}
+        onChange={handleChange}
+      />
+      <div className="mt-4">
+        <Table
+          columns={columns}
+          data={grantedUsers}
+          keyField={(user) => user.id}
+          isLoading={grantsQuery.isPending}
+          loadingMessage={tr.common.loading}
+          emptyMessage={strings.tableEmpty}
+        />
+      </div>
     </section>
   );
 }

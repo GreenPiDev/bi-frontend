@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { CalendarDayEventsModal } from './calendar-day-events-modal';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
@@ -15,6 +16,7 @@ import {
   useCalendarEventsQuery,
   useDeleteCalendarEventMutation,
 } from '../features/crm/use-calendar-events';
+import { useCalendarsSharedWithMeQuery } from '../features/crm/use-calendar-shares';
 import { ApiError, type CalendarEvent } from '../lib/api';
 import { displayEventTitle } from '../lib/calendar-event-title';
 import { getCalendarEventVisibility } from '../lib/calendar-event-visibility';
@@ -85,16 +87,35 @@ export function CalendarPage() {
   const deleteMutation = useDeleteCalendarEventMutation();
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
+  const sharedWithMeQuery = useCalendarsSharedWithMeQuery();
+  const [viewedUserId, setViewedUserId] = useState<string | undefined>(undefined);
+  // currentUserId sonradan gelir (meQuery async) - dropdown'in varsayilan degeri icin.
+  const selectedUserId = viewedUserId ?? currentUserId;
   // Date.now() render sirasinda dogrudan cagrilamaz (react-hooks/purity) - lazy useState
   // initializer'i istisna, bir kere mount'ta calisir.
   const [now] = useState(() => Date.now());
 
   const { from, to } = useMemo(() => getMonthGridRange(monthCursor), [monthCursor]);
+  const viewedUserQueryParam =
+    selectedUserId && selectedUserId !== currentUserId ? selectedUserId : undefined;
   const monthQuery = useCalendarEventsQuery(
     viewMode === 'month'
-      ? { from: from.toISOString(), to: to.toISOString(), order: 'asc' }
-      : { order: 'asc' },
+      ? {
+          from: from.toISOString(),
+          to: to.toISOString(),
+          order: 'asc',
+          userId: viewedUserQueryParam,
+        }
+      : { order: 'asc', userId: viewedUserQueryParam },
   );
+
+  const viewerOptions = [
+    ...(currentUserId ? [{ value: currentUserId, label: tr.crm.calendar.viewerSelfOption }] : []),
+    ...(sharedWithMeQuery.data ?? []).map((user) => ({
+      value: user.id,
+      label: user.name,
+    })),
+  ];
 
   const gridDays = useMemo(() => buildGridDays(from), [from]);
   const monthLabel = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric' }).format(
@@ -142,6 +163,14 @@ export function CalendarPage() {
             <PageHelp text={tr.help.calendar} />
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.calendar.subtitle}</p>
+          <Link
+            to="/profile?tab=security"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-block text-sm font-medium text-app-brand hover:underline"
+          >
+            {tr.crm.calendar.sharingHint}
+          </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span
               className={clsx(
@@ -170,6 +199,20 @@ export function CalendarPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
+          {currentUserId && (
+            <select
+              aria-label={tr.crm.calendar.viewerLabel}
+              value={selectedUserId ?? ''}
+              onChange={(event) => setViewedUserId(event.target.value)}
+              className="h-11 rounded-xl border border-app-border bg-app-surface px-3 text-sm font-medium text-app-text outline-none focus:border-app-primary"
+            >
+              {viewerOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
           <CircleIconButton
             icon={CalendarDays}
             tooltip={tr.crm.calendar.monthView}
@@ -282,7 +325,7 @@ export function CalendarPage() {
                       }}
                       className={clsx(
                         'truncate rounded px-1.5 py-0.5 text-[11px] font-semibold',
-                        CHIP_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, currentUserId)],
+                        CHIP_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, selectedUserId)],
                       )}
                     >
                       {displayEventTitle(event.title)}
@@ -327,7 +370,7 @@ export function CalendarPage() {
           rowClassName={(event) =>
             new Date(event.endAt).getTime() < now
               ? 'bg-red-50 hover:bg-red-100'
-              : ROW_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, currentUserId)]
+              : ROW_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, selectedUserId)]
           }
         />
       )}

@@ -247,6 +247,16 @@ export const tr = {
       pageSizeHint: 'Tablolu sayfalarda bir seferde kaç kayıt gösterileceğini belirler.',
       updateSuccess: 'Sayfa boyutu güncellendi.',
     },
+    calendarSharingSection: {
+      title: 'Ajanda Paylaşımı',
+      label: 'Ajandamı görebilecek kullanıcılar',
+      hint: 'Burada seçtiğin kullanıcılar, /ajanda sayfasındaki açılır menüden senin ajandanı seçip görüntüleyebilir.',
+      placeholder: 'Kullanıcı seçin',
+      updateSuccess: 'Ajanda paylaşım ayarların güncellendi.',
+      tableNameColumn: 'Kullanıcı',
+      tableEmpty: 'Ajandanı henüz kimseyle paylaşmadın.',
+      removeAction: 'Kaldır',
+    },
   },
   datasets: {
     title: 'Veri Kümeleri',
@@ -1168,6 +1178,9 @@ export const tr = {
       legendPrivate: 'Bana Özel',
       legendAssigned: 'Bana atanan',
       legendShared: 'Paylaşımlı',
+      viewerLabel: 'Ajanda',
+      viewerSelfOption: 'Ben',
+      sharingHint: 'Ajandanı başkalarıyla paylaşmak ister misin? Ayarlar için tıkla →',
       dayEventsModal: {
         empty: 'Bu günde etkinlik yok.',
       },
@@ -1393,7 +1406,9 @@ export const tr = {
         reset: 'Sıfırla',
       },
       deleteConfirm: 'Bu fırsatı silmek istediğinize emin misiniz?',
+      deleteConfirmTitle: 'Fırsatı Sil',
       deleteError: 'Fırsat silinemedi.',
+      deleteSuccess: 'Fırsat silindi.',
       stageUpdateSuccess: 'Aşama güncellendi.',
       stageUpdateError: 'Aşama güncellenemedi.',
       reminderConflictNotice: (suggested: string) =>
@@ -1960,7 +1975,9 @@ export const tr = {
       actualCostColumn: 'Gerçekleşen Maliyet',
       actionsColumn: 'İşlemler',
       deleteConfirm: 'Bu projeyi silmek istediğinize emin misiniz?',
+      deleteConfirmTitle: 'Projeyi Sil',
       deleteError: 'Proje silinemedi.',
+      deleteSuccess: 'Proje silindi.',
       detail: {
         back: 'Projelere dön',
         editButton: 'Düzenle',

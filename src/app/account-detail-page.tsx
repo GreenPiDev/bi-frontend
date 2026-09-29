@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
@@ -6,11 +7,14 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { useAccountQuery } from '../features/crm/use-accounts';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import { useProjectsQuery } from '../features/crm/use-projects';
 import { useQuotesQuery } from '../features/crm/use-quotes';
+import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import type { Interaction, Opportunity, Project, Quote } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
@@ -21,6 +25,143 @@ const QUOTE_STATUS_BADGE_VARIANT: Record<string, 'success' | 'warning' | 'danger
   APPROVED: 'success',
   REJECTED: 'danger',
 };
+
+const INTERACTION_STATUS_BADGE_VARIANT: Record<string, 'success' | 'neutral'> = {
+  OPEN: 'success',
+  CLOSED: 'neutral',
+};
+
+function formatBudget(value: string | null): string {
+  if (!value) return '—';
+  return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
+    Number(value),
+  );
+}
+
+function quoteTotalsByCurrency(quote: Quote) {
+  return groupQuoteItemTotals(
+    quote.items.map((item) => ({
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discountPct: Number(item.discountPct),
+      vatPct: Number(item.vatPct),
+      currency: item.currency,
+    })),
+  );
+}
+
+function SectionHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <span className="shrink-0 text-[11px] font-bold tracking-wide text-app-muted uppercase">
+        {children}
+      </span>
+      <span className="h-px flex-1 bg-app-border" />
+    </div>
+  );
+}
+
+const INTERACTION_COLUMNS: TableColumn<Interaction>[] = [
+  {
+    key: 'occurredAt',
+    header: tr.crm.interactions.dateColumn,
+    className: 'text-app-muted',
+    render: (i) => new Date(i.occurredAt).toLocaleDateString('tr-TR'),
+  },
+  {
+    key: 'contact',
+    header: tr.crm.interactions.contactColumn,
+    render: (i) => (i.contact ? `${i.contact.firstName} ${i.contact.lastName}` : '—'),
+  },
+  {
+    key: 'type',
+    header: tr.crm.interactions.typeColumn,
+    render: (i) => i.type,
+  },
+  {
+    key: 'status',
+    header: tr.crm.interactions.statusColumn,
+    render: (i) => (
+      <Badge variant={INTERACTION_STATUS_BADGE_VARIANT[i.status]}>
+        {tr.crm.interactions.statusOptions[i.status]}
+      </Badge>
+    ),
+  },
+];
+
+const OPPORTUNITY_COLUMNS: TableColumn<Opportunity>[] = [
+  {
+    key: 'name',
+    header: tr.crm.opportunities.nameColumn,
+    render: (o) => <span className="font-semibold text-app-text">{o.name}</span>,
+  },
+  {
+    key: 'stage',
+    header: tr.crm.opportunities.stageColumn,
+    render: (o) => tr.crm.opportunities.stageOptions[o.stage],
+  },
+  {
+    key: 'estimatedValue',
+    header: tr.crm.opportunities.valueColumn,
+    className: 'text-app-muted',
+    render: (o) =>
+      o.estimatedValue
+        ? new Intl.NumberFormat('tr-TR', {
+            style: 'currency',
+            currency: o.estimatedValueCurrency,
+          }).format(Number(o.estimatedValue))
+        : '—',
+  },
+];
+
+const QUOTE_COLUMNS: TableColumn<Quote>[] = [
+  {
+    key: 'quoteNumber',
+    header: tr.crm.quotes.numberColumn,
+    render: (q) => <span className="font-semibold text-app-text">{q.quoteNumber}</span>,
+  },
+  {
+    key: 'status',
+    header: tr.crm.quotes.statusColumn,
+    render: (q) => (
+      <Badge variant={QUOTE_STATUS_BADGE_VARIANT[q.status]}>
+        {tr.crm.quotes.statusOptions[q.status]}
+      </Badge>
+    ),
+  },
+  {
+    key: 'total',
+    header: tr.crm.quotes.totalColumn,
+    className: 'text-app-muted',
+    render: (q) => (
+      <div className="flex flex-col">
+        {quoteTotalsByCurrency(q).map((t) => (
+          <span key={t.currency}>{formatCurrencyAmount(t.grandTotal, t.currency)}</span>
+        ))}
+      </div>
+    ),
+  },
+];
+
+const PROJECT_COLUMNS: TableColumn<Project>[] = [
+  {
+    key: 'projectNumber',
+    header: tr.crm.projects.numberColumn,
+    className: 'font-semibold text-app-text',
+    render: (p) => p.projectNumber,
+  },
+  {
+    key: 'name',
+    header: tr.crm.projects.nameColumn,
+    render: (p) => p.name,
+  },
+  {
+    key: 'estimatedBudget',
+    header: tr.crm.projects.estimatedBudgetColumn,
+    className: 'text-app-muted',
+    render: (p) => formatBudget(p.estimatedBudget),
+  },
+];
 
 export function AccountDetailPage() {
   const { id = '' } = useParams();
@@ -97,28 +238,28 @@ export function AccountDetailPage() {
               key: 'general',
               label: tr.crm.accounts.detail.tabGeneral,
               content: (
-                <>
-                  <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {fields.map((field) => (
-                      <div key={field.label}>
-                        <dt className="text-xs font-semibold uppercase text-app-muted">
-                          {field.label}
-                        </dt>
-                        <dd className="mt-1 text-sm text-app-text">{field.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
+                <div className="flex flex-col gap-6">
+                  <div className="rounded-xl border border-app-border bg-white p-5">
+                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {fields.map((field) => (
+                        <div key={field.label}>
+                          <dt className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">
+                            {field.label}
+                          </dt>
+                          <dd className="mt-1.5 text-sm font-medium text-app-text">
+                            {field.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
 
-                  <div className="mt-6 border-t border-app-border pt-6">
-                    <h2 className="text-sm font-bold text-app-text">
-                      {tr.crm.accounts.detail.contactsTitle}
-                    </h2>
+                  <div className="rounded-xl border border-app-border bg-white p-5">
+                    <SectionHeader>{tr.crm.accounts.detail.contactsTitle}</SectionHeader>
                     {account.contacts.length === 0 ? (
-                      <p className="mt-2 text-sm text-app-muted">
-                        {tr.crm.accounts.detail.noContacts}
-                      </p>
+                      <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noContacts}</p>
                     ) : (
-                      <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {account.contacts.map((contact) => (
                           <li key={contact.id}>
                             <button
@@ -134,28 +275,26 @@ export function AccountDetailPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 border-t border-app-border pt-6">
-                    <h2 className="text-sm font-bold text-app-text">
-                      {tr.crm.accounts.detail.customFieldsTitle}
-                    </h2>
+                  <div className="rounded-xl border border-app-border bg-white p-5">
+                    <SectionHeader>{tr.crm.accounts.detail.customFieldsTitle}</SectionHeader>
                     {account.customFields && Object.keys(account.customFields).length > 0 ? (
-                      <dl className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {Object.entries(account.customFields).map(([key, value]) => (
                           <div key={key}>
-                            <dt className="text-xs font-semibold uppercase text-app-muted">
+                            <dt className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">
                               {key}
                             </dt>
-                            <dd className="mt-1 text-sm text-app-text">{value}</dd>
+                            <dd className="mt-1.5 text-sm font-medium text-app-text">{value}</dd>
                           </div>
                         ))}
                       </dl>
                     ) : (
-                      <p className="mt-2 text-sm text-app-muted">
+                      <p className="text-sm text-app-muted">
                         {tr.crm.accounts.detail.customFieldsEmpty}
                       </p>
                     )}
                   </div>
-                </>
+                </div>
               ),
             },
             {
@@ -172,26 +311,14 @@ export function AccountDetailPage() {
                       {tr.crm.interactions.newButton}
                     </Button>
                   </div>
-                  {(interactionsQuery.data?.data.length ?? 0) === 0 ? (
-                    <p className="text-sm text-app-muted">
-                      {tr.crm.accounts.detail.noInteractions}
-                    </p>
-                  ) : (
-                    <ul className="flex flex-col gap-3">
-                      {interactionsQuery.data?.data.map((interaction) => (
-                        <li key={interaction.id}>
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/gorusmeler/${interaction.id}`)}
-                            className="text-sm font-semibold text-app-brand hover:underline"
-                          >
-                            {interaction.type} ·{' '}
-                            {new Date(interaction.occurredAt).toLocaleString('tr-TR')}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <Table<Interaction>
+                    columns={INTERACTION_COLUMNS}
+                    data={interactionsQuery.data?.data ?? []}
+                    keyField={(interaction) => interaction.id}
+                    onRowClick={(interaction) => navigate(`/gorusmeler/${interaction.id}`)}
+                    isLoading={interactionsQuery.isPending}
+                    emptyMessage={tr.crm.accounts.detail.noInteractions}
+                  />
                 </div>
               ),
             },
@@ -209,26 +336,14 @@ export function AccountDetailPage() {
                       {tr.crm.opportunities.newButton}
                     </Button>
                   </div>
-                  {(opportunitiesQuery.data?.data.length ?? 0) === 0 ? (
-                    <p className="text-sm text-app-muted">
-                      {tr.crm.accounts.detail.noOpportunities}
-                    </p>
-                  ) : (
-                    <ul className="flex flex-col gap-3">
-                      {opportunitiesQuery.data?.data.map((opportunity) => (
-                        <li key={opportunity.id}>
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/firsatlar/${opportunity.id}`)}
-                            className="text-sm font-semibold text-app-brand hover:underline"
-                          >
-                            {opportunity.name} (
-                            {tr.crm.opportunities.stageOptions[opportunity.stage]})
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <Table<Opportunity>
+                    columns={OPPORTUNITY_COLUMNS}
+                    data={opportunitiesQuery.data?.data ?? []}
+                    keyField={(opportunity) => opportunity.id}
+                    onRowClick={(opportunity) => navigate(`/firsatlar/${opportunity.id}`)}
+                    isLoading={opportunitiesQuery.isPending}
+                    emptyMessage={tr.crm.accounts.detail.noOpportunities}
+                  />
                 </div>
               ),
             },
@@ -246,26 +361,14 @@ export function AccountDetailPage() {
                       {tr.crm.quotes.newButton}
                     </Button>
                   </div>
-                  {(quotesQuery.data?.data.length ?? 0) === 0 ? (
-                    <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noQuotes}</p>
-                  ) : (
-                    <ul className="flex flex-col gap-3">
-                      {quotesQuery.data?.data.map((quote) => (
-                        <li key={quote.id} className="flex items-center justify-between gap-3">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/teklifler/${quote.id}`)}
-                            className="text-sm font-semibold text-app-brand hover:underline"
-                          >
-                            {quote.quoteNumber}
-                          </button>
-                          <Badge variant={QUOTE_STATUS_BADGE_VARIANT[quote.status]}>
-                            {tr.crm.quotes.statusOptions[quote.status]}
-                          </Badge>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <Table<Quote>
+                    columns={QUOTE_COLUMNS}
+                    data={quotesQuery.data?.data ?? []}
+                    keyField={(quote) => quote.id}
+                    onRowClick={(quote) => navigate(`/teklifler/${quote.id}`)}
+                    isLoading={quotesQuery.isPending}
+                    emptyMessage={tr.crm.accounts.detail.noQuotes}
+                  />
                 </div>
               ),
             },
@@ -283,23 +386,14 @@ export function AccountDetailPage() {
                       {tr.crm.projects.newButton}
                     </Button>
                   </div>
-                  {(projectsQuery.data?.data.length ?? 0) === 0 ? (
-                    <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noProjects}</p>
-                  ) : (
-                    <ul className="flex flex-col gap-3">
-                      {projectsQuery.data?.data.map((project) => (
-                        <li key={project.id}>
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/projeler/${project.id}`)}
-                            className="text-sm font-semibold text-app-brand hover:underline"
-                          >
-                            {project.projectNumber} · {project.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  <Table<Project>
+                    columns={PROJECT_COLUMNS}
+                    data={projectsQuery.data?.data ?? []}
+                    keyField={(project) => project.id}
+                    onRowClick={(project) => navigate(`/projeler/${project.id}`)}
+                    isLoading={projectsQuery.isPending}
+                    emptyMessage={tr.crm.accounts.detail.noProjects}
+                  />
                 </div>
               ),
             },
