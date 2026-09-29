@@ -96,6 +96,7 @@ export function CalendarEventFormModal({
       title={isEdit ? tr.crm.calendar.form.editTitle : tr.crm.calendar.form.newTitle}
       onClose={onClose}
       width="lg"
+      allowPageScroll
       footer={
         <>
           <Button variant="secondary" type="button" onClick={onClose}>
@@ -167,6 +168,8 @@ export function CalendarEventFormModal({
               }))}
               error={errors.attendeeUserIds?.message}
               hint={`Opsiyonel, en fazla 50 kişi seçebilirsiniz. ${tr.crm.calendar.form.attendeesInviteHint}`}
+              searchable
+              menuPosition="absolute"
             />
           )}
         />

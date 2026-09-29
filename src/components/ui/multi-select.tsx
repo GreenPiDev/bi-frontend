@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
-import { ChevronDown, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { tr } from '../../i18n/tr';
 import type { SelectOption } from './select';
 
 interface MultiSelectProps {
@@ -14,6 +15,17 @@ interface MultiSelectProps {
   hint?: string;
   /** Secilen degerleri, alanin altinda kaldirma (X) ikonlu etiketler halinde de gosterir. */
   showChips?: boolean;
+  /** Dropdown acildiginda ustte bir arama kutusu gosterir, yazildikca secenekleri filtreler. */
+  searchable?: boolean;
+  /**
+   * 'fixed' (varsayilan): liste, buton konumuna gore ekranin ustune bindirilir (overlay) -
+   * modal icindeki `overflow-auto` kirpmasini asmak icin; viewport disina tasan kisim
+   * gorulemez. 'absolute': liste butonun hemen altina, normal CSS `position: absolute` ile
+   * konumlanir - kendi ic scroll'u/yukseklik siniri yoktur, dialog'un sinirlarini asarak
+   * tasabilir. Ust konteyner (`Modal`'in `allowPageScroll` modu gibi) `overflow` kirpmasi
+   * uygulamiyorsa, tasan kisim sayfa/backdrop kaydirilarak gorulebilir.
+   */
+  menuPosition?: 'fixed' | 'absolute';
 }
 
 /** A4: dropdown alanlarda çoklu seçim (ör. bir firma hem müşteri hem tedarikçi olabilir).
@@ -32,13 +44,17 @@ export function MultiSelect({
   required,
   hint,
   showChips,
+  searchable,
+  menuPosition = 'fixed',
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(
     null,
   );
+  const [filterText, setFilterText] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -51,7 +67,7 @@ export function MultiSelect({
   }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || menuPosition !== 'fixed') return;
 
     function updateRect() {
       const rect = buttonRef.current?.getBoundingClientRect();
@@ -65,7 +81,13 @@ export function MultiSelect({
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect, true);
     };
-  }, [open]);
+  }, [open, menuPosition]);
+
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !filterText.trim()) return options;
+    const needle = filterText.trim().toLowerCase();
+    return options.filter((option) => option.label.toLowerCase().includes(needle));
+  }, [options, searchable, filterText]);
 
   function toggleValue(optionValue: string) {
     onChange(
@@ -93,7 +115,12 @@ export function MultiSelect({
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() =>
+          setOpen((prev) => {
+            if (prev) setFilterText('');
+            return !prev;
+          })
+        }
         className={clsx(
           'flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
           error && 'border-app-danger',
@@ -103,30 +130,55 @@ export function MultiSelect({
         <span className="truncate">{selectedLabels || placeholder}</span>
         <ChevronDown size={16} className="shrink-0 text-app-muted" />
       </button>
-      {open && menuRect && (
+      {open && (menuPosition === 'absolute' || menuRect) && (
         <div
-          style={{
-            position: 'fixed',
-            top: menuRect.top,
-            left: menuRect.left,
-            width: menuRect.width,
-          }}
-          className="z-[200] max-h-60 overflow-auto rounded-lg border border-app-border bg-app-surface p-1.5 shadow-lg"
+          style={
+            menuPosition === 'fixed' && menuRect
+              ? { position: 'fixed', top: menuRect.top, left: menuRect.left, width: menuRect.width }
+              : undefined
+          }
+          className={clsx(
+            'z-[200] rounded-lg border border-app-border bg-app-surface p-1.5 shadow-lg',
+            menuPosition === 'fixed'
+              ? 'max-h-60 overflow-auto'
+              : 'absolute top-full left-0 mt-1 w-full',
+          )}
         >
-          {options.map((option) => (
-            <label
-              key={option.value}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-app-text hover:bg-app-bg"
-            >
-              <input
-                type="checkbox"
-                checked={value.includes(option.value)}
-                onChange={() => toggleValue(option.value)}
-                className="accent-app-primary"
+          {searchable && (
+            <div className="relative mb-1.5">
+              <Search
+                size={14}
+                className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-app-muted"
               />
-              {option.label}
-            </label>
-          ))}
+              <input
+                ref={searchInputRef}
+                type="text"
+                autoFocus
+                value={filterText}
+                onChange={(event) => setFilterText(event.target.value)}
+                placeholder={tr.common.multiSelectSearchPlaceholder}
+                className="w-full rounded-md border border-app-border bg-app-bg py-1.5 pr-2.5 pl-7 text-sm outline-none focus:border-app-primary"
+              />
+            </div>
+          )}
+          {filteredOptions.length === 0 ? (
+            <p className="px-2.5 py-2 text-sm text-app-muted">{tr.common.multiSelectNoResults}</p>
+          ) : (
+            filteredOptions.map((option) => (
+              <label
+                key={option.value}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-app-text hover:bg-app-bg"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(option.value)}
+                  onChange={() => toggleValue(option.value)}
+                  className="accent-app-primary"
+                />
+                {option.label}
+              </label>
+            ))
+          )}
         </div>
       )}
       {showChips && value.length > 0 && (

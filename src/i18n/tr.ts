@@ -26,6 +26,8 @@ export const tr = {
       selectedFile: (name: string) => `Seçilen dosya: ${name}`,
       removeAria: 'Dosyayı kaldır',
     },
+    multiSelectSearchPlaceholder: 'İsim yazarak ara...',
+    multiSelectNoResults: 'Eşleşen sonuç bulunamadı.',
   },
   help: {
     dashboards:
