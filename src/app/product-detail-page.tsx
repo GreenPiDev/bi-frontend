@@ -128,7 +128,7 @@ export function ProductDetailPage() {
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-4 border-y border-app-border py-5 sm:grid-cols-3 lg:grid-cols-6 sm:divide-x sm:divide-app-border">
+      <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl border border-app-border bg-white p-5 sm:grid-cols-3 lg:grid-cols-6 sm:divide-x sm:divide-app-border">
         <MetaCell label={tr.crm.products.detail.unitLabel}>{product.unit}</MetaCell>
         <MetaCell label={tr.crm.products.detail.categoryLabel}>{product.category ?? '—'}</MetaCell>
         <MetaCell label={tr.crm.products.detail.priceLabel}>
@@ -145,7 +145,7 @@ export function ProductDetailPage() {
         </MetaCell>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-8 rounded-xl border border-app-border bg-white p-5">
         <SectionHeader>{tr.crm.products.detail.attributesTitle}</SectionHeader>
         {attributeEntries.length > 0 ? (
           <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -160,7 +160,7 @@ export function ProductDetailPage() {
         )}
       </div>
 
-      <div className="mt-8 border-t border-app-border pt-6">
+      <div className="mt-8 rounded-xl border border-app-border bg-white p-5">
         <SectionHeader>{tr.crm.products.detail.priceHistoryTitle}</SectionHeader>
         <ProductPriceMovements productId={product.id} />
       </div>
