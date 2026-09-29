@@ -1144,10 +1144,14 @@ export const tr = {
       listColumnDate: 'Tarih',
       weekdays: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
       moreEvents: (count: number) => `+${count} daha`,
+      showAllLabel: 'Tümünü Göster',
       deleteConfirm: 'Bu etkinliği silmek istediğinize emin misiniz?',
       deleteError: 'Etkinlik silinemedi.',
       allDayLabel: 'Tüm gün',
       attendeesLabel: 'Katılımcılar',
+      dayEventsModal: {
+        empty: 'Bu günde etkinlik yok.',
+      },
       form: {
         newTitle: 'Yeni Etkinlik',
         editTitle: 'Etkinliği Düzenle',

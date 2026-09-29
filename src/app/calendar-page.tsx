@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppShell } from './app-shell';
+import { CalendarDayEventsModal } from './calendar-day-events-modal';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
 import { CalendarEventFormModal } from './calendar-event-form-modal';
 import { Button } from '../components/ui/button';
@@ -65,6 +66,7 @@ export function CalendarPage() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [creatingAt, setCreatingAt] = useState<Date | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [dayEventsFor, setDayEventsFor] = useState<Date | null>(null);
   const toast = useToast();
   const deleteMutation = useDeleteCalendarEventMutation();
   // Date.now() render sirasinda dogrudan cagrilamaz (react-hooks/purity) - lazy useState
@@ -208,11 +210,24 @@ export function CalendarPage() {
                     )
                   }
                   className={clsx(
-                    'flex min-h-24 flex-col gap-1 bg-app-surface p-1.5 text-left align-top',
+                    'group relative flex min-h-24 flex-col gap-1 bg-app-surface p-1.5 text-left align-top',
                     !isCurrentMonth && 'bg-app-bg text-app-muted',
                     isSameDay(day, new Date()) && 'ring-2 ring-inset ring-app-brand',
                   )}
                 >
+                  {dayEvents.length > 0 && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(clickEvent) => {
+                        clickEvent.stopPropagation();
+                        setDayEventsFor(day);
+                      }}
+                      className="absolute top-1 right-1 hidden cursor-pointer rounded bg-app-surface px-1 text-[11px] font-semibold text-app-brand hover:underline group-hover:block"
+                    >
+                      {tr.crm.calendar.showAllLabel}
+                    </span>
+                  )}
                   <span className="text-xs font-semibold">{day.getDate()}</span>
                   {dayEvents.map((event) => (
                     <span
@@ -267,6 +282,18 @@ export function CalendarPage() {
           rowClassName={(event) =>
             new Date(event.endAt).getTime() < now ? 'bg-red-50 hover:bg-red-100' : undefined
           }
+        />
+      )}
+
+      {dayEventsFor && (
+        <CalendarDayEventsModal
+          day={dayEventsFor}
+          events={eventsOnDay(events, dayEventsFor)}
+          onClose={() => setDayEventsFor(null)}
+          onSelectEvent={(event) => {
+            setDayEventsFor(null);
+            setSelectedEvent(event);
+          }}
         />
       )}
 
