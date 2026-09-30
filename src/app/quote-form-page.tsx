@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
@@ -19,6 +19,7 @@ import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
+import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
@@ -27,8 +28,20 @@ import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-paymen
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
 import { useCreateQuoteMutation } from '../features/crm/use-quotes';
+import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
+import {
+  DEFAULT_QUOTE_VAT_PCT,
+  DEFAULT_QUOTE_VAT_PCT_KEY,
+  QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
+} from '../features/crm/tenant-settings.constants';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
-import { ApiError, type CreateQuoteInput, type OpportunityStage, type Product } from '../lib/api';
+import {
+  ApiError,
+  type Account,
+  type CreateQuoteInput,
+  type OpportunityStage,
+  type Product,
+} from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
@@ -50,6 +63,23 @@ function sanitizeDecimalInput(value: string): string {
   return value.replace(/[^0-9.]/g, '');
 }
 
+/** KDV alanının altında, tenant'ın varsayılan KDV oranı ayarına (yeni sekmede,
+ * ilgili bölüme kaydırarak) götüren kısa bağlantı. */
+function VatPctDefaultLink() {
+  return (
+    <p className="text-xs text-app-muted">
+      <Link
+        to={`/settings?tab=crm#${QUOTE_VAT_PCT_SETTING_ANCHOR_ID}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-app-brand hover:underline"
+      >
+        {tr.crm.quotes.form.vatPctSetDefaultLink}
+      </Link>
+    </p>
+  );
+}
+
 function todayDateString(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -65,6 +95,11 @@ export function QuoteFormPage() {
   const toast = useToast();
   const contactsQuery = useContactsQuery();
   const productListsQuery = useProductListsQuery();
+  const tenantSettingsQuery = useTenantSettingsQuery();
+  const defaultVatPctSetting = tenantSettingsQuery.data?.find(
+    (setting) => setting.key === DEFAULT_QUOTE_VAT_PCT_KEY,
+  );
+  const defaultVatPct = String(defaultVatPctSetting?.value ?? DEFAULT_QUOTE_VAT_PCT);
   const createMutation = useCreateQuoteMutation();
   const createPaymentMethodOptionMutation = useCreatePaymentMethodOptionMutation();
   // Odeme Yontemi/IBAN icin "+ Yeni ..." modallari, urun formundaki
@@ -74,6 +109,7 @@ export function QuoteFormPage() {
   // yeniler ve eklenen deger hic kaydedilmez (bkz. product-form-page.tsx).
   const [activeOptionModal, setActiveOptionModal] = useState<'paymentMethod' | 'iban' | null>(null);
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+  const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
 
   const {
     register,
@@ -149,7 +185,7 @@ export function QuoteFormPage() {
   const [entryQuantity, setEntryQuantity] = useState('1');
   const [entryUnitPrice, setEntryUnitPrice] = useState('');
   const [entryDiscountPct, setEntryDiscountPct] = useState('0');
-  const [entryVatPct, setEntryVatPct] = useState('0');
+  const [entryVatPct, setEntryVatPct] = useState(defaultVatPct);
 
   function handleToggleEntry(product: Product) {
     if (entryProductId === product.id) {
@@ -160,7 +196,7 @@ export function QuoteFormPage() {
     setEntryQuantity('1');
     setEntryUnitPrice(product.price ?? '');
     setEntryDiscountPct('0');
-    setEntryVatPct('0');
+    setEntryVatPct(defaultVatPct);
   }
 
   function handleAddEntry(product: Product) {
@@ -185,9 +221,17 @@ export function QuoteFormPage() {
       quantity: '1',
       unitPrice: product.price ?? '',
       discountPct: '0',
-      vatPct: '0',
+      vatPct: defaultVatPct,
     });
     setIsNewProductModalOpen(false);
+  }
+
+  // "+ Yeni Firma" ile sistemde hiç kayıtlı olmayan bir firma oluşturulunca, doğrudan
+  // bu teklifin firma alanına seçili olarak atanır (NewProductModal'daki
+  // handleProductCreated ile aynı desen).
+  function handleAccountCreated(account: Account) {
+    setValue('accountId', account.id, { shouldValidate: true });
+    setIsNewAccountModalOpen(false);
   }
 
   // Teklif özeti tablosundaki mevcut satırlara tıklayınca açılan düzenleme paneli -
@@ -395,7 +439,7 @@ export function QuoteFormPage() {
 
   function renderEntryPanel(product: Product) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-5">
         <TextField
           type="text"
           inputMode="decimal"
@@ -417,14 +461,20 @@ export function QuoteFormPage() {
           value={entryDiscountPct}
           onChange={(event) => setEntryDiscountPct(sanitizeDecimalInput(event.target.value))}
         />
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.vatPctLabel}
-          value={entryVatPct}
-          onChange={(event) => setEntryVatPct(sanitizeDecimalInput(event.target.value))}
-        />
-        <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+        <div>
+          <TextField
+            type="text"
+            inputMode="decimal"
+            label={tr.crm.quotes.form.vatPctLabel}
+            value={entryVatPct}
+            onChange={(event) => setEntryVatPct(sanitizeDecimalInput(event.target.value))}
+          />
+          <VatPctDefaultLink />
+        </div>
+        <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-4 lg:col-span-1">
+          <span aria-hidden="true" className="text-sm font-semibold text-transparent select-none">
+            &nbsp;
+          </span>
           <Button type="button" className="w-full" onClick={() => handleAddEntry(product)}>
             {tr.crm.quotes.form.addToQuote}
           </Button>
@@ -495,7 +545,7 @@ export function QuoteFormPage() {
 
   function renderEditPanel() {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-5">
         <TextField
           type="text"
           inputMode="decimal"
@@ -517,14 +567,20 @@ export function QuoteFormPage() {
           value={editDiscountPct}
           onChange={(event) => setEditDiscountPct(sanitizeDecimalInput(event.target.value))}
         />
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.vatPctLabel}
-          value={editVatPct}
-          onChange={(event) => setEditVatPct(sanitizeDecimalInput(event.target.value))}
-        />
-        <div className="col-span-2 sm:col-span-4 lg:col-span-1">
+        <div>
+          <TextField
+            type="text"
+            inputMode="decimal"
+            label={tr.crm.quotes.form.vatPctLabel}
+            value={editVatPct}
+            onChange={(event) => setEditVatPct(sanitizeDecimalInput(event.target.value))}
+          />
+          <VatPctDefaultLink />
+        </div>
+        <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-4 lg:col-span-1">
+          <span aria-hidden="true" className="text-sm font-semibold text-transparent select-none">
+            &nbsp;
+          </span>
           <Button
             type="button"
             className="w-full"
@@ -561,6 +617,16 @@ export function QuoteFormPage() {
                     error={errors.accountId?.message}
                     value={field.value}
                     onChange={field.onChange}
+                    trailingAction={
+                      <Button
+                        type="button"
+                        variant="navy"
+                        className="shrink-0"
+                        onClick={() => setIsNewAccountModalOpen(true)}
+                      >
+                        {tr.crm.quotes.form.newAccountButton}
+                      </Button>
+                    }
                   />
                 )}
               />
@@ -595,19 +661,9 @@ export function QuoteFormPage() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="rounded-lg border border-app-border bg-app-surface p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-semibold text-app-text">
-                  {tr.crm.quotes.form.itemsSectionTitle}
-                </span>
-                <Button
-                  type="button"
-                  variant="navy"
-                  className="shrink-0"
-                  onClick={() => setIsNewProductModalOpen(true)}
-                >
-                  {tr.crm.quotes.form.newProductButton}
-                </Button>
-              </div>
+              <span className="text-sm font-semibold text-app-text">
+                {tr.crm.quotes.form.itemsSectionTitle}
+              </span>
               <FormError message={errors.items?.message} />
 
               <div className="mt-3">
@@ -621,6 +677,16 @@ export function QuoteFormPage() {
                     value: productList.id,
                     label: productList.name,
                   }))}
+                  trailingAction={
+                    <Button
+                      type="button"
+                      variant="navy"
+                      className="shrink-0"
+                      onClick={() => setIsNewProductModalOpen(true)}
+                    >
+                      {tr.crm.quotes.form.newProductButton}
+                    </Button>
+                  }
                   {...register('productListId', {
                     onChange: () => {
                       setPickerPage(1);
@@ -856,6 +922,12 @@ export function QuoteFormPage() {
           defaultProductListId={selectedProductListId}
           onClose={() => setIsNewProductModalOpen(false)}
           onCreated={handleProductCreated}
+        />
+      )}
+      {isNewAccountModalOpen && (
+        <NewAccountModal
+          onClose={() => setIsNewAccountModalOpen(false)}
+          onCreated={handleAccountCreated}
         />
       )}
     </AppShell>

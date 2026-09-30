@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { AsyncAutocomplete } from '../../components/ui/async-autocomplete';
 import { useAccountQuery, useAccountsQuery } from './use-accounts';
 import { useDebouncedValue } from '../../lib/use-debounced-value';
@@ -13,6 +13,8 @@ interface AccountAutocompleteProps {
   hint?: string;
   /** Filtre alanlarinda opt-in tekil sifirlama butonu. */
   clearable?: boolean;
+  /** Kutunun yanina, ayni satira yerlestirilecek bir aksiyon (or. "+ Yeni Firma"). */
+  trailingAction?: ReactNode;
 }
 
 const PAGE_SIZE = 20;
@@ -35,6 +37,7 @@ export function AccountAutocomplete({
   required,
   hint,
   clearable,
+  trailingAction,
 }: AccountAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
@@ -72,6 +75,7 @@ export function AccountAutocomplete({
       required={required}
       hint={hint}
       clearable={clearable}
+      trailingAction={trailingAction}
       onClear={
         clearable
           ? () => {

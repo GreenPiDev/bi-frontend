@@ -1,5 +1,5 @@
 import { Check, Pencil, X } from 'lucide-react';
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Button } from '../../components/ui/button';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
@@ -11,7 +11,11 @@ import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type IbanOption } from '../../lib/api';
 import { formatIbanInput, normalizeIban, validateIban } from '../../lib/iban-validation';
 import { tr } from '../../i18n/tr';
-import { CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY } from './tenant-settings.constants';
+import {
+  CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY,
+  DEFAULT_QUOTE_VAT_PCT_KEY,
+  QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
+} from './tenant-settings.constants';
 import {
   useCreateDepartmentOptionMutation,
   useDeleteDepartmentOptionMutation,
@@ -975,6 +979,87 @@ function PostSaleFollowUpDaysSetting() {
   );
 }
 
+function DefaultQuoteVatPctSetting() {
+  const toast = useToast();
+  const settingsQuery = useTenantSettingsQuery();
+  const updateMutation = useUpdateTenantSettingMutation();
+  const [value, setValue] = useState('');
+
+  // Teklif formundaki "Varsayılan Değer Ata" linki bu bölüme
+  // `#ayarlar-kdv-orani` hash'iyle yeni sekmede gelir - bölüm varsayılan kapalı
+  // olduğu için hash'ten geldiyse açık başlar ve görünüre kaydırılır.
+  const [isLinkedFromHash] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.location.hash === `#${QUOTE_VAT_PCT_SETTING_ANCHOR_ID}`,
+  );
+  const sectionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isLinkedFromHash) {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isLinkedFromHash]);
+
+  const currentSetting = settingsQuery.data?.find(
+    (setting) => setting.key === DEFAULT_QUOTE_VAT_PCT_KEY,
+  );
+
+  const [prevSettingValue, setPrevSettingValue] = useState<unknown>(undefined);
+  if (currentSetting && currentSetting.value !== prevSettingValue) {
+    setPrevSettingValue(currentSetting.value);
+    setValue(String(currentSetting.value));
+  }
+
+  function handleSave() {
+    const pct = Number(value);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      return;
+    }
+    updateMutation.mutate(
+      { key: DEFAULT_QUOTE_VAT_PCT_KEY, value: pct },
+      {
+        onSuccess: () => toast.success(tr.settings.crm.defaultQuoteVatPct.saveSuccess),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
+  return (
+    <div
+      ref={sectionRef}
+      id={QUOTE_VAT_PCT_SETTING_ANCHOR_ID}
+      className="mt-3 border-t border-app-border"
+    >
+      <CollapsibleSection
+        title={tr.settings.crm.defaultQuoteVatPct.title}
+        subtitle={tr.settings.crm.defaultQuoteVatPct.subtitle}
+        defaultOpen={isLinkedFromHash}
+      >
+        <div className="flex items-end gap-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="default-quote-vat-pct" className="text-sm font-semibold text-app-muted">
+              {tr.settings.crm.defaultQuoteVatPct.label}
+            </label>
+            <input
+              id="default-quote-vat-pct"
+              type="text"
+              inputMode="decimal"
+              value={value}
+              onChange={(event) => setValue(event.target.value.replace(/[^0-9.]/g, ''))}
+              className="w-32 rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary"
+            />
+          </div>
+          <Button type="button" disabled={updateMutation.isPending} onClick={handleSave}>
+            {tr.settings.crm.defaultQuoteVatPct.saveButton}
+          </Button>
+        </div>
+      </CollapsibleSection>
+    </div>
+  );
+}
+
 export function CrmSettingsSection() {
   return (
     <section>
@@ -1030,6 +1115,7 @@ export function CrmSettingsSection() {
       <div className="mt-3 border-t border-app-border">
         <IbanOptionsManager />
       </div>
+      <DefaultQuoteVatPctSetting />
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
         {tr.settings.crm.calendarGroupLabel}

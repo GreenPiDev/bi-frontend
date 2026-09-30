@@ -16,6 +16,11 @@ import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
 import { useQuoteQuery, useUpdateQuoteMutation } from '../features/crm/use-quotes';
+import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
+import {
+  DEFAULT_QUOTE_VAT_PCT,
+  DEFAULT_QUOTE_VAT_PCT_KEY,
+} from '../features/crm/tenant-settings.constants';
 import { ApiError, type Product } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
@@ -52,6 +57,11 @@ export function QuoteEditPage() {
   const updateMutation = useUpdateQuoteMutation(id);
   const productListsQuery = useProductListsQuery();
   const contactsQuery = useContactsQuery();
+  const tenantSettingsQuery = useTenantSettingsQuery();
+  const defaultVatPctSetting = tenantSettingsQuery.data?.find(
+    (setting) => setting.key === DEFAULT_QUOTE_VAT_PCT_KEY,
+  );
+  const defaultVatPct = String(defaultVatPctSetting?.value ?? DEFAULT_QUOTE_VAT_PCT);
 
   // Kalemler baslangicta ilk kalemden turetilen urun listesiyle doldurulur, ama
   // kullanici (yeni teklif sayfasindaki gibi) baska bir urun listesine gecip oradan
@@ -123,7 +133,7 @@ export function QuoteEditPage() {
   const [addQuantity, setAddQuantity] = useState('1');
   const [addUnitPrice, setAddUnitPrice] = useState('');
   const [addDiscountPct, setAddDiscountPct] = useState('0');
-  const [addVatPct, setAddVatPct] = useState('0');
+  const [addVatPct, setAddVatPct] = useState(defaultVatPct);
 
   function handleToggleAdd(product: Product) {
     if (addingProductId === product.id) {
@@ -134,7 +144,7 @@ export function QuoteEditPage() {
     setAddQuantity('1');
     setAddUnitPrice(product.price ?? '');
     setAddDiscountPct('0');
-    setAddVatPct('0');
+    setAddVatPct(defaultVatPct);
   }
 
   function handleAddItem(product: Product) {

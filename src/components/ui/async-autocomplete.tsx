@@ -1,6 +1,13 @@
 import { clsx } from 'clsx';
 import { ChevronDown } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { ClearFieldButton } from './clear-field-button';
 
@@ -31,6 +38,10 @@ interface AsyncAutocompleteProps {
   clearable?: boolean;
   onClear?: () => void;
   disabled?: boolean;
+  /** Kutunun yanina, ayni satira yerlestirilecek bir aksiyon (or. "+ Yeni Firma"
+   * butonu) - `Select`'in `trailingAction`'iyla ayni desen, buton label/hint'i degil
+   * sadece kutuyu hizalar. */
+  trailingAction?: ReactNode;
 }
 
 /**
@@ -60,6 +71,7 @@ export function AsyncAutocomplete({
   clearable,
   onClear,
   disabled,
+  trailingAction,
 }: AsyncAutocompleteProps) {
   const showClear = clearable && Boolean(onClear) && Boolean(value);
   const [open, setOpen] = useState(false);
@@ -136,67 +148,70 @@ export function AsyncAutocomplete({
           </span>
         )}
       </label>
-      <div className="relative" ref={fieldRef}>
-        <input
-          type="text"
-          value={value}
-          placeholder={placeholder}
-          disabled={disabled}
-          onChange={(event) => {
-            onInputChange(event.target.value);
-            setHighlighted(0);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={handleKeyDown}
-          className={clsx(
-            'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',
-            showClear ? 'pr-16' : 'pr-9',
-            error && 'border-app-danger',
-            disabled && 'cursor-not-allowed opacity-60',
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1" ref={fieldRef}>
+          <input
+            type="text"
+            value={value}
+            placeholder={placeholder}
+            disabled={disabled}
+            onChange={(event) => {
+              onInputChange(event.target.value);
+              setHighlighted(0);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={handleKeyDown}
+            className={clsx(
+              'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',
+              showClear ? 'pr-16' : 'pr-9',
+              error && 'border-app-danger',
+              disabled && 'cursor-not-allowed opacity-60',
+            )}
+            aria-invalid={Boolean(error)}
+          />
+          {showClear && (
+            <div className="absolute top-1/2 right-8 -translate-y-1/2">
+              <ClearFieldButton onClick={() => onClear?.()} label={label} />
+            </div>
           )}
-          aria-invalid={Boolean(error)}
-        />
-        {showClear && (
-          <div className="absolute top-1/2 right-8 -translate-y-1/2">
-            <ClearFieldButton onClick={() => onClear?.()} label={label} />
-          </div>
-        )}
-        <ChevronDown
-          size={16}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-muted"
-        />
-        {open &&
-          options.length > 0 &&
-          menuRect &&
-          createPortal(
-            <div
-              ref={menuRef}
-              style={{
-                position: 'fixed',
-                top: menuRect.top,
-                left: menuRect.left,
-                width: menuRect.width,
-              }}
-              className="z-[9999] mt-1 max-h-56 overflow-auto rounded-lg border border-app-border bg-app-surface p-1 shadow-lg"
-            >
-              {options.map((option, index) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => selectOption(option)}
-                  className={clsx(
-                    'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
-                    index === highlighted && 'bg-app-bg',
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>,
-            document.body,
-          )}
+          <ChevronDown
+            size={16}
+            className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-muted"
+          />
+          {open &&
+            options.length > 0 &&
+            menuRect &&
+            createPortal(
+              <div
+                ref={menuRef}
+                style={{
+                  position: 'fixed',
+                  top: menuRect.top,
+                  left: menuRect.left,
+                  width: menuRect.width,
+                }}
+                className="z-[9999] mt-1 max-h-56 overflow-auto rounded-lg border border-app-border bg-app-surface p-1 shadow-lg"
+              >
+                {options.map((option, index) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => selectOption(option)}
+                    className={clsx(
+                      'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
+                      index === highlighted && 'bg-app-bg',
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>,
+              document.body,
+            )}
+        </div>
+        {trailingAction}
       </div>
       {error ? (
         <p className="text-xs text-app-danger">{error}</p>
