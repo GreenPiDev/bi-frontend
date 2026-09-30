@@ -2080,6 +2080,13 @@ export interface QuoteItem {
   vatPct: string;
 }
 
+/** quoteCurrency disindaki her item para biriminin quoteCurrency'ye cevrim kuru
+ * snapshot'i - `rates[X]` = "1 X = ? quoteCurrency" (bkz. Quote.exchangeRates). */
+export interface QuoteExchangeRates {
+  asOf?: string;
+  rates: Record<string, number>;
+}
+
 export interface Quote {
   id: string;
   quoteNumber: string;
@@ -2087,6 +2094,8 @@ export interface Quote {
   account: Account;
   contactId: string | null;
   contact: Contact | null;
+  quoteCurrency: string;
+  exchangeRates: QuoteExchangeRates | null;
   /** Bir proje birden fazla teklifle iliskilendirilebilir, ama bir teklif en fazla
    * bir projeye bagli olur (FK burada) - bkz. Project.quotes. */
   projectId: string | null;
@@ -2134,6 +2143,8 @@ export interface CreateQuoteInput {
   salesTerms?: string;
   deliveryTerms?: string;
   ibanOptionId?: string;
+  quoteCurrency: string;
+  exchangeRates?: QuoteExchangeRates;
 }
 
 export interface UpdateQuoteInput {
@@ -2147,6 +2158,8 @@ export interface UpdateQuoteInput {
   salesTerms?: string | null;
   deliveryTerms?: string | null;
   ibanOptionId?: string | null;
+  quoteCurrency?: string;
+  exchangeRates?: QuoteExchangeRates;
 }
 
 export function listQuotes(
@@ -2186,6 +2199,19 @@ export function deleteQuote(id: string): Promise<void> {
 
 export function approveQuote(id: string): Promise<Quote> {
   return request(`/quotes/${id}/approve`, { method: 'POST' });
+}
+
+export interface FxRatesResult {
+  base: string;
+  asOf: string;
+  /** Her key icin: 1 <key> = <deger> <base>. */
+  rates: Record<string, number>;
+}
+
+/** Teklif para birimi secimi icin guncel kur (otomatik on-doldurma, kullanici elle
+ * duzenleyebilir - bkz. Quote.exchangeRates). targets bossa istek atilmaz. */
+export function getQuoteFxRates(base: string, targets: string[]): Promise<FxRatesResult> {
+  return request(`/quotes/fx-rates?base=${base}&targets=${targets.join(',')}`);
 }
 
 export interface Project {

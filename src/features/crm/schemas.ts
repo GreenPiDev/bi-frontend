@@ -243,6 +243,7 @@ export const quoteFormSchema = z
     salesTerms: z.string().max(4000).optional(),
     deliveryTerms: z.string().max(4000).optional(),
     ibanOptionId: z.string().optional(),
+    quoteCurrency: z.string().min(1, 'Teklif para birimi gerekli.'),
   })
   .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
     message: 'Fırsat adı en az 2 karakter olmalı.',

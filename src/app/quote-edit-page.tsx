@@ -11,6 +11,10 @@ import { Select } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import {
+  QuoteExchangeRatesSection,
+  type QuoteExchangeRatesValue,
+} from '../features/crm/quote-exchange-rates';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -82,6 +86,8 @@ export function QuoteEditPage() {
   const [ibanOptionId, setIbanOptionId] = useState('');
   const [salesTerms, setSalesTerms] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
+  const [quoteCurrency, setQuoteCurrency] = useState('TRY');
+  const [exchangeRates, setExchangeRates] = useState<QuoteExchangeRatesValue>({ rates: {} });
   const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
 
   if (quoteQuery.data && quoteQuery.data.id !== initializedForQuoteId) {
@@ -105,6 +111,14 @@ export function QuoteEditPage() {
     setPaymentMethod(quoteQuery.data.paymentMethod ?? '');
     setSalesTerms(quoteQuery.data.salesTerms ?? '');
     setDeliveryTerms(quoteQuery.data.deliveryTerms ?? '');
+    setQuoteCurrency(quoteQuery.data.quoteCurrency);
+    const savedRates = quoteQuery.data.exchangeRates;
+    setExchangeRates({
+      rates: Object.fromEntries(
+        Object.entries(savedRates?.rates ?? {}).map(([currency, rate]) => [currency, String(rate)]),
+      ),
+      asOf: savedRates?.asOf,
+    });
   }
 
   const contactOptions = (contactsQuery.data?.data ?? [])
@@ -256,6 +270,18 @@ export function QuoteEditPage() {
         ibanOptionId: ibanOptionId || undefined,
         salesTerms: salesTerms || null,
         deliveryTerms: deliveryTerms || null,
+        quoteCurrency,
+        exchangeRates:
+          Object.keys(exchangeRates.rates).length > 0
+            ? {
+                asOf: exchangeRates.asOf,
+                rates: Object.fromEntries(
+                  Object.entries(exchangeRates.rates)
+                    .filter(([, rate]) => rate)
+                    .map(([currency, rate]) => [currency, Number(rate)]),
+                ),
+              }
+            : undefined,
       },
       {
         onSuccess: (quote) => {
@@ -494,6 +520,7 @@ export function QuoteEditPage() {
               leadTime,
               paymentMethod,
               ibanOptionId,
+              quoteCurrency,
             }}
             onChange={(field, value) => {
               if (field === 'contactId') {
@@ -506,6 +533,8 @@ export function QuoteEditPage() {
                 setPaymentMethod(value);
               } else if (field === 'ibanOptionId') {
                 setIbanOptionId(value);
+              } else if (field === 'quoteCurrency') {
+                setQuoteCurrency(value);
               }
             }}
             ibanCurrentInfo={
@@ -646,12 +675,19 @@ export function QuoteEditPage() {
                         <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
                       </div>
                       <div className="flex justify-between text-base font-bold text-app-text">
-                        <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
+                        <span>{tr.crm.quotes.detail.totalLabel}</span>
                         <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
+
+                <QuoteExchangeRatesSection
+                  quoteCurrency={quoteCurrency}
+                  totalsByCurrency={summaryTotalsByCurrency}
+                  value={exchangeRates}
+                  onChange={setExchangeRates}
+                />
 
                 <div className="flex flex-col gap-2 pt-2">
                   <Button type="button" disabled={updateMutation.isPending} onClick={handleSubmit}>

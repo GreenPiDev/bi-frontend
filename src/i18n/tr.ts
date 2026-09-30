@@ -1908,6 +1908,10 @@ export const tr = {
         lineTotalColumn: 'Tutar',
         subtotalLabel: 'Ara Toplam',
         vatTotalLabel: 'KDV Toplamı',
+        /** Para birimi bazlı alt toplam bloklarindaki satir etiketi - gercek TEK genel
+         * toplam (kur cevrimiyle hesaplanan) icin grandTotalLabel/convertedGrandTotalLabel
+         * kullanilir, bu sadece o para biriminin kendi toplamidir. */
+        totalLabel: 'Toplam',
         grandTotalLabel: 'Genel Toplam',
         opportunityTitle: 'İlişkili Fırsat',
         documentEyebrow: 'TEKLİF',
@@ -1993,6 +1997,18 @@ export const tr = {
         vatPctSetDefaultLink: 'Varsayılan Değer Ata',
         addItem: 'Ürün Ekle',
         removeItem: 'Kaldır',
+        quoteCurrencyLabel: 'Teklif Para Birimi',
+        quoteCurrencyHint:
+          'Kalemler farklı para birimlerinde olsa da tek bir genel toplam bu para biriminde gösterilir.',
+        exchangeRatesTitle: 'Kur Bilgisi',
+        exchangeRateLabel: (from: string, to: string) => `1 ${from} = ? ${to}`,
+        exchangeRateLoading: 'Güncel kur çekiliyor...',
+        exchangeRateRefreshTooltip: 'Güncel kuru yeniden çek',
+        convertedGrandTotalLabel: (currency: string) => `Genel Toplam (${currency})`,
+        exchangeRateNote: (rateDescriptions: string[], asOf?: string) =>
+          `Kur bilgisi: ${rateDescriptions.join(' · ')}${asOf ? ` (${asOf} tarihli)` : ''} olarak kullanılmıştır.`,
+        missingExchangeRate: (currencies: string[]) =>
+          `Şu para birimleri için kur girilmedi, genel toplam hesaplanamıyor: ${currencies.join(', ')}.`,
         opportunityCheckboxLabel: 'Bu teklifle birlikte bir fırsat oluştur',
         opportunityNameLabel: 'Fırsat Adı',
         opportunityNameHint: 'İşaretliyse zorunlu, en az 2 karakter.',

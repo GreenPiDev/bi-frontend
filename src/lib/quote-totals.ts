@@ -1,8 +1,11 @@
 /**
  * Teklif satırları farklı para birimli ürünler (EUR/USD/TRY) içerebilir (bkz.
- * Product.currency, kur çevrimi YOK) - bu yüzden tek bir "genel toplam" yerine para
- * birimi başına ayrı alt toplamlar hesaplanır. quote-form-page/quote-edit-page/
- * quote-detail-page/quotes-list-page'deki aynı hesaplama burada tek yerde toplanır.
+ * Product.currency) - bu yüzden her para birimi için ayrı alt toplamlar hesaplanır
+ * (subtotal/vatTotal/grandTotal). Kullanıcının seçtiği "teklif para birimi"
+ * (Quote.quoteCurrency) ve girdiği kur (Quote.exchangeRates) ile bu alt toplamlar TEK
+ * bir genel toplama da çevrilebilir - bkz. convertTotalsToQuoteCurrency. quote-form-page/
+ * quote-edit-page/quote-detail-page/quotes-list-page'deki aynı hesaplama burada tek
+ * yerde toplanır.
  */
 
 export interface QuoteLineForTotals {
@@ -61,4 +64,31 @@ export function groupQuoteItemTotals(items: QuoteLineForTotals[]): QuoteCurrency
     byCurrency.set(currency, existing);
   }
   return [...byCurrency.values()];
+}
+
+/** Para birimi bazlı alt toplamları, `rates` (her currency icin "1 currency = ?
+ * quoteCurrency") kullanarak TEK bir quoteCurrency toplamına çevirir. quoteCurrency'nin
+ * kendisi icin kur gerekmez (1 kabul edilir). Eksik kuru olan bir para birimi varsa
+ * (henuz cekilmemis/girilmemis) o grup toplama dahil edilmez - caller
+ * `missingRateCurrencies` ile bunu kullanıcıya bildirmeli. */
+export function convertTotalsToQuoteCurrency(
+  totals: QuoteCurrencyTotals[],
+  quoteCurrency: string,
+  rates: Record<string, number>,
+): { grandTotal: number; missingRateCurrencies: string[] } {
+  let grandTotal = 0;
+  const missingRateCurrencies: string[] = [];
+  for (const total of totals) {
+    if (total.currency === quoteCurrency) {
+      grandTotal += total.grandTotal;
+      continue;
+    }
+    const rate = rates[total.currency];
+    if (rate === undefined) {
+      missingRateCurrencies.push(total.currency);
+      continue;
+    }
+    grandTotal += total.grandTotal * rate;
+  }
+  return { grandTotal, missingRateCurrencies };
 }

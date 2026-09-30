@@ -55,6 +55,8 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     account,
     contactId: null,
     contact: null,
+    quoteCurrency: 'TRY',
+    exchangeRates: null,
     projectId: null,
     status: 'DRAFT',
     quoteDate: '2026-09-07T00:00:00.000Z',

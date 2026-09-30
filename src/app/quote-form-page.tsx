@@ -22,6 +22,10 @@ import { AddOptionModal } from '../features/crm/add-option-modal';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
+import {
+  QuoteExchangeRatesSection,
+  type QuoteExchangeRatesValue,
+} from '../features/crm/quote-exchange-rates';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
@@ -125,6 +129,7 @@ export function QuoteFormPage() {
       quoteDate: todayDateString(),
       items: [],
       hasOpportunity: false,
+      quoteCurrency: 'TRY',
     },
   });
   const { fields, append, remove, update } = useFieldArray({ control, name: 'items' });
@@ -132,6 +137,8 @@ export function QuoteFormPage() {
   const selectedAccountId = watch('accountId');
   const selectedProductListId = watch('productListId');
   const watchedItems = watch('items');
+  const quoteCurrency = watch('quoteCurrency') || 'TRY';
+  const [exchangeRates, setExchangeRates] = useState<QuoteExchangeRatesValue>({ rates: {} });
 
   // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
   // frontende çekilip filtrelenmez. Seçilen ürün listesine göre filtrelenir.
@@ -334,6 +341,18 @@ export function QuoteFormPage() {
       salesTerms: values.salesTerms || undefined,
       deliveryTerms: values.deliveryTerms || undefined,
       ibanOptionId: values.ibanOptionId || undefined,
+      quoteCurrency: values.quoteCurrency,
+      exchangeRates:
+        Object.keys(exchangeRates.rates).length > 0
+          ? {
+              asOf: exchangeRates.asOf,
+              rates: Object.fromEntries(
+                Object.entries(exchangeRates.rates)
+                  .filter(([, rate]) => rate)
+                  .map(([currency, rate]) => [currency, Number(rate)]),
+              ),
+            }
+          : undefined,
     };
 
     createMutation.mutate(input, {
@@ -642,6 +661,7 @@ export function QuoteFormPage() {
               leadTime: watch('leadTime') ?? '',
               paymentMethod: watch('paymentMethod') ?? '',
               ibanOptionId: watch('ibanOptionId') ?? '',
+              quoteCurrency,
             }}
             onChange={(field, value) => setValue(field, value as never, { shouldValidate: true })}
             errors={{
@@ -650,6 +670,7 @@ export function QuoteFormPage() {
               leadTime: errors.leadTime?.message,
               paymentMethod: errors.paymentMethod?.message,
               ibanOptionId: errors.ibanOptionId?.message,
+              quoteCurrency: errors.quoteCurrency?.message,
             }}
             onRequestAddPaymentMethod={() => setActiveOptionModal('paymentMethod')}
             onRequestAddIban={() => setActiveOptionModal('iban')}
@@ -814,12 +835,19 @@ export function QuoteFormPage() {
                         <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
                       </div>
                       <div className="flex justify-between text-base font-bold text-app-text">
-                        <span>{tr.crm.quotes.detail.grandTotalLabel}</span>
+                        <span>{tr.crm.quotes.detail.totalLabel}</span>
                         <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
                       </div>
                     </div>
                   ))}
                 </div>
+
+                <QuoteExchangeRatesSection
+                  quoteCurrency={quoteCurrency}
+                  totalsByCurrency={summaryTotalsByCurrency}
+                  value={exchangeRates}
+                  onChange={setExchangeRates}
+                />
               </div>
             </aside>
           </div>

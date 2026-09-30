@@ -6,12 +6,22 @@ import { tr } from '../../i18n/tr';
 import { IbanSelect } from './iban-select';
 import { PaymentMethodSelect } from './payment-method-select';
 
+/** Opportunity/Interaction formlarındaki CURRENCY_OPTIONS ile aynı desen - kur çevrimi
+ * için teklifin desteklediği para birimleri de bu kayıt defterinden gelir. */
+const QUOTE_CURRENCY_OPTIONS: { value: string; label: string }[] = (
+  ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY'] as const
+).map((currency) => ({
+  value: currency,
+  label: tr.crm.opportunities.form.currencyOptions[currency],
+}));
+
 export interface QuoteMetaFieldsValues {
   contactId: string;
   quoteDate: string;
   leadTime: string;
   paymentMethod: string;
   ibanOptionId: string;
+  quoteCurrency: string;
 }
 
 export interface QuoteMetaFieldsErrors {
@@ -20,6 +30,7 @@ export interface QuoteMetaFieldsErrors {
   leadTime?: string;
   paymentMethod?: string;
   ibanOptionId?: string;
+  quoteCurrency?: string;
 }
 
 interface QuoteMetaFieldsProps {
@@ -92,6 +103,14 @@ export function QuoteMetaFields({
         onChange={(value) => onChange('paymentMethod', value)}
         error={errors?.paymentMethod}
         onRequestAddNew={onRequestAddPaymentMethod}
+      />
+      <Select
+        label={tr.crm.quotes.form.quoteCurrencyLabel}
+        hint={tr.crm.quotes.form.quoteCurrencyHint}
+        options={QUOTE_CURRENCY_OPTIONS}
+        error={errors?.quoteCurrency}
+        value={values.quoteCurrency}
+        onChange={(event) => onChange('quoteCurrency', event.target.value)}
       />
       <div>
         <IbanSelect

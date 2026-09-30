@@ -37,7 +37,12 @@ import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
-import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import {
+  computeLineTotal,
+  convertTotalsToQuoteCurrency,
+  formatCurrencyAmount,
+  groupQuoteItemTotals,
+} from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<
@@ -104,6 +109,11 @@ export function QuoteContentBody({
   onOpportunityClick: (opportunityId: string) => void;
 }) {
   const totals = computeTotals(quote);
+  const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
+  const conversion =
+    foreignCurrencyTotals.length > 0
+      ? convertTotalsToQuoteCurrency(totals, quote.quoteCurrency, quote.exchangeRates?.rates ?? {})
+      : null;
 
   const itemColumns: TableColumn<QuoteItem>[] = [
     {
@@ -156,7 +166,9 @@ export function QuoteContentBody({
           {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
         </MetaCell>
         <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
-          {totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ')}
+          {conversion && conversion.missingRateCurrencies.length === 0
+            ? formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)
+            : totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ')}
         </MetaCell>
       </div>
 
@@ -190,7 +202,7 @@ export function QuoteContentBody({
                 </span>
               </div>
               <div className="flex justify-between border-t border-app-border pt-1 text-sm font-bold">
-                <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
+                <span className="text-app-text">{tr.crm.quotes.detail.totalLabel}</span>
                 <span className="text-app-text">
                   {formatCurrencyAmount(t.grandTotal, t.currency)}
                 </span>
@@ -198,6 +210,36 @@ export function QuoteContentBody({
             </div>
           ))}
         </div>
+
+        {conversion && (
+          <div className="mt-4 flex flex-col items-end gap-1">
+            {conversion.missingRateCurrencies.length === 0 ? (
+              <>
+                <div className="flex w-44 justify-between border-t border-app-border pt-1 text-sm font-bold">
+                  <span className="text-app-text">
+                    {tr.crm.quotes.form.convertedGrandTotalLabel(quote.quoteCurrency)}
+                  </span>
+                  <span className="text-app-text">
+                    {formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)}
+                  </span>
+                </div>
+                <p className="max-w-xs text-right text-[11px] text-app-muted">
+                  {tr.crm.quotes.form.exchangeRateNote(
+                    foreignCurrencyTotals.map(
+                      (t) =>
+                        `1 ${t.currency} = ${quote.exchangeRates?.rates[t.currency]} ${quote.quoteCurrency}`,
+                    ),
+                    quote.exchangeRates?.asOf,
+                  )}
+                </p>
+              </>
+            ) : (
+              <p className="max-w-xs text-right text-[11px] text-app-danger">
+                {tr.crm.quotes.form.missingExchangeRate(conversion.missingRateCurrencies)}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {(quote.salesTerms || quote.deliveryTerms) && (
@@ -497,7 +539,7 @@ export function QuoteDetailPage() {
                 />
               </>
             )}
-            {quote.status === 'DRAFT' && (
+            {(quote.status === 'DRAFT' || quote.status === 'REVIZE') && (
               <CircleIconButton
                 icon={Send}
                 tooltip={tr.crm.quotes.detail.sendForApprovalButton}
@@ -517,7 +559,7 @@ export function QuoteDetailPage() {
         />
       </div>
 
-      {!isPrintMode && quote.status === 'DRAFT' && (
+      {!isPrintMode && (quote.status === 'DRAFT' || quote.status === 'REVIZE') && (
         <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
           <CircleIconButton
             icon={Send}

@@ -4,6 +4,7 @@ import {
   createQuote,
   deleteQuote,
   getQuote,
+  getQuoteFxRates,
   listQuotes,
   rejectQuote,
   updateQuote,
@@ -105,6 +106,19 @@ export function useApproveQuoteMutation(id: string) {
       void queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['quotes', id] });
     },
+  });
+}
+
+/** Teklif para birimi secimi icin guncel kur - otomatik on-doldurma, kullanici elle
+ * duzenleyebilir (bkz. Quote.exchangeRates). targets bossa hic istek atilmaz. */
+export function useFxRatesQuery(base: string, targets: string[]) {
+  const sortedTargets = [...new Set(targets)].sort();
+  return useQuery({
+    queryKey: ['quotes', 'fx-rates', base, sortedTargets],
+    queryFn: () => getQuoteFxRates(base, sortedTargets),
+    enabled: sortedTargets.length > 0,
+    staleTime: 60 * 60 * 1000,
+    retry: false,
   });
 }
 
