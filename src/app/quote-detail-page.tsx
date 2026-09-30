@@ -173,6 +173,43 @@ export function QuoteContentBody({
         </MetaCell>
       </div>
 
+      {!isPrintMode && quote.revisionCount > 0 && quote.revisionSnapshot && (
+        <div className="mt-8">
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <SectionHeader>{tr.crm.quotes.detail.revisionTitle}</SectionHeader>
+            {quote.revisionNote && (
+              <p className="text-sm whitespace-pre-wrap text-black">{quote.revisionNote}</p>
+            )}
+            <p className="mt-2 text-xs text-app-muted">
+              {tr.crm.quotes.detail.revisionOldTotalLabel}{' '}
+              {(() => {
+                const snapshot = quote.revisionSnapshot!;
+                const oldTotals = groupQuoteItemTotals(snapshot.items);
+                const foreignOldTotals = oldTotals.filter(
+                  (t) => t.currency !== snapshot.quoteCurrency,
+                );
+                if (foreignOldTotals.length === 0) {
+                  return oldTotals
+                    .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
+                    .join(' + ');
+                }
+                const oldConversion = convertTotalsToQuoteCurrency(
+                  oldTotals,
+                  snapshot.quoteCurrency,
+                  snapshot.exchangeRates?.rates ?? {},
+                );
+                if (oldConversion.missingRateCurrencies.length > 0) {
+                  return oldTotals
+                    .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
+                    .join(' + ');
+                }
+                return formatCurrencyAmount(oldConversion.grandTotal, snapshot.quoteCurrency);
+              })()}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mt-8">
         <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
         <Table
@@ -288,41 +325,6 @@ export function QuoteContentBody({
               </MetaCell>
             </div>
           </div>
-        </div>
-      )}
-
-      {!isPrintMode && quote.revisionCount > 0 && quote.revisionSnapshot && (
-        <div className="mt-8 border-t border-app-border pt-6">
-          <SectionHeader>{tr.crm.quotes.detail.revisionTitle}</SectionHeader>
-          {quote.revisionNote && (
-            <p className="text-sm whitespace-pre-wrap text-app-text">{quote.revisionNote}</p>
-          )}
-          <p className="mt-2 text-xs text-app-muted">
-            {tr.crm.quotes.detail.revisionOldTotalLabel}{' '}
-            {(() => {
-              const snapshot = quote.revisionSnapshot!;
-              const oldTotals = groupQuoteItemTotals(snapshot.items);
-              const foreignOldTotals = oldTotals.filter(
-                (t) => t.currency !== snapshot.quoteCurrency,
-              );
-              if (foreignOldTotals.length === 0) {
-                return oldTotals
-                  .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
-                  .join(' + ');
-              }
-              const oldConversion = convertTotalsToQuoteCurrency(
-                oldTotals,
-                snapshot.quoteCurrency,
-                snapshot.exchangeRates?.rates ?? {},
-              );
-              if (oldConversion.missingRateCurrencies.length > 0) {
-                return oldTotals
-                  .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
-                  .join(' + ');
-              }
-              return formatCurrencyAmount(oldConversion.grandTotal, snapshot.quoteCurrency);
-            })()}
-          </p>
         </div>
       )}
 

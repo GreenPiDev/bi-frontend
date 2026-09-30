@@ -626,8 +626,27 @@ export interface AuditLogEntry {
   createdAt: string;
 }
 
-export function listAuditLogs(): Promise<AuditLogEntry[]> {
-  return request('/audit-logs');
+export function listAuditLogs(
+  params: {
+    page?: number;
+    pageSize?: number;
+    userId?: string;
+    entity?: string;
+    action?: string;
+    from?: string;
+    to?: string;
+  } = {},
+): Promise<PagedResult<AuditLogEntry>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.userId) query.set('userId', params.userId);
+  if (params.entity) query.set('entity', params.entity);
+  if (params.action) query.set('action', params.action);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  const qs = query.toString();
+  return request(`/audit-logs${qs ? `?${qs}` : ''}`);
 }
 
 export type ChatRole = 'user' | 'assistant';
@@ -2817,7 +2836,8 @@ export type NotificationType =
   | 'CALENDAR_EVENT_INVITE'
   | 'CALENDAR_EVENT_RESPONSE'
   | 'CALENDAR_EVENT_UPDATED'
-  | 'MEETING_REPORT_SENT';
+  | 'MEETING_REPORT_SENT'
+  | 'QUOTE_REVISION_REQUESTED';
 
 export interface Notification {
   id: string;

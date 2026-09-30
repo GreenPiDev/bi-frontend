@@ -28,7 +28,10 @@ describe('SettingsPage', () => {
 
   it('kayit yokken bos durum gosterir', async () => {
     const user = userEvent.setup();
-    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([]);
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
     renderSettingsPage();
     await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
     expect(await screen.findByText('Henüz bir işlem kaydedilmedi.')).toBeInTheDocument();
@@ -36,19 +39,22 @@ describe('SettingsPage', () => {
 
   it('denetim kayitlarini tabloda listeler', async () => {
     const user = userEvent.setup();
-    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([
-      {
-        id: 'a1',
-        userId: 'u1',
-        userName: 'Ada Lovelace',
-        userEmail: 'ada@test.com',
-        action: 'CREATE',
-        entity: 'Dashboard',
-        entityId: 'd1',
-        meta: null,
-        createdAt: '2026-08-22T10:00:00.000Z',
-      },
-    ]);
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue({
+      data: [
+        {
+          id: 'a1',
+          userId: 'u1',
+          userName: 'Ada Lovelace',
+          userEmail: 'ada@test.com',
+          action: 'CREATE',
+          entity: 'Dashboard',
+          entityId: 'd1',
+          meta: null,
+          createdAt: '2026-08-22T10:00:00.000Z',
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
     renderSettingsPage();
     await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
     expect(await screen.findByText('Ada Lovelace')).toBeInTheDocument();
@@ -58,19 +64,22 @@ describe('SettingsPage', () => {
 
   it('detaylari genislet denince stok kaydinin meta bilgisini (urun adi) gosterir', async () => {
     const user = userEvent.setup();
-    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([
-      {
-        id: 'a2',
-        userId: 'u1',
-        userName: 'Ada Lovelace',
-        userEmail: 'ada@test.com',
-        action: 'UPDATE',
-        entity: 'StockItem',
-        entityId: 'si1',
-        meta: { productId: 'p1', productName: 'Sunucu', quantity: 12 },
-        createdAt: '2026-08-22T10:00:00.000Z',
-      },
-    ]);
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue({
+      data: [
+        {
+          id: 'a2',
+          userId: 'u1',
+          userName: 'Ada Lovelace',
+          userEmail: 'ada@test.com',
+          action: 'UPDATE',
+          entity: 'StockItem',
+          entityId: 'si1',
+          meta: { productId: 'p1', productName: 'Sunucu', quantity: 12 },
+          createdAt: '2026-08-22T10:00:00.000Z',
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
     renderSettingsPage();
     await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
     expect(await screen.findByText('Stok')).toBeInTheDocument();
@@ -84,19 +93,22 @@ describe('SettingsPage', () => {
 
   it('stok guncellemesinde onceki ve yeni miktari birlikte gosterir', async () => {
     const user = userEvent.setup();
-    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([
-      {
-        id: 'a3',
-        userId: 'u1',
-        userName: 'Ada Lovelace',
-        userEmail: 'ada@test.com',
-        action: 'UPDATE',
-        entity: 'StockItem',
-        entityId: 'si1',
-        meta: { productId: 'p1', productName: 'Sunucu', previousQuantity: '3', quantity: 20 },
-        createdAt: '2026-08-22T10:00:00.000Z',
-      },
-    ]);
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue({
+      data: [
+        {
+          id: 'a3',
+          userId: 'u1',
+          userName: 'Ada Lovelace',
+          userEmail: 'ada@test.com',
+          action: 'UPDATE',
+          entity: 'StockItem',
+          entityId: 'si1',
+          meta: { productId: 'p1', productName: 'Sunucu', previousQuantity: '3', quantity: 20 },
+          createdAt: '2026-08-22T10:00:00.000Z',
+        },
+      ],
+      meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
+    });
     renderSettingsPage();
     await user.click(await screen.findByRole('tab', { name: 'Kullanıcı Aktiviteleri' }));
     await user.click(await screen.findByRole('button', { name: 'Detayları göster' }));

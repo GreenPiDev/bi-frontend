@@ -18,6 +18,10 @@ export function resolveNotificationRoute(notification: Notification): string | n
       return notification.relatedEntityId
         ? `/kisiler/duzenle/${notification.relatedEntityId}`
         : '/kisiler';
+    case 'Quote':
+      return notification.relatedEntityId
+        ? `/teklifler/${notification.relatedEntityId}`
+        : '/teklifler';
     default:
       return null;
   }

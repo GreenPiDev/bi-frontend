@@ -1,9 +1,14 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, ListFilter } from 'lucide-react';
 import { useState } from 'react';
 import { AppShell } from './app-shell';
+import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { DateField } from '../components/ui/date-field';
+import { Drawer } from '../components/ui/drawer';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
-import { Table, type TableColumn } from '../components/ui/table';
+import { Select } from '../components/ui/select';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { AlertsSection } from '../features/alerts/alerts-section';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -15,6 +20,7 @@ import { ActionPermissionsSection } from '../features/roles/action-permissions-s
 import { PageAccessMatrixSection } from '../features/roles/page-access-matrix-section';
 import { RolesSettingsSection } from '../features/roles/roles-settings-section';
 import { UsersSettingsSection } from '../features/roles/users-settings-section';
+import { useUsersQuery } from '../features/roles/use-users';
 import { ReportsSection } from '../features/reports/reports-section';
 import { CacheSection } from '../features/settings/cache-section';
 import { tr } from '../i18n/tr';
@@ -46,8 +52,32 @@ const entityLabels: Record<string, string> = {
   Alert: 'Alarm',
   Role: 'Rol',
   Product: 'Ürün',
+  ProductPrice: 'Ürün Fiyatı',
+  ProductList: 'Ürün Listesi',
+  ProductCategoryOption: 'Ürün Kategorisi Seçeneği',
   StockItem: 'Stok',
   PurchaseOrder: 'Satın Alma Siparişi',
+  Account: 'Firma',
+  Contact: 'Kişi',
+  Interaction: 'Görüşme',
+  InteractionTypeOption: 'Görüşme Türü Seçeneği',
+  Opportunity: 'Fırsat',
+  Quote: 'Teklif',
+  QuoteTemplate: 'Teklif Şablonu',
+  Project: 'Proje',
+  CalendarEvent: 'Takvim Etkinliği',
+  PostSaleCase: 'Satış Sonrası Destek',
+  Message: 'Mesaj',
+  Tenant: 'Şirket',
+  TenantSetting: 'Şirket Ayarı',
+  SectorOption: 'Sektör Seçeneği',
+  BrandOption: 'Marka Seçeneği',
+  UnitOption: 'Birim Seçeneği',
+  IbanOption: 'IBAN Seçeneği',
+  PaymentMethodOption: 'Ödeme Yöntemi Seçeneği',
+  TitleOption: 'Unvan Seçeneği',
+  DepartmentOption: 'Departman Seçeneği',
+  ReminderTypeOption: 'Hatırlatma Türü Seçeneği',
 };
 
 /** log.meta icindeki bilinen alanlar icin okunabilir etiket - entity'ye gore degil,
@@ -123,9 +153,43 @@ function GeneralTab() {
   );
 }
 
+const AUDIT_LOG_PAGE_SIZE = 25;
+
 function AuditLogTab() {
-  const auditLogsQuery = useAuditLogsQuery();
+  const [page, setPage] = useState(1);
+  const [userId, setUserId] = useState('');
+  const [entity, setEntity] = useState('');
+  const [action, setAction] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const hasActiveFilter =
+    Boolean(userId) || Boolean(entity) || Boolean(action) || Boolean(from) || Boolean(to);
+  const usersQuery = useUsersQuery();
+  const auditLogsQuery = useAuditLogsQuery({
+    page,
+    pageSize: AUDIT_LOG_PAGE_SIZE,
+    userId: userId || undefined,
+    entity: entity || undefined,
+    action: action || undefined,
+    from: from || undefined,
+    to: to || undefined,
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  function goToPage(newPage: number) {
+    setExpandedId(null);
+    setPage(newPage);
+  }
+
+  function resetFilters() {
+    setPage(1);
+    setUserId('');
+    setEntity('');
+    setAction('');
+    setFrom('');
+    setTo('');
+  }
 
   const columns: TableColumn<AuditLogEntry>[] = [
     {
@@ -186,9 +250,20 @@ function AuditLogTab() {
 
   return (
     <section>
+      <div className="mb-4 flex justify-end">
+        <CircleIconButton
+          icon={ListFilter}
+          tooltip={tr.settings.audit.filterButton}
+          onClick={() => setDrawerOpen(true)}
+        >
+          {hasActiveFilter && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+          )}
+        </CircleIconButton>
+      </div>
       <Table
         columns={columns}
-        data={auditLogsQuery.data ?? []}
+        data={auditLogsQuery.data?.data ?? []}
         keyField={(log) => log.id}
         isLoading={auditLogsQuery.isPending}
         loadingMessage={tr.settings.audit.loading}
@@ -197,6 +272,98 @@ function AuditLogTab() {
         isRowExpanded={(log) => expandedId === log.id}
         renderExpandedRow={(log) => <AuditLogMetaDetail meta={log.meta} />}
       />
+      {auditLogsQuery.data && auditLogsQuery.data.data.length > 0 && (
+        <Pagination
+          page={auditLogsQuery.data.meta.page}
+          totalPages={auditLogsQuery.data.meta.totalPages}
+          total={auditLogsQuery.data.meta.total}
+          onPrevious={() => goToPage(page - 1)}
+          onNext={() => goToPage(page + 1)}
+        />
+      )}
+      {drawerOpen && (
+        <Drawer title={tr.settings.audit.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <Select
+              label={tr.settings.audit.filterDrawer.userLabel}
+              value={userId}
+              onChange={(event) => {
+                setPage(1);
+                setUserId(event.target.value);
+              }}
+              options={(usersQuery.data ?? []).map((user) => ({
+                value: user.id,
+                label: user.name,
+              }))}
+              placeholder={tr.settings.audit.filterDrawer.userPlaceholder}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setUserId('');
+              }}
+            />
+            <Select
+              label={tr.settings.audit.filterDrawer.entityLabel}
+              value={entity}
+              onChange={(event) => {
+                setPage(1);
+                setEntity(event.target.value);
+              }}
+              options={Object.entries(entityLabels).map(([value, label]) => ({ value, label }))}
+              placeholder={tr.settings.audit.filterDrawer.entityPlaceholder}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setEntity('');
+              }}
+            />
+            <Select
+              label={tr.settings.audit.filterDrawer.actionLabel}
+              value={action}
+              onChange={(event) => {
+                setPage(1);
+                setAction(event.target.value);
+              }}
+              options={Object.entries(actionLabels).map(([value, label]) => ({ value, label }))}
+              placeholder={tr.settings.audit.filterDrawer.actionPlaceholder}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setAction('');
+              }}
+            />
+            <DateField
+              label={tr.settings.audit.filterDrawer.fromLabel}
+              value={from}
+              onChange={(value) => {
+                setPage(1);
+                setFrom(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setFrom('');
+              }}
+            />
+            <DateField
+              label={tr.settings.audit.filterDrawer.toLabel}
+              value={to}
+              onChange={(value) => {
+                setPage(1);
+                setTo(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setTo('');
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.settings.audit.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
+      )}
     </section>
   );
 }

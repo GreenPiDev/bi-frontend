@@ -63,7 +63,10 @@ describe('PermissionRoute', () => {
 
   it('settings VIEW izni olan kullaniciya ayarlar sayfasini gosterir', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(companyAdminUser());
-    vi.spyOn(api, 'listAuditLogs').mockResolvedValue([]);
+    vi.spyOn(api, 'listAuditLogs').mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
     renderAppAt('/settings');
 
     await waitFor(() => {
