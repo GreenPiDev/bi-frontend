@@ -31,6 +31,11 @@ interface TableProps<T> {
   data: T[];
   keyField: (row: T, index: number) => string;
   onRowClick?: (row: T) => void;
+  /** Verilirse, satir cmd/ctrl+click veya orta-tik ile yeni sekmede acilabilir hale
+   * gelir (native <a href> tarayici davranisini taklit eder - <tr> gecerli sekilde
+   * <a> ile sarilamadigi icin bu, window.open ile elle yapilir). Normal sol-tik hala
+   * onRowClick'i cagirir, bu prop onRowClick'in yerini almaz, yanina eklenir. */
+  getRowHref?: (row: T) => string | null | undefined;
   isLoading?: boolean;
   loadingMessage?: string;
   emptyMessage?: string;
@@ -61,6 +66,7 @@ export function Table<T>({
   data,
   keyField,
   onRowClick,
+  getRowHref,
   isLoading,
   loadingMessage = tr.common.loading,
   emptyMessage,
@@ -135,13 +141,29 @@ export function Table<T>({
         <tbody>
           {data.map((row, index) => {
             const expanded = isRowExpanded?.(row, index) ?? false;
+            const href = getRowHref?.(row);
             return (
               <Fragment key={keyField(row, index)}>
                 <tr
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onClick={(event) => {
+                    if (href && (event.metaKey || event.ctrlKey)) {
+                      event.preventDefault();
+                      window.open(href, '_blank', 'noopener,noreferrer');
+                      return;
+                    }
+                    onRowClick?.(row);
+                  }}
+                  onAuxClick={(event) => {
+                    // Orta-tik (tekerlek) - eventin default'u yeni sekmede acmaz,
+                    // native <a> davranisini taklit etmek icin elle acmak gerekiyor.
+                    if (href && event.button === 1) {
+                      event.preventDefault();
+                      window.open(href, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
                   className={clsx(
                     'bg-app-surface border-b border-app-border last:border-0',
-                    onRowClick && 'cursor-pointer hover:bg-blue-50',
+                    (onRowClick || href) && 'cursor-pointer hover:bg-blue-50',
                     expanded && 'border-b-0',
                     rowClassName?.(row, index),
                   )}

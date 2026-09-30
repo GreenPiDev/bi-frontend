@@ -40,7 +40,7 @@ export function IconActionButton({
           onClick?.(event);
         }}
         className={clsx(
-          'rounded-lg p-2 text-app-muted transition-colors hover:bg-app-bg disabled:cursor-not-allowed disabled:opacity-60',
+          'cursor-pointer rounded-lg p-2 text-app-muted transition-colors hover:bg-app-bg disabled:cursor-not-allowed disabled:opacity-60',
           VARIANT_CLASSES[variant],
           className,
         )}

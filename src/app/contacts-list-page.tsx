@@ -274,6 +274,7 @@ export function ContactsListPage() {
         data={contactsQuery.data?.data ?? []}
         keyField={(contact) => contact.id}
         onRowClick={(contact) => navigate(`/kisiler/${contact.id}`)}
+        getRowHref={(contact) => `/kisiler/${contact.id}`}
         isLoading={contactsQuery.isPending}
         loadingMessage={tr.crm.contacts.loading}
         emptyMessage={tr.crm.contacts.empty}

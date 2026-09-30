@@ -157,6 +157,7 @@ export function DashboardsListPage() {
         data={dashboardsQuery.data ?? []}
         keyField={(dashboard) => dashboard.id}
         onRowClick={(dashboard) => navigate(`/dashboards/${dashboard.id}`)}
+        getRowHref={(dashboard) => `/dashboards/${dashboard.id}`}
         isLoading={dashboardsQuery.isPending}
         loadingMessage={tr.dashboards.list.loading}
         emptyMessage={tr.dashboards.list.empty}

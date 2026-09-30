@@ -40,7 +40,7 @@ export function CircleIconButton({
         type="button"
         aria-label={tooltip}
         className={clsx(
-          'relative flex h-11 w-11 items-center justify-center rounded-xl bg-[#1a2440] transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60',
+          'relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-[#1a2440] transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60',
           VARIANT_CLASSES[variant],
           className,
         )}

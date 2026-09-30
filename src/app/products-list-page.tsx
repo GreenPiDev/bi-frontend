@@ -420,6 +420,7 @@ export function ProductsListContent() {
         }))}
         keyField={(product) => product.id}
         onRowClick={(product) => navigate(`/urunler/${product.id}`, { state: backState })}
+        getRowHref={(product) => `/urunler/${product.id}`}
         isLoading={productsQuery.isPending}
         loadingMessage={tr.crm.products.loading}
         emptyMessage={tr.crm.products.empty}

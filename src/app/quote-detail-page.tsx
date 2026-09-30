@@ -1,6 +1,16 @@
 import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
-import { Check, ChevronRight, FileDown, Mail, Send, X } from 'lucide-react';
+import {
+  Check,
+  ChevronRight,
+  FileDown,
+  Mail,
+  Pencil,
+  Send,
+  ShoppingCart,
+  Trash2,
+  X,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -17,10 +27,12 @@ import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import {
   useApproveQuoteMutation,
+  useDeleteQuoteMutation,
   useQuoteQuery,
   useRejectQuoteMutation,
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
+import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
 import { downloadBlob } from '../lib/download';
@@ -295,12 +307,16 @@ export function QuoteDetailPage() {
   const [pendingAction, setPendingAction] = useState<'APPROVED' | 'REJECTED' | undefined>(
     undefined,
   );
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isPurchaseOrderConfirmOpen, setIsPurchaseOrderConfirmOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery();
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
   const sendForApprovalMutation = useUpdateQuoteMutation(id);
+  const deleteMutation = useDeleteQuoteMutation();
+  const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const exportPdfMutation = useMutation({
     mutationFn: () => exportQuotePdf(id),
     onSuccess: (blob) => downloadBlob(blob, `${quoteQuery.data?.quoteNumber ?? 'teklif'}.pdf`),
@@ -323,6 +339,37 @@ export function QuoteDetailPage() {
 
   const quote = quoteQuery.data;
   const canApprove = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
+  const canCreatePurchaseOrder = hasPermission(
+    meQuery.data?.permissions,
+    'purchase-orders',
+    'CREATE',
+  );
+
+  function handleDelete() {
+    deleteMutation.mutate(quote.id, {
+      onSuccess: () => {
+        toast.success(tr.crm.quotes.deleteSuccess);
+        navigate('/teklifler');
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.deleteError);
+        setIsDeleteConfirmOpen(false);
+      },
+    });
+  }
+
+  function handleConfirmCreatePurchaseOrder() {
+    createPurchaseOrderMutation.mutate(quote.id, {
+      onSuccess: (purchaseOrder) => {
+        toast.success(tr.crm.quotes.createPurchaseOrderSuccess);
+        setIsPurchaseOrderConfirmOpen(false);
+        navigate(`/siparisler/${purchaseOrder.id}`);
+      },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
 
   function handleSendForApproval() {
     sendForApprovalMutation.mutate(
@@ -397,6 +444,31 @@ export function QuoteDetailPage() {
               tooltip={tr.crm.quotes.detail.createMessageTooltip}
               onClick={() => setIsMessageModalOpen(true)}
             />
+            {(quote.status === 'DRAFT' ||
+              quote.status === 'PENDING_APPROVAL' ||
+              quote.status === 'REVIZE') && (
+              <>
+                <CircleIconButton
+                  icon={Pencil}
+                  tooltip={tr.crm.quotes.editTooltip}
+                  onClick={() => navigate(`/teklifler/duzenle/${quote.id}`)}
+                />
+                <CircleIconButton
+                  icon={Trash2}
+                  tooltip={tr.crm.quotes.deleteTooltip}
+                  variant="danger"
+                  onClick={() => setIsDeleteConfirmOpen(true)}
+                />
+              </>
+            )}
+            {quote.status === 'APPROVED' && canCreatePurchaseOrder && (
+              <CircleIconButton
+                icon={ShoppingCart}
+                tooltip={tr.crm.quotes.createPurchaseOrderButton}
+                disabled={createPurchaseOrderMutation.isPending}
+                onClick={() => setIsPurchaseOrderConfirmOpen(true)}
+              />
+            )}
             {(quote.status === 'DRAFT' ||
               quote.status === 'PENDING_APPROVAL' ||
               quote.status === 'APPROVED') && (
@@ -485,6 +557,28 @@ export function QuoteDetailPage() {
           }
           onConfirm={pendingAction === 'APPROVED' ? handleConfirmApprove : handleConfirmReject}
           onCancel={() => setPendingAction(undefined)}
+        />
+      )}
+
+      {isDeleteConfirmOpen && (
+        <ConfirmModal
+          title={tr.crm.quotes.deleteConfirmTitle}
+          message={tr.crm.quotes.deleteConfirm}
+          confirmLabel={tr.crm.quotes.deleteTooltip}
+          isPending={deleteMutation.isPending}
+          onConfirm={handleDelete}
+          onCancel={() => setIsDeleteConfirmOpen(false)}
+        />
+      )}
+
+      {isPurchaseOrderConfirmOpen && (
+        <ConfirmModal
+          title={tr.crm.quotes.createPurchaseOrderConfirmTitle}
+          message={tr.crm.quotes.createPurchaseOrderConfirm(quote.quoteNumber)}
+          confirmLabel={tr.crm.quotes.createPurchaseOrderConfirmButton}
+          isPending={createPurchaseOrderMutation.isPending}
+          onConfirm={handleConfirmCreatePurchaseOrder}
+          onCancel={() => setIsPurchaseOrderConfirmOpen(false)}
         />
       )}
 

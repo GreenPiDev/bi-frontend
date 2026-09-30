@@ -97,6 +97,7 @@ export function ProductListsListContent() {
         onRowClick={(productList) =>
           navigate(`/urun-listeleri/${productList.id}/duzenle`, { state: backState })
         }
+        getRowHref={(productList) => `/urun-listeleri/${productList.id}/duzenle`}
         isLoading={productListsQuery.isPending}
         loadingMessage={tr.crm.productLists.loading}
         emptyMessage={tr.crm.productLists.empty}

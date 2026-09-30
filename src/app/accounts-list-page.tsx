@@ -288,6 +288,7 @@ export function AccountsListPage() {
         data={accountsQuery.data?.data ?? []}
         keyField={(account) => account.id}
         onRowClick={(account) => navigate(`/firmalar/${account.id}`)}
+        getRowHref={(account) => `/firmalar/${account.id}`}
         isLoading={accountsQuery.isPending}
         loadingMessage={tr.crm.accounts.loading}
         emptyMessage={tr.crm.accounts.empty}

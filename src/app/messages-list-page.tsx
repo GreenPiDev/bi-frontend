@@ -349,6 +349,7 @@ export function MessagesListPage() {
         data={rows}
         keyField={(conversation) => conversation.conversationId}
         onRowClick={(conversation) => navigate(`/mesajlar/${conversation.conversationId}`)}
+        getRowHref={(conversation) => `/mesajlar/${conversation.conversationId}`}
         isLoading={messagesQuery.isPending}
         loadingMessage={tr.crm.messages.loading}
         emptyMessage={tr.crm.messages.empty}

@@ -688,6 +688,7 @@ function NotificationsSection() {
         loadingMessage={tr.common.loading}
         emptyMessage={tr.notifications.fullListEmpty}
         onRowClick={handleRowClick}
+        getRowHref={(row) => resolveNotificationRoute(row)}
       />
       {notificationsQuery.data && notificationsQuery.data.meta.totalPages > 1 && (
         <Pagination

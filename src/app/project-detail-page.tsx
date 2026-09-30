@@ -158,6 +158,7 @@ export function ProjectDetailPage() {
             data={project.quotes}
             keyField={(quote) => quote.id}
             onRowClick={(quote) => navigate(`/teklifler/${quote.id}`)}
+            getRowHref={(quote) => `/teklifler/${quote.id}`}
             emptyMessage={tr.crm.projects.detail.noRelatedQuotes}
           />
         </div>

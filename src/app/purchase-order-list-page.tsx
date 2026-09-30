@@ -222,6 +222,7 @@ export function PurchaseOrderListPage() {
         data={purchaseOrdersQuery.data?.data ?? []}
         keyField={(order) => order.id}
         onRowClick={(order) => navigate(`/siparisler/${order.id}`)}
+        getRowHref={(order) => `/siparisler/${order.id}`}
         isLoading={purchaseOrdersQuery.isPending}
         loadingMessage={tr.crm.purchaseOrders.loading}
         emptyMessage={tr.crm.purchaseOrders.empty}

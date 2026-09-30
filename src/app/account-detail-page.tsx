@@ -320,6 +320,7 @@ export function AccountDetailPage() {
                     data={interactionsQuery.data?.data ?? []}
                     keyField={(interaction) => interaction.id}
                     onRowClick={(interaction) => navigate(`/gorusmeler/${interaction.id}`)}
+                    getRowHref={(interaction) => `/gorusmeler/${interaction.id}`}
                     isLoading={interactionsQuery.isPending}
                     emptyMessage={tr.crm.accounts.detail.noInteractions}
                   />
@@ -345,6 +346,7 @@ export function AccountDetailPage() {
                     data={opportunitiesQuery.data?.data ?? []}
                     keyField={(opportunity) => opportunity.id}
                     onRowClick={(opportunity) => navigate(`/firsatlar/${opportunity.id}`)}
+                    getRowHref={(opportunity) => `/firsatlar/${opportunity.id}`}
                     isLoading={opportunitiesQuery.isPending}
                     emptyMessage={tr.crm.accounts.detail.noOpportunities}
                   />
@@ -370,6 +372,7 @@ export function AccountDetailPage() {
                     data={quotesQuery.data?.data ?? []}
                     keyField={(quote) => quote.id}
                     onRowClick={(quote) => navigate(`/teklifler/${quote.id}`)}
+                    getRowHref={(quote) => `/teklifler/${quote.id}`}
                     isLoading={quotesQuery.isPending}
                     emptyMessage={tr.crm.accounts.detail.noQuotes}
                   />
@@ -395,6 +398,7 @@ export function AccountDetailPage() {
                     data={projectsQuery.data?.data ?? []}
                     keyField={(project) => project.id}
                     onRowClick={(project) => navigate(`/projeler/${project.id}`)}
+                    getRowHref={(project) => `/projeler/${project.id}`}
                     isLoading={projectsQuery.isPending}
                     emptyMessage={tr.crm.accounts.detail.noProjects}
                   />

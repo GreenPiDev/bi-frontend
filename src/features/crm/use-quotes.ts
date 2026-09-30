@@ -15,7 +15,13 @@ import {
 export const QUOTES_QUERY_KEY = ['quotes'];
 
 export function useQuotesQuery(
-  params: { page?: number; pageSize?: number; accountId?: string; status?: QuoteStatus } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    status?: QuoteStatus;
+    createdById?: string;
+  } = {},
   options: { enabled?: boolean } = {},
 ) {
   return useQuery({

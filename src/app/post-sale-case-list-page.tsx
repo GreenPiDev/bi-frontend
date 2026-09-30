@@ -162,6 +162,7 @@ export function PostSaleCaseListPage() {
         data={casesQuery.data?.data ?? []}
         keyField={(c) => c.id}
         onRowClick={(c) => navigate(`/satis-sonrasi/${c.id}`)}
+        getRowHref={(c) => `/satis-sonrasi/${c.id}`}
         isLoading={casesQuery.isPending}
         loadingMessage={tr.crm.postSaleCases.loading}
         emptyMessage={tr.crm.postSaleCases.empty}

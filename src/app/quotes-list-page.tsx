@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { ListFilter, Pencil, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -7,7 +7,9 @@ import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { Drawer } from '../components/ui/drawer';
 import { InlineSelect } from '../components/ui/inline-select';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
@@ -23,6 +25,7 @@ import {
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
 import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
+import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Quote, type QuoteStatus } from '../lib/api';
 import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
@@ -108,8 +111,11 @@ export function QuotesListPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const meQuery = useMeQuery();
+  const usersQuery = useUsersQuery();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<QuoteStatus | ''>('');
+  const [createdById, setCreatedById] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [deletingQuote, setDeletingQuote] = useState<Quote | undefined>(undefined);
   const [pendingStatusChange, setPendingStatusChange] = useState<
     { quote: Quote; status: QuoteStatus } | undefined
@@ -117,8 +123,14 @@ export function QuotesListPage() {
   const [pendingPurchaseOrderQuote, setPendingPurchaseOrderQuote] = useState<Quote | undefined>(
     undefined,
   );
+  const hasActiveFilter = Boolean(status) || Boolean(createdById);
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const quotesQuery = useQuotesQuery({ page, pageSize, status: status || undefined });
+  const quotesQuery = useQuotesQuery({
+    page,
+    pageSize,
+    status: status || undefined,
+    createdById: createdById || undefined,
+  });
   const statusCounts = useQuoteStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<QuoteStatus | '', number>> = {
     '': statusCounts.all,
@@ -145,6 +157,12 @@ export function QuotesListPage() {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
     });
+  }
+
+  function resetFilters() {
+    setPage(1);
+    setStatus('');
+    setCreatedById('');
   }
 
   function handleConfirmDelete() {
@@ -243,22 +261,14 @@ export function QuotesListPage() {
         }
         if (q.status === 'APPROVED' && canCreatePurchaseOrder) {
           return (
-            <Button
-              type="button"
-              variant="secondary"
-              className="whitespace-nowrap"
+            <IconActionButton
+              icon={ShoppingCart}
+              tooltip={tr.crm.quotes.createPurchaseOrderButton}
               disabled={
                 createPurchaseOrderMutation.isPending && pendingPurchaseOrderQuote?.id === q.id
               }
-              onClick={(event) => {
-                event.stopPropagation();
-                setPendingPurchaseOrderQuote(q);
-              }}
-            >
-              {createPurchaseOrderMutation.isPending && pendingPurchaseOrderQuote?.id === q.id
-                ? tr.crm.quotes.createPurchaseOrderBusy
-                : tr.crm.quotes.createPurchaseOrderButton}
-            </Button>
+              onClick={() => setPendingPurchaseOrderQuote(q)}
+            />
           );
         }
         return null;
@@ -283,14 +293,24 @@ export function QuotesListPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.quotes.subtitle}</p>
         </div>
-        <CircleIconButton
-          icon={Plus}
-          tooltip={tr.crm.quotes.newButton}
-          variant="success"
-          strokeWidth={3}
-          onClick={() => navigate('/teklifler/yeni')}
-          className="mt-1"
-        />
+        <div className="flex items-center gap-2 pt-1">
+          <CircleIconButton
+            icon={ListFilter}
+            tooltip={tr.crm.quotes.filterButton}
+            onClick={() => setDrawerOpen(true)}
+          >
+            {hasActiveFilter && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+            )}
+          </CircleIconButton>
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.quotes.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => navigate('/teklifler/yeni')}
+          />
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
@@ -317,6 +337,7 @@ export function QuotesListPage() {
         data={quotesQuery.data?.data ?? []}
         keyField={(quote) => quote.id}
         onRowClick={(quote) => navigate(`/teklifler/${quote.id}`)}
+        getRowHref={(quote) => `/teklifler/${quote.id}`}
         isLoading={quotesQuery.isPending}
         loadingMessage={tr.crm.quotes.loading}
         emptyMessage={tr.crm.quotes.empty}
@@ -330,6 +351,46 @@ export function QuotesListPage() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.quotes.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.quotes.filterDrawer.statusLabel}
+              placeholder={tr.crm.quotes.filterDrawer.statusPlaceholder}
+              value={status}
+              onChange={(event) => {
+                setPage(1);
+                setStatus(event.target.value as QuoteStatus | '');
+              }}
+              options={STATUS_OPTIONS}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setStatus('');
+              }}
+            />
+            <Select
+              label={tr.crm.quotes.filterDrawer.createdByLabel}
+              placeholder={tr.crm.quotes.filterDrawer.createdByPlaceholder}
+              value={createdById}
+              onChange={(event) => {
+                setPage(1);
+                setCreatedById(event.target.value);
+              }}
+              options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setCreatedById('');
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.quotes.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
 
       {deletingQuote && (

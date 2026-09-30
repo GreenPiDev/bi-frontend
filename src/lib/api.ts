@@ -2150,13 +2150,20 @@ export interface UpdateQuoteInput {
 }
 
 export function listQuotes(
-  params: { page?: number; pageSize?: number; accountId?: string; status?: QuoteStatus } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    status?: QuoteStatus;
+    createdById?: string;
+  } = {},
 ): Promise<PagedResult<Quote>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
+  if (params.createdById) query.set('createdById', params.createdById);
   const qs = query.toString();
   return request(`/quotes${qs ? `?${qs}` : ''}`);
 }
@@ -2418,12 +2425,22 @@ export interface StockItem {
 }
 
 export function listStockItems(
-  params: { page?: number; pageSize?: number; q?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    productListId?: string;
+    brand?: string;
+    category?: string;
+  } = {},
 ): Promise<PagedResult<StockItem>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
+  if (params.productListId) query.set('productListId', params.productListId);
+  if (params.brand) query.set('brand', params.brand);
+  if (params.category) query.set('category', params.category);
   const qs = query.toString();
   return request(`/stock-items${qs ? `?${qs}` : ''}`);
 }

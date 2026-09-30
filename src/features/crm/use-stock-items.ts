@@ -11,7 +11,16 @@ export const STOCK_ITEMS_QUERY_KEY = ['stock-items'];
 export const LOW_STOCK_ITEMS_QUERY_KEY = ['stock-items', 'low-stock'];
 export const STOCK_HISTORY_QUERY_KEY = ['stock-items', 'history'];
 
-export function useStockItemsQuery(params: { page?: number; pageSize?: number; q?: string } = {}) {
+export function useStockItemsQuery(
+  params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
+    productListId?: string;
+    brand?: string;
+    category?: string;
+  } = {},
+) {
   return useQuery({
     queryKey: [...STOCK_ITEMS_QUERY_KEY, params],
     queryFn: () => listStockItems(params),

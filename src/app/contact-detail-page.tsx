@@ -228,6 +228,7 @@ export function ContactDetailPage() {
           data={interactionsQuery.data?.data ?? []}
           keyField={(interaction) => interaction.id}
           onRowClick={(interaction) => navigate(`/gorusmeler/${interaction.id}`)}
+          getRowHref={(interaction) => `/gorusmeler/${interaction.id}`}
           isLoading={interactionsQuery.isPending}
           loadingMessage={tr.crm.interactions.loading}
           emptyMessage={tr.crm.contacts.noInteractions}

@@ -130,6 +130,7 @@ export function ProjectsListPage() {
         data={projectsQuery.data?.data ?? []}
         keyField={(project) => project.id}
         onRowClick={(project) => navigate(`/projeler/${project.id}`)}
+        getRowHref={(project) => `/projeler/${project.id}`}
         isLoading={projectsQuery.isPending}
         loadingMessage={tr.crm.projects.loading}
         emptyMessage={tr.crm.projects.empty}

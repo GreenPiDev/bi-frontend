@@ -101,6 +101,7 @@ export function DatasetsListPage() {
         data={datasetsQuery.data ?? []}
         keyField={(dataset) => dataset.id}
         onRowClick={(dataset) => navigate(`/datasets/${dataset.id}`)}
+        getRowHref={(dataset) => `/datasets/${dataset.id}`}
         isLoading={datasetsQuery.isPending}
         loadingMessage={tr.datasets.loading}
         emptyMessage={tr.datasets.empty}

@@ -256,6 +256,7 @@ export function OpportunitiesListPage() {
         data={opportunitiesQuery.data?.data ?? []}
         keyField={(opportunity) => opportunity.id}
         onRowClick={(opportunity) => navigate(`/firsatlar/${opportunity.id}`)}
+        getRowHref={(opportunity) => `/firsatlar/${opportunity.id}`}
         isLoading={opportunitiesQuery.isPending}
         loadingMessage={tr.crm.opportunities.loading}
         emptyMessage={tr.crm.opportunities.empty}

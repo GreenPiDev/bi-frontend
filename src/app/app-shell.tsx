@@ -22,7 +22,7 @@ import {
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { FloatingWidgetsDock } from '../components/ui/floating-widgets-dock';
 import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
@@ -78,7 +78,6 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     setSidebarOpenState(value);
   };
   const [navSearch, setNavSearch] = useState('');
-  const navigate = useNavigate();
   const location = useLocation();
   const closeSidebarTimeoutRef = useRef<number | null>(null);
 
@@ -298,9 +297,8 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
             const hasUnread = unreadCount > 0;
             return (
               <li key={label}>
-                <button
-                  type="button"
-                  onClick={() => navigate(path)}
+                <Link
+                  to={path}
                   className={clsx(
                     'flex h-10 w-full cursor-pointer items-center whitespace-nowrap transition-colors duration-200',
                     !isActive && 'hover:bg-app-brand/10 hover:text-app-text',
@@ -333,7 +331,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
                     </span>
                     <span className="pr-3 text-sm font-semibold">{label}</span>
                   </span>
-                </button>
+                </Link>
               </li>
             );
           })}

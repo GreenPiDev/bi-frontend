@@ -1,13 +1,20 @@
-import { AlertTriangle, Pencil, Search } from 'lucide-react';
+import { AlertTriangle, ListFilter, Pencil, Search } from 'lucide-react';
 import { useState } from 'react';
 import { AppShell } from './app-shell';
+import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { Drawer } from '../components/ui/drawer';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Tooltip } from '../components/ui/tooltip';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
+import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
+import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
+import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useLowStockItemsQuery, useStockItemsQuery } from '../features/crm/use-stock-items';
 import {
   isLowStock,
@@ -25,11 +32,33 @@ export function StockListContent() {
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
+  const [filterListId, setFilterListId] = useState('');
+  const [filterBrand, setFilterBrand] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const stockItemsQuery = useStockItemsQuery({ page, pageSize, q: q || undefined });
+  const stockItemsQuery = useStockItemsQuery({
+    page,
+    pageSize,
+    q: q || undefined,
+    productListId: filterListId || undefined,
+    brand: filterBrand || undefined,
+    category: filterCategory || undefined,
+  });
   const lowStockQuery = useLowStockItemsQuery();
+  const productListsQuery = useProductListsQuery();
+  const brandOptionsQuery = useBrandOptionsQuery();
+  const categoryOptionsQuery = useProductCategoryOptionsQuery();
   const lowStockIds = new Set((lowStockQuery.data ?? []).map((item) => item.id));
+  const hasActiveFilter = Boolean(filterListId) || Boolean(filterBrand) || Boolean(filterCategory);
+
+  function resetFilters() {
+    setPage(1);
+    setFilterListId('');
+    setFilterBrand('');
+    setFilterCategory('');
+  }
 
   const ALL_COLUMNS: TableColumn<StockItem>[] = [
     {
@@ -84,12 +113,25 @@ export function StockListContent() {
 
   return (
     <>
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.stock.title}</h1>
-          <PageHelp text={tr.help.stock} />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.stock.title}</h1>
+            <PageHelp text={tr.help.stock} />
+          </div>
+          <p className="mt-1 text-sm text-app-muted">{tr.crm.stock.subtitle}</p>
         </div>
-        <p className="mt-1 text-sm text-app-muted">{tr.crm.stock.subtitle}</p>
+        <div className="flex items-center gap-2 pt-1">
+          <CircleIconButton
+            icon={ListFilter}
+            tooltip={tr.crm.stock.filterButton}
+            onClick={() => setDrawerOpen(true)}
+          >
+            {hasActiveFilter && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+            )}
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="relative mt-6 w-full">
@@ -146,6 +188,70 @@ export function StockListContent() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.stock.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.stock.filterListLabel}
+              placeholder={tr.crm.stock.filterListPlaceholder}
+              clearable
+              value={filterListId}
+              onChange={(event) => {
+                setPage(1);
+                setFilterListId(event.target.value);
+              }}
+              onClear={() => {
+                setPage(1);
+                setFilterListId('');
+              }}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+            />
+            <Select
+              label={tr.crm.stock.filterDrawer.brandLabel}
+              placeholder={tr.crm.stock.filterDrawer.brandPlaceholder}
+              clearable
+              value={filterBrand}
+              onChange={(event) => {
+                setPage(1);
+                setFilterBrand(event.target.value);
+              }}
+              onClear={() => {
+                setPage(1);
+                setFilterBrand('');
+              }}
+              options={(brandOptionsQuery.data ?? []).map((option) => ({
+                value: option.label,
+                label: option.label,
+              }))}
+            />
+            <Select
+              label={tr.crm.stock.filterDrawer.categoryLabel}
+              placeholder={tr.crm.stock.filterDrawer.categoryPlaceholder}
+              clearable
+              value={filterCategory}
+              onChange={(event) => {
+                setPage(1);
+                setFilterCategory(event.target.value);
+              }}
+              onClear={() => {
+                setPage(1);
+                setFilterCategory('');
+              }}
+              options={(categoryOptionsQuery.data ?? []).map((option) => ({
+                value: option.label,
+                label: option.label,
+              }))}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.stock.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
 
       {editingItem && <StockUpdateModal item={editingItem} onClose={() => setEditingItem(null)} />}
