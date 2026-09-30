@@ -343,7 +343,7 @@ export function QuoteEditPage() {
         <TextField
           type="text"
           inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel}
+          label={tr.crm.quotes.form.unitPriceLabel(product.currency)}
           value={addUnitPrice}
           onChange={(event) => setAddUnitPrice(sanitizeDecimalInput(event.target.value))}
         />
@@ -421,6 +421,8 @@ export function QuoteEditPage() {
   ];
 
   function renderEditPanel() {
+    const editingItemCurrency =
+      editingIndex !== null ? (items?.[editingIndex]?.currency ?? 'TRY') : 'TRY';
     return (
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
         <TextField
@@ -433,7 +435,7 @@ export function QuoteEditPage() {
         <TextField
           type="text"
           inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel}
+          label={tr.crm.quotes.form.unitPriceLabel(editingItemCurrency)}
           value={editUnitPrice}
           onChange={(event) => setEditUnitPrice(sanitizeDecimalInput(event.target.value))}
         />

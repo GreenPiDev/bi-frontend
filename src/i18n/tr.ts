@@ -1,3 +1,11 @@
+/** Urun para birimlerinin (TRY/USD/EUR - bkz. product-form-fields.tsx) kisa
+ * sembolu - "Birim Fiyat (...)" gibi dinamik alan etiketlerinde kullanilir. */
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  TRY: '₺',
+  USD: '$',
+  EUR: '€',
+};
+
 export const tr = {
   common: {
     appName: 'PiLens',
@@ -1968,7 +1976,8 @@ export const tr = {
         addToQuote: 'Teklife Ekle',
         productLabel: 'Ürün',
         quantityLabel: 'Miktar',
-        unitPriceLabel: 'Birim Fiyat (₺)',
+        unitPriceLabel: (currency: string) =>
+          `Birim Fiyat (${CURRENCY_SYMBOLS[currency] ?? currency})`,
         unitPriceHint: 'Boş bırakılırsa ürünün kayıtlı fiyatı kullanılır.',
         discountPctLabel: 'İskonto (%)',
         vatPctLabel: 'KDV (%)',
