@@ -31,7 +31,7 @@ import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
-import { useCreateQuoteMutation } from '../features/crm/use-quotes';
+import { useCreateQuoteMutation, useQuoteRevisionSummaryQuery } from '../features/crm/use-quotes';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
 import {
   DEFAULT_QUOTE_VAT_PCT,
@@ -139,6 +139,7 @@ export function QuoteFormPage() {
   const watchedItems = watch('items');
   const quoteCurrency = watch('quoteCurrency') || 'TRY';
   const [exchangeRates, setExchangeRates] = useState<QuoteExchangeRatesValue>({ rates: {} });
+  const revisionSummaryQuery = useQuoteRevisionSummaryQuery(selectedAccountId);
 
   // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
   // frontende çekilip filtrelenmez. Seçilen ürün listesine göre filtrelenir.
@@ -207,14 +208,24 @@ export function QuoteFormPage() {
   }
 
   function handleAddEntry(product: Product) {
+    const quantity = Number(entryQuantity);
+    if (!entryQuantity || Number.isNaN(quantity) || quantity <= 0) {
+      toast.error(tr.crm.quotes.form.itemInvalidQuantity);
+      return;
+    }
+    if (!entryUnitPrice && !product.price) {
+      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
+      return;
+    }
     append({
       productId: product.id,
-      quantity: entryQuantity || '1',
+      quantity: entryQuantity,
       unitPrice: entryUnitPrice,
       discountPct: entryDiscountPct || '0',
       vatPct: entryVatPct || '0',
     });
     setEntryProductId(null);
+    toast.success(tr.crm.quotes.form.itemAddSuccess);
   }
 
   // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçtiği
@@ -266,14 +277,24 @@ export function QuoteFormPage() {
   function handleSaveEditRow(index: number) {
     const item = watchedItems?.[index];
     if (!item) return;
+    const quantity = Number(editQuantity);
+    if (!editQuantity || Number.isNaN(quantity) || quantity <= 0) {
+      toast.error(tr.crm.quotes.form.itemInvalidQuantity);
+      return;
+    }
+    if (!editUnitPrice && !productPriceById.get(item.productId)) {
+      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
+      return;
+    }
     update(index, {
       productId: item.productId,
-      quantity: editQuantity || '1',
+      quantity: editQuantity,
       unitPrice: editUnitPrice,
       discountPct: editDiscountPct || '0',
       vatPct: editVatPct || '0',
     });
     setEditingIndex(null);
+    toast.success(tr.crm.quotes.form.itemUpdateSuccess);
   }
 
   const contactOptions = (contactsQuery.data?.data ?? [])
@@ -631,31 +652,38 @@ export function QuoteFormPage() {
 
           <QuoteMetaFields
             accountSlot={
-              <Controller
-                name="accountId"
-                control={control}
-                render={({ field }) => (
-                  <AccountAutocomplete
-                    label={tr.crm.quotes.form.accountLabel}
-                    required
-                    placeholder={tr.crm.quotes.form.accountPlaceholder}
-                    hint={tr.crm.quotes.form.accountHint}
-                    error={errors.accountId?.message}
-                    value={field.value}
-                    onChange={field.onChange}
-                    trailingAction={
-                      <Button
-                        type="button"
-                        variant="navy"
-                        className="shrink-0"
-                        onClick={() => setIsNewAccountModalOpen(true)}
-                      >
-                        {tr.crm.quotes.form.newAccountButton}
-                      </Button>
-                    }
-                  />
+              <div>
+                <Controller
+                  name="accountId"
+                  control={control}
+                  render={({ field }) => (
+                    <AccountAutocomplete
+                      label={tr.crm.quotes.form.accountLabel}
+                      required
+                      placeholder={tr.crm.quotes.form.accountPlaceholder}
+                      hint={tr.crm.quotes.form.accountHint}
+                      error={errors.accountId?.message}
+                      value={field.value}
+                      onChange={field.onChange}
+                      trailingAction={
+                        <Button
+                          type="button"
+                          variant="navy"
+                          className="shrink-0"
+                          onClick={() => setIsNewAccountModalOpen(true)}
+                        >
+                          {tr.crm.quotes.form.newAccountButton}
+                        </Button>
+                      }
+                    />
+                  )}
+                />
+                {selectedAccountId && (revisionSummaryQuery.data?.count ?? 0) > 0 && (
+                  <p className="mt-1.5 text-xs font-semibold text-app-danger">
+                    {tr.crm.quotes.form.accountRevisionWarning(revisionSummaryQuery.data!.count)}
+                  </p>
                 )}
-              />
+              </div>
             }
             contactOptions={contactOptions}
             values={{

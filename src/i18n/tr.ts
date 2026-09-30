@@ -1961,7 +1961,9 @@ export const tr = {
       numberColumn: 'Teklif No',
       accountColumn: 'Firma',
       statusColumn: 'Durum',
-      totalColumn: 'Toplam',
+      totalColumn: 'Genel Toplam',
+      revisedColumn: 'Revize',
+      revisedTooltip: (count: number) => `Bu teklif ${count} kere revize edildi.`,
       createdByColumn: 'Oluşturan',
       statusFilterLabel: 'Durum',
       allStatuses: 'Tümü',
@@ -1994,6 +1996,8 @@ export const tr = {
       statusChangeConfirm: (statusLabel: string) =>
         `Teklifin durumunu "${statusLabel}" olarak değiştirmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
       statusChangeConfirmButton: 'Evet, Değiştir',
+      reviseConfirmMessage:
+        'Teklifi "Revize" durumuna almak istediğinize emin misiniz? Onaylarsanız teklifi düzenleme sayfasına yönlendirileceksiniz.',
       statusOptions: {
         DRAFT: 'Taslak',
         PENDING_APPROVAL: 'Onay Bekliyor',
@@ -2005,6 +2009,7 @@ export const tr = {
         back: 'Tekliflere dön',
         approveButton: 'Onayla',
         rejectButton: 'Reddet',
+        reviseButton: 'Revize Et',
         sendForApprovalButton: 'Onaya Gönder',
         exportPdfButton: 'PDF İndir',
         exportPdfBusy: 'Hazırlanıyor...',
@@ -2041,12 +2046,16 @@ export const tr = {
         accountNumberLabel: 'Hesap Numarası',
         ibanLabel: 'IBAN',
         createMessageTooltip: 'Kayıt ile ilişkili mesaj oluştur',
+        revisionTitle: 'Revizyon Bilgisi',
+        revisionOldTotalLabel: 'Revizyon öncesi genel toplam:',
       },
       form: {
         newTitle: 'Yeni Teklif',
         accountLabel: 'Firma',
         accountPlaceholder: 'Firma seçin',
         accountHint: 'Zorunlu. Teklifin kesileceği firma.',
+        accountRevisionWarning: (count: number) =>
+          `Bu firma daha önce ${count} kere revize istedi.`,
         newAccountButton: '+ Yeni Firma',
         newAccountCreatedAndAdded: 'Firma oluşturuldu ve teklife eklendi.',
         contactLabel: 'Muhatap Kişi (opsiyonel)',
@@ -2112,6 +2121,12 @@ export const tr = {
         vatPctSetDefaultLink: 'Varsayılan Değer Ata',
         addItem: 'Ürün Ekle',
         removeItem: 'Kaldır',
+        itemAddSuccess: 'Ürün teklife eklendi.',
+        itemAddError: 'Ürün eklenemedi. Lütfen miktar ve birim fiyatı kontrol edin.',
+        itemUpdateSuccess: 'Ürün satırı güncellendi.',
+        itemUpdateError: 'Satır güncellenemedi. Lütfen miktar ve birim fiyatı kontrol edin.',
+        itemInvalidQuantity: 'Miktar sıfırdan büyük bir sayı olmalıdır.',
+        itemInvalidUnitPrice: 'Birim fiyat girilmeli veya üründe kayıtlı bir fiyat olmalıdır.',
         quoteCurrencyLabel: 'Teklif Para Birimi',
         quoteCurrencyHint:
           'Kalemler farklı para birimlerinde olsa da tek bir genel toplam bu para biriminde gösterilir.',
@@ -2164,6 +2179,10 @@ export const tr = {
         updateSuccess: 'Teklif güncellendi.',
         itemsRequired: 'En az bir ürün satırı eklenmelidir.',
         saveRow: 'Güncelle',
+        revisionNoteLabel: 'Revizyon Notu',
+        revisionNotePlaceholder: 'Bu revizyonda neyin, neden değiştiğini yazın',
+        revisionNoteHint: 'Zorunlu. Sadece kayıt için tutulur, PDF çıktısında görünmez.',
+        revisionNoteRequired: 'Revizyon notu zorunludur.',
       },
     },
     postSaleCases: {

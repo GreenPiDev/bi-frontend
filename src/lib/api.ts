@@ -2087,6 +2087,20 @@ export interface QuoteExchangeRates {
   rates: Record<string, number>;
 }
 
+/** Ad-hoc revizyon takibi (bkz. Quote.revisionSnapshot doc comment'i, backend'de). */
+export interface QuoteRevisionSnapshot {
+  items: {
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    currency: string;
+    discountPct: number;
+    vatPct: number;
+  }[];
+  quoteCurrency: string;
+  exchangeRates: QuoteExchangeRates | null;
+}
+
 export interface Quote {
   id: string;
   quoteNumber: string;
@@ -2122,6 +2136,11 @@ export interface Quote {
   createdByName: string | null;
   items: QuoteItem[];
   opportunity: Opportunity | null;
+  /** Ad-hoc revizyon takibi - sadece EN SON revizyonu tutar, PDF export'ta gosterilmez. */
+  revisionNote: string | null;
+  revisionSnapshot: QuoteRevisionSnapshot | null;
+  revisionCount: number;
+  lastRevisedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -2155,6 +2174,8 @@ export interface CreateQuoteInput {
 export interface UpdateQuoteInput {
   items?: QuoteItemInput[];
   status?: QuoteStatus;
+  /** Teklif REVIZE durumundayken `items` ile birlikte gonderilirse zorunludur. */
+  revisionNote?: string;
   contactId?: string | null;
   quoteDate?: string;
   leadTime?: string | null;
@@ -2218,6 +2239,12 @@ export interface FxRatesResult {
  * duzenleyebilir - bkz. Quote.exchangeRates). targets bossa istek atilmaz. */
 export function getQuoteFxRates(base: string, targets: string[]): Promise<FxRatesResult> {
   return request(`/quotes/fx-rates?base=${base}&targets=${targets.join(',')}`);
+}
+
+/** /teklifler/yeni'deki firma bazli uyari icin ("Bu firma daha once N kere revize
+ * istedi") - bir firmanin tum tekliflerindeki revisionCount toplami. */
+export function getQuoteRevisionSummary(accountId: string): Promise<{ count: number }> {
+  return request(`/quotes/revision-summary?accountId=${accountId}`);
 }
 
 export interface Project {

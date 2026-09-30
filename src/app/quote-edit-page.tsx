@@ -89,6 +89,8 @@ export function QuoteEditPage() {
   const [deliveryTerms, setDeliveryTerms] = useState('');
   const [quoteCurrency, setQuoteCurrency] = useState('TRY');
   const [exchangeRates, setExchangeRates] = useState<QuoteExchangeRatesValue>({ rates: {} });
+  const [revisionNote, setRevisionNote] = useState('');
+  const [revisionNoteTouched, setRevisionNoteTouched] = useState(false);
   const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
 
   if (quoteQuery.data && quoteQuery.data.id !== initializedForQuoteId) {
@@ -164,12 +166,21 @@ export function QuoteEditPage() {
   }
 
   function handleAddItem(product: Product) {
+    const quantity = Number(addQuantity);
+    if (!addQuantity || Number.isNaN(quantity) || quantity <= 0) {
+      toast.error(tr.crm.quotes.form.itemInvalidQuantity);
+      return;
+    }
+    if (!addUnitPrice && !product.price) {
+      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
+      return;
+    }
     setItems((prev) => [
       ...(prev ?? []),
       {
         productId: product.id,
         productName: product.name,
-        quantity: addQuantity || '1',
+        quantity: addQuantity,
         unitPrice: addUnitPrice,
         currency: product.currency,
         discountPct: addDiscountPct || '0',
@@ -177,6 +188,7 @@ export function QuoteEditPage() {
       },
     ]);
     setAddingProductId(null);
+    toast.success(tr.crm.quotes.form.itemAddSuccess);
   }
 
   // Ozet tablosundaki mevcut satirlara tiklayinca acilan duzenleme paneli - ayni
@@ -202,20 +214,32 @@ export function QuoteEditPage() {
   }
 
   function handleSaveEditRow(index: number) {
+    const item = items?.[index];
+    if (!item) return;
+    const quantity = Number(editQuantity);
+    if (!editQuantity || Number.isNaN(quantity) || quantity <= 0) {
+      toast.error(tr.crm.quotes.form.itemInvalidQuantity);
+      return;
+    }
+    if (!editUnitPrice && !item.unitPrice) {
+      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
+      return;
+    }
     setItems((prev) =>
-      (prev ?? []).map((item, i) =>
+      (prev ?? []).map((it, i) =>
         i === index
           ? {
-              ...item,
-              quantity: editQuantity || '1',
+              ...it,
+              quantity: editQuantity,
               unitPrice: editUnitPrice,
               discountPct: editDiscountPct || '0',
               vatPct: editVatPct || '0',
             }
-          : item,
+          : it,
       ),
     );
     setEditingIndex(null);
+    toast.success(tr.crm.quotes.form.itemUpdateSuccess);
   }
 
   function handleRemoveItem(index: number) {
@@ -255,8 +279,15 @@ export function QuoteEditPage() {
       toast.error(tr.crm.quotes.edit.itemsRequired);
       return;
     }
+    const isRevisionMode = quoteQuery.data?.status === 'REVIZE';
+    if (isRevisionMode && !revisionNote.trim()) {
+      setRevisionNoteTouched(true);
+      toast.error(tr.crm.quotes.edit.revisionNoteRequired);
+      return;
+    }
     updateMutation.mutate(
       {
+        ...(isRevisionMode ? { revisionNote: revisionNote.trim() } : {}),
         items: items.map((item) => ({
           productId: item.productId,
           quantity: Number(item.quantity),
@@ -313,6 +344,7 @@ export function QuoteEditPage() {
   }
 
   const quote = quoteQuery.data;
+  const isRevisionMode = quote.status === 'REVIZE';
   const isEditable =
     quote.status === 'DRAFT' || quote.status === 'PENDING_APPROVAL' || quote.status === 'REVIZE';
 
@@ -696,21 +728,6 @@ export function QuoteEditPage() {
                   value={exchangeRates}
                   onChange={setExchangeRates}
                 />
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button type="button" disabled={updateMutation.isPending} onClick={handleSubmit}>
-                    {updateMutation.isPending
-                      ? tr.crm.quotes.edit.submitting
-                      : tr.crm.quotes.edit.submit}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => navigate(`/teklifler/${quote.id}`)}
-                  >
-                    {tr.crm.quotes.edit.cancel}
-                  </Button>
-                </div>
               </div>
             </aside>
           </div>
@@ -730,6 +747,36 @@ export function QuoteEditPage() {
               value={deliveryTerms}
               onChange={(event) => setDeliveryTerms(event.target.value)}
             />
+          </div>
+
+          {isRevisionMode && (
+            <TextareaField
+              label={tr.crm.quotes.edit.revisionNoteLabel}
+              required
+              placeholder={tr.crm.quotes.edit.revisionNotePlaceholder}
+              hint={tr.crm.quotes.edit.revisionNoteHint}
+              value={revisionNote}
+              onChange={(event) => setRevisionNote(event.target.value)}
+              error={
+                revisionNoteTouched && !revisionNote.trim()
+                  ? tr.crm.quotes.edit.revisionNoteRequired
+                  : undefined
+              }
+            />
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button type="button" disabled={updateMutation.isPending} onClick={handleSubmit}>
+              {updateMutation.isPending ? tr.crm.quotes.edit.submitting : tr.crm.quotes.edit.submit}
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              className="border border-white"
+              onClick={() => navigate(`/teklifler/${quote.id}`)}
+            >
+              {tr.crm.quotes.edit.cancel}
+            </Button>
           </div>
         </div>
       </div>

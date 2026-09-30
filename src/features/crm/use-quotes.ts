@@ -5,6 +5,7 @@ import {
   deleteQuote,
   getQuote,
   getQuoteFxRates,
+  getQuoteRevisionSummary,
   listQuotes,
   rejectQuote,
   updateQuote,
@@ -119,6 +120,16 @@ export function useFxRatesQuery(base: string, targets: string[]) {
     enabled: sortedTargets.length > 0,
     staleTime: 60 * 60 * 1000,
     retry: false,
+  });
+}
+
+/** /teklifler/yeni'deki firma bazli uyari icin ("Bu firma daha once N kere revize
+ * istedi") - accountId secilmediyse istek atilmaz. */
+export function useQuoteRevisionSummaryQuery(accountId: string | undefined) {
+  return useQuery({
+    queryKey: [...QUOTES_QUERY_KEY, 'revision-summary', accountId],
+    queryFn: () => getQuoteRevisionSummary(accountId as string),
+    enabled: Boolean(accountId),
   });
 }
 

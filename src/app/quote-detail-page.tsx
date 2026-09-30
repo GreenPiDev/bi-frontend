@@ -6,6 +6,7 @@ import {
   FileDown,
   Mail,
   Pencil,
+  RotateCcw,
   Send,
   ShoppingCart,
   Trash2,
@@ -290,6 +291,41 @@ export function QuoteContentBody({
         </div>
       )}
 
+      {!isPrintMode && quote.revisionCount > 0 && quote.revisionSnapshot && (
+        <div className="mt-8 border-t border-app-border pt-6">
+          <SectionHeader>{tr.crm.quotes.detail.revisionTitle}</SectionHeader>
+          {quote.revisionNote && (
+            <p className="text-sm whitespace-pre-wrap text-app-text">{quote.revisionNote}</p>
+          )}
+          <p className="mt-2 text-xs text-app-muted">
+            {tr.crm.quotes.detail.revisionOldTotalLabel}{' '}
+            {(() => {
+              const snapshot = quote.revisionSnapshot!;
+              const oldTotals = groupQuoteItemTotals(snapshot.items);
+              const foreignOldTotals = oldTotals.filter(
+                (t) => t.currency !== snapshot.quoteCurrency,
+              );
+              if (foreignOldTotals.length === 0) {
+                return oldTotals
+                  .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
+                  .join(' + ');
+              }
+              const oldConversion = convertTotalsToQuoteCurrency(
+                oldTotals,
+                snapshot.quoteCurrency,
+                snapshot.exchangeRates?.rates ?? {},
+              );
+              if (oldConversion.missingRateCurrencies.length > 0) {
+                return oldTotals
+                  .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
+                  .join(' + ');
+              }
+              return formatCurrencyAmount(oldConversion.grandTotal, snapshot.quoteCurrency);
+            })()}
+          </p>
+        </div>
+      )}
+
       {quote.opportunity && (
         <div className="mt-8 border-t border-app-border pt-6">
           <SectionHeader>{tr.crm.quotes.detail.opportunityTitle}</SectionHeader>
@@ -351,12 +387,14 @@ export function QuoteDetailPage() {
   );
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isPurchaseOrderConfirmOpen, setIsPurchaseOrderConfirmOpen] = useState(false);
+  const [isReviseConfirmOpen, setIsReviseConfirmOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery();
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
   const sendForApprovalMutation = useUpdateQuoteMutation(id);
+  const reviseMutation = useUpdateQuoteMutation(id);
   const deleteMutation = useDeleteQuoteMutation();
   const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const exportPdfMutation = useMutation({
@@ -449,6 +487,22 @@ export function QuoteDetailPage() {
     });
   }
 
+  function handleConfirmRevise() {
+    reviseMutation.mutate(
+      { status: 'REVIZE' },
+      {
+        onSuccess: () => {
+          toast.success(tr.crm.quotes.statusUpdateSuccess);
+          setIsReviseConfirmOpen(false);
+          navigate(`/teklifler/duzenle/${quote.id}`);
+        },
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
   return (
     <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
       {!isPrintMode && <BackLink to={'/teklifler'} label={tr.crm.quotes.detail.back} />}
@@ -502,6 +556,14 @@ export function QuoteDetailPage() {
                   onClick={() => setIsDeleteConfirmOpen(true)}
                 />
               </>
+            )}
+            {(quote.status === 'DRAFT' || quote.status === 'PENDING_APPROVAL') && (
+              <CircleIconButton
+                icon={RotateCcw}
+                tooltip={tr.crm.quotes.detail.reviseButton}
+                onClick={() => setIsReviseConfirmOpen(true)}
+                disabled={reviseMutation.isPending}
+              />
             )}
             {quote.status === 'APPROVED' && canCreatePurchaseOrder && (
               <CircleIconButton
@@ -610,6 +672,17 @@ export function QuoteDetailPage() {
           isPending={deleteMutation.isPending}
           onConfirm={handleDelete}
           onCancel={() => setIsDeleteConfirmOpen(false)}
+        />
+      )}
+
+      {isReviseConfirmOpen && (
+        <ConfirmModal
+          title={tr.crm.quotes.statusChangeConfirmTitle}
+          message={tr.crm.quotes.reviseConfirmMessage}
+          confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
+          isPending={reviseMutation.isPending}
+          onConfirm={handleConfirmRevise}
+          onCancel={() => setIsReviseConfirmOpen(false)}
         />
       )}
 

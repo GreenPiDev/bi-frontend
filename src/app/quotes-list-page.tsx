@@ -27,7 +27,11 @@ import {
 import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Quote, type QuoteStatus } from '../lib/api';
-import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import {
+  convertTotalsToQuoteCurrency,
+  formatCurrencyAmount,
+  groupQuoteItemTotals,
+} from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
@@ -42,7 +46,7 @@ const STATUS_TEXT_CLASS: Record<QuoteStatus, string> = {
   REVIZE: 'text-orange-600 dark:text-orange-400',
 };
 
-const CONFIRM_REQUIRED_STATUSES: readonly QuoteStatus[] = ['APPROVED', 'REJECTED'];
+const CONFIRM_REQUIRED_STATUSES: readonly QuoteStatus[] = ['APPROVED', 'REJECTED', 'REVIZE'];
 
 /** Onaylanmis/reddedilmis teklifler kilitlidir (bkz. quotes.service.ts QUOTE_NOT_EDITABLE),
  * bu yuzden dropdown o durumlarda salt-okunur duz metin olarak (oksuz) gosterilir. Hedef
@@ -105,6 +109,27 @@ function quoteTotalsByCurrency(quote: Quote) {
       currency: item.currency,
     })),
   );
+}
+
+/** Teklif kalemleri farklı para birimlerinde olabilir - bu yüzden tek bir "Genel Toplam"
+ * göstermek için hepsi teklifin kendi para birimine (quote.quoteCurrency) çevrilir (bkz.
+ * quote-detail-page.tsx'teki aynı desen). Eksik kur varsa (henüz girilmemiş) tek satırda
+ * gösterilemez, para birimi bazlı toplamlar "+" ile ayrılarak listelenir. */
+function quoteGrandTotalDisplay(quote: Quote): string {
+  const totals = quoteTotalsByCurrency(quote);
+  const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
+  if (foreignCurrencyTotals.length === 0) {
+    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  const conversion = convertTotalsToQuoteCurrency(
+    totals,
+    quote.quoteCurrency,
+    quote.exchangeRates?.rates ?? {},
+  );
+  if (conversion.missingRateCurrencies.length > 0) {
+    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  return formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency);
 }
 
 export function QuotesListPage() {
@@ -180,12 +205,16 @@ export function QuotesListPage() {
 
   function handleConfirmStatusChange() {
     if (!pendingStatusChange) return;
+    const { quote, status } = pendingStatusChange;
     confirmStatusMutation.mutate(
-      { status: pendingStatusChange.status },
+      { status },
       {
         onSuccess: () => {
           toast.success(tr.crm.quotes.statusUpdateSuccess);
           setPendingStatusChange(undefined);
+          if (status === 'REVIZE') {
+            navigate(`/teklifler/duzenle/${quote.id}`);
+          }
         },
         onError: (error) => {
           toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.statusUpdateError);
@@ -222,13 +251,18 @@ export function QuotesListPage() {
       key: 'total',
       header: tr.crm.quotes.totalColumn,
       className: 'text-app-muted',
-      render: (q) => (
-        <div className="flex flex-col">
-          {quoteTotalsByCurrency(q).map((t) => (
-            <span key={t.currency}>{formatCurrencyAmount(t.grandTotal, t.currency)}</span>
-          ))}
-        </div>
-      ),
+      render: (q) => <span>{quoteGrandTotalDisplay(q)}</span>,
+    },
+    {
+      key: 'revised',
+      header: tr.crm.quotes.revisedColumn,
+      className: 'text-center',
+      render: (q) =>
+        q.revisionCount > 0 ? (
+          <span title={tr.crm.quotes.revisedTooltip(q.revisionCount)}>✅</span>
+        ) : (
+          <span className="text-app-muted">—</span>
+        ),
     },
     {
       key: 'createdByName',
@@ -407,9 +441,13 @@ export function QuotesListPage() {
       {pendingStatusChange && (
         <ConfirmModal
           title={tr.crm.quotes.statusChangeConfirmTitle}
-          message={tr.crm.quotes.statusChangeConfirm(
-            tr.crm.quotes.statusOptions[pendingStatusChange.status],
-          )}
+          message={
+            pendingStatusChange.status === 'REVIZE'
+              ? tr.crm.quotes.reviseConfirmMessage
+              : tr.crm.quotes.statusChangeConfirm(
+                  tr.crm.quotes.statusOptions[pendingStatusChange.status],
+                )
+          }
           confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
           isPending={confirmStatusMutation.isPending}
           onConfirm={handleConfirmStatusChange}
