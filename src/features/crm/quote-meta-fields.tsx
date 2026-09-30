@@ -5,6 +5,7 @@ import { TextField } from '../../components/ui/text-field';
 import { tr } from '../../i18n/tr';
 import { IbanSelect } from './iban-select';
 import { PaymentMethodSelect } from './payment-method-select';
+import { QuoteTemplateSelect } from './quote-template-select';
 
 /** Opportunity/Interaction formlarındaki CURRENCY_OPTIONS ile aynı desen - kur çevrimi
  * için teklifin desteklediği para birimleri de bu kayıt defterinden gelir. */
@@ -22,6 +23,7 @@ export interface QuoteMetaFieldsValues {
   paymentMethod: string;
   ibanOptionId: string;
   quoteCurrency: string;
+  templateId: string;
 }
 
 export interface QuoteMetaFieldsErrors {
@@ -31,6 +33,7 @@ export interface QuoteMetaFieldsErrors {
   paymentMethod?: string;
   ibanOptionId?: string;
   quoteCurrency?: string;
+  templateId?: string;
 }
 
 interface QuoteMetaFieldsProps {
@@ -127,6 +130,11 @@ export function QuoteMetaFields({
           </p>
         )}
       </div>
+      <QuoteTemplateSelect
+        value={values.templateId}
+        onChange={(value) => onChange('templateId', value)}
+        error={errors?.templateId}
+      />
     </div>
   );
 }

@@ -342,6 +342,9 @@ export function QuoteFormPage() {
       deliveryTerms: values.deliveryTerms || undefined,
       ibanOptionId: values.ibanOptionId || undefined,
       quoteCurrency: values.quoteCurrency,
+      // Bos birakilirsa backend tenant'in varsayilan sablonunu otomatik atar
+      // (bkz. QuotesService.resolveTemplateId) - bu yuzden burada undefined.
+      templateId: values.templateId || undefined,
       exchangeRates:
         Object.keys(exchangeRates.rates).length > 0
           ? {
@@ -662,6 +665,7 @@ export function QuoteFormPage() {
               paymentMethod: watch('paymentMethod') ?? '',
               ibanOptionId: watch('ibanOptionId') ?? '',
               quoteCurrency,
+              templateId: watch('templateId') ?? '',
             }}
             onChange={(field, value) => setValue(field, value as never, { shouldValidate: true })}
             errors={{
@@ -671,6 +675,7 @@ export function QuoteFormPage() {
               paymentMethod: errors.paymentMethod?.message,
               ibanOptionId: errors.ibanOptionId?.message,
               quoteCurrency: errors.quoteCurrency?.message,
+              templateId: errors.templateId?.message,
             }}
             onRequestAddPaymentMethod={() => setActiveOptionModal('paymentMethod')}
             onRequestAddIban={() => setActiveOptionModal('iban')}

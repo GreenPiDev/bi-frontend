@@ -84,6 +84,7 @@ export function QuoteEditPage() {
   // (bkz. QuotesService.resolveIbanSnapshot) - bu yuzden duzenlemede hangi tanimin
   // secili oldugu bilinmez, kullanici degistirmek isterse yeniden secer.
   const [ibanOptionId, setIbanOptionId] = useState('');
+  const [templateId, setTemplateId] = useState('');
   const [salesTerms, setSalesTerms] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
   const [quoteCurrency, setQuoteCurrency] = useState('TRY');
@@ -111,6 +112,7 @@ export function QuoteEditPage() {
     setPaymentMethod(quoteQuery.data.paymentMethod ?? '');
     setSalesTerms(quoteQuery.data.salesTerms ?? '');
     setDeliveryTerms(quoteQuery.data.deliveryTerms ?? '');
+    setTemplateId(quoteQuery.data.templateId ?? '');
     setQuoteCurrency(quoteQuery.data.quoteCurrency);
     const savedRates = quoteQuery.data.exchangeRates;
     setExchangeRates({
@@ -270,6 +272,9 @@ export function QuoteEditPage() {
         ibanOptionId: ibanOptionId || undefined,
         salesTerms: salesTerms || null,
         deliveryTerms: deliveryTerms || null,
+        // Duzenlemede undefined "dokunma" anlamina gelir (bkz.
+        // UpdateQuoteSchema) - bu yuzden burada daima acik deger gonderilir.
+        templateId: templateId || null,
         quoteCurrency,
         exchangeRates:
           Object.keys(exchangeRates.rates).length > 0
@@ -521,6 +526,7 @@ export function QuoteEditPage() {
               paymentMethod,
               ibanOptionId,
               quoteCurrency,
+              templateId,
             }}
             onChange={(field, value) => {
               if (field === 'contactId') {
@@ -535,6 +541,8 @@ export function QuoteEditPage() {
                 setIbanOptionId(value);
               } else if (field === 'quoteCurrency') {
                 setQuoteCurrency(value);
+              } else if (field === 'templateId') {
+                setTemplateId(value);
               }
             }}
             ibanCurrentInfo={

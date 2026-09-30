@@ -58,6 +58,8 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     quoteCurrency: 'TRY',
     exchangeRates: null,
     projectId: null,
+    templateId: null,
+    template: null,
     status: 'DRAFT',
     quoteDate: '2026-09-07T00:00:00.000Z',
     leadTime: null,

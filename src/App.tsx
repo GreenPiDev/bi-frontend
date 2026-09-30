@@ -55,6 +55,9 @@ import { PurchaseOrderListPage } from './app/purchase-order-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteEditPage } from './app/quote-edit-page';
 import { QuoteFormPage } from './app/quote-form-page';
+import { QuoteTemplateFormPage } from './app/quote-template-form-page';
+import { QuoteTemplateListPage } from './app/quote-template-list-page';
+import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
 import { QuotesListPage } from './app/quotes-list-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
@@ -437,6 +440,38 @@ function App() {
           element={
             <TenantPageRoute pageKey="quotes">
               <QuoteDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teklifler/:id/sablon-baski"
+          element={
+            <TenantPageRoute pageKey="quotes">
+              <QuoteTemplatePrintPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teklif-sablonlari"
+          element={
+            <TenantPageRoute pageKey="quote-templates">
+              <QuoteTemplateListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teklif-sablonlari/yeni"
+          element={
+            <TenantPageRoute pageKey="quote-templates">
+              <QuoteTemplateFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teklif-sablonlari/:id/duzenle"
+          element={
+            <TenantPageRoute pageKey="quote-templates">
+              <QuoteTemplateFormPage />
             </TenantPageRoute>
           }
         />

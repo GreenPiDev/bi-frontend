@@ -2099,6 +2099,9 @@ export interface Quote {
   /** Bir proje birden fazla teklifle iliskilendirilebilir, ama bir teklif en fazla
    * bir projeye bagli olur (FK burada) - bkz. Project.quotes. */
   projectId: string | null;
+  /** Ad-hoc: markali PDF sablonu (bkz. docs/VARSAYIMLAR.md V41). null = sade export. */
+  templateId: string | null;
+  template: { id: string; name: string } | null;
   /** Sadece bazi uclarda (orn. siparis detayinda) nested olarak doner, her zaman
    * gelmeyebilir. */
   project?: Project | null;
@@ -2145,6 +2148,8 @@ export interface CreateQuoteInput {
   ibanOptionId?: string;
   quoteCurrency: string;
   exchangeRates?: QuoteExchangeRates;
+  /** Verilmezse tenant'in varsayilan sablonu otomatik atanir (varsa). */
+  templateId?: string | null;
 }
 
 export interface UpdateQuoteInput {
@@ -2160,6 +2165,7 @@ export interface UpdateQuoteInput {
   ibanOptionId?: string | null;
   quoteCurrency?: string;
   exchangeRates?: QuoteExchangeRates;
+  templateId?: string | null;
 }
 
 export function listQuotes(
@@ -2270,6 +2276,124 @@ export function rejectQuote(id: string): Promise<Quote> {
 
 export function exportQuotePdf(quoteId: string): Promise<Blob> {
   return requestBlob(`/exports/quote/${quoteId}/pdf`);
+}
+
+// Teklif PDF Sablonlari (ad-hoc, bkz. docs/VARSAYIMLAR.md V41)
+
+export interface QuoteTemplate {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  logoKey: string | null;
+  coverImageKey: string | null;
+  closingImageKey: string | null;
+  logoUrl: string | null;
+  coverImageUrl: string | null;
+  closingImageUrl: string | null;
+  companyDisplayName: string;
+  companyTagline: string | null;
+  companyPhone: string | null;
+  companyEmail: string | null;
+  companyAddressLines: string[];
+  senderName: string | null;
+  senderTitle: string | null;
+  senderPhone: string | null;
+  senderEmail: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteTemplateInput {
+  name: string;
+  isDefault?: boolean;
+  companyDisplayName: string;
+  companyTagline?: string | null;
+  companyPhone?: string | null;
+  companyEmail?: string | null;
+  companyAddressLines: string[];
+  senderName?: string | null;
+  senderTitle?: string | null;
+  senderPhone?: string | null;
+  senderEmail?: string | null;
+}
+
+export function listQuoteTemplates(
+  params: { page?: number; pageSize?: number; q?: string } = {},
+): Promise<PagedResult<QuoteTemplate>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/quote-templates${qs ? `?${qs}` : ''}`);
+}
+
+export function getQuoteTemplate(id: string): Promise<QuoteTemplate> {
+  return request(`/quote-templates/${id}`);
+}
+
+export function createQuoteTemplate(input: QuoteTemplateInput): Promise<QuoteTemplate> {
+  return request('/quote-templates', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateQuoteTemplate(
+  id: string,
+  input: Partial<QuoteTemplateInput>,
+): Promise<QuoteTemplate> {
+  return request(`/quote-templates/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteQuoteTemplate(id: string): Promise<void> {
+  return request(`/quote-templates/${id}`, { method: 'DELETE' });
+}
+
+export function setDefaultQuoteTemplate(id: string): Promise<QuoteTemplate> {
+  return request(`/quote-templates/${id}/set-default`, { method: 'POST' });
+}
+
+export type QuoteTemplateImageSlot = 'logo' | 'cover-image' | 'closing-image';
+
+export function uploadQuoteTemplateImage(
+  id: string,
+  slot: QuoteTemplateImageSlot,
+  file: File,
+): Promise<QuoteTemplate> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request(`/quote-templates/${id}/${slot}`, { method: 'POST', body: formData });
+}
+
+export function removeQuoteTemplateImage(
+  id: string,
+  slot: QuoteTemplateImageSlot,
+): Promise<QuoteTemplate> {
+  return request(`/quote-templates/${id}/${slot}`, { method: 'DELETE' });
+}
+
+/** Markali yazdirma sayfasinin (quote-template-print-page.tsx) tek seferlik veri ucu. */
+export type QuotePrintData = Omit<Quote, 'template'> & {
+  template: Pick<
+    QuoteTemplate,
+    | 'id'
+    | 'name'
+    | 'logoUrl'
+    | 'coverImageUrl'
+    | 'closingImageUrl'
+    | 'companyDisplayName'
+    | 'companyTagline'
+    | 'companyPhone'
+    | 'companyEmail'
+    | 'companyAddressLines'
+    | 'senderName'
+    | 'senderTitle'
+    | 'senderPhone'
+    | 'senderEmail'
+  > | null;
+};
+
+export function getQuotePrintData(quoteId: string): Promise<QuotePrintData> {
+  return request(`/quotes/${quoteId}/print-data`);
 }
 
 export type PostSaleCaseStatus = 'BEKLEMEDE' | 'HATIRLATILDI' | 'GERI_BILDIRIM_ALINDI';

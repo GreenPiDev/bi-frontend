@@ -199,6 +199,22 @@ export const productListFormSchema = z.object({
 
 export type ProductListFormValues = z.infer<typeof productListFormSchema>;
 
+export const quoteTemplateFormSchema = z.object({
+  name: z.string().min(2, 'Şablon adı en az 2 karakter olmalı.').max(200),
+  isDefault: z.boolean().optional(),
+  companyDisplayName: z.string().min(2, 'Şirket adı en az 2 karakter olmalı.').max(200),
+  companyTagline: z.string().max(400).optional().or(z.literal('')),
+  companyPhone: z.string().max(50).optional().or(z.literal('')),
+  companyEmail: z.string().email('Geçerli bir e-posta girin.').optional().or(z.literal('')),
+  companyAddressLines: z.string().max(2000).optional().or(z.literal('')),
+  senderName: z.string().max(200).optional().or(z.literal('')),
+  senderTitle: z.string().max(200).optional().or(z.literal('')),
+  senderPhone: z.string().max(50).optional().or(z.literal('')),
+  senderEmail: z.string().email('Geçerli bir e-posta girin.').optional().or(z.literal('')),
+});
+
+export type QuoteTemplateFormValues = z.infer<typeof quoteTemplateFormSchema>;
+
 export const productFormSchema = z.object({
   productListId: z.string().min(1, 'Ürün listesi gerekli.'),
   name: z.string().min(2, 'Ürün adı en az 2 karakter olmalı.').max(200),
@@ -244,6 +260,7 @@ export const quoteFormSchema = z
     deliveryTerms: z.string().max(4000).optional(),
     ibanOptionId: z.string().optional(),
     quoteCurrency: z.string().min(1, 'Teklif para birimi gerekli.'),
+    templateId: z.string().optional(),
   })
   .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
     message: 'Fırsat adı en az 2 karakter olmalı.',

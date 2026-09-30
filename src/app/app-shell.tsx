@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarDays,
   Contact2,
+  FileStack,
   FileText,
   HeartHandshake,
   LayoutDashboard,
@@ -127,6 +128,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     'product-lists': useIsPageModuleAccessible('product-lists'),
     products: useIsPageModuleAccessible('products'),
     quotes: useIsPageModuleAccessible('quotes'),
+    'quote-templates': useIsPageModuleAccessible('quote-templates'),
     'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
     projects: useIsPageModuleAccessible('projects'),
     'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
@@ -169,6 +171,15 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
       : []),
     ...(canAccessPage('quotes')
       ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
+      : []),
+    ...(canAccessPage('quote-templates')
+      ? [
+          {
+            label: tr.shell.nav.quoteTemplates,
+            icon: FileStack,
+            path: '/teklif-sablonlari',
+          },
+        ]
       : []),
     ...(canAccessPage('purchase-orders')
       ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]

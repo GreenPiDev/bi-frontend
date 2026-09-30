@@ -39,6 +39,8 @@ const quote: api.Quote = {
   ibanAccountHolderName: null,
   ibanAccountNumber: null,
   ibanNumber: null,
+  templateId: null,
+  template: null,
   accountId: 'acc-1',
   account: {
     id: 'acc-1',
