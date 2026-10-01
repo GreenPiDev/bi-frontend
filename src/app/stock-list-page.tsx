@@ -1,4 +1,4 @@
-import { AlertTriangle, ListFilter, Pencil, Search } from 'lucide-react';
+import { AlertTriangle, ListFilter, Minus, Pencil, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
@@ -6,7 +6,7 @@ import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
 import { IconActionButton } from '../components/ui/icon-action-button';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type SortDirection, type TableColumn } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Tooltip } from '../components/ui/tooltip';
@@ -23,6 +23,7 @@ import {
 } from '../features/crm/stock-status';
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
 import { StockUpdateModal } from './stock-update-modal';
+import { StockAdjustModal } from './stock-adjust-modal';
 import type { StockItem, StockStatusFilter } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -30,6 +31,10 @@ import { tr } from '../i18n/tr';
 export function StockListContent() {
   const [page, setPage] = useState(1);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+  const [adjustingItem, setAdjustingItem] = useState<{
+    item: StockItem;
+    mode: 'increase' | 'decrease';
+  } | null>(null);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const [filterListId, setFilterListId] = useState('');
@@ -37,6 +42,12 @@ export function StockListContent() {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStockStatus, setFilterStockStatus] = useState<StockStatusFilter | ''>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Urun kolonu icin 3 durumlu siralama: asc -> desc -> null (varsayilan renk/durum
+  // bazli sort'a don, bkz. sortByStockStatus). Sayfalama su an backend'de yapildigina
+  // gore bu sadece o anki sayfanin satirlarini client-side yeniden siraliyor - diger
+  // liste sayfalarindaki (orn. kisiler) server-side sort'tan farkli, cunku varsayilan
+  // durum zaten backend sort'u degil renk/durum bazli bir client-side kural.
+  const [nameSort, setNameSort] = useState<SortDirection | null>(null);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const stockItemsQuery = useStockItemsQuery({
@@ -73,6 +84,7 @@ export function StockListContent() {
       header: tr.crm.stock.productColumn,
       className: 'font-semibold text-app-text',
       required: true,
+      sortKey: 'name',
       render: (item) => (
         <span className="flex items-center gap-1.5">
           {(lowStockIds.has(item.id) || isLowStock(item.quantity, item.product.minStockLevel)) && (
@@ -102,11 +114,25 @@ export function StockListContent() {
       className: 'w-px',
       required: true,
       render: (item) => (
-        <IconActionButton
-          icon={Pencil}
-          tooltip={tr.crm.stock.editTooltip}
-          onClick={() => setEditingItem(item)}
-        />
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.stock.editTooltip}
+            onClick={() => setEditingItem(item)}
+          />
+          <IconActionButton
+            icon={Plus}
+            tooltip={tr.crm.stock.increaseTooltip}
+            className="rounded-full border border-app-border hover:text-app-success"
+            onClick={() => setAdjustingItem({ item, mode: 'increase' })}
+          />
+          <IconActionButton
+            icon={Minus}
+            tooltip={tr.crm.stock.decreaseTooltip}
+            className="rounded-full border border-app-border hover:text-app-danger"
+            onClick={() => setAdjustingItem({ item, mode: 'decrease' })}
+          />
+        </div>
       ),
     },
   ];
@@ -176,11 +202,21 @@ export function StockListContent() {
 
       <Table
         columns={columns}
-        data={sortByStockStatus(stockItemsQuery.data?.data ?? [], (item) => ({
-          quantity: item.quantity,
-          minStockLevel: item.product.minStockLevel,
-        }))}
+        data={
+          nameSort
+            ? [...(stockItemsQuery.data?.data ?? [])].sort(
+                (a, b) =>
+                  a.product.name.localeCompare(b.product.name, 'tr') *
+                  (nameSort === 'asc' ? 1 : -1),
+              )
+            : sortByStockStatus(stockItemsQuery.data?.data ?? [], (item) => ({
+                quantity: item.quantity,
+                minStockLevel: item.product.minStockLevel,
+              }))
+        }
         keyField={(item) => item.id}
+        sort={nameSort ? { key: 'name', direction: nameSort } : null}
+        onSortChange={(next) => setNameSort(next?.direction ?? null)}
         isLoading={stockItemsQuery.isPending}
         loadingMessage={tr.crm.stock.loading}
         emptyMessage={tr.crm.stock.empty}
@@ -192,6 +228,7 @@ export function StockListContent() {
           page={stockItemsQuery.data.meta.page}
           totalPages={stockItemsQuery.data.meta.totalPages}
           total={stockItemsQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
@@ -285,6 +322,13 @@ export function StockListContent() {
       )}
 
       {editingItem && <StockUpdateModal item={editingItem} onClose={() => setEditingItem(null)} />}
+      {adjustingItem && (
+        <StockAdjustModal
+          item={adjustingItem.item}
+          mode={adjustingItem.mode}
+          onClose={() => setAdjustingItem(null)}
+        />
+      )}
     </>
   );
 }

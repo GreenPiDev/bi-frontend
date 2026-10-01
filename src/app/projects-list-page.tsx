@@ -141,6 +141,7 @@ export function ProjectsListPage() {
           page={projectsQuery.data.meta.page}
           totalPages={projectsQuery.data.meta.totalPages}
           total={projectsQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

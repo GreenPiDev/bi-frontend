@@ -267,6 +267,7 @@ export function OpportunitiesListPage() {
           page={opportunitiesQuery.data.meta.page}
           totalPages={opportunitiesQuery.data.meta.totalPages}
           total={opportunitiesQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

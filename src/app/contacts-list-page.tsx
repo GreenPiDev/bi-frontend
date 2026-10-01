@@ -290,6 +290,7 @@ export function ContactsListPage() {
           page={contactsQuery.data.meta.page}
           totalPages={contactsQuery.data.meta.totalPages}
           total={contactsQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

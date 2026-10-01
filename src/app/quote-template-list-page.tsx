@@ -126,6 +126,7 @@ export function QuoteTemplateListContent() {
           page={templatesQuery.data.meta.page}
           totalPages={templatesQuery.data.meta.totalPages}
           total={templatesQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

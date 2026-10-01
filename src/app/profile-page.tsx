@@ -695,6 +695,7 @@ function NotificationsSection() {
           page={page}
           totalPages={notificationsQuery.data.meta.totalPages}
           total={notificationsQuery.data.meta.total}
+          onPageChange={goToPage}
           onPrevious={() => goToPage(Math.max(1, page - 1))}
           onNext={() => goToPage(page + 1)}
         />

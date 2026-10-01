@@ -237,6 +237,7 @@ export function ProductListFormPage() {
                 page={productsQuery.data.meta.page}
                 totalPages={productsQuery.data.meta.totalPages}
                 total={productsQuery.data.meta.total}
+                onPageChange={setProductPage}
                 onPrevious={() => setProductPage((p) => p - 1)}
                 onNext={() => setProductPage((p) => p + 1)}
               />

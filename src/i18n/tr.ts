@@ -19,6 +19,11 @@ export const tr = {
     pageOf: (page: number, totalPages: number) => `Sayfa ${page} / ${Math.max(totalPages, 1)}`,
     pageOfWithTotal: (page: number, totalPages: number, total: number) =>
       `Sayfa ${page} / ${Math.max(totalPages, 1)} · Toplam ${new Intl.NumberFormat('tr-TR').format(total)} kayıt`,
+    pageInputLabel: 'Sayfa',
+    pageInputAria: 'Gidilecek sayfa numarası',
+    pageTotalSuffix: (totalPages: number) => `/ ${Math.max(totalPages, 1)}`,
+    totalRecords: (total: number) => `Toplam ${new Intl.NumberFormat('tr-TR').format(total)} kayıt`,
+    goToPage: 'Git',
     unexpectedError: 'Beklenmeyen bir hata oluştu.',
     passwordToggle: {
       show: 'Şifreyi göster',
@@ -2382,6 +2387,13 @@ export const tr = {
       saving: 'Kaydediliyor...',
       saveSuccess: 'Stok miktarı güncellendi.',
       editTooltip: 'Stok miktarını düzenle',
+      increaseTooltip: 'Stok artır',
+      decreaseTooltip: 'Stok azalt',
+      increaseModalTitle: 'Stok Artır',
+      decreaseModalTitle: 'Stok Azalt',
+      amountLabel: 'Miktar',
+      increaseAmountHint: (amount: number) => `Stok miktarı ${amount} artırılacak.`,
+      decreaseAmountHint: (amount: number) => `Stok miktarı ${amount} azaltılacak.`,
       lowStockBadge: 'Düşük Stok',
       lowStockTooltip: 'Düşük stok',
       lowStockSummary: (count: number) =>
@@ -2392,6 +2404,8 @@ export const tr = {
       cancel: 'Vazgeç',
       updateModalTitle: 'Stok Miktarını Güncelle',
       newQuantityLabel: 'Yeni Stok Miktarı',
+      quantityDiffIncrease: (diff: number) => `Stok miktarı ${diff} artırılacak.`,
+      quantityDiffDecrease: (diff: number) => `Stok miktarı ${diff} azaltılacak.`,
       noteLabel: 'Not',
       noteHint: 'Bu güncellemenin nedenini kısaca açıklayın (örn. "Sayım farkı", "Mal kabul").',
       history: {

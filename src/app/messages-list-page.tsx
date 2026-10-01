@@ -360,6 +360,7 @@ export function MessagesListPage() {
           page={messagesQuery.data.meta.page}
           totalPages={messagesQuery.data.meta.totalPages}
           total={messagesQuery.data.meta.total}
+          onPageChange={goToPage}
           onPrevious={() => goToPage(page - 1)}
           onNext={() => goToPage(page + 1)}
         />

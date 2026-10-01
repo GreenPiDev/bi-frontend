@@ -665,6 +665,7 @@ export function QuoteEditPage() {
                   page={productsQuery.data.meta.page}
                   totalPages={productsQuery.data.meta.totalPages}
                   total={productsQuery.data.meta.total}
+                  onPageChange={setPickerPage}
                   onPrevious={() => setPickerPage((p) => p - 1)}
                   onNext={() => setPickerPage((p) => p + 1)}
                 />

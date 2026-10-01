@@ -277,6 +277,7 @@ function AuditLogTab() {
           page={auditLogsQuery.data.meta.page}
           totalPages={auditLogsQuery.data.meta.totalPages}
           total={auditLogsQuery.data.meta.total}
+          onPageChange={goToPage}
           onPrevious={() => goToPage(page - 1)}
           onNext={() => goToPage(page + 1)}
         />

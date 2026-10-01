@@ -15,10 +15,13 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
    * hicbir sey render edilmez, formlardaki mevcut kullanimlari etkilemez. */
   clearable?: boolean;
   onClear?: () => void;
+  /** Input'un solunda sabit, duzenlenemez bir isaret gosterir (ornek: azaltma
+   * miktari girilirken "-" isareti) - sadece gorsel, gercek deger hala pozitif girilir. */
+  prefix?: string;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, error, required, hint, id, className, clearable, onClear, ...props },
+  { label, error, required, hint, id, className, clearable, onClear, prefix, ...props },
   ref,
 ) {
   const inputId = id ?? props.name;
@@ -34,12 +37,21 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
         )}
       </label>
       <div className="relative">
+        {prefix && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-sm font-semibold text-app-muted"
+          >
+            {prefix}
+          </span>
+        )}
         <input
           ref={ref}
           id={inputId}
           className={clsx(
             'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',
             clearable && 'pr-9',
+            prefix && 'pl-7',
             error && 'border-app-danger',
             className,
           )}

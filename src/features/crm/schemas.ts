@@ -341,6 +341,16 @@ export const stockUpdateFormSchema = z.object({
 
 export type StockUpdateFormValues = z.infer<typeof stockUpdateFormSchema>;
 
+export const stockAdjustFormSchema = z.object({
+  amount: z
+    .string()
+    .min(1, 'Miktar gerekli.')
+    .refine((v) => !Number.isNaN(Number(v)) && Number(v) > 0, "Miktar 0'dan büyük olmalı."),
+  note: z.string().max(500).optional(),
+});
+
+export type StockAdjustFormValues = z.infer<typeof stockAdjustFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {

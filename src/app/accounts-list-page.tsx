@@ -299,6 +299,7 @@ export function AccountsListPage() {
           page={accountsQuery.data.meta.page}
           totalPages={accountsQuery.data.meta.totalPages}
           total={accountsQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

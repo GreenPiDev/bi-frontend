@@ -382,6 +382,7 @@ export function QuotesListPage() {
           page={quotesQuery.data.meta.page}
           totalPages={quotesQuery.data.meta.totalPages}
           total={quotesQuery.data.meta.total}
+          onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />

@@ -1,8 +1,9 @@
 import { clsx } from 'clsx';
-import { ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import { Fragment, type ReactNode } from 'react';
+import { ArrowRight, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import { Fragment, type ReactNode, useState } from 'react';
 import { tr } from '../../i18n/tr';
 import { Button } from './button';
+import { Tooltip } from './tooltip';
 
 export type SortDirection = 'asc' | 'desc';
 export interface TableSort {
@@ -126,9 +127,9 @@ export function Table<T>({
                       className="inline-flex items-center gap-1 uppercase hover:opacity-80"
                     >
                       {column.header}
-                      {isActive && sort?.direction === 'asc' && <ChevronUp size={14} />}
-                      {isActive && sort?.direction === 'desc' && <ChevronDown size={14} />}
-                      {!isActive && <ChevronsUpDown size={14} className="opacity-60" />}
+                      {isActive && sort?.direction === 'asc' && <ChevronUp size={18} />}
+                      {isActive && sort?.direction === 'desc' && <ChevronDown size={18} />}
+                      {!isActive && <ChevronsUpDown size={18} className="opacity-60" />}
                     </button>
                   ) : (
                     column.header
@@ -201,16 +202,96 @@ interface PaginationProps {
   /** Verilirse "Sayfa X / Y" yanina toplam kayit sayisi da eklenir (orn. liste
    * sayfalarindaki `meta.total`). Verilmezse eski davranis (sadece sayfa bilgisi) korunur. */
   total?: number;
+  /** Verilirse sayfa numarasi duz metin degil, bir input + "Git" butonu olarak
+   * gosterilir - kullanici sayi yazip "Git"e basana kadar sayfa degismez (input'a
+   * yazarken otomatik gitmez). Verilmezse eski davranis (sadece metin) korunur. */
+  onPageChange?: (page: number) => void;
 }
 
-export function Pagination({ page, totalPages, onPrevious, onNext, total }: PaginationProps) {
+export function Pagination({
+  page,
+  totalPages,
+  onPrevious,
+  onNext,
+  total,
+  onPageChange,
+}: PaginationProps) {
+  const [renderedPage, setRenderedPage] = useState(page);
+  const [inputValue, setInputValue] = useState(String(page));
+
+  // Sayfa disaridan (onceki/sonraki, filtre sifirlama...) degisince input'u senkronla -
+  // render sirasinda state ayarlama (React'in onerdigi desen), setState'i effect icinde
+  // cagirip gereksiz ekstra render yaratmamak icin.
+  if (renderedPage !== page) {
+    setRenderedPage(page);
+    setInputValue(String(page));
+  }
+
+  const parsedInputPage = Number(inputValue);
+  // Yalnizca gecerli bir sayfa numarasi *ve* su an bulundugumuz sayfadan farkli bir
+  // deger yazilmissa "Git" butonu aktif olur - ayni sayfaya gereksiz gitmeyi onler.
+  const canGoToTypedPage =
+    Number.isInteger(parsedInputPage) &&
+    parsedInputPage >= 1 &&
+    parsedInputPage <= Math.max(totalPages, 1) &&
+    parsedInputPage !== page;
+
+  function goToTypedPage() {
+    if (!canGoToTypedPage) {
+      setInputValue(String(page));
+      return;
+    }
+    onPageChange?.(parsedInputPage);
+  }
+
   return (
-    <div className="mt-4 flex items-center justify-between text-sm text-app-muted">
-      <span>
-        {total === undefined
-          ? tr.common.pageOf(page, totalPages)
-          : tr.common.pageOfWithTotal(page, totalPages, total)}
-      </span>
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-app-muted">
+      {onPageChange ? (
+        <div className="flex items-center gap-2">
+          <span>{tr.common.pageInputLabel}</span>
+          <input
+            type="number"
+            min={1}
+            max={Math.max(totalPages, 1)}
+            value={inputValue}
+            onChange={(event) => setInputValue(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                goToTypedPage();
+              }
+            }}
+            aria-label={tr.common.pageInputAria}
+            className="w-16 rounded border border-app-border bg-app-surface px-2 py-1 text-center text-app-text [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          />
+          <span className="inline-flex items-center">
+            {tr.common.pageTotalSuffix(totalPages)}
+            {total !== undefined && ` · ${tr.common.totalRecords(total)}`}
+          </span>
+          <Tooltip content={tr.common.goToPage}>
+            <button
+              type="button"
+              onClick={goToTypedPage}
+              disabled={!canGoToTypedPage}
+              aria-label={tr.common.goToPage}
+              className={clsx(
+                'inline-flex h-5 items-center justify-center self-center rounded border border-[#1e2a4a] px-1.5 text-[#1e2a4a] transition-colors',
+                canGoToTypedPage
+                  ? 'cursor-pointer hover:bg-[#1e2a4a]/10'
+                  : 'cursor-not-allowed opacity-40',
+              )}
+            >
+              <ArrowRight size={14} />
+            </button>
+          </Tooltip>
+        </div>
+      ) : (
+        <span>
+          {total === undefined
+            ? tr.common.pageOf(page, totalPages)
+            : tr.common.pageOfWithTotal(page, totalPages, total)}
+        </span>
+      )}
       <div className="flex gap-2">
         <Button type="button" variant="secondary" disabled={page <= 1} onClick={onPrevious}>
           {tr.common.previous}
