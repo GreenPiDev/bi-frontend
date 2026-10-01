@@ -5,7 +5,6 @@ import {
   ChevronUp,
   ListFilter,
   Minus,
-  Pencil,
   Plus,
   Search,
 } from 'lucide-react';
@@ -28,7 +27,6 @@ import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useLowStockItemsQuery, useStockItemsQuery } from '../features/crm/use-stock-items';
 import { isLowStock, stockStatusRowClassName } from '../features/crm/stock-status';
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
-import { StockUpdateModal } from './stock-update-modal';
 import { StockAdjustModal } from './stock-adjust-modal';
 import { StockTransferModal } from './stock-transfer-modal';
 import type { StockItem, StockStatusFilter } from '../lib/api';
@@ -92,7 +90,6 @@ function StockWarehouseBreakdown({ item }: { item: StockItem }) {
 export function StockListContent() {
   const [page, setPage] = useState(1);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [adjustingItem, setAdjustingItem] = useState<{
     item: StockItem;
     mode: 'increase' | 'decrease';
@@ -182,11 +179,6 @@ export function StockListContent() {
       required: true,
       render: (item) => (
         <div className="flex items-center gap-1">
-          <IconActionButton
-            icon={Pencil}
-            tooltip={tr.crm.stock.editTooltip}
-            onClick={() => setEditingItem(item)}
-          />
           <IconActionButton
             icon={Plus}
             tooltip={tr.crm.stock.increaseTooltip}
@@ -380,7 +372,6 @@ export function StockListContent() {
         </Drawer>
       )}
 
-      {editingItem && <StockUpdateModal item={editingItem} onClose={() => setEditingItem(null)} />}
       {adjustingItem && (
         <StockAdjustModal
           item={adjustingItem.item}
