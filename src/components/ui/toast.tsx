@@ -150,7 +150,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}
-                className="absolute right-2 top-2 shrink-0 text-white/80 transition-transform hover:scale-125 hover:text-white"
+                className="absolute right-2 top-2 shrink-0 cursor-pointer text-white/80 transition-transform hover:scale-125 hover:text-white"
                 aria-label="Kapat"
               >
                 <X size={20} />
