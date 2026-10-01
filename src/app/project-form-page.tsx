@@ -247,6 +247,7 @@ export function ProjectFormPage() {
                   value={field.value ?? []}
                   onChange={field.onChange}
                   showChips
+                  chipVariant="solid"
                 />
               )}
             />

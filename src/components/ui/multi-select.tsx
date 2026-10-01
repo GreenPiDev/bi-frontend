@@ -15,6 +15,12 @@ interface MultiSelectProps {
   hint?: string;
   /** Secilen degerleri, alanin altinda kaldirma (X) ikonlu etiketler halinde de gosterir. */
   showChips?: boolean;
+  /**
+   * Chip gorunumu. 'muted' (varsayilan): acik gri arka plan. 'solid': settings
+   * sayfasindaki (crm-settings-section.tsx) OptionListManager etiketleriyle ayni
+   * dolu-renkli stil - ornegin /projeler duzenleme formundaki Teklifler alani icin.
+   */
+  chipVariant?: 'muted' | 'solid';
   /** Dropdown acildiginda ustte bir arama kutusu gosterir, yazildikca secenekleri filtreler. */
   searchable?: boolean;
   /**
@@ -44,6 +50,7 @@ export function MultiSelect({
   required,
   hint,
   showChips,
+  chipVariant = 'muted',
   searchable,
   menuPosition = 'fixed',
 }: MultiSelectProps) {
@@ -188,16 +195,26 @@ export function MultiSelect({
             .map((option) => (
               <span
                 key={option.value}
-                className="flex items-center gap-1 rounded-full bg-app-bg-muted py-1 pr-1.5 pl-3 text-xs font-medium text-app-text"
+                className={clsx(
+                  'flex items-center gap-1 font-medium',
+                  chipVariant === 'solid'
+                    ? 'rounded-md bg-app-primary py-1 pr-1.5 pl-2.5 text-sm text-white'
+                    : 'rounded-full bg-app-bg-muted py-1 pr-1.5 pl-3 text-xs text-app-text',
+                )}
               >
                 {option.label}
                 <button
                   type="button"
                   onClick={() => toggleValue(option.value)}
                   aria-label={`${option.label} kaldır`}
-                  className="inline-flex h-4 w-4 items-center justify-center rounded-full text-app-muted hover:bg-app-danger/10 hover:text-app-danger"
+                  className={clsx(
+                    'inline-flex items-center justify-center rounded-full',
+                    chipVariant === 'solid'
+                      ? 'h-5 w-5 text-white/80 hover:bg-white/15 hover:text-white'
+                      : 'h-4 w-4 text-app-muted hover:bg-app-danger/10 hover:text-app-danger',
+                  )}
                 >
-                  <X size={10} />
+                  <X size={chipVariant === 'solid' ? 12 : 10} />
                 </button>
               </span>
             ))}
