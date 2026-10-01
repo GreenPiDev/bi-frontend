@@ -11,6 +11,7 @@ import { PageHelp } from '../components/ui/page-help';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { useMeQuery } from '../features/auth/use-auth';
+import { buildAccountSlug } from '../features/crm/account-slug';
 import { useContactQuery, useDeleteContactMutation } from '../features/crm/use-contacts';
 import { InteractionStatusSelect } from '../features/crm/interaction-status-select';
 import {
@@ -177,7 +178,7 @@ export function ContactDetailPage() {
             {contact.account ? (
               <button
                 type="button"
-                onClick={() => navigate(`/firmalar/${contact.account?.id}`)}
+                onClick={() => navigate(`/firmalar/${buildAccountSlug(contact.account!)}`)}
                 className="mt-1 flex items-center gap-1.5 text-sm font-semibold text-app-brand hover:underline"
               >
                 <Building2 size={14} />

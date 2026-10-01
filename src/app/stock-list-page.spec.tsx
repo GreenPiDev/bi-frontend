@@ -20,11 +20,21 @@ function renderPage() {
   );
 }
 
+const warehouse: api.Warehouse = {
+  id: 'w1',
+  name: 'Merkez Depo',
+  address: null,
+  isDefault: true,
+  createdAt: '2026-09-07T00:00:00.000Z',
+  updatedAt: '2026-09-07T00:00:00.000Z',
+};
+
 const lowStockItem: api.StockItem = {
   id: 'si-1',
   productId: 'p1',
   quantity: '2',
   product: { id: 'p1', name: 'Widget', minStockLevel: 5 },
+  warehouses: [{ warehouseId: 'w1', warehouseName: 'Merkez Depo', quantity: '2' }],
   createdAt: '2026-09-07T00:00:00.000Z',
   updatedAt: '2026-09-07T00:00:00.000Z',
 };
@@ -34,6 +44,7 @@ const okItem: api.StockItem = {
   productId: 'p2',
   quantity: '50',
   product: { id: 'p2', name: 'Gadget', minStockLevel: 5 },
+  warehouses: [{ warehouseId: 'w1', warehouseName: 'Merkez Depo', quantity: '50' }],
   createdAt: '2026-09-07T00:00:00.000Z',
   updatedAt: '2026-09-07T00:00:00.000Z',
 };
@@ -41,6 +52,10 @@ const okItem: api.StockItem = {
 describe('StockListPage', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
+    vi.spyOn(api, 'listWarehouses').mockResolvedValue({
+      data: [warehouse],
+      meta: { page: 1, pageSize: 200, total: 1, totalPages: 1 },
+    });
   });
 
   it('stok kaydi yokken bos durum gosterir', async () => {
@@ -94,7 +109,7 @@ describe('StockListPage', () => {
     await user.type(screen.getByLabelText('Not'), 'Sayim farki');
     await user.click(screen.getByRole('button', { name: 'Kaydet' }));
 
-    await waitFor(() => expect(upsertSpy).toHaveBeenCalledWith('p2', 75, 'Sayim farki'));
+    await waitFor(() => expect(upsertSpy).toHaveBeenCalledWith('p2', 'w1', 75, 'Sayim farki'));
     // kayittan sonra modal kapanir
     expect(screen.queryByDisplayValue('75')).not.toBeInTheDocument();
   });

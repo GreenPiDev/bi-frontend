@@ -36,7 +36,7 @@ interface AccountFormFieldsProps {
   errors: FieldErrors<AccountFormValues>;
 }
 
-/** `account-form-page.tsx` (`/firmalar/yeni`, `/firmalar/:id/duzenle`) ve
+/** `account-form-page.tsx` (`/firmalar/yeni`, `/firmalar/duzenle/:slug`) ve
  * `new-account-modal.tsx` (teklif formundan "+ Yeni Firma") arasinda paylasilan alan
  * kumesi - `ContactFormFields`/`ProductFormFields` ile ayni desen. */
 export function AccountFormFields({ register, control, setValue, errors }: AccountFormFieldsProps) {

@@ -62,6 +62,8 @@ import { QuotesListPage } from './app/quotes-list-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
 import { UserStatsPage } from './app/user-stats-page';
+import { WarehouseFormPage } from './app/warehouse-form-page';
+import { WarehousesListPage } from './app/warehouses-list-page';
 import { hasPermission } from './features/auth/permissions';
 import { useMeQuery } from './features/auth/use-auth';
 import { usePageAccessQuery } from './features/crm/use-page-access';
@@ -109,6 +111,7 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'products', path: '/envanter' },
   { pageKey: 'product-lists', path: '/envanter' },
   { pageKey: 'stock', path: '/envanter' },
+  { pageKey: 'warehouses', path: '/envanter' },
   { pageKey: 'messages', path: '/mesajlar' },
   { pageKey: 'settings', path: '/settings' },
 ];
@@ -276,7 +279,7 @@ function App() {
           }
         />
         <Route
-          path="/firmalar/:id"
+          path="/firmalar/:slug"
           element={
             <TenantPageRoute pageKey="accounts">
               <AccountDetailPage />
@@ -284,7 +287,7 @@ function App() {
           }
         />
         <Route
-          path="/firmalar/duzenle/:id"
+          path="/firmalar/duzenle/:slug"
           element={
             <TenantPageRoute pageKey="accounts">
               <AccountFormPage />
@@ -532,7 +535,7 @@ function App() {
           }
         />
         <Route
-          path="/projeler/:id/duzenle"
+          path="/projeler/duzenle/:projectNumber"
           element={
             <TenantPageRoute pageKey="projects">
               <ProjectFormPage />
@@ -584,6 +587,22 @@ function App() {
           element={
             <TenantPageRoute pageKey="stock">
               <StockListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/depolar"
+          element={
+            <TenantPageRoute pageKey="warehouses">
+              <WarehousesListPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/depolar/yeni"
+          element={
+            <TenantPageRoute pageKey="warehouses">
+              <WarehouseFormPage />
             </TenantPageRoute>
           }
         />
@@ -670,7 +689,7 @@ function App() {
           }
         />
         <Route
-          path="/settings/kullanicilar/:id"
+          path="/settings/kullanicilar/:slug"
           element={
             <ProtectedRoute>
               <PermissionRoute pageKey="settings" action="VIEW" redirectTo="/">

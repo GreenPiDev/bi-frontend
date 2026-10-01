@@ -118,7 +118,7 @@ export function ProjectDetailPage() {
           <CircleIconButton
             icon={Pencil}
             tooltip={tr.crm.projects.detail.editButton}
-            onClick={() => navigate(`/projeler/${project.id}/duzenle`)}
+            onClick={() => navigate(`/projeler/duzenle/${project.projectNumber}`)}
           />
           <CircleIconButton
             icon={Trash2}
@@ -146,6 +146,20 @@ export function ProjectDetailPage() {
               </dt>
               <dd className="mt-1.5 text-sm font-medium text-app-text">
                 {formatCurrency(project.actualCost)}
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">
+                {tr.crm.projects.detail.responsibleLabel}
+              </dt>
+              <dd className="mt-1.5 flex flex-wrap gap-1">
+                {project.responsibleUsers.length > 0 ? (
+                  project.responsibleUsers.map((user) => <Badge key={user.id}>{user.name}</Badge>)
+                ) : (
+                  <span className="text-sm font-medium text-app-text">
+                    {tr.crm.projects.detail.noResponsibles}
+                  </span>
+                )}
               </dd>
             </div>
           </dl>

@@ -188,6 +188,8 @@ export const projectFormSchema = z.object({
   actualCost: z.string().optional(),
   /** Sadece proje düzenlenirken gösterilir/gönderilir (bkz. project-form-page.tsx). */
   quoteIds: z.array(z.string()).optional(),
+  /** "Bizden ilgili" - hem oluşturma hem düzenlemede gösterilir/gönderilir. */
+  responsibleUserIds: z.array(z.string()).optional(),
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -198,6 +200,14 @@ export const productListFormSchema = z.object({
 });
 
 export type ProductListFormValues = z.infer<typeof productListFormSchema>;
+
+export const warehouseFormSchema = z.object({
+  name: z.string().min(2, 'Depo adı en az 2 karakter olmalı.').max(200),
+  address: z.string().max(500).optional(),
+  isDefault: z.boolean().optional(),
+});
+
+export type WarehouseFormValues = z.infer<typeof warehouseFormSchema>;
 
 export const quoteTemplateFormSchema = z.object({
   name: z.string().min(2, 'Şablon adı en az 2 karakter olmalı.').max(200),
@@ -332,6 +342,7 @@ export const messageComposeSchema = z
 export type MessageComposeFormValues = z.infer<typeof messageComposeSchema>;
 
 export const stockUpdateFormSchema = z.object({
+  warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
   quantity: z
     .string()
     .min(1, 'Miktar gerekli.')
@@ -342,6 +353,7 @@ export const stockUpdateFormSchema = z.object({
 export type StockUpdateFormValues = z.infer<typeof stockUpdateFormSchema>;
 
 export const stockAdjustFormSchema = z.object({
+  warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
   amount: z
     .string()
     .min(1, 'Miktar gerekli.')

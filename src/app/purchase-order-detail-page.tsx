@@ -84,7 +84,7 @@ export function PurchaseOrderDetailPage() {
         {relatedProject && (
           <button
             type="button"
-            onClick={() => navigate(`/projeler/${relatedProject.id}`)}
+            onClick={() => navigate(`/projeler/${relatedProject.projectNumber}`)}
             className="text-sm font-semibold text-app-brand hover:underline"
           >
             {tr.crm.purchaseOrders.detail.relatedProjectLink}

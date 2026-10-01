@@ -4,6 +4,7 @@ import { ProductListsListContent } from './product-lists-list-page';
 import { ProductsListContent } from './products-list-page';
 import { StockHistoryContent } from './stock-history-page';
 import { StockListContent } from './stock-list-page';
+import { WarehousesListContent } from './warehouses-list-page';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
 import { hasPermission } from '../features/auth/permissions';
@@ -20,10 +21,12 @@ export function InventoryManagementPage() {
   const productsModuleOk = useIsPageModuleAccessible('products');
   const productListsModuleOk = useIsPageModuleAccessible('product-lists');
   const stockModuleOk = useIsPageModuleAccessible('stock');
+  const warehousesModuleOk = useIsPageModuleAccessible('warehouses');
 
   const productsAccessible = canView('products') && productsModuleOk;
   const productListsAccessible = canView('product-lists') && productListsModuleOk;
   const stockAccessible = canView('stock') && stockModuleOk;
+  const warehousesAccessible = canView('warehouses') && warehousesModuleOk;
 
   const tabs: HorizontalTabItem[] = [
     ...(productsAccessible
@@ -46,6 +49,15 @@ export function InventoryManagementPage() {
       : []),
     ...(stockAccessible
       ? [{ key: 'stock', label: tr.inventory.tabs.stock, content: <StockListContent /> }]
+      : []),
+    ...(warehousesAccessible
+      ? [
+          {
+            key: 'warehouses',
+            label: tr.inventory.tabs.warehouses,
+            content: <WarehousesListContent />,
+          },
+        ]
       : []),
     ...(stockAccessible
       ? [

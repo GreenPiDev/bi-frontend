@@ -1,10 +1,13 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { useUserStatsQuery } from '../features/roles/use-users';
+import { extractUserId } from '../features/roles/user-slug';
 import { tr } from '../i18n/tr';
+import type { UserStats } from '../lib/api';
 
 const numberFormatter = new Intl.NumberFormat('tr-TR');
 
@@ -19,8 +22,23 @@ function StatCard({ label, value }: { label: string; value: number }) {
 
 /** Facebook/Twitter profili benzeri, salt-okunur kullanici istatistik sayfasi -
  * /settings?tab=users tablosundaki bir satira tiklayinca acilir (bkz. users-section.tsx). */
+const RESPONSIBLE_PROJECT_COLUMNS: TableColumn<UserStats['responsibleProjects'][number]>[] = [
+  {
+    key: 'projectNumber',
+    header: tr.crm.projects.numberColumn,
+    render: (p) => <span className="font-semibold text-app-text">{p.projectNumber}</span>,
+  },
+  {
+    key: 'name',
+    header: tr.crm.projects.nameColumn,
+    render: (p) => p.name,
+  },
+];
+
 export function UserStatsPage() {
-  const { id = '' } = useParams();
+  const { slug = '' } = useParams();
+  const navigate = useNavigate();
+  const id = extractUserId(slug);
   const statsQuery = useUserStatsQuery(id);
   const strings = tr.settings.roles.users.statsPage;
 
@@ -75,6 +93,20 @@ export function UserStatsPage() {
             <StatCard
               label={strings.purchaseOrdersLabel}
               value={statsQuery.data.counts.purchaseOrders}
+            />
+          </div>
+
+          <div className="mt-6 rounded-xl border border-app-border bg-white p-5">
+            <h2 className="mb-4 text-[11px] font-bold tracking-wide text-app-muted uppercase">
+              {strings.responsibleProjectsTitle}
+            </h2>
+            <Table
+              columns={RESPONSIBLE_PROJECT_COLUMNS}
+              data={statsQuery.data.responsibleProjects}
+              keyField={(project) => project.id}
+              onRowClick={(project) => navigate(`/projeler/${project.projectNumber}`)}
+              getRowHref={(project) => `/projeler/${project.projectNumber}`}
+              emptyMessage={strings.noResponsibleProjects}
             />
           </div>
         </>

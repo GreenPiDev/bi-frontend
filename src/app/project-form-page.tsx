@@ -13,6 +13,7 @@ import { useToast } from '../components/ui/toast-context';
 import { useQuotesQuery } from '../features/crm/use-quotes';
 import {
   useCreateProjectMutation,
+  useProjectAssignableUsersQuery,
   useProjectQuery,
   useUpdateProjectMutation,
 } from '../features/crm/use-projects';
@@ -21,15 +22,17 @@ import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 export function ProjectFormPage() {
-  const { id } = useParams();
-  const isEdit = Boolean(id);
+  const { projectNumber } = useParams();
+  const isEdit = Boolean(projectNumber);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
-  const projectQuery = useProjectQuery(id ?? '');
+  // getById backend tarafinda hem id hem projectNumber'i kabul ediyor (bkz.
+  // ProjectsService.getById) - duzenleme rotasi artik id degil slug tasiyor.
+  const projectQuery = useProjectQuery(projectNumber ?? '');
   const createMutation = useCreateProjectMutation();
-  const updateMutation = useUpdateProjectMutation(id ?? '');
+  const updateMutation = useUpdateProjectMutation(projectQuery.data?.id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
 
   const {
@@ -57,11 +60,18 @@ export function ProjectFormPage() {
     label: quote.quoteNumber,
   }));
 
+  const assignableUsersQuery = useProjectAssignableUsersQuery();
+  const responsibleOptions = (assignableUsersQuery.data ?? []).map((user) => ({
+    value: user.id,
+    label: user.name,
+  }));
+
   useEffect(() => {
     if (projectQuery.data) {
       reset({
         accountId: projectQuery.data.accountId,
         quoteIds: projectQuery.data.quotes.map((quote) => quote.id),
+        responsibleUserIds: projectQuery.data.responsibleUsers.map((user) => user.id),
         name: projectQuery.data.name,
         estimatedBudget: projectQuery.data.estimatedBudget,
         actualCost: projectQuery.data.actualCost ?? undefined,
@@ -83,6 +93,7 @@ export function ProjectFormPage() {
       name: values.name,
       estimatedBudget: Number(values.estimatedBudget),
       actualCost: values.actualCost ? Number(values.actualCost) : undefined,
+      responsibleUserIds: values.responsibleUserIds ?? [],
       ...(isEdit ? { quoteIds: values.quoteIds ?? [] } : {}),
     };
     mutation.mutate(input, {
@@ -90,7 +101,7 @@ export function ProjectFormPage() {
         toast.success(
           isEdit ? tr.crm.projects.form.updateSuccess : tr.crm.projects.form.createSuccess,
         );
-        navigate(`/projeler/${project.id}`);
+        navigate(`/projeler/${project.projectNumber}`);
       },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
@@ -128,6 +139,24 @@ export function ProjectFormPage() {
                 error={errors.accountId?.message}
                 value={field.value}
                 onChange={field.onChange}
+              />
+            )}
+          />
+          <Controller
+            name="responsibleUserIds"
+            control={control}
+            defaultValue={[]}
+            render={({ field }) => (
+              <MultiSelect
+                label={tr.crm.projects.form.responsibleLabel}
+                placeholder={tr.crm.projects.form.responsiblePlaceholder}
+                hint={tr.crm.projects.form.responsibleHint}
+                options={responsibleOptions}
+                error={errors.responsibleUserIds?.message}
+                value={field.value ?? []}
+                onChange={field.onChange}
+                showChips
+                searchable
               />
             )}
           />

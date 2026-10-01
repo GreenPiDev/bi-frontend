@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
+import { extractAccountId } from '../features/crm/account-slug';
 import { useAccountQuery } from '../features/crm/use-accounts';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
@@ -168,7 +169,8 @@ const PROJECT_COLUMNS: TableColumn<Project>[] = [
 ];
 
 export function AccountDetailPage() {
-  const { id = '' } = useParams();
+  const { slug = '' } = useParams();
+  const id = extractAccountId(slug);
   const navigate = useNavigate();
   const accountQuery = useAccountQuery(id);
   const interactionsQuery = useInteractionsQuery({ accountId: id });
@@ -397,8 +399,8 @@ export function AccountDetailPage() {
                     columns={PROJECT_COLUMNS}
                     data={projectsQuery.data?.data ?? []}
                     keyField={(project) => project.id}
-                    onRowClick={(project) => navigate(`/projeler/${project.id}`)}
-                    getRowHref={(project) => `/projeler/${project.id}`}
+                    onRowClick={(project) => navigate(`/projeler/${project.projectNumber}`)}
+                    getRowHref={(project) => `/projeler/${project.projectNumber}`}
                     isLoading={projectsQuery.isPending}
                     emptyMessage={tr.crm.accounts.detail.noProjects}
                   />

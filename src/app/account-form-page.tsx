@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { useToast } from '../components/ui/toast-context';
 import { AccountFormFields } from '../features/crm/account-form-fields';
+import { buildAccountSlug, extractAccountId } from '../features/crm/account-slug';
 import {
   accountFormSchema,
   cleanEmptyStrings,
@@ -23,7 +24,8 @@ import { ApiError, type AccountInput } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 export function AccountFormPage() {
-  const { id } = useParams();
+  const { slug } = useParams();
+  const id = slug ? extractAccountId(slug) : undefined;
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const toast = useToast();
@@ -109,7 +111,7 @@ export function AccountFormPage() {
           toast.success(
             isEdit ? tr.crm.accounts.form.updateSuccess : tr.crm.accounts.form.createSuccess,
           );
-          navigate(`/firmalar/${account.id}`);
+          navigate(`/firmalar/${buildAccountSlug(account)}`);
         };
 
         if (isEdit && contactPayload) {
@@ -123,7 +125,7 @@ export function AccountFormPage() {
                     ? error.message
                     : tr.crm.accounts.form.contactCreateError,
                 );
-                navigate(`/firmalar/${account.id}`);
+                navigate(`/firmalar/${buildAccountSlug(account)}`);
               },
             },
           );

@@ -24,6 +24,7 @@ import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
+import { buildAccountSlug } from '../features/crm/account-slug';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import {
   useDeleteInteractionMutation,
@@ -334,7 +335,7 @@ export function InteractionDetailPage() {
               <InfoLinkRow
                 label={tr.crm.interactions.accountColumn}
                 value={interaction.account.name}
-                onClick={() => navigate(`/firmalar/${interaction.account?.id}`)}
+                onClick={() => navigate(`/firmalar/${buildAccountSlug(interaction.account!)}`)}
               />
             ) : (
               <span className="flex items-center gap-2 text-sm text-app-muted">

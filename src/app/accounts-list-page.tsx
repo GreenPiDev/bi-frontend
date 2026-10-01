@@ -26,6 +26,7 @@ import { useToast } from '../components/ui/toast-context';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
+import { buildAccountSlug } from '../features/crm/account-slug';
 import { useAccountsQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { useUsersQuery } from '../features/roles/use-users';
@@ -173,7 +174,7 @@ export function AccountsListPage() {
           <IconActionButton
             icon={Pencil}
             tooltip={tr.crm.accounts.editTooltip}
-            onClick={() => navigate(`/firmalar/duzenle/${a.id}`)}
+            onClick={() => navigate(`/firmalar/duzenle/${buildAccountSlug(a)}`)}
           />
           <IconActionButton
             icon={Trash2}
@@ -287,8 +288,8 @@ export function AccountsListPage() {
         columns={columns}
         data={accountsQuery.data?.data ?? []}
         keyField={(account) => account.id}
-        onRowClick={(account) => navigate(`/firmalar/${account.id}`)}
-        getRowHref={(account) => `/firmalar/${account.id}`}
+        onRowClick={(account) => navigate(`/firmalar/${buildAccountSlug(account)}`)}
+        getRowHref={(account) => `/firmalar/${buildAccountSlug(account)}`}
         isLoading={accountsQuery.isPending}
         loadingMessage={tr.crm.accounts.loading}
         emptyMessage={tr.crm.accounts.empty}

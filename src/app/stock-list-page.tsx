@@ -1,4 +1,14 @@
-import { AlertTriangle, ListFilter, Minus, Pencil, Plus, Search } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeftRight,
+  ChevronDown,
+  ChevronUp,
+  ListFilter,
+  Minus,
+  Pencil,
+  Plus,
+  Search,
+} from 'lucide-react';
 import { useState } from 'react';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
@@ -20,12 +30,68 @@ import { isLowStock, stockStatusRowClassName } from '../features/crm/stock-statu
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
 import { StockUpdateModal } from './stock-update-modal';
 import { StockAdjustModal } from './stock-adjust-modal';
+import { StockTransferModal } from './stock-transfer-modal';
 import type { StockItem, StockStatusFilter } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
+function StockWarehouseBreakdown({ item }: { item: StockItem }) {
+  const [transferringFromWarehouseId, setTransferringFromWarehouseId] = useState<string | null>(
+    null,
+  );
+
+  if (item.warehouses.length === 0) {
+    return <p className="text-sm text-app-muted">{tr.crm.stock.breakdown.empty}</p>;
+  }
+  const columns: TableColumn<StockItem['warehouses'][number]>[] = [
+    {
+      key: 'warehouse',
+      header: tr.crm.stock.breakdown.warehouseColumn,
+      required: true,
+      render: (w) => <span className="font-semibold text-app-text">{w.warehouseName}</span>,
+    },
+    {
+      key: 'quantity',
+      header: tr.crm.stock.breakdown.quantityColumn,
+      required: true,
+      render: (w) => w.quantity,
+    },
+    {
+      key: 'actions',
+      header: tr.crm.stock.breakdown.actionsColumn,
+      className: 'w-px',
+      required: true,
+      render: (w) => (
+        <IconActionButton
+          icon={ArrowLeftRight}
+          tooltip={tr.crm.stock.breakdown.transferTooltip}
+          onClick={() => setTransferringFromWarehouseId(w.warehouseId)}
+        />
+      ),
+    },
+  ];
+  return (
+    <>
+      <Table
+        columns={columns}
+        data={item.warehouses}
+        keyField={(w) => w.warehouseId}
+        emptyMessage={tr.crm.stock.breakdown.empty}
+      />
+      {transferringFromWarehouseId && (
+        <StockTransferModal
+          item={item}
+          fromWarehouseId={transferringFromWarehouseId}
+          onClose={() => setTransferringFromWarehouseId(null)}
+        />
+      )}
+    </>
+  );
+}
+
 export function StockListContent() {
   const [page, setPage] = useState(1);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [adjustingItem, setAdjustingItem] = useState<{
     item: StockItem;
@@ -83,6 +149,11 @@ export function StockListContent() {
       sortKey: 'name',
       render: (item) => (
         <span className="flex items-center gap-1.5">
+          {expandedItemId === item.id ? (
+            <ChevronUp size={16} className="shrink-0 text-app-muted" />
+          ) : (
+            <ChevronDown size={16} className="shrink-0 text-app-muted" />
+          )}
           {(lowStockIds.has(item.id) || isLowStock(item.quantity, item.product.minStockLevel)) && (
             <Tooltip content={tr.crm.stock.lowStockTooltip}>
               <AlertTriangle size={18} strokeWidth={2.5} className="shrink-0 text-red-600" />
@@ -206,6 +277,9 @@ export function StockListContent() {
         loadingMessage={tr.crm.stock.loading}
         emptyMessage={tr.crm.stock.empty}
         rowClassName={(item) => stockStatusRowClassName(item.quantity, item.product.minStockLevel)}
+        onRowClick={(item) => setExpandedItemId(expandedItemId === item.id ? null : item.id)}
+        isRowExpanded={(item) => expandedItemId === item.id}
+        renderExpandedRow={(item) => <StockWarehouseBreakdown item={item} />}
       />
 
       {stockItemsQuery.data && stockItemsQuery.data.data.length > 0 && (

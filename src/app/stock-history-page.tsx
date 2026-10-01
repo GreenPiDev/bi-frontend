@@ -10,6 +10,7 @@ import { Select } from '../components/ui/select';
 import { Table, type TableColumn } from '../components/ui/table';
 import { ProductAutocomplete } from '../features/crm/product-autocomplete';
 import { useUsersQuery } from '../features/roles/use-users';
+import { useWarehousesQuery } from '../features/crm/use-warehouses';
 import { useStockHistoryQuery } from '../features/crm/use-stock-items';
 import type { StockMovement } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -48,17 +49,21 @@ function DeltaBadge({ delta }: { delta: number }) {
 export function StockHistoryContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [productId, setProductId] = useState<string | undefined>(undefined);
+  const [warehouseId, setWarehouseId] = useState('');
   const [userId, setUserId] = useState('');
   const [noteModalRow, setNoteModalRow] = useState<StockMovement | null>(null);
   const usersQuery = useUsersQuery();
+  const warehousesQuery = useWarehousesQuery({ pageSize: 100 });
   const historyQuery = useStockHistoryQuery({
     productId: productId || undefined,
+    warehouseId: warehouseId || undefined,
     userId: userId || undefined,
   });
-  const hasActiveFilter = Boolean(productId) || Boolean(userId);
+  const hasActiveFilter = Boolean(productId) || Boolean(warehouseId) || Boolean(userId);
 
   function resetFilters() {
     setProductId(undefined);
+    setWarehouseId('');
     setUserId('');
   }
 
@@ -69,6 +74,12 @@ export function StockHistoryContent() {
       className: 'font-semibold text-app-text',
       required: true,
       render: (row) => row.productName,
+    },
+    {
+      key: 'warehouse',
+      header: tr.crm.stock.history.warehouseColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) => row.warehouseName,
     },
     {
       key: 'user',
@@ -159,6 +170,18 @@ export function StockHistoryContent() {
               clearable
             />
             <Select
+              label={tr.crm.stock.history.filterDrawer.warehouseLabel}
+              placeholder={tr.crm.stock.history.filterDrawer.warehousePlaceholder}
+              value={warehouseId}
+              onChange={(event) => setWarehouseId(event.target.value)}
+              options={(warehousesQuery.data?.data ?? []).map((w) => ({
+                value: w.id,
+                label: w.name,
+              }))}
+              clearable
+              onClear={() => setWarehouseId('')}
+            />
+            <Select
               label={tr.crm.stock.history.filterDrawer.userLabel}
               placeholder={tr.crm.stock.history.filterDrawer.userPlaceholder}
               value={userId}
@@ -189,6 +212,12 @@ export function StockHistoryContent() {
                   {tr.crm.stock.history.noteModal.productLabel}
                 </dt>
                 <dd className="text-app-text">{noteModalRow.productName}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold text-app-muted">
+                  {tr.crm.stock.history.noteModal.warehouseLabel}
+                </dt>
+                <dd className="text-app-text">{noteModalRow.warehouseName}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold text-app-muted">

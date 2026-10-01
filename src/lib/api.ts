@@ -1455,6 +1455,7 @@ export interface UserStats {
     projects: number;
     purchaseOrders: number;
   };
+  responsibleProjects: { id: string; projectNumber: string; name: string }[];
 }
 
 export function getUserStats(userId: string): Promise<UserStats> {
@@ -1908,6 +1909,44 @@ export function deleteOpportunity(id: string): Promise<void> {
   return request(`/opportunities/${id}`, { method: 'DELETE' });
 }
 
+export interface Warehouse {
+  id: string;
+  name: string;
+  address: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WarehouseInput {
+  name: string;
+  address?: string;
+  isDefault?: boolean;
+}
+
+export function listWarehouses(
+  params: { page?: number; pageSize?: number; q?: string } = {},
+): Promise<PagedResult<Warehouse>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/warehouses${qs ? `?${qs}` : ''}`);
+}
+
+export function createWarehouse(input: WarehouseInput): Promise<Warehouse> {
+  return request('/warehouses', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateWarehouse(id: string, input: Partial<WarehouseInput>): Promise<Warehouse> {
+  return request(`/warehouses/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteWarehouse(id: string): Promise<void> {
+  return request(`/warehouses/${id}`, { method: 'DELETE' });
+}
+
 export interface ProductList {
   id: string;
   name: string;
@@ -2266,6 +2305,11 @@ export function getQuoteRevisionSummary(accountId: string): Promise<{ count: num
   return request(`/quotes/revision-summary?accountId=${accountId}`);
 }
 
+export interface ProjectResponsibleUser {
+  id: string;
+  name: string;
+}
+
 export interface Project {
   id: string;
   projectNumber: string;
@@ -2277,6 +2321,7 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   quotes: Quote[];
+  responsibleUsers: ProjectResponsibleUser[];
 }
 
 export interface ProjectInput {
@@ -2287,6 +2332,13 @@ export interface ProjectInput {
   /** Sadece guncellemede anlamli - projeyle iliskilendirilecek tekliflerin tam
    * listesi (replace semantigi), bkz. UpdateProjectDto. */
   quoteIds?: string[];
+  /** "Bizden ilgili" - projeyle ilgilenen dahili kullanicilarin tam listesi
+   * (replace semantigi), hem olusturma hem duzenlemede gonderilebilir. */
+  responsibleUserIds?: string[];
+}
+
+export function listProjectAssignableUsers(): Promise<{ id: string; name: string }[]> {
+  return request('/projects/assignable-users');
 }
 
 export function listProjects(
@@ -2611,11 +2663,21 @@ export function deletePurchaseOrder(id: string): Promise<void> {
   return request(`/purchase-orders/${id}`, { method: 'DELETE' });
 }
 
+export interface StockItemWarehouseBreakdown {
+  warehouseId: string;
+  warehouseName: string;
+  quantity: string;
+}
+
 export interface StockItem {
   id: string;
   productId: string;
+  /** Depolar arasi toplam miktar. */
   quantity: string;
   product: { id: string; name: string; minStockLevel: number | null };
+  /** Satir genisletildiginde gosterilen depo bazli kirilim - sadece gercek StockItem
+   * kaydi olan depoleri icerir. */
+  warehouses: StockItemWarehouseBreakdown[];
   createdAt: string;
   updatedAt: string;
 }
@@ -2653,12 +2715,27 @@ export function listLowStockItems(): Promise<StockItem[]> {
 
 export function upsertStockItem(
   productId: string,
+  warehouseId: string,
   quantity: number,
   note?: string,
 ): Promise<StockItem> {
   return request(`/stock-items/${productId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ quantity, note: note || undefined }),
+    body: JSON.stringify({ warehouseId, quantity, note: note || undefined }),
+  });
+}
+
+export interface TransferStockInput {
+  fromWarehouseId: string;
+  toWarehouseId: string;
+  quantity: number;
+  note?: string;
+}
+
+export function transferStock(productId: string, input: TransferStockInput): Promise<StockItem> {
+  return request(`/stock-items/${productId}/transfer`, {
+    method: 'POST',
+    body: JSON.stringify({ ...input, note: input.note || undefined }),
   });
 }
 
@@ -2666,6 +2743,8 @@ export interface StockMovement {
   id: string;
   productId: string;
   productName: string;
+  warehouseId: string;
+  warehouseName: string;
   userName: string;
   userEmail: string;
   note: string | null;
@@ -2676,10 +2755,11 @@ export interface StockMovement {
 }
 
 export function listStockHistory(
-  params: { productId?: string; userId?: string } = {},
+  params: { productId?: string; warehouseId?: string; userId?: string } = {},
 ): Promise<StockMovement[]> {
   const query = new URLSearchParams();
   if (params.productId) query.set('productId', params.productId);
+  if (params.warehouseId) query.set('warehouseId', params.warehouseId);
   if (params.userId) query.set('userId', params.userId);
   const qs = query.toString();
   return request(`/stock-items/history${qs ? `?${qs}` : ''}`);

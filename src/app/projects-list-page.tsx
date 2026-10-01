@@ -68,6 +68,21 @@ export function ProjectsListPage() {
       render: (p) => formatCurrency(p.actualCost),
     },
     {
+      key: 'responsibleUsers',
+      header: tr.crm.projects.responsibleColumn,
+      className: 'text-app-muted',
+      render: (p) =>
+        p.responsibleUsers.length > 0 ? (
+          <div className="flex flex-col gap-0.5">
+            {p.responsibleUsers.map((u) => (
+              <span key={u.id}>{u.name}</span>
+            ))}
+          </div>
+        ) : (
+          tr.crm.projects.noResponsibles
+        ),
+    },
+    {
       key: 'actions',
       header: tr.crm.projects.actionsColumn,
       className: 'w-px',
@@ -77,7 +92,7 @@ export function ProjectsListPage() {
           <IconActionButton
             icon={Pencil}
             tooltip={tr.crm.projects.detail.editButton}
-            onClick={() => navigate(`/projeler/${p.id}/duzenle`)}
+            onClick={() => navigate(`/projeler/duzenle/${p.projectNumber}`)}
           />
           <IconActionButton
             icon={Trash2}
@@ -129,8 +144,8 @@ export function ProjectsListPage() {
         columns={columns}
         data={projectsQuery.data?.data ?? []}
         keyField={(project) => project.id}
-        onRowClick={(project) => navigate(`/projeler/${project.id}`)}
-        getRowHref={(project) => `/projeler/${project.id}`}
+        onRowClick={(project) => navigate(`/projeler/${project.projectNumber}`)}
+        getRowHref={(project) => `/projeler/${project.projectNumber}`}
         isLoading={projectsQuery.isPending}
         loadingMessage={tr.crm.projects.loading}
         emptyMessage={tr.crm.projects.empty}

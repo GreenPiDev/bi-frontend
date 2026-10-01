@@ -3,8 +3,10 @@ import {
   listLowStockItems,
   listStockHistory,
   listStockItems,
+  transferStock,
   upsertStockItem,
   type StockStatusFilter,
+  type TransferStockInput,
 } from '../../lib/api';
 import { PRODUCTS_QUERY_KEY } from './use-products';
 
@@ -37,7 +39,9 @@ export function useLowStockItemsQuery() {
   });
 }
 
-export function useStockHistoryQuery(params: { productId?: string; userId?: string } = {}) {
+export function useStockHistoryQuery(
+  params: { productId?: string; warehouseId?: string; userId?: string } = {},
+) {
   return useQuery({
     queryKey: [...STOCK_HISTORY_QUERY_KEY, params],
     queryFn: () => listStockHistory(params),
@@ -49,13 +53,29 @@ export function useUpsertStockItemMutation() {
   return useMutation({
     mutationFn: ({
       productId,
+      warehouseId,
       quantity,
       note,
     }: {
       productId: string;
+      warehouseId: string;
       quantity: number;
       note?: string;
-    }) => upsertStockItem(productId, quantity, note),
+    }) => upsertStockItem(productId, warehouseId, quantity, note),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: STOCK_ITEMS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: LOW_STOCK_ITEMS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: STOCK_HISTORY_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+  });
+}
+
+export function useTransferStockMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, ...input }: { productId: string } & TransferStockInput) =>
+      transferStock(productId, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: STOCK_ITEMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: LOW_STOCK_ITEMS_QUERY_KEY });

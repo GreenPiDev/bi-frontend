@@ -11,6 +11,7 @@ import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-s
 import { usePaymentMethodOptionsRealtimeSync } from '../features/crm/use-payment-method-options-realtime-sync';
 import { useProductCategoryOptionsRealtimeSync } from '../features/crm/use-product-categories-realtime-sync';
 import { useProductListsRealtimeSync } from '../features/crm/use-product-lists-realtime-sync';
+import { useWarehousesRealtimeSync } from '../features/crm/use-warehouses-realtime-sync';
 import { useReminderTypeOptionsRealtimeSync } from '../features/crm/use-reminder-type-options-realtime-sync';
 import { useSectorOptionsRealtimeSync } from '../features/crm/use-sector-options-realtime-sync';
 import { useTitleOptionsRealtimeSync } from '../features/crm/use-title-options-realtime-sync';
@@ -45,6 +46,7 @@ export function ProtectedRoute({
   useUnitOptionsRealtimeSync();
   useProductCategoryOptionsRealtimeSync();
   useProductListsRealtimeSync();
+  useWarehousesRealtimeSync();
   useTitleOptionsRealtimeSync();
   usePaymentMethodOptionsRealtimeSync();
   useIbanOptionsRealtimeSync();

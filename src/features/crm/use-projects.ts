@@ -3,12 +3,20 @@ import {
   createProject,
   deleteProject,
   getProject,
+  listProjectAssignableUsers,
   listProjects,
   updateProject,
   type ProjectInput,
 } from '../../lib/api';
 
 export const PROJECTS_QUERY_KEY = ['projects'];
+
+export function useProjectAssignableUsersQuery() {
+  return useQuery({
+    queryKey: ['projects', 'assignable-users'],
+    queryFn: listProjectAssignableUsers,
+  });
+}
 
 export function useProjectsQuery(
   params: { page?: number; pageSize?: number; accountId?: string } = {},

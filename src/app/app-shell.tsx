@@ -133,6 +133,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     projects: useIsPageModuleAccessible('projects'),
     'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
     stock: useIsPageModuleAccessible('stock'),
+    warehouses: useIsPageModuleAccessible('warehouses'),
     messages: useIsPageModuleAccessible('messages'),
     settings: useIsPageModuleAccessible('settings'),
   };
@@ -187,7 +188,10 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     ...(canAccessPage('post-sale-cases')
       ? [{ label: tr.shell.nav.postSaleSupport, icon: HeartHandshake, path: '/satis-sonrasi' }]
       : []),
-    ...(canAccessPage('stock') || canAccessPage('product-lists') || canAccessPage('products')
+    ...(canAccessPage('stock') ||
+    canAccessPage('product-lists') ||
+    canAccessPage('products') ||
+    canAccessPage('warehouses')
       ? [{ label: tr.shell.nav.inventory, icon: Warehouse, path: '/envanter' }]
       : []),
     ...(canAccessPage('datasets')

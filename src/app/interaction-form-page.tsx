@@ -15,6 +15,7 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { InteractionTypeSelect } from '../features/crm/interaction-type-select';
+import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewContactModal } from '../features/crm/new-contact-modal';
 import { useAccountQuery, useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
@@ -52,6 +53,7 @@ export function InteractionFormPage() {
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const createMutation = useCreateInteractionMutation();
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
+  const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
 
   const {
     register,
@@ -203,6 +205,16 @@ export function InteractionFormPage() {
                   onChange={field.onChange}
                   options={(accountsQuery.data?.data ?? []).map((account) => account.name)}
                   error={errors.accountName?.message}
+                  trailingAction={
+                    <Button
+                      type="button"
+                      variant="navy"
+                      className="shrink-0"
+                      onClick={() => setIsNewAccountModalOpen(true)}
+                    >
+                      {tr.crm.interactions.form.newAccountButton}
+                    </Button>
+                  }
                 />
               )}
             />
@@ -475,6 +487,16 @@ export function InteractionFormPage() {
               setValue('accountName', contact.account.name);
             }
             setIsNewContactModalOpen(false);
+          }}
+        />
+      )}
+      {isNewAccountModalOpen && (
+        <NewAccountModal
+          defaultName={accountNameValue}
+          onClose={() => setIsNewAccountModalOpen(false)}
+          onCreated={(account) => {
+            setValue('accountName', account.name, { shouldValidate: true });
+            setIsNewAccountModalOpen(false);
           }}
         />
       )}

@@ -13,6 +13,7 @@ import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type RoleView, type SafeUser } from '../../lib/api';
+import { buildUserSlug } from './user-slug';
 import { tr } from '../../i18n/tr';
 import {
   useCreateUserMutation,
@@ -413,7 +414,7 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
         data={usersQuery.data ?? []}
         keyField={(u) => u.id}
         isLoading={usersQuery.isPending}
-        onRowClick={(u) => navigate(`/settings/kullanicilar/${u.id}`)}
+        onRowClick={(u) => navigate(`/settings/kullanicilar/${buildUserSlug(u)}`)}
       />
 
       {inviteOpen && <AddUserModal roles={roles} onClose={() => setInviteOpen(false)} />}
