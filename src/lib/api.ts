@@ -2620,6 +2620,8 @@ export interface StockItem {
   updatedAt: string;
 }
 
+export type StockStatusFilter = 'low' | 'equal' | 'ok' | 'unknown';
+
 export function listStockItems(
   params: {
     page?: number;
@@ -2628,6 +2630,7 @@ export function listStockItems(
     productListId?: string;
     brand?: string;
     category?: string;
+    stockStatus?: StockStatusFilter;
   } = {},
 ): Promise<PagedResult<StockItem>> {
   const query = new URLSearchParams();
@@ -2637,6 +2640,7 @@ export function listStockItems(
   if (params.productListId) query.set('productListId', params.productListId);
   if (params.brand) query.set('brand', params.brand);
   if (params.category) query.set('category', params.category);
+  if (params.stockStatus) query.set('stockStatus', params.stockStatus);
   const qs = query.toString();
   return request(`/stock-items${qs ? `?${qs}` : ''}`);
 }

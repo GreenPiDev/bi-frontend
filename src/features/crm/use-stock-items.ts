@@ -4,6 +4,7 @@ import {
   listStockHistory,
   listStockItems,
   upsertStockItem,
+  type StockStatusFilter,
 } from '../../lib/api';
 import { PRODUCTS_QUERY_KEY } from './use-products';
 
@@ -19,6 +20,7 @@ export function useStockItemsQuery(
     productListId?: string;
     brand?: string;
     category?: string;
+    stockStatus?: StockStatusFilter;
   } = {},
 ) {
   return useQuery({

@@ -23,7 +23,7 @@ import {
 } from '../features/crm/stock-status';
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
 import { StockUpdateModal } from './stock-update-modal';
-import type { StockItem } from '../lib/api';
+import type { StockItem, StockStatusFilter } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -35,6 +35,7 @@ export function StockListContent() {
   const [filterListId, setFilterListId] = useState('');
   const [filterBrand, setFilterBrand] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
+  const [filterStockStatus, setFilterStockStatus] = useState<StockStatusFilter | ''>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
@@ -45,19 +46,25 @@ export function StockListContent() {
     productListId: filterListId || undefined,
     brand: filterBrand || undefined,
     category: filterCategory || undefined,
+    stockStatus: filterStockStatus || undefined,
   });
   const lowStockQuery = useLowStockItemsQuery();
   const productListsQuery = useProductListsQuery();
   const brandOptionsQuery = useBrandOptionsQuery();
   const categoryOptionsQuery = useProductCategoryOptionsQuery();
   const lowStockIds = new Set((lowStockQuery.data ?? []).map((item) => item.id));
-  const hasActiveFilter = Boolean(filterListId) || Boolean(filterBrand) || Boolean(filterCategory);
+  const hasActiveFilter =
+    Boolean(filterListId) ||
+    Boolean(filterBrand) ||
+    Boolean(filterCategory) ||
+    Boolean(filterStockStatus);
 
   function resetFilters() {
     setPage(1);
     setFilterListId('');
     setFilterBrand('');
     setFilterCategory('');
+    setFilterStockStatus('');
   }
 
   const ALL_COLUMNS: TableColumn<StockItem>[] = [
@@ -246,6 +253,29 @@ export function StockListContent() {
                 value: option.label,
                 label: option.label,
               }))}
+            />
+            <Select
+              label={tr.crm.stock.filterDrawer.stockStatusLabel}
+              placeholder={tr.crm.stock.filterDrawer.stockStatusPlaceholder}
+              clearable
+              value={filterStockStatus}
+              onChange={(event) => {
+                setPage(1);
+                setFilterStockStatus(event.target.value as StockStatusFilter);
+              }}
+              onClear={() => {
+                setPage(1);
+                setFilterStockStatus('');
+              }}
+              options={[
+                { value: 'low', label: tr.crm.stock.filterDrawer.stockStatusOptions.low },
+                { value: 'equal', label: tr.crm.stock.filterDrawer.stockStatusOptions.equal },
+                { value: 'ok', label: tr.crm.stock.filterDrawer.stockStatusOptions.ok },
+                {
+                  value: 'unknown',
+                  label: tr.crm.stock.filterDrawer.stockStatusOptions.unknown,
+                },
+              ]}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>
               {tr.crm.stock.filterDrawer.reset}
