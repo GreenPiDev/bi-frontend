@@ -1,5 +1,6 @@
 import { ListFilter } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
@@ -89,6 +90,22 @@ export function StockHistoryContent() {
       render: (row) => row.userName,
     },
     {
+      key: 'type',
+      header: tr.crm.stock.history.typeColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) =>
+        row.type === 'QUOTE_SALE' && row.quoteId ? (
+          <Link
+            to={`/teklifler/${row.quoteId}`}
+            className="font-semibold text-app-brand hover:underline"
+          >
+            {tr.crm.stock.history.typeLabels[row.type]}
+          </Link>
+        ) : (
+          tr.crm.stock.history.typeLabels[row.type]
+        ),
+    },
+    {
       key: 'note',
       header: tr.crm.stock.history.noteColumn,
       className: 'max-w-xs text-app-muted',
@@ -112,7 +129,19 @@ export function StockHistoryContent() {
       header: tr.crm.stock.history.quantityColumn,
       className: 'whitespace-nowrap font-semibold text-app-text',
       required: true,
-      render: (row) => row.quantity,
+      render: (row) => row.newQuantity,
+    },
+    {
+      key: 'unitCost',
+      header: tr.crm.stock.history.unitCostColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) => row.unitCost ?? '—',
+    },
+    {
+      key: 'newAvgCost',
+      header: tr.crm.stock.history.newAvgCostColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) => (row.type === 'INCREASE' ? (row.newAvgCost ?? '—') : '—'),
     },
     {
       key: 'createdAt',
@@ -235,7 +264,7 @@ export function StockHistoryContent() {
                 <dt className="text-xs font-semibold text-app-muted">
                   {tr.crm.stock.history.noteModal.quantityLabel}
                 </dt>
-                <dd className="text-app-text">{noteModalRow.quantity}</dd>
+                <dd className="text-app-text">{noteModalRow.newQuantity}</dd>
               </div>
               <div>
                 <dt className="text-xs font-semibold text-app-muted">

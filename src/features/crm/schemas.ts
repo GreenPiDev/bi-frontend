@@ -281,7 +281,6 @@ export const productFormSchema = z.object({
   description: z.string().max(2000).optional(),
   category: z.string().max(100).optional(),
   brand: z.string().max(100).optional(),
-  costPrice: z.string().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
@@ -398,16 +397,38 @@ export const stockUpdateFormSchema = z.object({
 
 export type StockUpdateFormValues = z.infer<typeof stockUpdateFormSchema>;
 
-export const stockAdjustFormSchema = z.object({
+/** `mode === 'increase'` iken birim maliyet zorunlu (WAC hesabina girer) - `decrease`'de
+ * maliyet degismedigi icin alan hic gosterilmez/istenmez (bkz. docs/PLAN_STOK_MALIYET.md
+ * Faz 6). */
+export function createStockAdjustFormSchema(mode: 'increase' | 'decrease') {
+  return z.object({
+    warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
+    amount: z
+      .string()
+      .min(1, 'Miktar gerekli.')
+      .refine((v) => !Number.isNaN(Number(v)) && Number(v) > 0, "Miktar 0'dan büyük olmalı."),
+    unitCost:
+      mode === 'increase'
+        ? z
+            .string()
+            .min(1, 'Birim maliyet gerekli.')
+            .refine(
+              (v) => !Number.isNaN(Number(v)) && Number(v) > 0,
+              "Birim maliyet 0'dan büyük olmalı.",
+            )
+        : z.string().optional(),
+    note: z.string().max(500).optional(),
+  });
+}
+
+export type StockAdjustFormValues = z.infer<ReturnType<typeof createStockAdjustFormSchema>>;
+
+/** Teklif onayinda depo secimi - bkz. docs/PLAN_STOK_MALIYET.md Faz 5. */
+export const approveQuoteFormSchema = z.object({
   warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
-  amount: z
-    .string()
-    .min(1, 'Miktar gerekli.')
-    .refine((v) => !Number.isNaN(Number(v)) && Number(v) > 0, "Miktar 0'dan büyük olmalı."),
-  note: z.string().max(500).optional(),
 });
 
-export type StockAdjustFormValues = z.infer<typeof stockAdjustFormSchema>;
+export type ApproveQuoteFormValues = z.infer<typeof approveQuoteFormSchema>;
 
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */

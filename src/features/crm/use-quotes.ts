@@ -102,7 +102,7 @@ export function useDeleteQuoteMutation() {
 export function useApproveQuoteMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => approveQuote(id),
+    mutationFn: (warehouseId: string) => approveQuote(id, warehouseId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['quotes', id] });

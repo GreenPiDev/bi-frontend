@@ -456,10 +456,10 @@ export function QuoteFormPage() {
           : '—',
     },
     {
-      key: 'costPrice',
-      header: tr.crm.products.costPriceColumn,
+      key: 'avgCost',
+      header: tr.crm.products.avgCostColumn,
       className: 'text-app-muted',
-      render: (product) => (product.costPrice != null ? product.costPrice : '—'),
+      render: (product) => (product.avgCost != null ? product.avgCost : '—'),
     },
     {
       key: 'minStockLevel',

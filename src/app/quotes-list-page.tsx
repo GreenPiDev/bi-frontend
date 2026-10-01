@@ -3,6 +3,7 @@ import { ListFilter, Pencil, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { ApproveQuoteModal } from './approve-quote-modal';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
@@ -203,11 +204,11 @@ export function QuotesListPage() {
     });
   }
 
-  function handleConfirmStatusChange() {
+  function handleConfirmStatusChange(warehouseId?: string) {
     if (!pendingStatusChange) return;
     const { quote, status } = pendingStatusChange;
     confirmStatusMutation.mutate(
-      { status },
+      { status, ...(warehouseId ? { warehouseId } : {}) },
       {
         onSuccess: () => {
           toast.success(tr.crm.quotes.statusUpdateSuccess);
@@ -439,7 +440,14 @@ export function QuotesListPage() {
         />
       )}
 
-      {pendingStatusChange && (
+      {pendingStatusChange?.status === 'APPROVED' && (
+        <ApproveQuoteModal
+          isPending={confirmStatusMutation.isPending}
+          onConfirm={(warehouseId) => handleConfirmStatusChange(warehouseId)}
+          onCancel={() => setPendingStatusChange(undefined)}
+        />
+      )}
+      {pendingStatusChange && pendingStatusChange.status !== 'APPROVED' && (
         <ConfirmModal
           title={tr.crm.quotes.statusChangeConfirmTitle}
           message={
@@ -451,7 +459,7 @@ export function QuotesListPage() {
           }
           confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
           isPending={confirmStatusMutation.isPending}
-          onConfirm={handleConfirmStatusChange}
+          onConfirm={() => handleConfirmStatusChange()}
           onCancel={() => setPendingStatusChange(undefined)}
         />
       )}

@@ -69,7 +69,6 @@ export function NewProductModal({
       description: cleaned.description ?? undefined,
       category: cleaned.category ?? undefined,
       brand: cleaned.brand ?? undefined,
-      costPrice: cleaned.costPrice ? Number(cleaned.costPrice) : undefined,
     };
 
     createMutation.mutate(input, {

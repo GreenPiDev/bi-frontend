@@ -247,10 +247,10 @@ export function ProductsListContent() {
       render: (p) => p.currency ?? '—',
     },
     {
-      key: 'costPrice',
-      header: tr.crm.products.costPriceColumn,
+      key: 'avgCost',
+      header: tr.crm.products.avgCostColumn,
       className: 'text-app-muted',
-      render: (p) => (p.costPrice != null ? p.costPrice : '—'),
+      render: (p) => (p.avgCost != null ? p.avgCost : '—'),
     },
     {
       key: 'stockQuantity',

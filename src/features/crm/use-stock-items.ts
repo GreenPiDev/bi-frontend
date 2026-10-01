@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  decreaseStockItem,
+  increaseStockItem,
   listLowStockItems,
   listStockHistory,
   listStockItems,
   transferStock,
-  upsertStockItem,
   type StockStatusFilter,
   type TransferStockInput,
 } from '../../lib/api';
@@ -48,7 +49,32 @@ export function useStockHistoryQuery(
   });
 }
 
-export function useUpsertStockItemMutation() {
+export function useIncreaseStockMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      productId,
+      warehouseId,
+      quantity,
+      unitCost,
+      note,
+    }: {
+      productId: string;
+      warehouseId: string;
+      quantity: number;
+      unitCost: number;
+      note?: string;
+    }) => increaseStockItem(productId, warehouseId, quantity, unitCost, note),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: STOCK_ITEMS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: LOW_STOCK_ITEMS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: STOCK_HISTORY_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_QUERY_KEY });
+    },
+  });
+}
+
+export function useDecreaseStockMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -61,7 +87,7 @@ export function useUpsertStockItemMutation() {
       warehouseId: string;
       quantity: number;
       note?: string;
-    }) => upsertStockItem(productId, warehouseId, quantity, note),
+    }) => decreaseStockItem(productId, warehouseId, quantity, note),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: STOCK_ITEMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: LOW_STOCK_ITEMS_QUERY_KEY });

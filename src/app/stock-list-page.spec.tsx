@@ -33,7 +33,7 @@ const lowStockItem: api.StockItem = {
   id: 'si-1',
   productId: 'p1',
   quantity: '2',
-  product: { id: 'p1', name: 'Widget', minStockLevel: 5 },
+  product: { id: 'p1', name: 'Widget', minStockLevel: 5, avgCost: null },
   warehouses: [{ warehouseId: 'w1', warehouseName: 'Merkez Depo', quantity: '2' }],
   createdAt: '2026-09-07T00:00:00.000Z',
   updatedAt: '2026-09-07T00:00:00.000Z',
@@ -43,7 +43,7 @@ const okItem: api.StockItem = {
   id: 'si-2',
   productId: 'p2',
   quantity: '50',
-  product: { id: 'p2', name: 'Gadget', minStockLevel: 5 },
+  product: { id: 'p2', name: 'Gadget', minStockLevel: 5, avgCost: null },
   warehouses: [{ warehouseId: 'w1', warehouseName: 'Merkez Depo', quantity: '50' }],
   createdAt: '2026-09-07T00:00:00.000Z',
   updatedAt: '2026-09-07T00:00:00.000Z',
@@ -85,13 +85,17 @@ describe('StockListPage', () => {
     expect(screen.queryByText('Düşük Stok')).not.toBeInTheDocument();
   });
 
-  it('duzenle ikonuna tiklayinca stok guncelleme modali acilir, kaydedince not ile birlikte upsert cagrisi yapilir', async () => {
+  it('stok artir ikonuna tiklayinca artis modali acilir, miktar+birim maliyet ile kaydedilir', async () => {
     vi.spyOn(api, 'listStockItems').mockResolvedValue({
       data: [okItem],
       meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
     });
     vi.spyOn(api, 'listLowStockItems').mockResolvedValue([]);
-    const upsertSpy = vi.spyOn(api, 'upsertStockItem').mockResolvedValue({
+    vi.spyOn(api, 'listWarehouses').mockResolvedValue({
+      data: [warehouse],
+      meta: { page: 1, pageSize: 200, total: 1, totalPages: 1 },
+    });
+    const increaseSpy = vi.spyOn(api, 'increaseStockItem').mockResolvedValue({
       ...okItem,
       quantity: '75',
     });
@@ -99,18 +103,16 @@ describe('StockListPage', () => {
     renderPage();
 
     expect(await screen.findByText('Gadget')).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('50')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Stok miktarını düzenle' }));
+    await user.click(screen.getByRole('button', { name: 'Stok artır' }));
 
-    const quantityInput = await screen.findByDisplayValue('50');
-    await user.clear(quantityInput);
-    await user.type(quantityInput, '75');
+    await user.type(await screen.findByLabelText(/^Miktar/), '25');
+    await user.type(screen.getByLabelText(/^Birim Maliyet/), '10');
     await user.type(screen.getByLabelText('Not'), 'Sayim farki');
     await user.click(screen.getByRole('button', { name: 'Kaydet' }));
 
-    await waitFor(() => expect(upsertSpy).toHaveBeenCalledWith('p2', 'w1', 75, 'Sayim farki'));
-    // kayittan sonra modal kapanir
-    expect(screen.queryByDisplayValue('75')).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(increaseSpy).toHaveBeenCalledWith('p2', 'w1', 25, 10, 'Sayim farki'),
+    );
   });
 });

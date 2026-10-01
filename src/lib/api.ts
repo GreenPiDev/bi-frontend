@@ -2021,7 +2021,10 @@ export interface Product {
   description: string | null;
   category: string | null;
   brand: string | null;
-  costPrice: string | null;
+  /** Hareketli agirlikli ortalama maliyet (WAC) - bkz. docs/PLAN_STOK_MALIYET.md.
+   * Statik costPrice'in yerini aldi, stok girisi (increaseStockItem) uzerinden hesaplanir,
+   * urun formundan elle girilemez. */
+  avgCost: string | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -2047,7 +2050,6 @@ export interface ProductInput {
   description?: string | null;
   category?: string | null;
   brand?: string | null;
-  costPrice?: number | null;
 }
 
 export function listProducts(
@@ -2252,6 +2254,9 @@ export interface CreateQuoteInput {
 export interface UpdateQuoteInput {
   items?: QuoteItemInput[];
   status?: QuoteStatus;
+  /** status 'APPROVED' ise zorunlu - hangi depodan otomatik dusulecegi (bkz.
+   * docs/PLAN_STOK_MALIYET.md Faz 4). */
+  warehouseId?: string;
   /** Teklif REVIZE durumundayken `items` ile birlikte gonderilirse zorunludur. */
   revisionNote?: string;
   contactId?: string | null;
@@ -2304,8 +2309,11 @@ export function deleteQuote(id: string): Promise<void> {
   return request(`/quotes/${id}`, { method: 'DELETE' });
 }
 
-export function approveQuote(id: string): Promise<Quote> {
-  return request(`/quotes/${id}/approve`, { method: 'POST' });
+export function approveQuote(id: string, warehouseId: string): Promise<Quote> {
+  return request(`/quotes/${id}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ warehouseId }),
+  });
 }
 
 export interface FxRatesResult {
@@ -2735,7 +2743,13 @@ export interface StockItem {
   productId: string;
   /** Depolar arasi toplam miktar. */
   quantity: string;
-  product: { id: string; name: string; minStockLevel: number | null };
+  product: {
+    id: string;
+    name: string;
+    minStockLevel: number | null;
+    /** Hareketli agirlikli ortalama maliyet (WAC) - bkz. docs/PLAN_STOK_MALIYET.md. */
+    avgCost: string | null;
+  };
   /** Satir genisletildiginde gosterilen depo bazli kirilim - sadece gercek StockItem
    * kaydi olan depoleri icerir. */
   warehouses: StockItemWarehouseBreakdown[];
@@ -2774,14 +2788,30 @@ export function listLowStockItems(): Promise<StockItem[]> {
   return request('/stock-items/low-stock');
 }
 
-export function upsertStockItem(
+/** Stok girisi (alim/parti) - unitCost zorunlu, WAC (hareketli agirlikli ortalama
+ * maliyet) hesabina katkisi var. Bkz. docs/PLAN_STOK_MALIYET.md Faz 2/3. */
+export function increaseStockItem(
+  productId: string,
+  warehouseId: string,
+  quantity: number,
+  unitCost: number,
+  note?: string,
+): Promise<StockItem> {
+  return request(`/stock-items/${productId}/increase`, {
+    method: 'POST',
+    body: JSON.stringify({ warehouseId, quantity, unitCost, note: note || undefined }),
+  });
+}
+
+/** Elle stok cikisi - maliyeti degistirmez, negatife dusmeye izin verilir. */
+export function decreaseStockItem(
   productId: string,
   warehouseId: string,
   quantity: number,
   note?: string,
 ): Promise<StockItem> {
-  return request(`/stock-items/${productId}`, {
-    method: 'PATCH',
+  return request(`/stock-items/${productId}/decrease`, {
+    method: 'POST',
     body: JSON.stringify({ warehouseId, quantity, note: note || undefined }),
   });
 }
@@ -2800,6 +2830,9 @@ export function transferStock(productId: string, input: TransferStockInput): Pro
   });
 }
 
+export type StockMovementType =
+  'INCREASE' | 'DECREASE' | 'QUOTE_SALE' | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'CORRECTION';
+
 export interface StockMovement {
   id: string;
   productId: string;
@@ -2808,10 +2841,18 @@ export interface StockMovement {
   warehouseName: string;
   userName: string;
   userEmail: string;
+  type: StockMovementType;
   note: string | null;
   previousQuantity: number;
+  /** Hareketin kendisi - her zaman pozitif, "yeni degeri" GOSTERMEZ (bkz. newQuantity). */
   quantity: number;
+  newQuantity: number;
   delta: number;
+  /** Sadece INCREASE'de dolu. */
+  unitCost: number | null;
+  previousAvgCost: number | null;
+  newAvgCost: number | null;
+  quoteId: string | null;
   createdAt: string;
 }
 

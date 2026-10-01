@@ -134,8 +134,8 @@ export function ProductDetailPage() {
         <MetaCell label={tr.crm.products.detail.priceLabel}>
           {product.price ? `${product.price} ${product.currency}` : '—'}
         </MetaCell>
-        <MetaCell label={tr.crm.products.detail.costPriceLabel}>
-          {product.costPrice ? `₺${product.costPrice}` : '—'}
+        <MetaCell label={tr.crm.products.detail.avgCostLabel}>
+          {product.avgCost ? `₺${product.avgCost}` : '—'}
         </MetaCell>
         <MetaCell label={tr.crm.products.detail.minStockLevelLabel}>
           {product.minStockLevel !== null ? String(product.minStockLevel) : '—'}

@@ -16,6 +16,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { ApproveQuoteModal } from './approve-quote-modal';
 import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
@@ -483,8 +484,8 @@ export function QuoteDetailPage() {
     );
   }
 
-  function handleConfirmApprove() {
-    approveMutation.mutate(undefined, {
+  function handleConfirmApprove(warehouseId: string) {
+    approveMutation.mutate(warehouseId, {
       onSuccess: () => {
         toast.success(tr.crm.quotes.detail.approveSuccess);
         setPendingAction(undefined);
@@ -671,15 +672,21 @@ export function QuoteDetailPage() {
         </div>
       )}
 
-      {pendingAction && (
+      {pendingAction === 'APPROVED' && (
+        <ApproveQuoteModal
+          isPending={approveMutation.isPending}
+          onConfirm={handleConfirmApprove}
+          onCancel={() => setPendingAction(undefined)}
+        />
+      )}
+
+      {pendingAction === 'REJECTED' && (
         <ConfirmModal
           title={tr.crm.quotes.statusChangeConfirmTitle}
-          message={tr.crm.quotes.statusChangeConfirm(tr.crm.quotes.statusOptions[pendingAction])}
+          message={tr.crm.quotes.statusChangeConfirm(tr.crm.quotes.statusOptions.REJECTED)}
           confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
-          isPending={
-            pendingAction === 'APPROVED' ? approveMutation.isPending : rejectMutation.isPending
-          }
-          onConfirm={pendingAction === 'APPROVED' ? handleConfirmApprove : handleConfirmReject}
+          isPending={rejectMutation.isPending}
+          onConfirm={handleConfirmReject}
           onCancel={() => setPendingAction(undefined)}
         />
       )}

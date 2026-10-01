@@ -173,6 +173,12 @@ export function StockListContent() {
       render: (item) => item.product.minStockLevel ?? '—',
     },
     {
+      key: 'avgCost',
+      header: tr.crm.stock.avgCostColumn,
+      className: 'text-app-muted',
+      render: (item) => item.product.avgCost ?? '—',
+    },
+    {
       key: 'actions',
       header: tr.crm.stock.actionsColumn,
       className: 'w-px',

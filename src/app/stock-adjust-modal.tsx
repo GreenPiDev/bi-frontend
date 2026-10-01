@@ -7,9 +7,12 @@ import { Select } from '../components/ui/select';
 import { TextField } from '../components/ui/text-field';
 import { TextareaField } from '../components/ui/textarea-field';
 import { useToast } from '../components/ui/toast-context';
-import { stockAdjustFormSchema, type StockAdjustFormValues } from '../features/crm/schemas';
+import { createStockAdjustFormSchema, type StockAdjustFormValues } from '../features/crm/schemas';
 import { useWarehousesQuery } from '../features/crm/use-warehouses';
-import { useUpsertStockItemMutation } from '../features/crm/use-stock-items';
+import {
+  useDecreaseStockMutation,
+  useIncreaseStockMutation,
+} from '../features/crm/use-stock-items';
 import { ApiError, type StockItem } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -21,7 +24,9 @@ interface StockAdjustModalProps {
 
 export function StockAdjustModal({ item, mode, onClose }: StockAdjustModalProps) {
   const toast = useToast();
-  const mutation = useUpsertStockItemMutation();
+  const increaseMutation = useIncreaseStockMutation();
+  const decreaseMutation = useDecreaseStockMutation();
+  const mutation = mode === 'increase' ? increaseMutation : decreaseMutation;
   const warehousesQuery = useWarehousesQuery({ pageSize: 100 });
   const warehouses = warehousesQuery.data?.data ?? [];
   const defaultWarehouseId = item.warehouses[0]?.warehouseId ?? warehouses[0]?.id ?? '';
@@ -32,8 +37,8 @@ export function StockAdjustModal({ item, mode, onClose }: StockAdjustModalProps)
     watch,
     formState: { errors },
   } = useForm<StockAdjustFormValues>({
-    resolver: zodResolver(stockAdjustFormSchema),
-    defaultValues: { warehouseId: defaultWarehouseId, amount: '', note: '' },
+    resolver: zodResolver(createStockAdjustFormSchema(mode)),
+    defaultValues: { warehouseId: defaultWarehouseId, amount: '', unitCost: '', note: '' },
   });
 
   const warehouseIdValue = watch('warehouseId');
@@ -48,27 +53,30 @@ export function StockAdjustModal({ item, mode, onClose }: StockAdjustModalProps)
 
   function onSubmit(values: StockAdjustFormValues) {
     const amount = Number(values.amount);
-    const currentQuantity = Number(
-      item.warehouses.find((w) => w.warehouseId === values.warehouseId)?.quantity ?? 0,
-    );
-    const newQuantity = mode === 'increase' ? currentQuantity + amount : currentQuantity - amount;
-    mutation.mutate(
-      {
-        productId: item.productId,
-        warehouseId: values.warehouseId,
-        quantity: newQuantity,
-        note: values.note,
+    const payload =
+      mode === 'increase'
+        ? {
+            productId: item.productId,
+            warehouseId: values.warehouseId,
+            quantity: amount,
+            unitCost: Number(values.unitCost),
+            note: values.note,
+          }
+        : {
+            productId: item.productId,
+            warehouseId: values.warehouseId,
+            quantity: amount,
+            note: values.note,
+          };
+    mutation.mutate(payload as never, {
+      onSuccess: () => {
+        toast.success(tr.crm.stock.saveSuccess);
+        onClose();
       },
-      {
-        onSuccess: () => {
-          toast.success(tr.crm.stock.saveSuccess);
-          onClose();
-        },
-        onError: (error) => {
-          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-        },
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
-    );
+    });
   }
 
   return (
@@ -140,6 +148,16 @@ export function StockAdjustModal({ item, mode, onClose }: StockAdjustModalProps)
             <p className={`text-xs font-medium ${amountHint.className}`}>{amountHint.text}</p>
           )}
         </div>
+        {mode === 'increase' && (
+          <TextField
+            label={tr.crm.stock.unitCostLabel}
+            hint={tr.crm.stock.unitCostHint}
+            inputMode="decimal"
+            error={errors.unitCost?.message}
+            required
+            {...register('unitCost')}
+          />
+        )}
         <TextareaField
           label={tr.crm.stock.noteLabel}
           hint={tr.crm.stock.noteHint}

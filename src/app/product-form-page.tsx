@@ -75,7 +75,6 @@ export function ProductFormPage() {
         description: productQuery.data.description ?? undefined,
         category: productQuery.data.category ?? undefined,
         brand: productQuery.data.brand ?? undefined,
-        costPrice: productQuery.data.costPrice ?? undefined,
       });
     }
   }, [productQuery.data, reset]);
@@ -109,10 +108,6 @@ export function ProductFormPage() {
       description: values.description || emptyValue,
       category: values.category || emptyValue,
       brand: values.brand || emptyValue,
-      costPrice:
-        values.costPrice === undefined || values.costPrice === ''
-          ? emptyValue
-          : Number(values.costPrice),
     };
 
     try {

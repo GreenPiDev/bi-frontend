@@ -31,7 +31,6 @@ export function ProductFormFields({
   onRequestAddBrand,
 }: ProductFormFieldsProps) {
   const priceField = register('price');
-  const costPriceField = register('costPrice');
   const minStockLevelField = register('minStockLevel');
   const maxDiscountPctField = register('maxDiscountPct');
 
@@ -128,18 +127,6 @@ export function ProductFormFields({
           { value: 'USD', label: 'USD' },
         ]}
         {...register('currency')}
-      />
-      <TextField
-        type="text"
-        inputMode="decimal"
-        label={tr.crm.products.form.costPriceLabel}
-        hint={tr.crm.products.form.costPriceHint}
-        error={errors.costPrice?.message}
-        {...costPriceField}
-        onChange={(event) => {
-          event.target.value = event.target.value.replace(/[^0-9.]/g, '');
-          costPriceField.onChange(event);
-        }}
       />
       <TextField
         type="text"
