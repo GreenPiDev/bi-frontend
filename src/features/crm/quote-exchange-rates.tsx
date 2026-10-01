@@ -11,9 +11,9 @@ import {
 import { useFxRatesQuery } from './use-quotes';
 
 /** FxService'ten gelen kur, ondalikta anlamsiz uzunlukta gelebilir (orn.
- * "48.99559039686428") - kullanicinin girecegi/gorecegi deger icin 3 basamak yeterli. */
+ * "48.99559039686428") - kullanicinin girecegi/gorecegi deger icin 4 basamak yeterli. */
 function roundRate(rate: number): string {
-  return rate.toFixed(2);
+  return rate.toFixed(4);
 }
 
 /** Sayısal metin alanları icin: type="number" spinner oklarini kaldirmak amaciyla

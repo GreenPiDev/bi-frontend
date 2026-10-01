@@ -139,6 +139,12 @@ export function QuoteFormPage() {
   const watchedItems = watch('items');
   const quoteCurrency = watch('quoteCurrency') || 'TRY';
   const [exchangeRates, setExchangeRates] = useState<QuoteExchangeRatesValue>({ rates: {} });
+  // Kur input'lari currency koduyla anahtarlanir (hangi quoteCurrency'ye gore
+  // hesaplandigi tutulmaz) - para birimi degisince eski degerler yanlis referansa
+  // gore kalir, sifirlanip yeniden cekilmeli.
+  useEffect(() => {
+    setExchangeRates({ rates: {} });
+  }, [quoteCurrency]);
   const revisionSummaryQuery = useQuoteRevisionSummaryQuery(selectedAccountId);
 
   // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
@@ -359,8 +365,10 @@ export function QuoteFormPage() {
       leadTime: values.leadTime || undefined,
       paymentMethod: values.paymentMethod || undefined,
       title: values.title || undefined,
+      paymentTerms: values.paymentTerms || undefined,
       salesTerms: values.salesTerms || undefined,
       deliveryTerms: values.deliveryTerms || undefined,
+      generalTerms: values.generalTerms || undefined,
       ibanOptionId: values.ibanOptionId || undefined,
       quoteCurrency: values.quoteCurrency,
       // Bos birakilirsa backend tenant'in varsayilan sablonunu otomatik atar
@@ -886,7 +894,14 @@ export function QuoteFormPage() {
             </aside>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <TextareaField
+              label={tr.crm.quotes.form.paymentTermsLabel}
+              placeholder={tr.crm.quotes.form.paymentTermsPlaceholder}
+              hint={tr.crm.quotes.form.paymentTermsHint}
+              error={errors.paymentTerms?.message}
+              {...register('paymentTerms')}
+            />
             <TextareaField
               label={tr.crm.quotes.form.salesTermsLabel}
               placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
@@ -900,6 +915,13 @@ export function QuoteFormPage() {
               hint={tr.crm.quotes.form.deliveryTermsHint}
               error={errors.deliveryTerms?.message}
               {...register('deliveryTerms')}
+            />
+            <TextareaField
+              label={tr.crm.quotes.form.generalTermsLabel}
+              placeholder={tr.crm.quotes.form.generalTermsPlaceholder}
+              hint={tr.crm.quotes.form.generalTermsHint}
+              error={errors.generalTerms?.message}
+              {...register('generalTerms')}
             />
           </div>
 

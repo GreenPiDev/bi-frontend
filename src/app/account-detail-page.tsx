@@ -15,7 +15,7 @@ import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import { useProjectsQuery } from '../features/crm/use-projects';
 import { useQuotesQuery } from '../features/crm/use-quotes';
 import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
-import type { Interaction, Opportunity, Project, Quote } from '../lib/api';
+import type { Contact, Interaction, Opportunity, Project, Quote } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
@@ -148,6 +148,36 @@ const QUOTE_COLUMNS: TableColumn<Quote>[] = [
   },
 ];
 
+const CONTACT_COLUMNS: TableColumn<Contact>[] = [
+  {
+    key: 'name',
+    header: tr.crm.contacts.nameColumn,
+    render: (c) => (
+      <span className="font-semibold text-app-text">
+        {c.firstName} {c.lastName}
+      </span>
+    ),
+  },
+  {
+    key: 'department',
+    header: tr.crm.contacts.departmentColumn,
+    className: 'text-app-muted',
+    render: (c) => c.department ?? '—',
+  },
+  {
+    key: 'phone',
+    header: tr.crm.contacts.phoneColumn,
+    className: 'text-app-muted',
+    render: (c) => c.phone ?? '—',
+  },
+  {
+    key: 'email',
+    header: tr.crm.contacts.emailColumn,
+    className: 'text-app-muted',
+    render: (c) => c.email ?? '—',
+  },
+];
+
 const PROJECT_COLUMNS: TableColumn<Project>[] = [
   {
     key: 'projectNumber',
@@ -262,23 +292,14 @@ export function AccountDetailPage() {
 
                   <div className="rounded-xl border border-app-border bg-white p-5">
                     <SectionHeader>{tr.crm.accounts.detail.contactsTitle}</SectionHeader>
-                    {account.contacts.length === 0 ? (
-                      <p className="text-sm text-app-muted">{tr.crm.accounts.detail.noContacts}</p>
-                    ) : (
-                      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {account.contacts.map((contact) => (
-                          <li key={contact.id}>
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/kisiler/${contact.id}`)}
-                              className="text-sm font-semibold text-app-brand hover:underline"
-                            >
-                              {contact.firstName} {contact.lastName}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <Table<Contact>
+                      columns={CONTACT_COLUMNS}
+                      data={account.contacts}
+                      keyField={(contact) => contact.id}
+                      onRowClick={(contact) => navigate(`/kisiler/${contact.id}`)}
+                      getRowHref={(contact) => `/kisiler/${contact.id}`}
+                      emptyMessage={tr.crm.accounts.detail.noContacts}
+                    />
                   </div>
 
                   <div className="rounded-xl border border-app-border bg-white p-5">

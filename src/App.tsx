@@ -471,7 +471,7 @@ function App() {
           }
         />
         <Route
-          path="/teklif-sablonlari/:id/duzenle"
+          path="/teklif-sablonlari/duzenle/:id"
           element={
             <TenantPageRoute pageKey="quote-templates">
               <QuoteTemplateFormPage />

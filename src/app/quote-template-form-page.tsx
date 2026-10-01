@@ -136,7 +136,7 @@ export function QuoteTemplateFormPage() {
       onSuccess: (template) => {
         toast.success(isEdit ? strings.updateSuccess : strings.createSuccess);
         if (isEdit) return;
-        navigate(`/teklif-sablonlari/${template.id}/duzenle`, { state: { from: backTo } });
+        navigate(`/teklif-sablonlari/duzenle/${template.id}`, { state: { from: backTo } });
       },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);

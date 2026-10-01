@@ -85,8 +85,10 @@ export function QuoteEditPage() {
   // secili oldugu bilinmez, kullanici degistirmek isterse yeniden secer.
   const [ibanOptionId, setIbanOptionId] = useState('');
   const [templateId, setTemplateId] = useState('');
+  const [paymentTerms, setPaymentTerms] = useState('');
   const [salesTerms, setSalesTerms] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
+  const [generalTerms, setGeneralTerms] = useState('');
   const [quoteCurrency, setQuoteCurrency] = useState('TRY');
   const [exchangeRates, setExchangeRates] = useState<QuoteExchangeRatesValue>({ rates: {} });
   const [revisionNote, setRevisionNote] = useState('');
@@ -112,8 +114,10 @@ export function QuoteEditPage() {
     setTitle(quoteQuery.data.title ?? '');
     setLeadTime(quoteQuery.data.leadTime ?? '');
     setPaymentMethod(quoteQuery.data.paymentMethod ?? '');
+    setPaymentTerms(quoteQuery.data.paymentTerms ?? '');
     setSalesTerms(quoteQuery.data.salesTerms ?? '');
     setDeliveryTerms(quoteQuery.data.deliveryTerms ?? '');
+    setGeneralTerms(quoteQuery.data.generalTerms ?? '');
     setTemplateId(quoteQuery.data.templateId ?? '');
     setQuoteCurrency(quoteQuery.data.quoteCurrency);
     const savedRates = quoteQuery.data.exchangeRates;
@@ -301,8 +305,10 @@ export function QuoteEditPage() {
         leadTime: leadTime || null,
         paymentMethod: paymentMethod || null,
         ibanOptionId: ibanOptionId || undefined,
+        paymentTerms: paymentTerms || null,
         salesTerms: salesTerms || null,
         deliveryTerms: deliveryTerms || null,
+        generalTerms: generalTerms || null,
         // Duzenlemede undefined "dokunma" anlamina gelir (bkz.
         // UpdateQuoteSchema) - bu yuzden burada daima acik deger gonderilir.
         templateId: templateId || null,
@@ -573,6 +579,10 @@ export function QuoteEditPage() {
                 setIbanOptionId(value);
               } else if (field === 'quoteCurrency') {
                 setQuoteCurrency(value);
+                // Kur input'lari currency koduyla anahtarlanir (hangi quoteCurrency'ye
+                // gore hesaplandigi tutulmaz) - para birimi degisince eski degerler
+                // yanlis referansa gore kalir, sifirlanip yeniden cekilmeli.
+                setExchangeRates({ rates: {} });
               } else if (field === 'templateId') {
                 setTemplateId(value);
               }
@@ -733,7 +743,14 @@ export function QuoteEditPage() {
             </aside>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <TextareaField
+              label={tr.crm.quotes.edit.paymentTermsLabel}
+              placeholder={tr.crm.quotes.form.paymentTermsPlaceholder}
+              hint={tr.crm.quotes.form.paymentTermsHint}
+              value={paymentTerms}
+              onChange={(event) => setPaymentTerms(event.target.value)}
+            />
             <TextareaField
               label={tr.crm.quotes.edit.salesTermsLabel}
               placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
@@ -747,6 +764,13 @@ export function QuoteEditPage() {
               hint={tr.crm.quotes.form.deliveryTermsHint}
               value={deliveryTerms}
               onChange={(event) => setDeliveryTerms(event.target.value)}
+            />
+            <TextareaField
+              label={tr.crm.quotes.edit.generalTermsLabel}
+              placeholder={tr.crm.quotes.form.generalTermsPlaceholder}
+              hint={tr.crm.quotes.form.generalTermsHint}
+              value={generalTerms}
+              onChange={(event) => setGeneralTerms(event.target.value)}
             />
           </div>
 

@@ -113,9 +113,9 @@ export function QuoteTemplateListContent() {
         data={templatesQuery.data?.data ?? []}
         keyField={(template) => template.id}
         onRowClick={(template) =>
-          navigate(`/teklif-sablonlari/${template.id}/duzenle`, { state: backState })
+          navigate(`/teklif-sablonlari/duzenle/${template.id}`, { state: backState })
         }
-        getRowHref={(template) => `/teklif-sablonlari/${template.id}/duzenle`}
+        getRowHref={(template) => `/teklif-sablonlari/duzenle/${template.id}`}
         isLoading={templatesQuery.isPending}
         loadingMessage={tr.crm.quoteTemplates.loading}
         emptyMessage={tr.crm.quoteTemplates.empty}

@@ -1,7 +1,12 @@
 import type { ReactNode } from 'react';
-import { type QuoteTemplate } from '../lib/api';
+import { type QuoteExchangeRates, type QuoteTemplate } from '../lib/api';
 import { formatIbanInput } from '../lib/iban-validation';
-import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import {
+  computeLineTotal,
+  convertTotalsToQuoteCurrency,
+  formatCurrencyAmount,
+  groupQuoteItemTotals,
+} from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
@@ -15,6 +20,8 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 export interface QuoteTemplatePrintDocumentData {
   quoteNumber: string;
   quoteDate: string;
+  quoteCurrency: string;
+  exchangeRates: QuoteExchangeRates | null;
   account: {
     name: string;
     address: string | null;
@@ -31,8 +38,10 @@ export interface QuoteTemplatePrintDocumentData {
     vatPct: string;
     product: { name: string };
   }>;
+  paymentTerms: string | null;
   salesTerms: string | null;
   deliveryTerms: string | null;
+  generalTerms: string | null;
   ibanBankName: string | null;
   ibanAccountHolderName: string | null;
   ibanAccountNumber: string | null;
@@ -78,6 +87,11 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
       currency: item.currency,
     })),
   );
+  const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
+  const conversion =
+    foreignCurrencyTotals.length > 0
+      ? convertTotalsToQuoteCurrency(totals, quote.quoteCurrency, quote.exchangeRates?.rates ?? {})
+      : null;
 
   const pages: ReactNode[] = [];
 
@@ -95,7 +109,7 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
         />
       )}
       <div className="relative flex flex-1 flex-col justify-between p-10">
-        <div className="flex justify-end">
+        <div className="flex justify-start">
           {template.logoUrl && (
             <img
               src={template.logoUrl}
@@ -209,9 +223,12 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
         </tbody>
       </table>
 
-      <div className="mt-4 flex flex-col items-end gap-1 text-sm">
+      <div className="mt-4 flex flex-wrap justify-end gap-4 text-sm">
         {totals.map((t) => (
           <div key={t.currency} className="flex w-64 flex-col gap-1">
+            {totals.length > 1 && (
+              <span className="text-right text-xs font-semibold text-app-muted">{t.currency}</span>
+            )}
             <div className="flex justify-between">
               <span>{strings.subtotalLabel}</span>
               <span>{formatCurrencyAmount(t.subtotal, t.currency)}</span>
@@ -230,6 +247,35 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           </div>
         ))}
       </div>
+
+      {conversion && (
+        <div className="mt-4 flex flex-col items-end gap-1 text-sm">
+          {conversion.missingRateCurrencies.length === 0 ? (
+            <>
+              <div
+                className="flex w-64 justify-between rounded px-2 py-1 font-bold"
+                style={{ backgroundColor: '#e8f5e9' }}
+              >
+                <span>{tr.crm.quotes.form.convertedGrandTotalLabel(quote.quoteCurrency)}:</span>
+                <span>{formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)}</span>
+              </div>
+              <p className="max-w-xs text-right text-[11px] text-app-muted">
+                {tr.crm.quotes.form.exchangeRateNote(
+                  foreignCurrencyTotals.map(
+                    (t) =>
+                      `1 ${t.currency} = ${quote.exchangeRates?.rates[t.currency]} ${quote.quoteCurrency}`,
+                  ),
+                  quote.exchangeRates?.asOf,
+                )}
+              </p>
+            </>
+          ) : (
+            <p className="max-w-xs text-right text-[11px] text-app-danger">
+              {tr.crm.quotes.form.missingExchangeRate(conversion.missingRateCurrencies)}
+            </p>
+          )}
+        </div>
+      )}
 
       {quote.ibanNumber && (
         <div className="mt-10">
@@ -262,6 +308,14 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
   // 3. Kosullar (teklifin kendi satis/teslimat sartlari) + onay
   pages.push(
     <section key="terms" className="print-page-break p-10">
+      {quote.paymentTerms && (
+        <div className="mb-8">
+          <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            {strings.paymentConditionsTitle}
+          </h3>
+          <p className="mt-2 text-sm whitespace-pre-wrap">{quote.paymentTerms}</p>
+        </div>
+      )}
       {quote.salesTerms && (
         <div className="mb-8">
           <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
@@ -276,6 +330,14 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
             {strings.deliveryConditionsTitle}
           </h3>
           <p className="mt-2 text-sm whitespace-pre-wrap">{quote.deliveryTerms}</p>
+        </div>
+      )}
+      {quote.generalTerms && (
+        <div className="mb-8">
+          <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            {strings.generalConditionsTitle}
+          </h3>
+          <p className="mt-2 text-sm whitespace-pre-wrap">{quote.generalTerms}</p>
         </div>
       )}
 

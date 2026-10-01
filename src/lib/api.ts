@@ -2182,8 +2182,10 @@ export interface Quote {
   leadTime: string | null;
   paymentMethod: string | null;
   title: string | null;
+  paymentTerms: string | null;
   salesTerms: string | null;
   deliveryTerms: string | null;
+  generalTerms: string | null;
   ibanBankName: string | null;
   ibanAccountHolderName: string | null;
   ibanAccountNumber: string | null;
@@ -2220,8 +2222,10 @@ export interface CreateQuoteInput {
   leadTime?: string;
   paymentMethod?: string;
   title?: string;
+  paymentTerms?: string;
   salesTerms?: string;
   deliveryTerms?: string;
+  generalTerms?: string;
   ibanOptionId?: string;
   quoteCurrency: string;
   exchangeRates?: QuoteExchangeRates;
@@ -2239,8 +2243,10 @@ export interface UpdateQuoteInput {
   leadTime?: string | null;
   paymentMethod?: string | null;
   title?: string | null;
+  paymentTerms?: string | null;
   salesTerms?: string | null;
   deliveryTerms?: string | null;
+  generalTerms?: string | null;
   ibanOptionId?: string | null;
   quoteCurrency?: string;
   exchangeRates?: QuoteExchangeRates;

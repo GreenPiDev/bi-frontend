@@ -36,7 +36,7 @@ import {
 import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
-import { downloadBlob } from '../lib/download';
+import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
 import {
   computeLineTotal,
@@ -280,8 +280,16 @@ export function QuoteContentBody({
         )}
       </div>
 
-      {(quote.salesTerms || quote.deliveryTerms) && (
+      {(quote.paymentTerms || quote.salesTerms || quote.deliveryTerms || quote.generalTerms) && (
         <div className="print-page-break mt-8 flex flex-col gap-4 border-t border-app-border pt-6">
+          {quote.paymentTerms && (
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <SectionHeader>{tr.crm.quotes.detail.paymentTermsTitle}</SectionHeader>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+                {quote.paymentTerms}
+              </p>
+            </div>
+          )}
           {quote.salesTerms && (
             <div className="rounded-xl bg-white p-5 shadow-sm">
               <SectionHeader>{tr.crm.quotes.detail.salesTermsTitle}</SectionHeader>
@@ -295,6 +303,14 @@ export function QuoteContentBody({
               <SectionHeader>{tr.crm.quotes.detail.deliveryTermsTitle}</SectionHeader>
               <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
                 {quote.deliveryTerms}
+              </p>
+            </div>
+          )}
+          {quote.generalTerms && (
+            <div className="rounded-xl bg-white p-5 shadow-sm">
+              <SectionHeader>{tr.crm.quotes.detail.generalTermsTitle}</SectionHeader>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+                {quote.generalTerms}
               </p>
             </div>
           )}
@@ -401,8 +417,10 @@ export function QuoteDetailPage() {
   const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const exportPdfMutation = useMutation({
     mutationFn: () => exportQuotePdf(id),
-    onSuccess: (blob) => downloadBlob(blob, `${quoteQuery.data?.quoteNumber ?? 'teklif'}.pdf`),
-    onError: (error) => {
+    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
+    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
+    onError: (error, _vars, context) => {
+      context?.tabHandle?.close();
       toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
     },
   });

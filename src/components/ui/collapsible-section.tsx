@@ -17,12 +17,12 @@ export function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div>
+    <div className="rounded-lg bg-white">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
-        className="flex w-full cursor-pointer items-center gap-3 rounded-lg bg-white p-3 text-left hover:bg-sky-50"
+        className={`flex w-full cursor-pointer items-center gap-3 p-3 text-left hover:bg-sky-50 ${open ? 'rounded-t-lg' : 'rounded-lg'}`}
       >
         <ChevronDown
           size={18}
@@ -34,7 +34,7 @@ export function CollapsibleSection({
         </div>
       </button>
 
-      {open && <div className="mt-3">{children}</div>}
+      {open && <div className="rounded-b-lg px-3 pb-3">{children}</div>}
     </div>
   );
 }

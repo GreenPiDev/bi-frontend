@@ -175,6 +175,8 @@ function buildSampleQuote(
   return {
     quoteNumber: strings.sampleQuoteNumber,
     quoteDate: new Date().toISOString(),
+    quoteCurrency: 'TRY',
+    exchangeRates: null,
     account: {
       name: strings.sampleAccountName,
       address: strings.sampleAccountAddress,
@@ -202,8 +204,10 @@ function buildSampleQuote(
         product: { name: strings.sampleItem2Name },
       },
     ],
+    paymentTerms: strings.samplePaymentTerms,
     salesTerms: strings.sampleSalesTerms,
     deliveryTerms: strings.sampleDeliveryTerms,
+    generalTerms: strings.sampleGeneralTerms,
     ibanBankName: null,
     ibanAccountHolderName: null,
     ibanAccountNumber: null,
