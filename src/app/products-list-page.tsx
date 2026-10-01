@@ -30,11 +30,7 @@ import {
   useProductAttributeKeysQuery,
   useProductsQuery,
 } from '../features/crm/use-products';
-import {
-  isLowStock,
-  sortByStockStatus,
-  stockStatusRowClassName,
-} from '../features/crm/stock-status';
+import { isLowStock, stockStatusRowClassName } from '../features/crm/stock-status';
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
 import { ApiError, type ProductWithStock } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -414,10 +410,7 @@ export function ProductsListContent() {
 
       <Table
         columns={columns}
-        data={sortByStockStatus(productsQuery.data?.data ?? [], (product) => ({
-          quantity: product.stockQuantity,
-          minStockLevel: product.minStockLevel,
-        }))}
+        data={productsQuery.data?.data ?? []}
         keyField={(product) => product.id}
         onRowClick={(product) => navigate(`/urunler/${product.id}`, { state: backState })}
         getRowHref={(product) => `/urunler/${product.id}`}

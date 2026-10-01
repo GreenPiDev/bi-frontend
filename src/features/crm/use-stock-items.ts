@@ -21,6 +21,7 @@ export function useStockItemsQuery(
     brand?: string;
     category?: string;
     stockStatus?: StockStatusFilter;
+    sort?: string;
   } = {},
 ) {
   return useQuery({

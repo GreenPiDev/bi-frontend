@@ -35,27 +35,3 @@ export function stockStatusRowClassName(
 ): string | undefined {
   return STOCK_STATUS_ROW_CLASS[getStockStatus(quantity, minStockLevel)];
 }
-
-const STOCK_STATUS_SORT_ORDER: Record<StockStatus, number> = {
-  low: 0,
-  equal: 1,
-  ok: 2,
-  unknown: 3,
-};
-
-/** Kirmizi -> mavi -> yesil -> renksiz sirasiyla sirlar (sayfa icindeki mevcut sonuc
- * kumesi uzerinde, client-side - stok durumu backend'in ListQuerySchema `sort`
- * alaninda desteklenen bir kolon degil). */
-export function sortByStockStatus<T>(
-  items: T[],
-  getFields: (item: T) => { quantity: number | string; minStockLevel: number | null },
-): T[] {
-  return [...items].sort((a, b) => {
-    const fieldsA = getFields(a);
-    const fieldsB = getFields(b);
-    return (
-      STOCK_STATUS_SORT_ORDER[getStockStatus(fieldsA.quantity, fieldsA.minStockLevel)] -
-      STOCK_STATUS_SORT_ORDER[getStockStatus(fieldsB.quantity, fieldsB.minStockLevel)]
-    );
-  });
-}

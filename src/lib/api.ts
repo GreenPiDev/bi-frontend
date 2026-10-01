@@ -2631,6 +2631,7 @@ export function listStockItems(
     brand?: string;
     category?: string;
     stockStatus?: StockStatusFilter;
+    sort?: string;
   } = {},
 ): Promise<PagedResult<StockItem>> {
   const query = new URLSearchParams();
@@ -2641,6 +2642,7 @@ export function listStockItems(
   if (params.brand) query.set('brand', params.brand);
   if (params.category) query.set('category', params.category);
   if (params.stockStatus) query.set('stockStatus', params.stockStatus);
+  if (params.sort) query.set('sort', params.sort);
   const qs = query.toString();
   return request(`/stock-items${qs ? `?${qs}` : ''}`);
 }

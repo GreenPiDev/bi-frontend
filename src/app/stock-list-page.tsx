@@ -6,7 +6,7 @@ import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
 import { IconActionButton } from '../components/ui/icon-action-button';
-import { Pagination, Table, type SortDirection, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Tooltip } from '../components/ui/tooltip';
@@ -16,11 +16,7 @@ import { useBrandOptionsQuery } from '../features/crm/use-brand-options';
 import { useProductCategoryOptionsQuery } from '../features/crm/use-product-categories';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useLowStockItemsQuery, useStockItemsQuery } from '../features/crm/use-stock-items';
-import {
-  isLowStock,
-  sortByStockStatus,
-  stockStatusRowClassName,
-} from '../features/crm/stock-status';
+import { isLowStock, stockStatusRowClassName } from '../features/crm/stock-status';
 import { StockStatusLegend } from '../features/crm/stock-status-legend';
 import { StockUpdateModal } from './stock-update-modal';
 import { StockAdjustModal } from './stock-adjust-modal';
@@ -43,11 +39,10 @@ export function StockListContent() {
   const [filterStockStatus, setFilterStockStatus] = useState<StockStatusFilter | ''>('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Urun kolonu icin 3 durumlu siralama: asc -> desc -> null (varsayilan renk/durum
-  // bazli sort'a don, bkz. sortByStockStatus). Sayfalama su an backend'de yapildigina
-  // gore bu sadece o anki sayfanin satirlarini client-side yeniden siraliyor - diger
-  // liste sayfalarindaki (orn. kisiler) server-side sort'tan farkli, cunku varsayilan
-  // durum zaten backend sort'u degil renk/durum bazli bir client-side kural.
-  const [nameSort, setNameSort] = useState<SortDirection | null>(null);
+  // bazli sort'a don). Server-side yapiliyor (kisiler sayfasiyla ayni `sort` deseni) -
+  // aksi halde sadece o anki sayfanin satirlari siralanir, tum sonuc kumesi degil
+  // (bkz. kullanici bulgusu).
+  const [sort, setSort] = useState<TableSort | null>(null);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const stockItemsQuery = useStockItemsQuery({
@@ -58,6 +53,7 @@ export function StockListContent() {
     brand: filterBrand || undefined,
     category: filterCategory || undefined,
     stockStatus: filterStockStatus || undefined,
+    sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const lowStockQuery = useLowStockItemsQuery();
   const productListsQuery = useProductListsQuery();
@@ -202,21 +198,10 @@ export function StockListContent() {
 
       <Table
         columns={columns}
-        data={
-          nameSort
-            ? [...(stockItemsQuery.data?.data ?? [])].sort(
-                (a, b) =>
-                  a.product.name.localeCompare(b.product.name, 'tr') *
-                  (nameSort === 'asc' ? 1 : -1),
-              )
-            : sortByStockStatus(stockItemsQuery.data?.data ?? [], (item) => ({
-                quantity: item.quantity,
-                minStockLevel: item.product.minStockLevel,
-              }))
-        }
+        data={stockItemsQuery.data?.data ?? []}
         keyField={(item) => item.id}
-        sort={nameSort ? { key: 'name', direction: nameSort } : null}
-        onSortChange={(next) => setNameSort(next?.direction ?? null)}
+        sort={sort}
+        onSortChange={setSort}
         isLoading={stockItemsQuery.isPending}
         loadingMessage={tr.crm.stock.loading}
         emptyMessage={tr.crm.stock.empty}
