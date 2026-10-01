@@ -204,6 +204,8 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
             <th className="p-3 text-left">{strings.itemsProductColumn}</th>
             <th className="p-3 text-center">{strings.itemsQuantityColumn}</th>
             <th className="p-3 text-right">{strings.itemsUnitPriceColumn}</th>
+            <th className="p-3 text-right">{strings.itemsDiscountColumn}</th>
+            <th className="p-3 text-right">{strings.itemsVatColumn}</th>
             <th className="p-3 text-right">{strings.itemsTotalColumn}</th>
           </tr>
         </thead>
@@ -215,6 +217,8 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
               <td className="p-3 text-right">
                 {formatCurrencyAmount(Number(item.unitPrice), item.currency)}
               </td>
+              <td className="p-3 text-right">{`%${item.discountPct}`}</td>
+              <td className="p-3 text-right">{`%${item.vatPct}`}</td>
               <td className="p-3 text-right">
                 {formatCurrencyAmount(lineTotal(item), item.currency)}
               </td>

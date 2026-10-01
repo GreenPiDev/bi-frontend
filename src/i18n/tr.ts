@@ -1904,6 +1904,8 @@ export const tr = {
       itemsProductColumn: 'Ürün ve Açıklaması',
       itemsQuantityColumn: 'Miktar',
       itemsUnitPriceColumn: 'Birim Fiyat',
+      itemsDiscountColumn: 'İskonto',
+      itemsVatColumn: 'KDV',
       itemsTotalColumn: 'Toplam',
       subtotalLabel: 'Toplam',
       vatLabel: (pct: string) => `KDV (%${pct})`,
