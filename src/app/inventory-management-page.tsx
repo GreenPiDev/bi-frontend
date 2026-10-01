@@ -50,15 +50,6 @@ export function InventoryManagementPage() {
     ...(stockAccessible
       ? [{ key: 'stock', label: tr.inventory.tabs.stock, content: <StockListContent /> }]
       : []),
-    ...(warehousesAccessible
-      ? [
-          {
-            key: 'warehouses',
-            label: tr.inventory.tabs.warehouses,
-            content: <WarehousesListContent />,
-          },
-        ]
-      : []),
     ...(stockAccessible
       ? [
           {
@@ -74,6 +65,15 @@ export function InventoryManagementPage() {
             key: 'priceHistory',
             label: tr.inventory.tabs.priceHistory,
             content: <PriceHistoryContent />,
+          },
+        ]
+      : []),
+    ...(warehousesAccessible
+      ? [
+          {
+            key: 'warehouses',
+            label: tr.inventory.tabs.warehouses,
+            content: <WarehousesListContent />,
           },
         ]
       : []),
