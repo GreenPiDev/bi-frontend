@@ -77,6 +77,17 @@ export function useInteractionQuery(id: string) {
   });
 }
 
+/** Bir gorusmenin detay sayfasinda "Bagli Gorusmeler" karti olarak gosterilen ek kayitlar -
+ * parentInteractionId verilen /interactions istegi ana listede gizli olan bu kayitlari
+ * getirir (bkz. InteractionsService.list varsayilan filtresi). */
+export function useLinkedInteractionsQuery(parentInteractionId: string) {
+  return useQuery({
+    queryKey: [...INTERACTIONS_QUERY_KEY, 'linked', parentInteractionId],
+    queryFn: () => listInteractions({ parentInteractionId, pageSize: 100 }),
+    enabled: Boolean(parentInteractionId),
+  });
+}
+
 export function useCreateInteractionMutation() {
   const queryClient = useQueryClient();
   return useMutation({

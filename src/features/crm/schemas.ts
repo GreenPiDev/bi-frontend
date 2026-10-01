@@ -156,6 +156,50 @@ export const interactionEditFormSchema = z.object({
 
 export type InteractionEditFormValues = z.infer<typeof interactionEditFormSchema>;
 
+// "Bağlı Görüşme Ekle" modalı - interactionFormSchema'nın firma/kişi serbest-metin ve
+// fırsat/katılımcı bölümleri olmayan, firma zaten sabit geldiği için küçültülmüş hali.
+export const linkedInteractionFormSchema = z
+  .object({
+    contactId: z.string().optional(),
+    performedByUserId: z.string().min(1, 'Görüşmeyi yapan kişi seçilmelidir.'),
+    type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
+    notes: z.string().max(5000).optional(),
+    occurredAt: z.string().min(1, 'Tarih gerekli.'),
+    hasReminder: z.boolean().optional(),
+    reminderStartAt: z.string().optional(),
+    reminderAssigneeUserIds: z.array(z.string()).max(50).optional(),
+    reminderTitle: z.string().max(200).optional(),
+    reminderDescription: z.string().max(2000).optional(),
+  })
+  .refine((values) => !values.hasReminder || (values.reminderStartAt ?? '').length > 0, {
+    message: 'Hatırlatma tarihi gerekli.',
+    path: ['reminderStartAt'],
+  })
+  .refine((values) => !values.hasReminder || (values.reminderAssigneeUserIds ?? []).length > 0, {
+    message: 'En az bir kişi seçin.',
+    path: ['reminderAssigneeUserIds'],
+  })
+  .refine((values) => !values.hasReminder || (values.reminderTitle ?? '').trim().length > 0, {
+    message: 'Hatırlatma başlığı gerekli.',
+    path: ['reminderTitle'],
+  });
+
+export type LinkedInteractionFormValues = z.infer<typeof linkedInteractionFormSchema>;
+
+// "Bağlı Görüşme" düzenleme modalı - backend PATCH /interactions/:id sadece type/notes/
+// occurredAt/contactId/performedByUserId günceller (hatırlatma oluşturma sonrası
+// değiştirilemez, bkz. interaction-edit-page.tsx'teki aynı kısıt), bu yüzden
+// linkedInteractionFormSchema'nın hatırlatma bölümü olmayan alt kümesi.
+export const linkedInteractionEditFormSchema = z.object({
+  contactId: z.string().optional(),
+  performedByUserId: z.string().min(1, 'Görüşmeyi yapan kişi seçilmelidir.'),
+  type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
+  notes: z.string().max(5000).optional(),
+  occurredAt: z.string().min(1, 'Tarih gerekli.'),
+});
+
+export type LinkedInteractionEditFormValues = z.infer<typeof linkedInteractionEditFormSchema>;
+
 export const opportunityFormSchema = z
   .object({
     accountId: z.string().min(1, 'Firma gerekli.'),

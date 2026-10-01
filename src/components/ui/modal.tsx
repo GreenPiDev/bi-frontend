@@ -98,17 +98,26 @@ export function Modal({
     </div>
   );
 
+  // app-shell.tsx'teki ust header `z-[100]` kullanir - Modal eskiden `z-50` idi, yani
+  // header modalin USTUNE biniyordu ve uzun bir modalin tepesi (baslik + kapat ikonu)
+  // header'in arkasinda gorunmez kaliyordu (bu bir scroll/kirpma sorunu DEGIL, saf bir
+  // stacking-order hatasiydi - bkz. kullanici bildirimi). `z-[110]` header'in ustune
+  // cikmaya yeter; Toast (`z-[120]`) hala her modalin ustunde kalir.
   if (allowPageScroll) {
-    // Klasik "ortalanmis ama tasarsa sayfa kaydirilabilir" deseni: backdrop kendisi
-    // kaydirilabilir, icindeki wrapper `min-h-full` ile en az viewport kadar yuksek -
-    // icerik sigarsa flex-center normal modaldaki gibi ortalar, sigmiyorsa (ornegin
-    // MultiSelect'in `absolute` konumlu dropdown'u tastiginda) wrapper icerik kadar
-    // buyur ve ust kenar viewport disina itilmeden, sayfa/backdrop kaydirilarak
-    // tamami gorulebilir (bkz. kullanici bildirimi).
+    // backdrop kendisi kaydirilabilir (`overflow-y-auto`), icindeki wrapper dialog'u
+    // dikeyde `items-start` ile USTE hizalar - `items-center` BILEREK kullanilmiyor:
+    // icerik viewport'tan tasarsa (orn. bir switch acilinca buyur), flex-center + overflow
+    // kombinasyonu tasan kismi USTTEN keser ve o kisma hicbir sekilde (ne fare tekerlegi
+    // ne programatik scroll) ulasilamaz - klasik, taranan tarayicilarin hepsinde ayni olan
+    // bir flexbox kirpma hatasi (bkz. kullanici bildirimi, /ajanda "Yeni Hatirlatici"
+    // modalinda da yasanip duzeltilmisti). `items-start` + `py-8` ile dialog her zaman
+    // backdrop'un en ustunden (padding kadar bosluklu) baslar, kisa icerikte alt tarafta
+    // fazladan bosluk kalir ama tam ortalamadan feragat edilip DOGRU/kirpilmaz davranis
+    // tercih edildi.
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40">
+      <div className="fixed inset-0 z-[110] overflow-y-auto bg-black/40">
         <div
-          className="flex min-h-full items-center justify-center p-4 py-8"
+          className="flex min-h-full items-start justify-center p-4 py-8"
           onMouseDown={handleBackdropMouseDown}
           onClick={handleBackdropClick}
         >
@@ -120,7 +129,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 p-4"
       onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
     >

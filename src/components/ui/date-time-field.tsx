@@ -34,18 +34,22 @@ function formatDateDisplay(dateStr: string): string {
 // Calendar bileseninin sabit genisligi (calendar.tsx'teki `w-72`) ile ayni - takvim ekranin
 // sag kenarindan tasarsa sola kaydirmak icin kullanilir.
 const CALENDAR_WIDTH = 288;
-const MENU_HORIZONTAL_MARGIN = 8;
+const MENU_MARGIN = 8;
 
 /** Tarih kismi icin ozel Calendar acilir penceresi + saat icin native <input type="time">
  * - datetime-local'in tarayicidan tarayiciya degisen yerel takvim gorunumu yerine.
  *
  * Takvim `position: fixed` ile butonun ekran konumuna gore konumlanir - Modal icerigi
  * `overflow-auto` oldugu icin (bkz. modal.tsx), `absolute` konumlandirma listeyi kirpardi
- * (ayni gerekce icin bkz. multi-select.tsx). Takvim her zaman butonun altinda acilir;
- * sayfanin altina tasarsa (sayfa zaten kendi sonuna kadar scroll edilmisse), gecici bir
- * spacer eklenip otomatik asagi scroll edilir ki tasan kisim gorunur olsun. menuRect,
- * her kapanista sifirlanir - aksi halde bir sonraki acilista onceki (zaten scroll ile
- * duzeltilmis) konum kullanilir ve tasma tekrar hesaplanmadigi icin scroll calismaz. */
+ * (ayni gerekce icin bkz. multi-select.tsx). ONEMLI: `position: fixed` oldugu icin takvim
+ * normal akistan tamamen cikar ve hicbir ust elemanin (sayfa veya Modal'in `allowPageScroll`
+ * backdrop'u) scrollHeight'ina katkida bulunmaz - yani takvim viewport disina tasarsa, ne
+ * sayfa ne de modal kaydirarak gorunur hale getirilemez (eskiden denenen spacer+scrollBy
+ * yontemi tam olarak bu yuzden calismiyordu, ozellikle Modal'in `fixed` backdrop'u icinde
+ * window scroll'unun hicbir gorsel etkisi yok). Takvim HER ZAMAN butonun ALTINDA acilir
+ * (bilerek flip/ustte acma yok - kullanici bildirimi); sadece viewport'a sigmayacak kadar
+ * az yer kalmissa dikeyde viewport icine kirpilir (clamp) - MultiSelect/Select
+ * dropdown'larinin ayni "her zaman ekranda kal" davranisiyla tutarli. */
 export function DateTimeField({
   label,
   value,
@@ -61,16 +65,11 @@ export function DateTimeField({
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const spacerRef = useRef<HTMLDivElement | null>(null);
-  const hasAdjustedScrollRef = useRef(false);
   const [datePart = '', timePart = ''] = value ? value.split('T') : [];
 
   function closeMenu() {
     setOpen(false);
     setMenuRect(null);
-    hasAdjustedScrollRef.current = false;
-    spacerRef.current?.remove();
-    spacerRef.current = null;
   }
 
   useEffect(() => {
@@ -89,8 +88,11 @@ export function DateTimeField({
     function updateRect() {
       const rect = buttonRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const maxLeft = window.innerWidth - CALENDAR_WIDTH - MENU_HORIZONTAL_MARGIN;
-      const left = Math.max(MENU_HORIZONTAL_MARGIN, Math.min(rect.left, maxLeft));
+      const maxLeft = window.innerWidth - CALENDAR_WIDTH - MENU_MARGIN;
+      const left = Math.max(MENU_MARGIN, Math.min(rect.left, maxLeft));
+      // Takvimin gercek yuksekligi henuz bilinmiyor (ilk acilista menuRef daha render
+      // edilmedi) - asagidaki useLayoutEffect, render sonrasi gercek yukseklikle bu
+      // baslangic degerini duzeltir (flip/clamp).
       setMenuRect({ top: rect.bottom + 4, left });
     }
     updateRect();
@@ -102,24 +104,23 @@ export function DateTimeField({
     };
   }, [open]);
 
-  useEffect(() => {
-    return () => {
-      spacerRef.current?.remove();
-    };
-  }, []);
-
   useLayoutEffect(() => {
-    if (!open || !menuRect || hasAdjustedScrollRef.current) return;
+    if (!open || !menuRect) return;
     const menu = menuRef.current;
-    if (!menu) return;
-    hasAdjustedScrollRef.current = true;
-    const overflow = menuRect.top + menu.offsetHeight - window.innerHeight;
-    if (overflow > 0) {
-      const spacer = document.createElement('div');
-      spacer.style.height = `${overflow + 16}px`;
-      document.body.appendChild(spacer);
-      spacerRef.current = spacer;
-      window.scrollBy({ top: overflow + 16, behavior: 'smooth' });
+    const button = buttonRef.current;
+    if (!menu || !button) return;
+    const buttonRect = button.getBoundingClientRect();
+    const menuHeight = menu.offsetHeight;
+    const spaceBelow = window.innerHeight - buttonRect.bottom;
+    // Her zaman butonun ALTINDA acilir (eski davranis) - sadece viewport'tan tasacak
+    // kadar az yer kalmissa (cok kisa bir ekran) dikeyde viewport icine kirpilir
+    // (clamp), butonun UZERINE flip edilmez.
+    const fitsBelow = spaceBelow >= menuHeight + MENU_MARGIN;
+    const top = fitsBelow
+      ? buttonRect.bottom + 4
+      : Math.max(MENU_MARGIN, window.innerHeight - menuHeight - MENU_MARGIN);
+    if (Math.round(top) !== Math.round(menuRect.top)) {
+      setMenuRect((prev) => (prev ? { ...prev, top } : prev));
     }
   }, [open, menuRect]);
 

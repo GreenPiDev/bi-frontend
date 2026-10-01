@@ -7,6 +7,7 @@ import {
   MapPin,
   Pencil,
   Phone,
+  Plus,
   RotateCcw,
   Tag,
   Trash2,
@@ -21,17 +22,22 @@ import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { Modal } from '../components/ui/modal';
 import { PageHelp } from '../components/ui/page-help';
+import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { buildAccountSlug } from '../features/crm/account-slug';
+import { EditLinkedInteractionModal } from '../features/crm/edit-linked-interaction-modal';
+import { NewLinkedInteractionModal } from '../features/crm/new-linked-interaction-modal';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import {
   useDeleteInteractionMutation,
   useInteractionQuery,
+  useLinkedInteractionsQuery,
   useUpdateInteractionMutation,
 } from '../features/crm/use-interactions';
-import { ApiError, type InteractionParticipant } from '../lib/api';
+import { ApiError, type Interaction, type InteractionParticipant } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 /** Gorusme sekli artik dinamik/serbest metin oldugundan (bkz. schema.prisma
@@ -46,6 +52,30 @@ const TYPE_ICONS: Record<string, typeof Phone> = {
   'E-posta': Mail,
   Diğer: Tag,
 };
+
+const LINKED_NOTE_TRUNCATE_LENGTH = 40;
+
+/** /envanter?tab=stockHistory'deki NoteCell ile ayni desen: not kisaysa duz metin,
+ * uzunsa tiklanabilir bir "..." butonu - tiklaninca tam metin modalda acilir. */
+function LinkedNoteCell({
+  interaction,
+  onOpen,
+}: {
+  interaction: Interaction;
+  onOpen: (interaction: Interaction) => void;
+}) {
+  if (!interaction.notes) return <>—</>;
+  if (interaction.notes.length <= LINKED_NOTE_TRUNCATE_LENGTH) return <>{interaction.notes}</>;
+  return (
+    <button
+      type="button"
+      className="cursor-pointer text-left text-app-text hover:text-app-brand"
+      onClick={() => onOpen(interaction)}
+    >
+      {`${interaction.notes.slice(0, LINKED_NOTE_TRUNCATE_LENGTH)}...`}
+    </button>
+  );
+}
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -156,8 +186,12 @@ export function InteractionDetailPage() {
   const updateMutation = useUpdateInteractionMutation(id);
   const deleteMutation = useDeleteInteractionMutation();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
+  const linkedInteractionsQuery = useLinkedInteractionsQuery(id);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isLinkedModalOpen, setIsLinkedModalOpen] = useState(false);
+  const [linkedNoteModalRow, setLinkedNoteModalRow] = useState<Interaction | null>(null);
+  const [editLinkedInteraction, setEditLinkedInteraction] = useState<Interaction | null>(null);
 
   if (interactionQuery.isPending) {
     return (
@@ -185,6 +219,68 @@ export function InteractionDetailPage() {
     (assignableUsersQuery.data ?? []).map((user) => [user.name, user.avatarUrl] as const),
   );
   const isOwnInteraction = interaction.createdById === meQuery.data?.id;
+
+  const linkedColumns: TableColumn<Interaction>[] = [
+    {
+      key: 'type',
+      header: tr.crm.interactions.typeColumn,
+      className: 'whitespace-nowrap font-semibold text-app-text',
+      required: true,
+      render: (row) => row.type,
+    },
+    {
+      key: 'occurredAt',
+      header: tr.crm.interactions.dateColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      required: true,
+      render: (row) =>
+        new Date(row.occurredAt).toLocaleString('tr-TR', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+    },
+    {
+      key: 'contact',
+      header: tr.crm.interactions.contactColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) =>
+        row.contact
+          ? `${row.contact.firstName} ${row.contact.lastName}`
+          : tr.crm.interactions.detail.linkedNoContact,
+    },
+    {
+      key: 'performedBy',
+      header: tr.crm.interactions.linked.performedByLabel,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) => row.performedByName ?? '—',
+    },
+    {
+      key: 'notes',
+      header: tr.crm.interactions.detail.notesTitle,
+      className: 'max-w-xs text-app-muted',
+      render: (row) => <LinkedNoteCell interaction={row} onOpen={setLinkedNoteModalRow} />,
+    },
+    {
+      key: 'actions',
+      header: tr.crm.interactions.detail.linkedActionsColumn,
+      className: 'whitespace-nowrap',
+      required: true,
+      render: (row) => (
+        <button
+          type="button"
+          aria-label={tr.crm.interactions.detail.linkedEditTooltip}
+          title={tr.crm.interactions.detail.linkedEditTooltip}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-app-muted transition-colors hover:bg-app-bg-muted hover:text-app-text"
+          onClick={() => setEditLinkedInteraction(row)}
+        >
+          <Pencil size={15} />
+        </button>
+      ),
+    },
+  ];
 
   function handleDelete() {
     deleteMutation.mutate(id, { onSuccess: () => navigate('/gorusmeler') });
@@ -216,6 +312,14 @@ export function InteractionDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 pt-1">
+          {interaction.account && (
+            <CircleIconButton
+              icon={Plus}
+              tooltip={tr.crm.interactions.addLinkedTooltip}
+              variant="success"
+              onClick={() => setIsLinkedModalOpen(true)}
+            />
+          )}
           <CircleIconButton
             icon={Mail}
             tooltip={tr.crm.interactions.detail.createMessageTooltip}
@@ -361,6 +465,46 @@ export function InteractionDetailPage() {
           </div>
         </div>
       </div>
+
+      {interaction.account && (
+        <div className="mt-6 rounded-xl border border-app-border bg-white p-5">
+          <SectionHeader>{tr.crm.interactions.detail.linkedTitle}</SectionHeader>
+          <Table
+            columns={linkedColumns}
+            data={linkedInteractionsQuery.data?.data ?? []}
+            keyField={(row) => row.id}
+            isLoading={linkedInteractionsQuery.isPending}
+            loadingMessage={tr.common.loading}
+            emptyMessage={tr.crm.interactions.detail.linkedEmpty}
+          />
+          {isLinkedModalOpen && (
+            <NewLinkedInteractionModal
+              accountId={interaction.account.id}
+              accountName={interaction.account.name}
+              parentInteractionId={id}
+              onClose={() => setIsLinkedModalOpen(false)}
+            />
+          )}
+          {linkedNoteModalRow && (
+            <Modal
+              title={tr.crm.interactions.detail.notesTitle}
+              onClose={() => setLinkedNoteModalRow(null)}
+            >
+              <p className="text-sm whitespace-pre-wrap text-app-text">
+                {linkedNoteModalRow.notes}
+              </p>
+            </Modal>
+          )}
+          {editLinkedInteraction && (
+            <EditLinkedInteractionModal
+              interaction={editLinkedInteraction}
+              accountId={interaction.account.id}
+              accountName={interaction.account.name}
+              onClose={() => setEditLinkedInteraction(null)}
+            />
+          )}
+        </div>
+      )}
 
       {isMessageModalOpen && (
         <NewMessageModal

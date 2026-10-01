@@ -1742,6 +1742,13 @@ export interface Interaction {
   customFields: Record<string, string> | null;
   participants: InteractionParticipant[];
   opportunity: Opportunity | null;
+  /** "Bağlı Görüşme Ekle" ile eklenen ek kayıtlar için ana görüşmenin id'si - bkz.
+   * schema.prisma Interaction.parentInteractionId yorumu. */
+  parentInteractionId: string | null;
+  /** Görüşmeyi fiilen yapan kullanıcı - bkz. schema.prisma Interaction.performedByUserId
+   * yorumu. */
+  performedByUserId: string | null;
+  performedByName: string | null;
   createdById: string;
   createdByName: string | null;
   createdAt: string;
@@ -1770,6 +1777,10 @@ export interface CreateInteractionInput {
     description?: string;
     assignees: { userId: string }[];
   };
+  /** "Bağlı Görüşme Ekle" modalından oluşturulan ek kayıtlar için ana görüşmenin id'si. */
+  parentInteractionId?: string;
+  /** Görüşmeyi fiilen yapan kullanıcı. */
+  performedByUserId?: string;
 }
 
 export interface UpdateInteractionInput {
@@ -1778,6 +1789,9 @@ export interface UpdateInteractionInput {
   notes?: string;
   occurredAt?: string;
   status?: InteractionStatus;
+  /** Sadece "Bağlı Görüşme Ekle" ile oluşturulan kayıtların düzenleme modalından gelir. */
+  contactId?: string;
+  performedByUserId?: string;
 }
 
 export interface ReminderConflict {
@@ -1801,6 +1815,7 @@ export function listInteractions(
     status?: InteractionStatus;
     from?: string;
     to?: string;
+    parentInteractionId?: string;
   } = {},
 ): Promise<PagedResult<Interaction>> {
   const query = new URLSearchParams();
@@ -1813,6 +1828,7 @@ export function listInteractions(
   if (params.status) query.set('status', params.status);
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
+  if (params.parentInteractionId) query.set('parentInteractionId', params.parentInteractionId);
   const qs = query.toString();
   return request(`/interactions${qs ? `?${qs}` : ''}`);
 }
@@ -2316,6 +2332,15 @@ export interface ProjectResponsibleUser {
   name: string;
 }
 
+export interface ProjectAttachment {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  url: string | null;
+  createdAt: string;
+}
+
 export interface Project {
   id: string;
   projectNumber: string;
@@ -2328,6 +2353,7 @@ export interface Project {
   updatedAt: string;
   quotes: Quote[];
   responsibleUsers: ProjectResponsibleUser[];
+  attachments: ProjectAttachment[];
 }
 
 export interface ProjectInput {
@@ -2345,6 +2371,35 @@ export interface ProjectInput {
 
 export function listProjectAssignableUsers(): Promise<{ id: string; name: string }[]> {
   return request('/projects/assignable-users');
+}
+
+/** Form "Kaydet"e basilinca (proje olusturulduktan/guncellendikten hemen sonra)
+ * cagrilir - dosya secildigi anda degil, boylece kullanici yanlis dosya secip
+ * Kaydet'ten once vazgecebilir (bkz. project-form-page.tsx stagedFiles). */
+export function addProjectAttachment(projectId: string, file: File): Promise<ProjectAttachment> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request(`/projects/${projectId}/attachments`, {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+export function removeProjectAttachment(projectId: string, attachmentId: string): Promise<void> {
+  return request(`/projects/${projectId}/attachments/${attachmentId}`, {
+    method: 'DELETE',
+  });
+}
+
+export function renameProjectAttachment(
+  projectId: string,
+  attachmentId: string,
+  fileName: string,
+): Promise<ProjectAttachment> {
+  return request(`/projects/${projectId}/attachments/${attachmentId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fileName }),
+  });
 }
 
 export function listProjects(

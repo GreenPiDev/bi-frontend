@@ -1,18 +1,28 @@
-import { Mail, Pencil, Trash2 } from 'lucide-react';
+import { Mail, Paperclip, Pencil, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { FormError } from '../components/ui/form-error';
+import { IconActionButton } from '../components/ui/icon-action-button';
+import { Modal } from '../components/ui/modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
+import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
-import { useDeleteProjectMutation, useProjectQuery } from '../features/crm/use-projects';
-import { ApiError, type Quote } from '../lib/api';
+import { formatFileSize } from '../features/crm/format-file-size';
+import {
+  useDeleteProjectMutation,
+  useProjectQuery,
+  useRenameProjectAttachmentMutation,
+} from '../features/crm/use-projects';
+import { ApiError, type ProjectAttachment, type Quote } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 function formatCurrency(value: string | null): string {
@@ -61,6 +71,105 @@ const RELATED_QUOTE_COLUMNS: TableColumn<Quote>[] = [
   },
 ];
 
+function buildAttachmentColumns(
+  onRename: (attachment: ProjectAttachment) => void,
+): TableColumn<ProjectAttachment>[] {
+  return [
+    {
+      key: 'fileName',
+      header: tr.crm.projects.detail.attachmentNameColumn,
+      render: (attachment) => (
+        <a
+          href={attachment.url ?? undefined}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={tr.crm.projects.detail.downloadAttachmentAria}
+          className="inline-flex items-center gap-1.5 text-app-primary hover:underline"
+        >
+          <Paperclip size={14} />
+          {attachment.fileName} ({formatFileSize(attachment.sizeBytes)})
+        </a>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: tr.crm.projects.detail.attachmentUploadedAtColumn,
+      render: (attachment) => (
+        <span className="text-app-muted">
+          {new Date(attachment.createdAt).toLocaleString('tr-TR')}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: tr.crm.projects.detail.attachmentActionsColumn,
+      className: 'w-px',
+      render: (attachment) => (
+        <IconActionButton
+          icon={Pencil}
+          tooltip={tr.crm.projects.detail.renameAttachmentTooltip}
+          onClick={() => onRename(attachment)}
+        />
+      ),
+    },
+  ];
+}
+
+interface RenameAttachmentModalProps {
+  projectId: string;
+  attachment: ProjectAttachment;
+  onClose: () => void;
+}
+
+/** Zaten yuklu bir dosyanin goruntulenen adini duzenlemek icin - AddOptionModal ile
+ * ayni "kucuk form modali" deseni. */
+function RenameAttachmentModal({ projectId, attachment, onClose }: RenameAttachmentModalProps) {
+  const toast = useToast();
+  const renameMutation = useRenameProjectAttachmentMutation();
+  const [fileName, setFileName] = useState(attachment.fileName);
+  const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>();
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    const trimmed = fileName.trim();
+    if (!trimmed) return;
+    renameMutation.mutate(
+      { projectId, attachmentId: attachment.id, fileName: trimmed },
+      {
+        onSuccess: () => {
+          toast.success(tr.crm.projects.detail.renameAttachmentSuccess);
+          onClose();
+        },
+        onError: (error) => {
+          setApiErrorMessage(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
+
+  return (
+    <Modal title={tr.crm.projects.detail.renameAttachmentTitle} onClose={onClose} width="sm">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+        <FormError message={apiErrorMessage} />
+        <TextField
+          label={tr.crm.projects.detail.attachmentNameColumn}
+          autoFocus
+          value={fileName}
+          onChange={(event) => setFileName(event.target.value)}
+        />
+        <div className="flex gap-2">
+          <Button type="submit" disabled={renameMutation.isPending}>
+            {tr.common.save}
+          </Button>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            {tr.common.cancel}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 export function ProjectDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -69,6 +178,7 @@ export function ProjectDetailPage() {
   const deleteMutation = useDeleteProjectMutation();
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [renamingAttachment, setRenamingAttachment] = useState<ProjectAttachment | null>(null);
 
   if (projectQuery.isPending) {
     return (
@@ -83,6 +193,9 @@ export function ProjectDetailPage() {
   }
 
   const project = projectQuery.data;
+  const sortedAttachments = [...project.attachments].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   function handleDelete() {
     deleteMutation.mutate(project.id, {
@@ -176,6 +289,16 @@ export function ProjectDetailPage() {
             emptyMessage={tr.crm.projects.detail.noRelatedQuotes}
           />
         </div>
+
+        <div className="rounded-xl border border-app-border bg-white p-5">
+          <SectionHeader>{tr.crm.projects.detail.attachmentsTitle}</SectionHeader>
+          <Table<ProjectAttachment>
+            columns={buildAttachmentColumns(setRenamingAttachment)}
+            data={sortedAttachments}
+            keyField={(attachment) => attachment.id}
+            emptyMessage={tr.crm.projects.detail.noAttachments}
+          />
+        </div>
       </div>
 
       {isMessageModalOpen && (
@@ -195,6 +318,14 @@ export function ProjectDetailPage() {
           isPending={deleteMutation.isPending}
           onConfirm={handleDelete}
           onCancel={() => setIsDeleteConfirmOpen(false)}
+        />
+      )}
+
+      {renamingAttachment && (
+        <RenameAttachmentModal
+          projectId={project.id}
+          attachment={renamingAttachment}
+          onClose={() => setRenamingAttachment(null)}
         />
       )}
     </AppShell>

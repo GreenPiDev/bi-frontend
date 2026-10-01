@@ -367,6 +367,12 @@ export function InteractionFormPage() {
                         )}
                       />
                     </div>
+                    <div className="flex-1">
+                      <TextField
+                        label={tr.crm.interactions.form.participantNoteLabel}
+                        {...register(`participants.${index}.note` as const)}
+                      />
+                    </div>
                     <Controller
                       name={`participants.${index}.isInternal` as const}
                       control={control}
