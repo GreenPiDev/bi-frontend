@@ -139,7 +139,7 @@ export function CrmImportPage({ entity }: { entity: ImportEntity }) {
         {result && (
           <div className="mt-6">
             <h2 className="text-sm font-bold text-app-text">{tr.crm.import.stepResult}</h2>
-            <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-3 grid grid-cols-5 gap-3 text-center">
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.totalRows}</p>
                 <p className="text-xs text-app-muted">{tr.crm.import.totalRowsLabel}</p>
@@ -147,6 +147,14 @@ export function CrmImportPage({ entity }: { entity: ImportEntity }) {
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.imported}</p>
                 <p className="text-xs text-app-muted">{tr.crm.import.importedLabel}</p>
+              </div>
+              <div className="rounded-lg border border-app-border p-3">
+                <p className="text-lg font-bold text-app-text">{result.created}</p>
+                <p className="text-xs text-app-muted">{tr.crm.import.createdLabel}</p>
+              </div>
+              <div className="rounded-lg border border-app-border p-3">
+                <p className="text-lg font-bold text-app-text">{result.updated}</p>
+                <p className="text-xs text-app-muted">{tr.crm.import.updatedLabel}</p>
               </div>
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.errors.length}</p>

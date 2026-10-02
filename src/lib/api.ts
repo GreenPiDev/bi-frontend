@@ -1264,6 +1264,8 @@ export interface ImportRowError {
 export interface ImportResult {
   totalRows: number;
   imported: number;
+  created: number;
+  updated: number;
   errors: ImportRowError[];
 }
 

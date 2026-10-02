@@ -262,7 +262,7 @@ export function InteractionImportPage() {
             <h2 className="text-sm font-bold text-app-text">
               {tr.crm.interactionImports.stepResult}
             </h2>
-            <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+            <div className="mt-3 grid grid-cols-5 gap-3 text-center">
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.totalRows}</p>
                 <p className="text-xs text-app-muted">{tr.crm.interactionImports.totalRowsLabel}</p>
@@ -270,6 +270,14 @@ export function InteractionImportPage() {
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.imported}</p>
                 <p className="text-xs text-app-muted">{tr.crm.interactionImports.importedLabel}</p>
+              </div>
+              <div className="rounded-lg border border-app-border p-3">
+                <p className="text-lg font-bold text-app-text">{result.created}</p>
+                <p className="text-xs text-app-muted">{tr.crm.interactionImports.createdLabel}</p>
+              </div>
+              <div className="rounded-lg border border-app-border p-3">
+                <p className="text-lg font-bold text-app-text">{result.updated}</p>
+                <p className="text-xs text-app-muted">{tr.crm.interactionImports.updatedLabel}</p>
               </div>
               <div className="rounded-lg border border-app-border p-3">
                 <p className="text-lg font-bold text-app-text">{result.errors.length}</p>
