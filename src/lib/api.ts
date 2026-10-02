@@ -265,6 +265,13 @@ export function resetTenantAdminPassword(tenantId: string): Promise<{ temporaryP
   });
 }
 
+export function updateTenantSlug(tenantId: string, slug: string): Promise<TenantSummary> {
+  return request(`/platform-admin/tenants/${tenantId}/slug`, {
+    method: 'PATCH',
+    body: JSON.stringify({ slug }),
+  });
+}
+
 export interface ModuleDefinition {
   key: string;
   label: string;

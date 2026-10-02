@@ -44,10 +44,20 @@ export function PlatformAdminPage() {
       render: (tenant) => <PlatformAdminTenantModules tenantId={tenant.id} />,
     },
     {
+      key: 'subdomain',
+      header: tr.platformAdmin.subdomainColumn,
+      className: 'font-mono text-app-muted',
+      render: (tenant) => `${tenant.slug}.pilens.com.tr`,
+    },
+    {
       key: 'actions',
       header: tr.platformAdmin.actionsColumn,
       render: (tenant) => (
-        <PlatformAdminTenantActions tenantId={tenant.id} adminEmail={tenant.adminEmail} />
+        <PlatformAdminTenantActions
+          tenantId={tenant.id}
+          adminEmail={tenant.adminEmail}
+          slug={tenant.slug}
+        />
       ),
     },
   ];

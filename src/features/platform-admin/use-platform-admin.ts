@@ -8,10 +8,12 @@ import {
   resetTenantAdminPassword,
   setPlatformPageModule,
   setPlatformTenantModule,
+  updateTenantSlug,
   type CreateTenantInput,
   type ModuleDefinition,
   type PageModuleAssignment,
   type TenantModuleStatus,
+  type TenantSummary,
 } from '../../lib/api';
 
 export const PLATFORM_TENANTS_QUERY_KEY = ['platform-admin', 'tenants'];
@@ -36,6 +38,19 @@ export function useCreateTenantMutation() {
 export function useResetTenantAdminPasswordMutation() {
   return useMutation({
     mutationFn: (tenantId: string) => resetTenantAdminPassword(tenantId),
+  });
+}
+
+export function useUpdateTenantSlugMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tenantId, slug }: { tenantId: string; slug: string }) =>
+      updateTenantSlug(tenantId, slug),
+    onSuccess: (updated: TenantSummary) => {
+      queryClient.setQueryData<TenantSummary[]>(PLATFORM_TENANTS_QUERY_KEY, (current) =>
+        current?.map((tenant) => (tenant.id === updated.id ? updated : tenant)),
+      );
+    },
   });
 }
 

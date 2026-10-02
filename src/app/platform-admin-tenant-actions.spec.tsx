@@ -10,7 +10,7 @@ function renderComponent(adminEmail: string | null = 'yetkili@musteri.com') {
   return render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        <PlatformAdminTenantActions tenantId="t1" adminEmail={adminEmail} />
+        <PlatformAdminTenantActions tenantId="t1" adminEmail={adminEmail} slug="musteri" />
       </ToastProvider>
     </QueryClientProvider>,
   );

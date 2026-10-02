@@ -939,8 +939,20 @@ export const tr = {
     planColumn: 'Plan',
     createdAtColumn: 'Kayıt Tarihi',
     modulesColumn: 'Modüller',
+    subdomainColumn: 'Subdomain',
     actionsColumn: 'Aksiyonlar',
     resetAdminPasswordTooltip: 'Parola sıfırla',
+    editSlugTooltip: 'Subdomain düzenle',
+    editSlugModal: {
+      title: 'Subdomain Düzenle',
+      description: 'Kiracı bu adresten sisteme giriş yapacak.',
+      slugLabel: 'Subdomain',
+      previewPrefix: 'Önizleme: ',
+      submit: 'Kaydet',
+      submitting: 'Kaydediliyor...',
+      successToast: 'Subdomain güncellendi.',
+      cancelButton: 'Vazgeç',
+    },
     resetAdminPasswordResult: {
       title: 'Parola Sıfırlandı',
       description:
