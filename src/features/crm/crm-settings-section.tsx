@@ -5,6 +5,7 @@ import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Table, type TableColumn } from '../../components/ui/table';
+import { TextareaField } from '../../components/ui/textarea-field';
 import { TextField } from '../../components/ui/text-field';
 import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
@@ -13,7 +14,12 @@ import { formatIbanInput, normalizeIban, validateIban } from '../../lib/iban-val
 import { tr } from '../../i18n/tr';
 import {
   CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY,
+  DEFAULT_QUOTE_DELIVERY_TERMS_KEY,
+  DEFAULT_QUOTE_GENERAL_TERMS_KEY,
+  DEFAULT_QUOTE_PAYMENT_TERMS_KEY,
+  DEFAULT_QUOTE_SALES_TERMS_KEY,
   DEFAULT_QUOTE_VAT_PCT_KEY,
+  QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID,
   QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
 } from './tenant-settings.constants';
 import {
@@ -1060,6 +1066,116 @@ function DefaultQuoteVatPctSetting() {
   );
 }
 
+/** Teklif formundaki (/teklifler/yeni) dort kosul metni alaninin varsayilan
+ * degerleri - DefaultQuoteVatPctSetting ile ayni hash-link/scroll deseni,
+ * tek fark 4 metin alaninin tek "Kaydet" ile ayni anda kaydedilmesi
+ * (Promise.all ile dort mutateAsync cagrisi). */
+function DefaultQuoteTermsSettings() {
+  const toast = useToast();
+  const strings = tr.settings.crm.defaultQuoteTerms;
+  const settingsQuery = useTenantSettingsQuery();
+  const updateMutation = useUpdateTenantSettingMutation();
+
+  const [isLinkedFromHash] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      window.location.hash === `#${QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID}`,
+  );
+  const sectionRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isLinkedFromHash) {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isLinkedFromHash]);
+
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [salesTerms, setSalesTerms] = useState('');
+  const [deliveryTerms, setDeliveryTerms] = useState('');
+  const [generalTerms, setGeneralTerms] = useState('');
+
+  const [appliedFromSettings, setAppliedFromSettings] = useState(false);
+  if (settingsQuery.data && !appliedFromSettings) {
+    setAppliedFromSettings(true);
+    setPaymentTerms(
+      String(
+        settingsQuery.data.find((s) => s.key === DEFAULT_QUOTE_PAYMENT_TERMS_KEY)?.value ?? '',
+      ),
+    );
+    setSalesTerms(
+      String(settingsQuery.data.find((s) => s.key === DEFAULT_QUOTE_SALES_TERMS_KEY)?.value ?? ''),
+    );
+    setDeliveryTerms(
+      String(
+        settingsQuery.data.find((s) => s.key === DEFAULT_QUOTE_DELIVERY_TERMS_KEY)?.value ?? '',
+      ),
+    );
+    setGeneralTerms(
+      String(
+        settingsQuery.data.find((s) => s.key === DEFAULT_QUOTE_GENERAL_TERMS_KEY)?.value ?? '',
+      ),
+    );
+  }
+
+  async function handleSave() {
+    try {
+      await Promise.all([
+        updateMutation.mutateAsync({ key: DEFAULT_QUOTE_PAYMENT_TERMS_KEY, value: paymentTerms }),
+        updateMutation.mutateAsync({ key: DEFAULT_QUOTE_SALES_TERMS_KEY, value: salesTerms }),
+        updateMutation.mutateAsync({ key: DEFAULT_QUOTE_DELIVERY_TERMS_KEY, value: deliveryTerms }),
+        updateMutation.mutateAsync({ key: DEFAULT_QUOTE_GENERAL_TERMS_KEY, value: generalTerms }),
+      ]);
+      toast.success(strings.saveSuccess);
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+    }
+  }
+
+  return (
+    <div
+      ref={sectionRef}
+      id={QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID}
+      className="mt-3 border-t border-app-border"
+    >
+      <CollapsibleSection
+        title={strings.title}
+        subtitle={strings.subtitle}
+        defaultOpen={isLinkedFromHash}
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <TextareaField
+            label={strings.paymentTermsLabel}
+            value={paymentTerms}
+            onChange={(event) => setPaymentTerms(event.target.value)}
+          />
+          <TextareaField
+            label={strings.salesTermsLabel}
+            value={salesTerms}
+            onChange={(event) => setSalesTerms(event.target.value)}
+          />
+          <TextareaField
+            label={strings.deliveryTermsLabel}
+            value={deliveryTerms}
+            onChange={(event) => setDeliveryTerms(event.target.value)}
+          />
+          <TextareaField
+            label={strings.generalTermsLabel}
+            value={generalTerms}
+            onChange={(event) => setGeneralTerms(event.target.value)}
+          />
+        </div>
+        <Button
+          type="button"
+          className="mt-3"
+          disabled={updateMutation.isPending}
+          onClick={handleSave}
+        >
+          {strings.saveButton}
+        </Button>
+      </CollapsibleSection>
+    </div>
+  );
+}
+
 export function CrmSettingsSection() {
   return (
     <section>
@@ -1116,6 +1232,7 @@ export function CrmSettingsSection() {
         <IbanOptionsManager />
       </div>
       <DefaultQuoteVatPctSetting />
+      <DefaultQuoteTermsSettings />
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
         {tr.settings.crm.calendarGroupLabel}

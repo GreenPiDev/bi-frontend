@@ -819,6 +819,17 @@ export const tr = {
         saveButton: 'Kaydet',
         saveSuccess: 'KDV oranı güncellendi.',
       },
+      defaultQuoteTerms: {
+        title: 'Teklif Metinleri (Varsayılan)',
+        subtitle:
+          'Yeni bir teklif oluştururken alttaki dört koşul metni buradaki değerlerle dolu gelir; teklif oluşturulurken üzerinde değişiklik yapılabilir.',
+        paymentTermsLabel: 'Ödeme Koşulları',
+        salesTermsLabel: 'Satış Koşulları',
+        deliveryTermsLabel: 'Teslimat Koşulları',
+        generalTermsLabel: 'Genel Hükümler',
+        saveButton: 'Kaydet',
+        saveSuccess: 'Varsayılan teklif metinleri güncellendi.',
+      },
     },
     audit: {
       title: 'Denetim Kaydı',
@@ -2204,6 +2215,7 @@ export const tr = {
         generalTermsLabel: 'Genel Hükümler',
         generalTermsPlaceholder: 'Teklife ilişkin genel hükümleri yazın',
         generalTermsHint: 'Opsiyonel.',
+        termsSetDefaultLink: 'Varsayılan Metinleri Düzenle',
         templateLabel: 'PDF Şablonu',
         templateNoneOption: 'Şablonsuz (sade görünüm)',
         templateHint: 'PDF olarak dışa aktarılınca kullanılacak görsel şablon.',

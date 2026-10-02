@@ -389,7 +389,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
       {!sidebarOpen && hoveredNavItem && (
         <span
           style={{ top: hoveredNavItem.top }}
-          className="pointer-events-none fixed left-16 z-[100] ml-2 -translate-y-1/2 rounded-md bg-app-brand-dark px-2 py-1 text-xs font-semibold whitespace-nowrap text-white shadow-lg"
+          className="pointer-events-none fixed left-16 z-[100] ml-2 -translate-y-1/2 rounded-md bg-app-brand-dark px-3 py-2 text-base font-semibold whitespace-nowrap text-white shadow-lg"
         >
           {hoveredNavItem.label}
         </span>

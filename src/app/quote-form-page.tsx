@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Search, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -34,8 +34,13 @@ import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/
 import { useCreateQuoteMutation, useQuoteRevisionSummaryQuery } from '../features/crm/use-quotes';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
 import {
+  DEFAULT_QUOTE_DELIVERY_TERMS_KEY,
+  DEFAULT_QUOTE_GENERAL_TERMS_KEY,
+  DEFAULT_QUOTE_PAYMENT_TERMS_KEY,
+  DEFAULT_QUOTE_SALES_TERMS_KEY,
   DEFAULT_QUOTE_VAT_PCT,
   DEFAULT_QUOTE_VAT_PCT_KEY,
+  QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID,
   QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
 } from '../features/crm/tenant-settings.constants';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
@@ -79,6 +84,24 @@ function VatPctDefaultLink() {
         className="font-semibold text-app-brand hover:underline"
       >
         {tr.crm.quotes.form.vatPctSetDefaultLink}
+      </Link>
+    </p>
+  );
+}
+
+/** Koşul metni alanlarının altında, tenant'ın varsayılan koşul metinleri ayarına
+ * (yeni sekmede, ilgili bölüme kaydırarak) götüren kısa bağlantı - VatPctDefaultLink
+ * ile aynı desen. */
+function TermsDefaultLink() {
+  return (
+    <p className="text-xs text-app-muted">
+      <Link
+        to={`/settings?tab=crm#${QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-app-brand hover:underline"
+      >
+        {tr.crm.quotes.form.termsSetDefaultLink}
       </Link>
     </p>
   );
@@ -146,6 +169,26 @@ export function QuoteFormPage() {
     setExchangeRates({ rates: {} });
   }, [quoteCurrency]);
   const revisionSummaryQuery = useQuoteRevisionSummaryQuery(selectedAccountId);
+
+  // Kosul metni alanlari (odeme/satis/teslimat/genel hukumler), ayarlardaki
+  // varsayilan degerlerle bir kere doldurulur - kullanici uzerinde degisiklik
+  // yapabilir, tenantSettingsQuery daha sonra yeniden fetch olursa (ornegin baska
+  // bir sekmede ayar degistirilince) kullanicinin elle girdigi deger ezilmez.
+  const appliedTermDefaultsRef = useRef(false);
+  useEffect(() => {
+    if (appliedTermDefaultsRef.current || !tenantSettingsQuery.data) return;
+    appliedTermDefaultsRef.current = true;
+    const findSetting = (key: string) =>
+      tenantSettingsQuery.data?.find((setting) => setting.key === key)?.value;
+    const paymentTerms = findSetting(DEFAULT_QUOTE_PAYMENT_TERMS_KEY);
+    const salesTerms = findSetting(DEFAULT_QUOTE_SALES_TERMS_KEY);
+    const deliveryTerms = findSetting(DEFAULT_QUOTE_DELIVERY_TERMS_KEY);
+    const generalTerms = findSetting(DEFAULT_QUOTE_GENERAL_TERMS_KEY);
+    if (paymentTerms) setValue('paymentTerms', String(paymentTerms));
+    if (salesTerms) setValue('salesTerms', String(salesTerms));
+    if (deliveryTerms) setValue('deliveryTerms', String(deliveryTerms));
+    if (generalTerms) setValue('generalTerms', String(generalTerms));
+  }, [tenantSettingsQuery.data, setValue]);
 
   // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
   // frontende çekilip filtrelenmez. Seçilen ürün listesine göre filtrelenir.
@@ -894,35 +937,47 @@ export function QuoteFormPage() {
             </aside>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <TextareaField
-              label={tr.crm.quotes.form.paymentTermsLabel}
-              placeholder={tr.crm.quotes.form.paymentTermsPlaceholder}
-              hint={tr.crm.quotes.form.paymentTermsHint}
-              error={errors.paymentTerms?.message}
-              {...register('paymentTerms')}
-            />
-            <TextareaField
-              label={tr.crm.quotes.form.salesTermsLabel}
-              placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
-              hint={tr.crm.quotes.form.salesTermsHint}
-              error={errors.salesTerms?.message}
-              {...register('salesTerms')}
-            />
-            <TextareaField
-              label={tr.crm.quotes.form.deliveryTermsLabel}
-              placeholder={tr.crm.quotes.form.deliveryTermsPlaceholder}
-              hint={tr.crm.quotes.form.deliveryTermsHint}
-              error={errors.deliveryTerms?.message}
-              {...register('deliveryTerms')}
-            />
-            <TextareaField
-              label={tr.crm.quotes.form.generalTermsLabel}
-              placeholder={tr.crm.quotes.form.generalTermsPlaceholder}
-              hint={tr.crm.quotes.form.generalTermsHint}
-              error={errors.generalTerms?.message}
-              {...register('generalTerms')}
-            />
+          <div className="flex flex-col gap-4">
+            <div>
+              <TextareaField
+                label={tr.crm.quotes.form.paymentTermsLabel}
+                placeholder={tr.crm.quotes.form.paymentTermsPlaceholder}
+                hint={tr.crm.quotes.form.paymentTermsHint}
+                error={errors.paymentTerms?.message}
+                {...register('paymentTerms')}
+              />
+              <TermsDefaultLink />
+            </div>
+            <div>
+              <TextareaField
+                label={tr.crm.quotes.form.salesTermsLabel}
+                placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
+                hint={tr.crm.quotes.form.salesTermsHint}
+                error={errors.salesTerms?.message}
+                {...register('salesTerms')}
+              />
+              <TermsDefaultLink />
+            </div>
+            <div>
+              <TextareaField
+                label={tr.crm.quotes.form.deliveryTermsLabel}
+                placeholder={tr.crm.quotes.form.deliveryTermsPlaceholder}
+                hint={tr.crm.quotes.form.deliveryTermsHint}
+                error={errors.deliveryTerms?.message}
+                {...register('deliveryTerms')}
+              />
+              <TermsDefaultLink />
+            </div>
+            <div>
+              <TextareaField
+                label={tr.crm.quotes.form.generalTermsLabel}
+                placeholder={tr.crm.quotes.form.generalTermsPlaceholder}
+                hint={tr.crm.quotes.form.generalTermsHint}
+                error={errors.generalTerms?.message}
+                {...register('generalTerms')}
+              />
+              <TermsDefaultLink />
+            </div>
           </div>
 
           <div className="rounded-lg border border-app-border bg-app-surface p-4">
