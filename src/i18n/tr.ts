@@ -186,6 +186,8 @@ export const tr = {
     },
     searchPlaceholder: 'Sayfa ara...',
     searchNoResults: 'Sonuç bulunamadı',
+    expandSidebar: 'Menüyü aç',
+    collapseSidebar: 'Menüyü kapat',
   },
   notifications: {
     bellAriaLabel: 'Bildirimler',

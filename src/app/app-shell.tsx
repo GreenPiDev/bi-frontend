@@ -12,6 +12,7 @@ import {
   type LucideIcon,
   Mail,
   MessageCircle,
+  PanelLeft,
   Search,
   Settings,
   Table2,
@@ -80,34 +81,33 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
   };
   const [navSearch, setNavSearch] = useState('');
   const location = useLocation();
-  const closeSidebarTimeoutRef = useRef<number | null>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const [hoveredNavItem, setHoveredNavItem] = useState<{ label: string; top: number } | null>(null);
+
+  function toggleSidebar() {
+    if (sidebarOpen) {
+      setNavSearch('');
+    }
+    setSidebarOpen(!sidebarOpen);
+  }
 
   useEffect(() => {
-    return () => {
-      if (closeSidebarTimeoutRef.current) {
-        window.clearTimeout(closeSidebarTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  function handleSidebarMouseEnter() {
-    if (closeSidebarTimeoutRef.current) {
-      window.clearTimeout(closeSidebarTimeoutRef.current);
-      closeSidebarTimeoutRef.current = null;
+    if (!sidebarOpen) {
+      return;
     }
-    setSidebarOpen(true);
-  }
-
-  function handleSidebarMouseLeave() {
-    // Sayfa navigasyonu sirasinda DOM yeniden render olurken tarayici bazen
-    // imlec hic hareket etmemisken de bir mouseleave tetikliyor (hit-test'in
-    // yeniden hesaplanmasi) - kisa bir gecikmeyle kapatip, bu sure icinde
-    // gercek bir mouseenter gelirse iptal ederek yanlis kapanmayi onluyoruz.
-    closeSidebarTimeoutRef.current = window.setTimeout(() => {
-      setSidebarOpen(false);
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (navRef.current?.contains(target) || toggleButtonRef.current?.contains(target)) {
+        return;
+      }
+      persistedSidebarOpen = false;
+      setSidebarOpenState(false);
       setNavSearch('');
-    }, 150);
-  }
+    }
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [sidebarOpen]);
 
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -240,44 +240,54 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
 
   return (
     <div className="min-h-screen bg-app-bg">
-      <header className="fixed inset-x-0 top-0 z-[100] flex h-16 items-center justify-between border-b border-app-border bg-app-surface px-5">
-        <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
-        <div className="flex items-center gap-4">
-          <NotificationBell />
-          {meQuery.data && (
-            <div className="hidden items-center gap-2 sm:flex">
-              {meQuery.data.avatarUrl ? (
-                <img
-                  src={meQuery.data.avatarUrl}
-                  alt={tr.profile.avatarSection.alt}
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-app-bg-muted text-xs font-bold text-app-muted">
-                  {meQuery.data.name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <span className="text-sm font-semibold text-app-brand">
-                {tr.shell.welcome(meQuery.data.name)}
-              </span>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={() => logoutMutation.mutate()}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-app-danger hover:bg-app-bg-muted"
-            aria-label={tr.shell.logout}
-          >
-            <LogOut size={20} />
-          </button>
+      <header className="fixed inset-x-0 top-0 z-[100] flex h-16 items-center border-b border-app-border bg-app-surface">
+        <button
+          ref={toggleButtonRef}
+          type="button"
+          onClick={toggleSidebar}
+          className="flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center border-b border-white/20 bg-app-brand text-white transition-colors duration-200 hover:bg-app-brand-dark"
+          aria-label={sidebarOpen ? tr.shell.collapseSidebar : tr.shell.expandSidebar}
+        >
+          <PanelLeft size={20} />
+        </button>
+        <div className="flex flex-1 items-center justify-between pr-5">
+          <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            {meQuery.data && (
+              <div className="hidden items-center gap-2 sm:flex">
+                {meQuery.data.avatarUrl ? (
+                  <img
+                    src={meQuery.data.avatarUrl}
+                    alt={tr.profile.avatarSection.alt}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-app-bg-muted text-xs font-bold text-app-muted">
+                    {meQuery.data.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-semibold text-app-brand">
+                  {tr.shell.welcome(meQuery.data.name)}
+                </span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => logoutMutation.mutate()}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-app-danger hover:bg-app-bg-muted"
+              aria-label={tr.shell.logout}
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
       </header>
 
       <nav
-        onMouseEnter={handleSidebarMouseEnter}
-        onMouseLeave={handleSidebarMouseLeave}
+        ref={navRef}
         className={clsx(
-          'fixed top-16 bottom-0 left-0 z-[90] hidden flex-col overflow-hidden border-r border-app-border bg-app-surface transition-[width] duration-200 md:flex',
+          'fixed top-16 bottom-0 left-0 z-[90] hidden flex-col overflow-hidden border-r border-app-brand-dark bg-app-brand transition-[width] duration-200 md:flex',
           sidebarOpen ? 'w-60' : 'w-16',
         )}
       >
@@ -285,7 +295,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           <label className="relative flex items-center">
             <Search
               size={16}
-              className="pointer-events-none absolute left-2.5 shrink-0 text-app-muted"
+              className="pointer-events-none absolute left-2.5 shrink-0 text-white"
             />
             <input
               type="text"
@@ -294,7 +304,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
               placeholder={tr.shell.searchPlaceholder}
               aria-label={tr.shell.searchPlaceholder}
               className={clsx(
-                'h-9 rounded-lg border border-app-border bg-app-bg pl-8 pr-2 text-sm text-app-text outline-none transition-[width,opacity] duration-200 focus:border-app-primary',
+                'h-9 rounded-lg border border-white/20 bg-white/10 pl-8 pr-2 text-sm text-white outline-none transition-[width,opacity] duration-200 placeholder:text-white/50 focus:border-white/60',
                 sidebarOpen ? 'w-full opacity-100' : 'w-9 opacity-0',
               )}
             />
@@ -302,7 +312,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
         </div>
         <ul className="flex flex-col overflow-y-auto pb-3">
           {visibleNavItems.length === 0 && (
-            <li className="px-5 py-3 text-xs text-app-muted whitespace-nowrap">
+            <li className="px-5 py-3 text-xs text-white whitespace-nowrap">
               {tr.shell.searchNoResults}
             </li>
           )}
@@ -311,21 +321,31 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
             const unreadCount = badgeCount ?? 0;
             const hasUnread = unreadCount > 0;
             return (
-              <li key={label}>
+              <li
+                key={label}
+                onMouseEnter={(event) => {
+                  if (!sidebarOpen) {
+                    setHoveredNavItem({
+                      label,
+                      top: event.currentTarget.getBoundingClientRect().top + 20,
+                    });
+                  }
+                }}
+                onMouseLeave={() => setHoveredNavItem(null)}
+              >
                 <Link
                   to={path}
                   className={clsx(
-                    'flex h-10 w-full cursor-pointer items-center whitespace-nowrap transition-colors duration-200',
-                    !isActive && 'hover:bg-app-brand/10 hover:text-app-text',
-                    !isActive && hasUnread && 'text-app-danger',
-                    !isActive && !hasUnread && 'text-app-muted',
+                    'flex h-10 w-full cursor-pointer items-center whitespace-nowrap text-white transition-colors duration-200',
+                    !isActive && 'hover:bg-white/15',
+                    !isActive && hasUnread && 'text-red-300',
                   )}
                 >
                   <span
                     className={clsx(
                       'inline-flex h-9 items-center gap-3 overflow-hidden rounded-lg transition-colors duration-200',
                       sidebarOpen ? 'mr-2 ml-2 flex-1' : 'mx-auto w-10 shrink-0',
-                      isActive && 'bg-app-brand text-white',
+                      isActive && 'bg-white text-app-brand',
                     )}
                   >
                     <span
@@ -352,19 +372,28 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           })}
         </ul>
         {watermarkLogoUrl && (
-          <div className="mt-auto flex shrink-0 items-center justify-center overflow-hidden border-t border-app-border px-3 py-4">
+          <div className="mt-auto flex shrink-0 items-center justify-center overflow-hidden border-t border-white/20 px-3 py-4">
             <img
               src={watermarkLogoUrl}
               alt=""
               aria-hidden="true"
               className={clsx(
-                'object-contain opacity-60 transition-[height,width] duration-200',
+                'object-contain opacity-80 transition-[height,width] duration-200',
                 sidebarOpen ? 'h-16 w-full' : 'h-8 w-8',
               )}
             />
           </div>
         )}
       </nav>
+
+      {!sidebarOpen && hoveredNavItem && (
+        <span
+          style={{ top: hoveredNavItem.top }}
+          className="pointer-events-none fixed left-16 z-[100] ml-2 -translate-y-1/2 rounded-md bg-app-brand-dark px-2 py-1 text-xs font-semibold whitespace-nowrap text-white shadow-lg"
+        >
+          {hoveredNavItem.label}
+        </span>
+      )}
 
       <main className="pt-16 md:pl-16">
         <div className="p-6 pb-24 md:p-8 md:pb-24">{children}</div>
