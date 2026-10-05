@@ -6,6 +6,7 @@ import {
   getQuote,
   getQuoteFxRates,
   getQuoteRevisionSummary,
+  listQuoteAssignableUsers,
   listQuotes,
   rejectQuote,
   updateQuote,
@@ -15,6 +16,14 @@ import {
 } from '../../lib/api';
 
 export const QUOTES_QUERY_KEY = ['quotes'];
+
+/** /teklifler/yeni ve /teklifler/duzenle/:id'deki "Gonderen" secicisi. */
+export function useQuoteAssignableUsersQuery() {
+  return useQuery({
+    queryKey: ['quotes', 'assignable-users'],
+    queryFn: listQuoteAssignableUsers,
+  });
+}
 
 export function useQuotesQuery(
   params: {

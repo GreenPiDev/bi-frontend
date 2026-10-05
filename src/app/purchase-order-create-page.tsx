@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import type { ChangeEvent } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { BackLink } from '../components/ui/back-link';
@@ -17,7 +18,10 @@ import { useToast } from '../components/ui/toast-context';
 import { ProductAutocomplete } from '../features/crm/product-autocomplete';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useQuotesQuery } from '../features/crm/use-quotes';
-import { useCreatePurchaseOrderMutation } from '../features/crm/use-purchase-orders';
+import {
+  useCreatePurchaseOrderMutation,
+  usePurchaseOrderDraftFromQuoteQuery,
+} from '../features/crm/use-purchase-orders';
 import {
   purchaseOrderCreateFormSchema,
   type PurchaseOrderCreateFormValues,
@@ -44,6 +48,10 @@ export function PurchaseOrderCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
   const createMutation = useCreatePurchaseOrderMutation();
+  const [searchParams] = useSearchParams();
+  const quoteIdFromUrl = searchParams.get('quoteId') ?? undefined;
+  const draftQuery = usePurchaseOrderDraftFromQuoteQuery(quoteIdFromUrl);
+  const appliedDraftRef = useRef(false);
 
   const {
     control,
@@ -56,7 +64,7 @@ export function PurchaseOrderCreatePage() {
     resolver: zodResolver(purchaseOrderCreateFormSchema),
     defaultValues: { items: [{ description: '', quantity: '1', productId: undefined }] },
   });
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, replace } = useFieldArray({ control, name: 'items' });
   const productListsQuery = useProductListsQuery({ pageSize: 100 });
   const productListOptions = (productListsQuery.data?.data ?? []).map((productList) => ({
     value: productList.id,
@@ -72,6 +80,33 @@ export function PurchaseOrderCreatePage() {
     value: quote.id,
     label: quote.quoteNumber,
   }));
+
+  // /teklifler sayfasindaki "Satin Alma Siparisi Olustur" butonu artik dogrudan
+  // siparis olusturmuyor - bu sayfayi ?quoteId= ile acip teklifin firma/urun
+  // bilgilerini (stoktan dusulmus onerilen miktarlarla, SP1/SP2) onceden
+  // dolduruyor; kullanici basligi/kalemleri duzenleyip kendisi kaydeder.
+  useEffect(() => {
+    if (!draftQuery.data || appliedDraftRef.current) return;
+    appliedDraftRef.current = true;
+    const draft = draftQuery.data;
+    setValue('accountId', draft.accountId);
+    setValue('quoteId', draft.quoteId);
+    replace(
+      draft.items.map((item) => ({
+        productListId: item.productListId ?? undefined,
+        productId: item.productId,
+        description: '',
+        quantity: String(item.quantity),
+      })),
+    );
+  }, [draftQuery.data, setValue, replace]);
+
+  useEffect(() => {
+    if (!draftQuery.error) return;
+    toast.error(
+      draftQuery.error instanceof ApiError ? draftQuery.error.message : tr.common.unexpectedError,
+    );
+  }, [draftQuery.error, toast]);
 
   const itemRows: ItemRow[] = fields.map((field, index) => ({ id: field.id, index }));
 

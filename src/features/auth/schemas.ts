@@ -10,6 +10,9 @@ export type LoginFormValues = z.infer<typeof loginFormSchema>;
 export const updateProfileFormSchema = z.object({
   name: z.string().min(1, 'Ad soyad gerekli.').max(120),
   email: z.string().email('Geçerli bir e-posta adresi girin.').max(255),
+  /** G3-genislemesi: teklif "gonderen" bilgisinde gosterilen unvan/telefon. */
+  title: z.string().max(200).optional().or(z.literal('')),
+  phone: z.string().max(50).optional().or(z.literal('')),
 });
 
 export type UpdateProfileFormValues = z.infer<typeof updateProfileFormSchema>;

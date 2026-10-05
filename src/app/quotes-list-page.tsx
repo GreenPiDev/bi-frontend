@@ -26,7 +26,6 @@ import {
   useQuotesQuery,
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
-import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Quote, type QuoteStatus } from '../lib/api';
 import {
@@ -153,9 +152,6 @@ export function QuotesListPage() {
   const [pendingStatusChange, setPendingStatusChange] = useState<
     { quote: Quote; status: QuoteStatus } | undefined
   >(undefined);
-  const [pendingPurchaseOrderQuote, setPendingPurchaseOrderQuote] = useState<Quote | undefined>(
-    undefined,
-  );
   // Iki tarih filtresi ayni quoteDate alanini hedefler, birbirini sifirlar: aralik
   // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. opportunities-list-page.tsx).
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
@@ -177,7 +173,6 @@ export function QuotesListPage() {
     '': statusCounts.all,
     ...statusCounts.counts,
   };
-  const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const deleteMutation = useDeleteQuoteMutation();
   const confirmStatusMutation = useUpdateQuoteMutation(pendingStatusChange?.quote.id ?? '');
   const canCreatePurchaseOrder = hasPermission(
@@ -185,20 +180,6 @@ export function QuotesListPage() {
     'purchase-orders',
     'CREATE',
   );
-
-  function handleConfirmCreatePurchaseOrder() {
-    if (!pendingPurchaseOrderQuote) return;
-    createPurchaseOrderMutation.mutate(pendingPurchaseOrderQuote.id, {
-      onSuccess: (purchaseOrder) => {
-        toast.success(tr.crm.quotes.createPurchaseOrderSuccess);
-        setPendingPurchaseOrderQuote(undefined);
-        navigate(`/siparisler/${purchaseOrder.id}`);
-      },
-      onError: (error) => {
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-      },
-    });
-  }
 
   async function handleCopyQuoteNumber(quoteNumber: string) {
     await navigator.clipboard.writeText(quoteNumber);
@@ -344,10 +325,7 @@ export function QuotesListPage() {
             <IconActionButton
               icon={ShoppingCart}
               tooltip={tr.crm.quotes.createPurchaseOrderButton}
-              disabled={
-                createPurchaseOrderMutation.isPending && pendingPurchaseOrderQuote?.id === q.id
-              }
-              onClick={() => setPendingPurchaseOrderQuote(q)}
+              onClick={() => navigate(`/siparisler/yeni?quoteId=${q.id}`)}
             />
           );
         }
@@ -566,16 +544,6 @@ export function QuotesListPage() {
           isPending={confirmStatusMutation.isPending}
           onConfirm={() => handleConfirmStatusChange()}
           onCancel={() => setPendingStatusChange(undefined)}
-        />
-      )}
-      {pendingPurchaseOrderQuote && (
-        <ConfirmModal
-          title={tr.crm.quotes.createPurchaseOrderConfirmTitle}
-          message={tr.crm.quotes.createPurchaseOrderConfirm(pendingPurchaseOrderQuote.quoteNumber)}
-          confirmLabel={tr.crm.quotes.createPurchaseOrderConfirmButton}
-          isPending={createPurchaseOrderMutation.isPending}
-          onConfirm={handleConfirmCreatePurchaseOrder}
-          onCancel={() => setPendingPurchaseOrderQuote(undefined)}
         />
       )}
     </AppShell>

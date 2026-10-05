@@ -19,9 +19,14 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR');
  * quote-template-preview-lightbox.tsx). */
 export interface QuoteTemplatePrintDocumentData {
   quoteNumber: string;
+  title: string | null;
   quoteDate: string;
   quoteCurrency: string;
   exchangeRates: QuoteExchangeRates | null;
+  /** Serbest metin, orn. "3 is gunu" - defaultta (quote-detail-page.tsx) zaten
+   * vardi, parite icin buraya da eklendi (bkz. docs/VARSAYIMLAR.md). */
+  leadTime: string | null;
+  paymentMethod: string | null;
   account: {
     name: string;
     address: string | null;
@@ -46,19 +51,15 @@ export interface QuoteTemplatePrintDocumentData {
   ibanAccountHolderName: string | null;
   ibanAccountNumber: string | null;
   ibanNumber: string | null;
+  /** Tenant-genel sirket bilgisi (bkz. docs/VARSAYIMLAR.md) - artik sablon basina
+   * degil, /settings?tab=crm'deki "Sirket Bilgileri"nden tek kaynaktan gelir. */
+  company: { address: string | null; phone: string | null; email: string | null };
+  /** Teklifin "gonderen"i (Quote.senderId -> User) - artik sablon basina sabit
+   * degil, /teklifler/yeni'de teklif bazinda secilir. */
+  sender: { name: string; title: string | null; phone: string | null; email: string } | null;
   template: Pick<
     QuoteTemplate,
-    | 'logoUrl'
-    | 'coverImageUrl'
-    | 'closingImageUrl'
-    | 'companyDisplayName'
-    | 'companyTagline'
-    | 'companyPhone'
-    | 'companyEmail'
-    | 'senderName'
-    | 'senderTitle'
-    | 'senderPhone'
-    | 'senderEmail'
+    'logoUrl' | 'coverImageUrl' | 'closingImageUrl' | 'companyDisplayName' | 'companyTagline'
   > | null;
 }
 
@@ -119,9 +120,8 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           )}
         </div>
         <div>
-          <h1 className="text-5xl font-bold text-white drop-shadow">
-            {template.companyDisplayName}
-          </h1>
+          <h1 className="text-5xl font-bold text-white drop-shadow">{quote.account.name}</h1>
+          {quote.title && <p className="mt-2 text-xl text-white drop-shadow">{quote.title}</p>}
           {template.companyTagline && (
             <p className="mt-4 max-w-lg text-base text-white drop-shadow">
               {template.companyTagline}
@@ -136,7 +136,7 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           </h2>
         </div>
         <hr className="my-3 border-gray-700" />
-        <p className="text-sm font-bold uppercase">{quote.account.name}</p>
+        <p className="text-sm font-bold uppercase">{template.companyDisplayName}</p>
         <div className="mt-3 flex gap-8 text-sm">
           <span>
             {strings.quoteDateLabel}: {dateFormatter.format(new Date(quote.quoteDate))}
@@ -146,8 +146,8 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           </span>
         </div>
         <div className="mt-3 flex gap-8 text-sm">
-          {template.companyPhone && <span>{template.companyPhone}</span>}
-          {template.companyEmail && <span>{template.companyEmail}</span>}
+          {quote.company.phone && <span>{quote.company.phone}</span>}
+          {quote.company.email && <span>{quote.company.email}</span>}
         </div>
       </div>
     </section>,
@@ -157,12 +157,34 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
   pages.push(
     <section key="detail" className="print-page-break p-10">
       <header className="flex items-start justify-between border-b-2 border-gray-200 pb-4">
-        {template.logoUrl && <img src={template.logoUrl} alt="" className="h-14 w-auto" />}
+        <div>
+          {template.logoUrl && <img src={template.logoUrl} alt="" className="h-14 w-auto" />}
+          {(quote.company.address || quote.company.phone || quote.company.email) && (
+            <div className="mt-2 text-xs text-app-muted">
+              {quote.company.address && <p>{quote.company.address}</p>}
+              {(quote.company.phone || quote.company.email) && (
+                <p>{[quote.company.phone, quote.company.email].filter(Boolean).join(' · ')}</p>
+              )}
+            </div>
+          )}
+        </div>
         <div className="text-right text-sm">
           <p className="font-bold">{dateFormatter.format(new Date(quote.quoteDate))}</p>
           <p className="font-bold">#{quote.quoteNumber}</p>
+          {quote.leadTime && (
+            <p className="mt-1 text-xs text-app-muted">
+              {strings.leadTimeLabel}: {quote.leadTime}
+            </p>
+          )}
+          {quote.paymentMethod && (
+            <p className="text-xs text-app-muted">
+              {strings.paymentMethodLabel}: {quote.paymentMethod}
+            </p>
+          )}
         </div>
       </header>
+
+      {quote.title && <p className="mt-4 text-base font-semibold">{quote.title}</p>}
 
       <div className="mt-6 grid grid-cols-2 gap-8">
         <div>
@@ -183,43 +205,45 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
             {strings.senderInfoTitle}
           </h3>
-          {template.senderName && <p className="mt-2 text-sm font-bold">{template.senderName}</p>}
-          {template.senderTitle && <p className="text-sm text-app-muted">{template.senderTitle}</p>}
-          {template.senderPhone && (
+          {quote.sender && <p className="mt-2 text-sm font-bold">{quote.sender.name}</p>}
+          {quote.sender?.title && <p className="text-sm text-app-muted">{quote.sender.title}</p>}
+          {quote.sender?.phone && (
             <p className="text-sm text-app-muted">
-              {strings.phoneLabel}: {template.senderPhone}
+              {strings.phoneLabel}: {quote.sender.phone}
             </p>
           )}
-          {template.senderEmail && (
+          {quote.sender?.email && (
             <p className="text-sm text-app-muted">
-              {strings.emailLabel}: {template.senderEmail}
+              {strings.emailLabel}: {quote.sender.email}
             </p>
           )}
         </div>
       </div>
 
-      <table className="mt-8 w-full border-collapse text-sm">
+      <table className="mt-8 w-full table-fixed border-collapse text-xs">
         <thead>
           <tr className="bg-gray-900 text-white">
             <th className="p-3 text-left">{strings.itemsProductColumn}</th>
-            <th className="p-3 text-center">{strings.itemsQuantityColumn}</th>
-            <th className="p-3 text-right">{strings.itemsUnitPriceColumn}</th>
-            <th className="p-3 text-right">{strings.itemsDiscountColumn}</th>
-            <th className="p-3 text-right">{strings.itemsVatColumn}</th>
-            <th className="p-3 text-right">{strings.itemsTotalColumn}</th>
+            <th className="w-16 p-3 whitespace-nowrap text-right">{strings.itemsQuantityColumn}</th>
+            <th className="w-24 p-3 whitespace-nowrap text-right">
+              {strings.itemsUnitPriceColumn}
+            </th>
+            <th className="w-16 p-3 whitespace-nowrap text-right">{strings.itemsDiscountColumn}</th>
+            <th className="w-14 p-3 whitespace-nowrap text-right">{strings.itemsVatColumn}</th>
+            <th className="w-24 p-3 whitespace-nowrap text-right">{strings.itemsTotalColumn}</th>
           </tr>
         </thead>
         <tbody>
           {quote.items.map((item, index) => (
             <tr key={item.id} className={index % 2 === 1 ? 'bg-gray-50' : undefined}>
-              <td className="p-3">{item.product.name}</td>
-              <td className="p-3 text-center">{item.quantity}</td>
-              <td className="p-3 text-right">
+              <td className="p-3 break-words">{item.product.name}</td>
+              <td className="p-3 whitespace-nowrap text-right">{item.quantity}</td>
+              <td className="p-3 whitespace-nowrap text-right">
                 {formatCurrencyAmount(Number(item.unitPrice), item.currency)}
               </td>
-              <td className="p-3 text-right">{`%${item.discountPct}`}</td>
-              <td className="p-3 text-right">{`%${item.vatPct}`}</td>
-              <td className="p-3 text-right">
+              <td className="p-3 whitespace-nowrap text-right">{`%${item.discountPct}`}</td>
+              <td className="p-3 whitespace-nowrap text-right">{`%${item.vatPct}`}</td>
+              <td className="p-3 whitespace-nowrap text-right">
                 {formatCurrencyAmount(lineTotal(item), item.currency)}
               </td>
             </tr>
@@ -280,36 +304,40 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           )}
         </div>
       )}
-
-      {quote.ibanNumber && (
-        <div className="mt-10">
-          <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
-            {strings.bankDetailsTitle}
-          </h3>
-          <table className="mt-3 w-full border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-gray-300 text-left text-app-muted">
-                <th className="p-2">{strings.bankNameColumn}</th>
-                <th className="p-2">{strings.accountHolderNameColumn}</th>
-                <th className="p-2">{strings.accountNumberColumn}</th>
-                <th className="p-2">{strings.ibanColumn}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="p-2">{quote.ibanBankName}</td>
-                <td className="p-2">{quote.ibanAccountHolderName}</td>
-                <td className="p-2">{quote.ibanAccountNumber ?? '—'}</td>
-                <td className="p-2">{formatIbanInput(quote.ibanNumber)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
     </section>,
   );
 
-  // 3. Kosullar (teklifin kendi satis/teslimat sartlari) + onay
+  // 3. Banka bilgileri (teklif IBAN icerıyorsa, kendi sayfasinda - urun listesinin
+  // hemen ardindan Word'deki Ctrl+Enter sayfa sonu gibi)
+  if (quote.ibanNumber) {
+    pages.push(
+      <section key="bank" className="print-page-break p-10">
+        <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+          {strings.bankDetailsTitle}
+        </h3>
+        <table className="mt-3 w-full border-collapse text-xs">
+          <thead>
+            <tr className="border-b border-gray-300 text-left text-app-muted">
+              <th className="p-2">{strings.bankNameColumn}</th>
+              <th className="p-2">{strings.accountHolderNameColumn}</th>
+              <th className="p-2">{strings.accountNumberColumn}</th>
+              <th className="p-2">{strings.ibanColumn}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b border-gray-100">
+              <td className="p-2">{quote.ibanBankName}</td>
+              <td className="p-2">{quote.ibanAccountHolderName}</td>
+              <td className="p-2">{quote.ibanAccountNumber ?? '—'}</td>
+              <td className="p-2">{formatIbanInput(quote.ibanNumber)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>,
+    );
+  }
+
+  // 4. Kosullar (teklifin kendi satis/teslimat sartlari) + onay
   pages.push(
     <section key="terms" className="print-page-break p-10">
       {quote.paymentTerms && (
@@ -350,13 +378,13 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           <h4 className="text-sm font-bold" style={{ color: '#2196f3' }}>
             {strings.representativeTitle}
           </h4>
-          {template.senderName && <p className="mt-2 font-semibold">{template.senderName}</p>}
-          {template.senderTitle && <p className="text-app-muted">{template.senderTitle}</p>}
+          {quote.sender && <p className="mt-2 font-semibold">{quote.sender.name}</p>}
+          {quote.sender?.title && <p className="text-app-muted">{quote.sender.title}</p>}
           <p className="mt-3 text-app-muted">
-            {strings.phoneLabel}: {template.senderPhone ?? ''}
+            {strings.phoneLabel}: {quote.sender?.phone ?? ''}
           </p>
           <p className="text-app-muted">
-            {strings.emailLabel}: {template.senderEmail ?? ''}
+            {strings.emailLabel}: {quote.sender?.email ?? ''}
           </p>
         </div>
         <div>
@@ -375,7 +403,7 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
     </section>,
   );
 
-  // 4. Kapanis sayfasi (opsiyonel)
+  // 5. Kapanis sayfasi (opsiyonel)
   if (template.closingImageUrl) {
     pages.push(
       <section key="closing" className="print-page-break">

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Search, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { ArrowRight, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -22,6 +22,7 @@ import { AddOptionModal } from '../features/crm/add-option-modal';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
+import { useMeQuery } from '../features/auth/use-auth';
 import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
@@ -31,7 +32,11 @@ import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
-import { useCreateQuoteMutation, useQuoteRevisionSummaryQuery } from '../features/crm/use-quotes';
+import {
+  useCreateQuoteMutation,
+  useQuoteAssignableUsersQuery,
+  useQuoteRevisionSummaryQuery,
+} from '../features/crm/use-quotes';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
 import {
   DEFAULT_QUOTE_DELIVERY_TERMS_KEY,
@@ -121,6 +126,8 @@ export function QuoteFormPage() {
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
   const contactsQuery = useContactsQuery();
+  const meQuery = useMeQuery();
+  const assignableUsersQuery = useQuoteAssignableUsersQuery();
   const productListsQuery = useProductListsQuery();
   const tenantSettingsQuery = useTenantSettingsQuery();
   const defaultVatPctSetting = tenantSettingsQuery.data?.find(
@@ -144,7 +151,7 @@ export function QuoteFormPage() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
@@ -170,25 +177,39 @@ export function QuoteFormPage() {
   }, [quoteCurrency]);
   const revisionSummaryQuery = useQuoteRevisionSummaryQuery(selectedAccountId);
 
-  // Kosul metni alanlari (odeme/satis/teslimat/genel hukumler), ayarlardaki
-  // varsayilan degerlerle bir kere doldurulur - kullanici uzerinde degisiklik
-  // yapabilir, tenantSettingsQuery daha sonra yeniden fetch olursa (ornegin baska
-  // bir sekmede ayar degistirilince) kullanicinin elle girdigi deger ezilmez.
-  const appliedTermDefaultsRef = useRef(false);
+  // Gonderen varsayilan olarak istegi yapan kullanici (bkz. docs/VARSAYIMLAR.md) -
+  // kullanici elle degistirirse (dirty) bir sonraki /auth/me yanitiyla ezilmez.
   useEffect(() => {
-    if (appliedTermDefaultsRef.current || !tenantSettingsQuery.data) return;
-    appliedTermDefaultsRef.current = true;
+    if (meQuery.data && !dirtyFields.senderId) {
+      setValue('senderId', meQuery.data.id);
+    }
+  }, [meQuery.data, dirtyFields.senderId, setValue]);
+
+  // Kosul metni alanlari (odeme/satis/teslimat/genel hukumler), ayarlardaki varsayilan
+  // degerlerle doldurulur. tenantSettingsQuery baska bir sekmede ayar kaydedilince
+  // realtime ile yeniden fetch olur (bkz. useTenantSettingsRealtimeSync) ve bu ekran da
+  // guncellenir - ama kullanicinin zaten elle degistirdigi (dirty) alanlar ezilmez.
+  useEffect(() => {
+    if (!tenantSettingsQuery.data) return;
     const findSetting = (key: string) =>
       tenantSettingsQuery.data?.find((setting) => setting.key === key)?.value;
     const paymentTerms = findSetting(DEFAULT_QUOTE_PAYMENT_TERMS_KEY);
     const salesTerms = findSetting(DEFAULT_QUOTE_SALES_TERMS_KEY);
     const deliveryTerms = findSetting(DEFAULT_QUOTE_DELIVERY_TERMS_KEY);
     const generalTerms = findSetting(DEFAULT_QUOTE_GENERAL_TERMS_KEY);
-    if (paymentTerms) setValue('paymentTerms', String(paymentTerms));
-    if (salesTerms) setValue('salesTerms', String(salesTerms));
-    if (deliveryTerms) setValue('deliveryTerms', String(deliveryTerms));
-    if (generalTerms) setValue('generalTerms', String(generalTerms));
-  }, [tenantSettingsQuery.data, setValue]);
+    if (paymentTerms && !dirtyFields.paymentTerms) setValue('paymentTerms', String(paymentTerms));
+    if (salesTerms && !dirtyFields.salesTerms) setValue('salesTerms', String(salesTerms));
+    if (deliveryTerms && !dirtyFields.deliveryTerms)
+      setValue('deliveryTerms', String(deliveryTerms));
+    if (generalTerms && !dirtyFields.generalTerms) setValue('generalTerms', String(generalTerms));
+  }, [
+    tenantSettingsQuery.data,
+    setValue,
+    dirtyFields.paymentTerms,
+    dirtyFields.salesTerms,
+    dirtyFields.deliveryTerms,
+    dirtyFields.generalTerms,
+  ]);
 
   // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
   // frontende çekilip filtrelenmez. Seçilen ürün listesine göre filtrelenir.
@@ -277,6 +298,24 @@ export function QuoteFormPage() {
     toast.success(tr.crm.quotes.form.itemAddSuccess);
   }
 
+  // Satırdaki ok ikonuna basınca, detay panelini açmadan ürünü varsayılan miktar/fiyat/KDV
+  // ile doğrudan teklife ekler (handleToggleEntry + handleAddEntry'nin kısayolu).
+  function handleQuickAdd(product: Product) {
+    if (!product.price) {
+      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
+      return;
+    }
+    append({
+      productId: product.id,
+      quantity: '1',
+      unitPrice: product.price,
+      discountPct: '0',
+      vatPct: defaultVatPct,
+    });
+    if (entryProductId === product.id) setEntryProductId(null);
+    toast.success(tr.crm.quotes.form.itemAddSuccess);
+  }
+
   // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçtiği
   // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
   // varsayılan miktar/fiyatla doğrudan satır olarak eklenir - ayrıca "Teklife Ekle"
@@ -353,6 +392,11 @@ export function QuoteFormPage() {
       label: `${contact.firstName} ${contact.lastName}`,
     }));
 
+  const senderOptions = (assignableUsersQuery.data ?? []).map((user) => ({
+    value: user.id,
+    label: user.name,
+  }));
+
   const summaryRows = (watchedItems ?? []).map((item, index) => {
     const quantity = Number(item.quantity) || 0;
     const manualPrice = item.unitPrice ? Number(item.unitPrice) : undefined;
@@ -388,6 +432,7 @@ export function QuoteFormPage() {
     const input: CreateQuoteInput = {
       accountId: values.accountId,
       contactId: values.contactId || undefined,
+      senderId: values.senderId,
       items: values.items.map((item) => ({
         productId: item.productId,
         quantity: Number(item.quantity),
@@ -517,6 +562,19 @@ export function QuoteFormPage() {
       render: (product) => product.description ?? '—',
     },
     ...pickerAttributeColumns,
+    {
+      key: 'quickAdd',
+      header: '',
+      required: true,
+      className: 'w-8',
+      render: (product) => (
+        <IconActionButton
+          icon={ArrowRight}
+          tooltip={tr.crm.quotes.form.quickAddTooltip}
+          onClick={() => handleQuickAdd(product)}
+        />
+      ),
+    },
   ];
 
   const {
@@ -737,6 +795,7 @@ export function QuoteFormPage() {
               </div>
             }
             contactOptions={contactOptions}
+            senderOptions={senderOptions}
             values={{
               contactId: watch('contactId') ?? '',
               quoteDate: watch('quoteDate') ?? '',
@@ -745,6 +804,7 @@ export function QuoteFormPage() {
               ibanOptionId: watch('ibanOptionId') ?? '',
               quoteCurrency,
               templateId: watch('templateId') ?? '',
+              senderId: watch('senderId') ?? '',
             }}
             onChange={(field, value) => setValue(field, value as never, { shouldValidate: true })}
             errors={{
@@ -755,6 +815,7 @@ export function QuoteFormPage() {
               ibanOptionId: errors.ibanOptionId?.message,
               quoteCurrency: errors.quoteCurrency?.message,
               templateId: errors.templateId?.message,
+              senderId: errors.senderId?.message,
             }}
             onRequestAddPaymentMethod={() => setActiveOptionModal('paymentMethod')}
             onRequestAddIban={() => setActiveOptionModal('iban')}
@@ -813,8 +874,6 @@ export function QuoteFormPage() {
                 </p>
               ) : (
                 <>
-                  <p className="mt-1 text-xs text-app-muted">{tr.crm.quotes.form.pickerHint}</p>
-
                   <div className="mt-3 flex flex-wrap items-end gap-3">
                     <div className="relative flex-1">
                       <Search
@@ -838,6 +897,10 @@ export function QuoteFormPage() {
                       onChange={setVisiblePickerKeys}
                     />
                   </div>
+
+                  <p className="mt-2 text-sm text-app-muted">
+                    {tr.crm.quotes.form.summaryEditHint}
+                  </p>
 
                   <Table
                     columns={pickerColumns}
@@ -887,7 +950,7 @@ export function QuoteFormPage() {
                   </span>
                 </div>
 
-                <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEditHint}</p>
+                <p className="text-sm text-app-muted">{tr.crm.quotes.form.summaryEditHint}</p>
 
                 {summaryRows.length === 0 ? (
                   <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>

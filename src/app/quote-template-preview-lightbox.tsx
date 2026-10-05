@@ -174,9 +174,12 @@ function buildSampleQuote(
 
   return {
     quoteNumber: strings.sampleQuoteNumber,
+    title: strings.sampleTitle,
     quoteDate: new Date().toISOString(),
     quoteCurrency: 'TRY',
     exchangeRates: null,
+    leadTime: strings.sampleLeadTime,
+    paymentMethod: strings.samplePaymentMethod,
     account: {
       name: strings.sampleAccountName,
       address: strings.sampleAccountAddress,
@@ -212,18 +215,23 @@ function buildSampleQuote(
     ibanAccountHolderName: null,
     ibanAccountNumber: null,
     ibanNumber: null,
+    company: {
+      address: strings.sampleCompanyAddress,
+      phone: strings.sampleCompanyPhone,
+      email: strings.sampleCompanyEmail,
+    },
+    sender: {
+      name: strings.sampleSenderName,
+      title: strings.sampleSenderTitle,
+      phone: strings.sampleSenderPhone,
+      email: strings.sampleSenderEmail,
+    },
     template: {
       logoUrl: images.logoUrl,
       coverImageUrl: images.coverImageUrl,
       closingImageUrl: images.closingImageUrl,
       companyDisplayName: values.companyDisplayName.trim() || strings.sampleCompanyName,
       companyTagline: values.companyTagline?.trim() || null,
-      companyPhone: values.companyPhone?.trim() || null,
-      companyEmail: values.companyEmail?.trim() || null,
-      senderName: values.senderName?.trim() || null,
-      senderTitle: values.senderTitle?.trim() || null,
-      senderPhone: values.senderPhone?.trim() || null,
-      senderEmail: values.senderEmail?.trim() || null,
     },
   };
 }

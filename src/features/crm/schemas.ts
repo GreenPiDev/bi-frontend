@@ -258,13 +258,6 @@ export const quoteTemplateFormSchema = z.object({
   isDefault: z.boolean().optional(),
   companyDisplayName: z.string().min(2, 'Şirket adı en az 2 karakter olmalı.').max(200),
   companyTagline: z.string().max(400).optional().or(z.literal('')),
-  companyPhone: z.string().max(50).optional().or(z.literal('')),
-  companyEmail: z.string().email('Geçerli bir e-posta girin.').optional().or(z.literal('')),
-  companyAddressLines: z.string().max(2000).optional().or(z.literal('')),
-  senderName: z.string().max(200).optional().or(z.literal('')),
-  senderTitle: z.string().max(200).optional().or(z.literal('')),
-  senderPhone: z.string().max(50).optional().or(z.literal('')),
-  senderEmail: z.string().email('Geçerli bir e-posta girin.').optional().or(z.literal('')),
 });
 
 export type QuoteTemplateFormValues = z.infer<typeof quoteTemplateFormSchema>;
@@ -316,6 +309,7 @@ export const quoteFormSchema = z
     ibanOptionId: z.string().optional(),
     quoteCurrency: z.string().min(1, 'Teklif para birimi gerekli.'),
     templateId: z.string().optional(),
+    senderId: z.string({ message: 'Gönderen gerekli.' }).min(1, 'Gönderen gerekli.'),
   })
   .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
     message: 'Fırsat adı en az 2 karakter olmalı.',

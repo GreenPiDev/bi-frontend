@@ -58,6 +58,9 @@ interface TableProps<T> {
    * verir. Varsayilan false - mevcut sabit genislikli liste sayfalarinin davranisi
    * degismez. */
   scrollX?: boolean;
+  /** Kolonlari icerige gore degil, esit araliklarla (table-layout: fixed) dagitir -
+   * az sayida, sabit genislikte kolonu olan tablolar icin (orn. siparis kalemleri). */
+  fixedLayout?: boolean;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -77,6 +80,7 @@ export function Table<T>({
   renderExpandedRow,
   rowClassName,
   scrollX = false,
+  fixedLayout = false,
 }: TableProps<T>) {
   if (isLoading) {
     return <p className="mt-6 text-sm text-app-muted">{loadingMessage}</p>;
@@ -112,6 +116,7 @@ export function Table<T>({
         className={clsx(
           'text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]',
           scrollX ? 'w-max min-w-full' : 'w-full',
+          fixedLayout && 'table-fixed',
         )}
       >
         <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">

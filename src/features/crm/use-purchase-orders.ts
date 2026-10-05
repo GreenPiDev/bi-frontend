@@ -1,9 +1,9 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createPurchaseOrder,
-  createPurchaseOrderFromQuote,
   deletePurchaseOrder,
   getPurchaseOrder,
+  getPurchaseOrderDraftFromQuote,
   listPurchaseOrders,
   updatePurchaseOrder,
   type CreatePurchaseOrderInput,
@@ -65,13 +65,13 @@ export function usePurchaseOrderQuery(id: string) {
   });
 }
 
-export function useCreatePurchaseOrderFromQuoteMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (quoteId: string) => createPurchaseOrderFromQuote(quoteId),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: PURCHASE_ORDERS_QUERY_KEY });
-    },
+/** Teklif onerisiyle /siparisler/yeni formunu doldurmak icin (SP1/SP2) - herhangi
+ * bir siparis OLUSTURMAZ, sadece onerilen urun/miktarlari getirir. */
+export function usePurchaseOrderDraftFromQuoteQuery(quoteId: string | undefined) {
+  return useQuery({
+    queryKey: ['purchase-order-draft', quoteId],
+    queryFn: () => getPurchaseOrderDraftFromQuote(quoteId as string),
+    enabled: Boolean(quoteId),
   });
 }
 

@@ -75,6 +75,7 @@ const quote: api.Quote = {
   status: 'APPROVED',
   approvedAt: '2026-09-01T00:00:00.000Z',
   approvedById: 'u1',
+  senderId: 'u1',
   createdById: 'u1',
   createdByName: 'Admin',
   items: [],
@@ -128,5 +129,62 @@ describe('PurchaseOrderCreatePage', () => {
     ]);
 
     expect(await screen.findByText('detail-page')).toBeInTheDocument();
+  });
+
+  it('?quoteId= ile acilinca teklifin firma/urun bilgileriyle onceden doldurulur (SP1/SP2)', async () => {
+    vi.spyOn(api, 'getPurchaseOrderDraftFromQuote').mockResolvedValue({
+      accountId: 'acc-1',
+      quoteId: 'q1',
+      quoteNumber: 'TEK-2026-09-07-001',
+      items: [
+        {
+          productId: 'p1',
+          productListId: 'pl1',
+          productName: 'Sunucu',
+          quantity: 7,
+        },
+      ],
+    });
+    vi.spyOn(api, 'getAccount').mockResolvedValue({
+      ...quote.account,
+      contacts: [],
+    });
+    vi.spyOn(api, 'getProduct').mockResolvedValue({
+      id: 'p1',
+      productListId: 'pl1',
+      productList: { id: 'pl1', name: 'Genel' },
+      name: 'Sunucu',
+      sku: null,
+      unit: 'adet',
+      minStockLevel: null,
+      maxDiscountPct: null,
+      price: null,
+      currency: 'TRY',
+      attributes: null,
+      description: null,
+      category: null,
+      brand: null,
+      avgCost: null,
+      createdAt: '2026-08-01T00:00:00.000Z',
+      updatedAt: '2026-08-01T00:00:00.000Z',
+      deletedAt: null,
+    });
+
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/siparisler/yeni?quoteId=q1']}>
+            <Routes>
+              <Route path="/siparisler/yeni" element={<PurchaseOrderCreatePage />} />
+            </Routes>
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByDisplayValue('Acme A.S.');
+    await screen.findByDisplayValue('Sunucu');
+    expect(screen.getByLabelText(/Miktar/)).toHaveValue('7');
   });
 });

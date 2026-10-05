@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { listTenantSettings, updateTenantSetting } from '../../lib/api';
 
-const TENANT_SETTINGS_QUERY_KEY = ['tenant-settings'];
+export const TENANT_SETTINGS_QUERY_KEY = ['tenant-settings'];
 
 export function useTenantSettingsQuery() {
   return useQuery({

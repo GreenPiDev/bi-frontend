@@ -177,9 +177,6 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     ...(canAccessPage('interactions')
       ? [{ label: tr.shell.nav.interactions, icon: MessageCircle, path: '/gorusmeler' }]
       : []),
-    ...(canAccessPage('opportunities')
-      ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
-      : []),
     ...(canAccessPage('calendar')
       ? [{ label: tr.shell.nav.calendar, icon: CalendarDays, path: '/ajanda' }]
       : []),
@@ -213,6 +210,9 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
       : []),
     ...(canAccessPage('post-sale-cases')
       ? [{ label: tr.shell.nav.postSaleSupport, icon: HeartHandshake, path: '/satis-sonrasi' }]
+      : []),
+    ...(canAccessPage('opportunities')
+      ? [{ label: tr.shell.nav.opportunities, icon: Target, path: '/firsatlar' }]
       : []),
     ...(canAccessPage('stock') ||
     canAccessPage('product-lists') ||

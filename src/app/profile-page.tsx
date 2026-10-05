@@ -121,6 +121,8 @@ export function ProfilePage() {
                       <ProfileEditForm
                         name={profileQuery.data.name}
                         email={profileQuery.data.email}
+                        title={profileQuery.data.title}
+                        phone={profileQuery.data.phone}
                       />
                     </div>
                   ),
@@ -294,7 +296,18 @@ function ListSettingsSection({ defaultPageSize }: { defaultPageSize: number }) {
   );
 }
 
-function ProfileEditForm({ name, email }: { name: string; email: string }) {
+function ProfileEditForm({
+  name,
+  email,
+  title,
+  phone,
+}: {
+  name: string;
+  email: string;
+  title: string | null;
+  phone: string | null;
+}) {
+  const toast = useToast();
   const updateMutation = useUpdateProfileMutation();
   const {
     register: registerField,
@@ -303,28 +316,33 @@ function ProfileEditForm({ name, email }: { name: string; email: string }) {
     formState: { errors },
   } = useForm<UpdateProfileFormValues>({
     resolver: zodResolver(updateProfileFormSchema),
-    values: { name, email },
+    values: { name, email, title: title ?? '', phone: phone ?? '' },
   });
 
   useEffect(() => {
-    reset({ name, email });
-  }, [name, email, reset]);
+    reset({ name, email, title: title ?? '', phone: phone ?? '' });
+  }, [name, email, title, phone, reset]);
 
   const onSubmit = handleSubmit((values) => {
-    updateMutation.mutate(values);
+    updateMutation.mutate(
+      {
+        ...values,
+        title: values.title || null,
+        phone: values.phone || null,
+      },
+      {
+        onSuccess: () => toast.success(tr.profile.editSection.success),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
   });
-
-  const apiErrorMessage =
-    updateMutation.error instanceof ApiError ? updateMutation.error.message : undefined;
 
   return (
     <section className="rounded-xl border border-app-border bg-app-surface p-4 shadow-sm">
       <h2 className="mb-4 text-base font-bold text-app-text">{tr.profile.editSection.title}</h2>
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-        <FormError message={apiErrorMessage} />
-        {updateMutation.isSuccess && (
-          <p className="text-sm font-medium text-app-brand">{tr.profile.editSection.success}</p>
-        )}
         <TextField
           label={tr.profile.editSection.nameLabel}
           autoComplete="name"
@@ -337,6 +355,18 @@ function ProfileEditForm({ name, email }: { name: string; email: string }) {
           autoComplete="email"
           error={errors.email?.message}
           {...registerField('email')}
+        />
+        <TextField
+          label={tr.profile.editSection.titleLabel}
+          placeholder={tr.profile.editSection.titlePlaceholder}
+          error={errors.title?.message}
+          {...registerField('title')}
+        />
+        <TextField
+          label={tr.profile.editSection.phoneLabel}
+          autoComplete="tel"
+          error={errors.phone?.message}
+          {...registerField('phone')}
         />
         <Button type="submit" disabled={updateMutation.isPending} className="self-start">
           {updateMutation.isPending

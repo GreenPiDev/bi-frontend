@@ -9,7 +9,6 @@ import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { ImageUploadField } from '../components/ui/image-upload-field';
 import { Switch } from '../components/ui/switch';
-import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -56,7 +55,8 @@ export function QuoteTemplateFormPage() {
     handleSubmit,
     reset,
     getValues,
-    formState: { errors },
+    setValue,
+    formState: { errors, dirtyFields },
   } = useForm<QuoteTemplateFormValues>({
     resolver: zodResolver(quoteTemplateFormSchema),
   });
@@ -71,16 +71,18 @@ export function QuoteTemplateFormPage() {
         isDefault: template.isDefault,
         companyDisplayName: template.companyDisplayName,
         companyTagline: template.companyTagline ?? '',
-        companyPhone: template.companyPhone ?? '',
-        companyEmail: template.companyEmail ?? '',
-        companyAddressLines: template.companyAddressLines.join('\n'),
-        senderName: template.senderName ?? '',
-        senderTitle: template.senderTitle ?? '',
-        senderPhone: template.senderPhone ?? '',
-        senderEmail: template.senderEmail ?? '',
       });
     }
   }, [templateQuery.data, reset]);
+
+  // Yeni sablon olustururken "Sirket Adi" alani varsayilan olarak tenant'in
+  // adiyla (Tenant.name, /settings?tab=crm "Sirket Bilgileri"nde ayni alan)
+  // onceden doldurulur - kullanici dilerse degistirebilir (bkz. kullanici istegi).
+  useEffect(() => {
+    if (!isEdit && tenantProfileQuery.data && !dirtyFields.companyDisplayName) {
+      setValue('companyDisplayName', tenantProfileQuery.data.name);
+    }
+  }, [isEdit, tenantProfileQuery.data, dirtyFields.companyDisplayName, setValue]);
 
   if (isEdit && templateQuery.isPending) {
     return (
@@ -121,16 +123,6 @@ export function QuoteTemplateFormPage() {
       isDefault: values.isDefault,
       companyDisplayName: values.companyDisplayName,
       companyTagline: emptyToOptional(values.companyTagline ?? '', isEdit),
-      companyPhone: emptyToOptional(values.companyPhone ?? '', isEdit),
-      companyEmail: emptyToOptional(values.companyEmail ?? '', isEdit),
-      companyAddressLines: (values.companyAddressLines ?? '')
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean),
-      senderName: emptyToOptional(values.senderName ?? '', isEdit),
-      senderTitle: emptyToOptional(values.senderTitle ?? '', isEdit),
-      senderPhone: emptyToOptional(values.senderPhone ?? '', isEdit),
-      senderEmail: emptyToOptional(values.senderEmail ?? '', isEdit),
     };
     mutation.mutate(input, {
       onSuccess: (template) => {
@@ -317,49 +309,7 @@ export function QuoteTemplateFormPage() {
                 error={errors.companyTagline?.message}
                 {...register('companyTagline')}
               />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <TextField
-                  label={strings.companySection.phoneLabel}
-                  error={errors.companyPhone?.message}
-                  {...register('companyPhone')}
-                />
-                <TextField
-                  label={strings.companySection.emailLabel}
-                  error={errors.companyEmail?.message}
-                  {...register('companyEmail')}
-                />
-              </div>
-              <TextareaField
-                label={strings.companySection.addressLinesLabel}
-                error={errors.companyAddressLines?.message}
-                {...register('companyAddressLines')}
-              />
-            </div>
-
-            <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
-              <h2 className="text-sm font-bold text-app-text">{strings.senderSection.title}</h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <TextField
-                  label={strings.senderSection.nameLabel}
-                  error={errors.senderName?.message}
-                  {...register('senderName')}
-                />
-                <TextField
-                  label={strings.senderSection.titleLabel}
-                  error={errors.senderTitle?.message}
-                  {...register('senderTitle')}
-                />
-                <TextField
-                  label={strings.senderSection.phoneLabel}
-                  error={errors.senderPhone?.message}
-                  {...register('senderPhone')}
-                />
-                <TextField
-                  label={strings.senderSection.emailLabel}
-                  error={errors.senderEmail?.message}
-                  {...register('senderEmail')}
-                />
-              </div>
+              <p className="text-xs text-app-muted">{strings.companySection.movedToSettingsHint}</p>
             </div>
           </div>
 

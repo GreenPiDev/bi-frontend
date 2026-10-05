@@ -21,6 +21,8 @@ export interface SafeUser {
   isPlatformAdmin: boolean;
   isActive: boolean;
   avatarUrl: string | null;
+  title: string | null;
+  phone: string | null;
   defaultPageSize: number;
   columnPreferences: Record<string, string[]> | null;
 }
@@ -163,6 +165,8 @@ export function getProfile(): Promise<UserProfile> {
 export interface UpdateProfileInput {
   name?: string;
   email?: string;
+  title?: string | null;
+  phone?: string | null;
   defaultPageSize?: 10 | 25 | 50;
   columnPreferences?: Record<string, string[]>;
 }
@@ -197,6 +201,9 @@ export interface TenantProfile {
   id: string;
   name: string;
   logoUrl: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
 }
 
 export function getMyTenant(): Promise<TenantProfile> {
@@ -211,6 +218,16 @@ export function uploadTenantLogo(file: File): Promise<TenantProfile> {
 
 export function deleteTenantLogo(): Promise<TenantProfile> {
   return request('/tenants/me/logo', { method: 'DELETE' });
+}
+
+export interface UpdateCompanyInfoInput {
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export function updateCompanyInfo(input: UpdateCompanyInfoInput): Promise<TenantProfile> {
+  return request('/tenants/me/company-info', { method: 'PATCH', body: JSON.stringify(input) });
 }
 
 export interface TenantSummary {
@@ -2219,6 +2236,9 @@ export interface Quote {
   ibanNumber: string | null;
   approvedAt: string | null;
   approvedById: string | null;
+  /** Teklifin "gonderen"i (PDF'te gosterilen temsilci) - createdById'den bagimsiz,
+   * bkz. docs/VARSAYIMLAR.md. */
+  senderId: string | null;
   createdById: string;
   createdByName: string | null;
   items: QuoteItem[];
@@ -2258,6 +2278,9 @@ export interface CreateQuoteInput {
   exchangeRates?: QuoteExchangeRates;
   /** Verilmezse tenant'in varsayilan sablonu otomatik atanir (varsa). */
   templateId?: string | null;
+  /** Teklifin "gonderen"i - varsayilan olarak isteği yapan kullanici onceden
+   * secili gelir, ama degistirilebilir (createdById'den bagimsiz). */
+  senderId: string;
 }
 
 export interface UpdateQuoteInput {
@@ -2281,6 +2304,7 @@ export interface UpdateQuoteInput {
   quoteCurrency?: string;
   exchangeRates?: QuoteExchangeRates;
   templateId?: string | null;
+  senderId?: string;
 }
 
 export function listQuotes(
@@ -2468,6 +2492,19 @@ export function exportQuotePdf(quoteId: string): Promise<Blob> {
   return requestBlob(`/exports/quote/${quoteId}/pdf`);
 }
 
+export interface QuoteAssignableUser {
+  id: string;
+  name: string;
+  title: string | null;
+  phone: string | null;
+  email: string;
+}
+
+/** /teklifler/yeni ve /teklifler/duzenle/:id'deki "Gonderen" secicisi. */
+export function listQuoteAssignableUsers(): Promise<QuoteAssignableUser[]> {
+  return request('/quotes/assignable-users');
+}
+
 // Teklif PDF Sablonlari (ad-hoc, bkz. docs/VARSAYIMLAR.md V41)
 
 export interface QuoteTemplate {
@@ -2482,13 +2519,6 @@ export interface QuoteTemplate {
   closingImageUrl: string | null;
   companyDisplayName: string;
   companyTagline: string | null;
-  companyPhone: string | null;
-  companyEmail: string | null;
-  companyAddressLines: string[];
-  senderName: string | null;
-  senderTitle: string | null;
-  senderPhone: string | null;
-  senderEmail: string | null;
   createdById: string;
   createdAt: string;
   updatedAt: string;
@@ -2499,13 +2529,6 @@ export interface QuoteTemplateInput {
   isDefault?: boolean;
   companyDisplayName: string;
   companyTagline?: string | null;
-  companyPhone?: string | null;
-  companyEmail?: string | null;
-  companyAddressLines: string[];
-  senderName?: string | null;
-  senderTitle?: string | null;
-  senderPhone?: string | null;
-  senderEmail?: string | null;
 }
 
 export function listQuoteTemplates(
@@ -2561,7 +2584,25 @@ export function removeQuoteTemplateImage(
   return request(`/quote-templates/${id}/${slot}`, { method: 'DELETE' });
 }
 
-/** Markali yazdirma sayfasinin (quote-template-print-page.tsx) tek seferlik veri ucu. */
+/** Sablonlu ve sablonsuz PDF'in ikisinin de kullandigi, tenant-genel sirket
+ * bilgisi (bkz. docs/VARSAYIMLAR.md). */
+export interface QuotePrintCompanyData {
+  name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+}
+
+/** Quote.senderId -> User - teklifin "gonderen"i, PDF'te gosterilen temsilci. */
+export interface QuotePrintSenderData {
+  name: string;
+  title: string | null;
+  phone: string | null;
+  email: string;
+}
+
+/** Markali yazdirma sayfasinin (quote-template-print-page.tsx) ve sablonsuz
+ * yazdirma gorunumunun (quote-detail-page.tsx) tek seferlik veri ucu. */
 export type QuotePrintData = Omit<Quote, 'template'> & {
   template: Pick<
     QuoteTemplate,
@@ -2572,14 +2613,9 @@ export type QuotePrintData = Omit<Quote, 'template'> & {
     | 'closingImageUrl'
     | 'companyDisplayName'
     | 'companyTagline'
-    | 'companyPhone'
-    | 'companyEmail'
-    | 'companyAddressLines'
-    | 'senderName'
-    | 'senderTitle'
-    | 'senderPhone'
-    | 'senderEmail'
   > | null;
+  company: QuotePrintCompanyData;
+  sender: QuotePrintSenderData | null;
 };
 
 export function getQuotePrintData(quoteId: string): Promise<QuotePrintData> {
@@ -2743,8 +2779,22 @@ export function getPurchaseOrder(id: string): Promise<PurchaseOrder> {
   return request(`/purchase-orders/${id}`);
 }
 
-export function createPurchaseOrderFromQuote(quoteId: string): Promise<PurchaseOrder> {
-  return request(`/quotes/${quoteId}/create-purchase-order`, { method: 'POST' });
+export interface PurchaseOrderDraftItem {
+  productId: string;
+  productListId: string | null;
+  productName: string;
+  quantity: number;
+}
+
+export interface PurchaseOrderDraft {
+  accountId: string;
+  quoteId: string;
+  quoteNumber: string;
+  items: PurchaseOrderDraftItem[];
+}
+
+export function getPurchaseOrderDraftFromQuote(quoteId: string): Promise<PurchaseOrderDraft> {
+  return request(`/quotes/${quoteId}/purchase-order-draft`);
 }
 
 export function createPurchaseOrder(input: CreatePurchaseOrderInput): Promise<PurchaseOrder> {

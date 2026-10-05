@@ -16,6 +16,8 @@ const ME: api.AuthenticatedUser = {
   isPlatformAdmin: false,
   isActive: true,
   avatarUrl: null,
+  title: null,
+  phone: null,
   defaultPageSize: 25,
   columnPreferences: null,
   permissions: { isCompanyAdmin: true, permissions: [] },

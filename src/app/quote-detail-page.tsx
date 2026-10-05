@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import {
   Check,
@@ -34,9 +34,17 @@ import {
   useRejectQuoteMutation,
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
-import { useCreatePurchaseOrderFromQuoteMutation } from '../features/crm/use-purchase-orders';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
-import { ApiError, exportQuotePdf, type Quote, type QuoteItem, type QuoteStatus } from '../lib/api';
+import {
+  ApiError,
+  exportQuotePdf,
+  getQuotePrintData,
+  type Quote,
+  type QuoteItem,
+  type QuotePrintCompanyData,
+  type QuotePrintSenderData,
+  type QuoteStatus,
+} from '../lib/api';
 import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
 import {
@@ -105,10 +113,16 @@ export function QuoteContentBody({
   quote,
   isPrintMode = false,
   onOpportunityClick,
+  company,
+  sender,
 }: {
   quote: Quote;
   isPrintMode?: boolean;
   onOpportunityClick: (opportunityId: string) => void;
+  /** Sadece yazdirma gorunumunde (isPrintMode) dolu gelir - bkz.
+   * docs/VARSAYIMLAR.md "sirket bilgileri"/"gonderen" parite notu. */
+  company?: QuotePrintCompanyData;
+  sender?: QuotePrintSenderData | null;
 }) {
   const totals = computeTotals(quote);
   const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
@@ -121,36 +135,37 @@ export function QuoteContentBody({
     {
       key: 'product',
       header: tr.crm.products.nameColumn,
+      className: 'break-words',
       render: (item) => item.product.name,
     },
     {
       key: 'quantity',
       header: tr.crm.quotes.detail.quantityColumn,
-      className: 'text-app-muted',
+      className: 'w-20 whitespace-nowrap text-right text-app-muted',
       render: (item) => item.quantity,
     },
     {
       key: 'unitPrice',
       header: tr.crm.quotes.detail.unitPriceColumn,
-      className: 'text-app-muted',
+      className: 'w-28 whitespace-nowrap text-right text-app-muted',
       render: (item) => formatCurrencyAmount(Number(item.unitPrice), item.currency),
     },
     {
       key: 'discountPct',
       header: tr.crm.quotes.detail.discountColumn,
-      className: 'text-app-muted',
+      className: 'w-20 whitespace-nowrap text-right text-app-muted',
       render: (item) => `%${item.discountPct}`,
     },
     {
       key: 'vatPct',
       header: tr.crm.quotes.detail.vatColumn,
-      className: 'text-app-muted',
+      className: 'w-16 whitespace-nowrap text-right text-app-muted',
       render: (item) => `%${item.vatPct}`,
     },
     {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'text-right',
+      className: 'w-28 whitespace-nowrap text-right',
       render: (item) => formatCurrencyAmount(lineTotal(item), item.currency),
     },
   ];
@@ -213,12 +228,15 @@ export function QuoteContentBody({
 
       <div className="mt-8">
         <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
-        <Table
-          columns={itemColumns}
-          data={quote.items}
-          keyField={(item) => item.id}
-          emptyMessage={tr.crm.quotes.form.summaryEmpty}
-        />
+        <div className="[&_tbody_td]:text-xs">
+          <Table
+            columns={itemColumns}
+            data={quote.items}
+            keyField={(item) => item.id}
+            emptyMessage={tr.crm.quotes.form.summaryEmpty}
+            fixedLayout
+          />
+        </div>
 
         <div className="mt-4 flex flex-wrap justify-end gap-4 text-xs">
           {totals.map((t) => (
@@ -281,6 +299,33 @@ export function QuoteContentBody({
         )}
       </div>
 
+      {quote.ibanNumber && (
+        <div className="print-page-break mt-8">
+          <div className="rounded-xl bg-white p-5 shadow-sm">
+            <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
+            <div
+              className={clsx(
+                'gap-4',
+                isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-4',
+              )}
+            >
+              <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
+              <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
+                {quote.ibanAccountHolderName}
+              </MetaCell>
+              {quote.ibanAccountNumber && (
+                <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
+                  {quote.ibanAccountNumber}
+                </MetaCell>
+              )}
+              <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
+                <span className="break-all">{formatIbanInput(quote.ibanNumber)}</span>
+              </MetaCell>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(quote.paymentTerms || quote.salesTerms || quote.deliveryTerms || quote.generalTerms) && (
         <div className="print-page-break mt-8 flex flex-col gap-4 border-t border-app-border pt-6">
           {quote.paymentTerms && (
@@ -318,34 +363,7 @@ export function QuoteContentBody({
         </div>
       )}
 
-      {quote.ibanNumber && (
-        <div className="print-page-break mt-8 border-t border-app-border pt-6">
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
-            <div
-              className={clsx(
-                'gap-4',
-                isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-4',
-              )}
-            >
-              <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
-              <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
-                {quote.ibanAccountHolderName}
-              </MetaCell>
-              {quote.ibanAccountNumber && (
-                <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
-                  {quote.ibanAccountNumber}
-                </MetaCell>
-              )}
-              <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
-                <span className="break-all">{formatIbanInput(quote.ibanNumber)}</span>
-              </MetaCell>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {quote.opportunity && (
+      {!isPrintMode && quote.opportunity && (
         <div className="mt-8 border-t border-app-border pt-6">
           <SectionHeader>{tr.crm.quotes.detail.opportunityTitle}</SectionHeader>
           <InfoLinkRow
@@ -354,6 +372,54 @@ export function QuoteContentBody({
             suffix={tr.crm.opportunities.stageOptions[quote.opportunity.stage]}
             onClick={() => onOpportunityClick(quote.opportunity!.id)}
           />
+        </div>
+      )}
+
+      {isPrintMode && (company || sender) && (
+        <div className="print-page-break mt-8 grid grid-cols-2 gap-8 border-t border-app-border pt-6 text-sm">
+          {company && (
+            <div>
+              <SectionHeader>{tr.crm.quotes.detail.companyInfoTitle}</SectionHeader>
+              <p className="font-semibold text-black">{company.name}</p>
+              {company.address && <p className="text-app-muted">{company.address}</p>}
+              {(company.phone || company.email) && (
+                <p className="mt-1 text-app-muted">
+                  {[company.phone, company.email].filter(Boolean).join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
+          {sender && (
+            <div>
+              <SectionHeader>{tr.crm.quotes.detail.senderInfoTitle}</SectionHeader>
+              <p className="font-semibold text-black">{sender.name}</p>
+              {sender.title && <p className="text-app-muted">{sender.title}</p>}
+              {(sender.phone || sender.email) && (
+                <p className="mt-1 text-app-muted">
+                  {[sender.phone, sender.email].filter(Boolean).join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isPrintMode && (
+        <div className="mt-12 grid grid-cols-2 gap-8 text-sm">
+          <div>
+            <SectionHeader>{tr.crm.quotes.detail.representativeTitle}</SectionHeader>
+            {sender && <p className="font-semibold text-black">{sender.name}</p>}
+          </div>
+          <div>
+            <SectionHeader>{tr.crm.quotes.detail.approvalTitle}</SectionHeader>
+            {quote.contact && (
+              <p className="font-semibold text-black">
+                {quote.contact.firstName} {quote.contact.lastName}
+              </p>
+            )}
+            <p className="mt-3 text-app-muted">{tr.crm.quotes.detail.signatureLabel}:</p>
+            <p className="mt-3 text-app-muted">{tr.crm.quotes.detail.approvalDateLabel}:</p>
+          </div>
         </div>
       )}
     </>
@@ -405,17 +471,23 @@ export function QuoteDetailPage() {
     undefined,
   );
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [isPurchaseOrderConfirmOpen, setIsPurchaseOrderConfirmOpen] = useState(false);
   const [isReviseConfirmOpen, setIsReviseConfirmOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery();
+  // Sirket adresi/telefonu/e-postasi + gonderen bilgisi (bkz. docs/VARSAYIMLAR.md
+  // "sirket bilgileri"/"gonderen" parite notu) - sadece yazdirma gorunumunde
+  // gerekli, normal sayfa gorunumunde bu ek sorgu atilmaz.
+  const printDataQuery = useQuery({
+    queryKey: ['quotes', id, 'print-data'],
+    queryFn: () => getQuotePrintData(id),
+    enabled: isPrintMode && Boolean(id),
+  });
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
   const sendForApprovalMutation = useUpdateQuoteMutation(id);
   const reviseMutation = useUpdateQuoteMutation(id);
   const deleteMutation = useDeleteQuoteMutation();
-  const createPurchaseOrderMutation = useCreatePurchaseOrderFromQuoteMutation();
   const exportPdfMutation = useMutation({
     mutationFn: () => exportQuotePdf(id),
     onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
@@ -426,7 +498,7 @@ export function QuoteDetailPage() {
     },
   });
 
-  if (quoteQuery.isPending) {
+  if (quoteQuery.isPending || (isPrintMode && printDataQuery.isPending)) {
     return (
       <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
         <p className="text-sm text-app-muted">{tr.common.loading}</p>
@@ -455,19 +527,6 @@ export function QuoteDetailPage() {
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.deleteError);
         setIsDeleteConfirmOpen(false);
-      },
-    });
-  }
-
-  function handleConfirmCreatePurchaseOrder() {
-    createPurchaseOrderMutation.mutate(quote.id, {
-      onSuccess: (purchaseOrder) => {
-        toast.success(tr.crm.quotes.createPurchaseOrderSuccess);
-        setIsPurchaseOrderConfirmOpen(false);
-        navigate(`/siparisler/${purchaseOrder.id}`);
-      },
-      onError: (error) => {
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
     });
   }
@@ -590,8 +649,7 @@ export function QuoteDetailPage() {
               <CircleIconButton
                 icon={ShoppingCart}
                 tooltip={tr.crm.quotes.createPurchaseOrderButton}
-                disabled={createPurchaseOrderMutation.isPending}
-                onClick={() => setIsPurchaseOrderConfirmOpen(true)}
+                onClick={() => navigate(`/siparisler/yeni?quoteId=${quote.id}`)}
               />
             )}
             {(quote.status === 'DRAFT' ||
@@ -639,6 +697,8 @@ export function QuoteDetailPage() {
           quote={quote}
           isPrintMode={isPrintMode}
           onOpportunityClick={(opportunityId) => navigate(`/firsatlar/${opportunityId}`)}
+          company={printDataQuery.data?.company}
+          sender={printDataQuery.data?.sender}
         />
       </div>
 
@@ -710,17 +770,6 @@ export function QuoteDetailPage() {
           isPending={reviseMutation.isPending}
           onConfirm={handleConfirmRevise}
           onCancel={() => setIsReviseConfirmOpen(false)}
-        />
-      )}
-
-      {isPurchaseOrderConfirmOpen && (
-        <ConfirmModal
-          title={tr.crm.quotes.createPurchaseOrderConfirmTitle}
-          message={tr.crm.quotes.createPurchaseOrderConfirm(quote.quoteNumber)}
-          confirmLabel={tr.crm.quotes.createPurchaseOrderConfirmButton}
-          isPending={createPurchaseOrderMutation.isPending}
-          onConfirm={handleConfirmCreatePurchaseOrder}
-          onCancel={() => setIsPurchaseOrderConfirmOpen(false)}
         />
       )}
 

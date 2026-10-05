@@ -79,6 +79,7 @@ import {
 import {
   useDeleteTenantLogoMutation,
   useTenantProfileQuery,
+  useUpdateCompanyInfoMutation,
   useUploadTenantLogoMutation,
 } from './use-tenant-logo';
 import { useTenantSettingsQuery, useUpdateTenantSettingMutation } from './use-tenant-settings';
@@ -94,9 +95,12 @@ const POST_SALE_FOLLOW_UP_DAYS_KEY = 'crm.postSaleFollowUpDays';
 const MAX_LOGO_SIZE_BYTES = 1.5 * 1024 * 1024;
 const ACCEPTED_LOGO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-/** Sirket logosu - kullanici avatariyla ayni desen (bkz. app/profile-page.tsx
- * AvatarSection): secilince aninda yuklenir, "Kaydet" adimi yok. */
-function CompanyLogoSection() {
+/** Sirket Bilgileri - logo (kullanici avatariyla ayni desen: secilince aninda
+ * yuklenir) + adres/telefon/eposta (ayri "Kaydet" ile, diger metin ayarlariyla
+ * ayni desen). Eskiden markali teklif sablonu (QuoteTemplate) basina tekrar
+ * girilen companyPhone/companyEmail/companyAddressLines'in yerini aldi - tek
+ * tenant-genel kaynak (bkz. docs/VARSAYIMLAR.md). */
+function CompanyInfoSection() {
   const toast = useToast();
   const strings = tr.settings.crm.companyLogo;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +108,31 @@ function CompanyLogoSection() {
   const profileQuery = useTenantProfileQuery();
   const uploadMutation = useUploadTenantLogoMutation();
   const deleteMutation = useDeleteTenantLogoMutation();
+  const updateCompanyInfoMutation = useUpdateCompanyInfoMutation();
   const logoUrl = profileQuery.data?.logoUrl ?? null;
+
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [appliedFromProfile, setAppliedFromProfile] = useState(false);
+  if (profileQuery.data && !appliedFromProfile) {
+    setAppliedFromProfile(true);
+    setAddress(profileQuery.data.address ?? '');
+    setPhone(profileQuery.data.phone ?? '');
+    setEmail(profileQuery.data.email ?? '');
+  }
+
+  function handleSaveCompanyInfo() {
+    updateCompanyInfoMutation.mutate(
+      { address: address || null, phone: phone || null, email: email || null },
+      {
+        onSuccess: () => toast.success(strings.companyInfoSaveSuccess),
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      },
+    );
+  }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -193,6 +221,33 @@ function CompanyLogoSection() {
           onCancel={() => setRemoving(false)}
         />
       )}
+
+      <div className="mt-4 grid grid-cols-1 gap-3 border-t border-app-border pt-4 sm:grid-cols-3">
+        <TextField
+          label={strings.addressLabel}
+          value={address}
+          onChange={(event) => setAddress(event.target.value)}
+        />
+        <TextField
+          label={strings.phoneLabel}
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+        />
+        <TextField
+          label={strings.emailLabel}
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+        />
+      </div>
+      <Button
+        type="button"
+        className="mt-3"
+        disabled={updateCompanyInfoMutation.isPending}
+        onClick={handleSaveCompanyInfo}
+      >
+        {strings.companyInfoSaveButton}
+      </Button>
     </CollapsibleSection>
   );
 }
@@ -1223,7 +1278,7 @@ export function CrmSettingsSection() {
         {tr.settings.crm.quoteCreationGroupLabel}
       </h2>
       <div className="border-t border-app-border">
-        <CompanyLogoSection />
+        <CompanyInfoSection />
       </div>
       <div className="mt-3 border-t border-app-border">
         <PaymentMethodOptionsManager />

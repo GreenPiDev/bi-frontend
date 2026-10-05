@@ -24,6 +24,7 @@ export interface QuoteMetaFieldsValues {
   ibanOptionId: string;
   quoteCurrency: string;
   templateId: string;
+  senderId: string;
 }
 
 export interface QuoteMetaFieldsErrors {
@@ -34,6 +35,7 @@ export interface QuoteMetaFieldsErrors {
   ibanOptionId?: string;
   quoteCurrency?: string;
   templateId?: string;
+  senderId?: string;
 }
 
 interface QuoteMetaFieldsProps {
@@ -41,6 +43,8 @@ interface QuoteMetaFieldsProps {
    * duzenle: salt-okunur metin) - cagiran bu hucreyi kendisi render eder. */
   accountSlot: ReactNode;
   contactOptions: { value: string; label: string }[];
+  /** /quotes/assignable-users'tan - "Gonderen" secicisi (bkz. docs/VARSAYIMLAR.md). */
+  senderOptions: { value: string; label: string }[];
   values: QuoteMetaFieldsValues;
   onChange: <K extends keyof QuoteMetaFieldsValues>(
     field: K,
@@ -65,6 +69,7 @@ interface QuoteMetaFieldsProps {
 export function QuoteMetaFields({
   accountSlot,
   contactOptions,
+  senderOptions,
   values,
   onChange,
   errors,
@@ -83,6 +88,14 @@ export function QuoteMetaFields({
         error={errors?.contactId}
         value={values.contactId}
         onChange={(event) => onChange('contactId', event.target.value)}
+      />
+      <Select
+        label={tr.crm.quotes.form.senderLabel}
+        hint={tr.crm.quotes.form.senderHint}
+        options={senderOptions}
+        error={errors?.senderId}
+        value={values.senderId}
+        onChange={(event) => onChange('senderId', event.target.value)}
       />
       <DateField
         label={tr.crm.quotes.form.quoteDateLabel}

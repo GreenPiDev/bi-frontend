@@ -25,6 +25,8 @@ function safeUser(overrides: Pick<SafeUser, 'id' | 'email' | 'name' | 'roles'>):
     isPlatformAdmin: false,
     isActive: true,
     avatarUrl: null,
+    title: null,
+    phone: null,
     defaultPageSize: 25,
     columnPreferences: null,
     ...overrides,

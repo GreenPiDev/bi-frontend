@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -17,7 +17,7 @@ function renderPage() {
             <Route path="/teklifler" element={<QuotesListPage />} />
             <Route path="/teklifler/yeni" element={<div>new-page</div>} />
             <Route path="/teklifler/:id" element={<div>detail-page</div>} />
-            <Route path="/siparisler/:id" element={<div>purchase-order-detail-page</div>} />
+            <Route path="/siparisler/yeni" element={<div>purchase-order-create-page</div>} />
           </Routes>
         </MemoryRouter>
       </ToastProvider>
@@ -75,6 +75,7 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     ibanNumber: null,
     approvedAt: null,
     approvedById: null,
+    senderId: 'u1',
     createdById: 'u1',
     createdByName: 'Admin',
     items: [],
@@ -98,6 +99,8 @@ const companyAdminUser: api.AuthenticatedUser = {
   isPlatformAdmin: false,
   isActive: true,
   avatarUrl: null,
+  title: null,
+  phone: null,
   defaultPageSize: 25,
   columnPreferences: null,
   permissions: { isCompanyAdmin: true, permissions: [] },
@@ -131,26 +134,11 @@ describe('QuotesListPage', () => {
     expect(buttons).toHaveLength(1);
   });
 
-  it('siparis olustur butonuna tiklayinca siparis olusturulur ve detayina gidilir', async () => {
+  it('siparis olustur butonuna tiklayinca teklife ozel doldurulmus /siparisler/yeni acilir', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(companyAdminUser);
     vi.spyOn(api, 'listQuotes').mockResolvedValue({
       data: [makeQuote({ id: 'q-approved', quoteNumber: 'TEK-A', status: 'APPROVED' })],
       meta: { page: 1, pageSize: 25, total: 1, totalPages: 1 },
-    });
-    const createSpy = vi.spyOn(api, 'createPurchaseOrderFromQuote').mockResolvedValue({
-      id: 'po-1',
-      orderNumber: 'SIP-2026-09-07-001',
-      title: null,
-      quoteId: 'q-approved',
-      quote: {
-        ...makeQuote({ id: 'q-approved', quoteNumber: 'TEK-A', status: 'APPROVED' }),
-        project: null,
-      },
-      status: 'DRAFT',
-      createdById: 'u1',
-      items: [],
-      createdAt: '2026-09-07T00:00:00.000Z',
-      updatedAt: '2026-09-07T00:00:00.000Z',
     });
     const user = userEvent.setup();
     renderPage();
@@ -158,10 +146,6 @@ describe('QuotesListPage', () => {
     const button = await screen.findByRole('button', { name: 'Satın Alma Siparişi Oluştur' });
     await user.click(button);
 
-    const confirmButton = await screen.findByRole('button', { name: 'Oluştur' });
-    await user.click(confirmButton);
-
-    await waitFor(() => expect(createSpy).toHaveBeenCalledWith('q-approved'));
-    expect(await screen.findByText('purchase-order-detail-page')).toBeInTheDocument();
+    expect(await screen.findByText('purchase-order-create-page')).toBeInTheDocument();
   });
 });

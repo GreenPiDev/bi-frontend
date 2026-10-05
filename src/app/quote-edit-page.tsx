@@ -19,7 +19,11 @@ import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductsQuery } from '../features/crm/use-products';
-import { useQuoteQuery, useUpdateQuoteMutation } from '../features/crm/use-quotes';
+import {
+  useQuoteAssignableUsersQuery,
+  useQuoteQuery,
+  useUpdateQuoteMutation,
+} from '../features/crm/use-quotes';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
 import {
   DEFAULT_QUOTE_VAT_PCT,
@@ -61,6 +65,7 @@ export function QuoteEditPage() {
   const updateMutation = useUpdateQuoteMutation(id);
   const productListsQuery = useProductListsQuery();
   const contactsQuery = useContactsQuery();
+  const assignableUsersQuery = useQuoteAssignableUsersQuery();
   const tenantSettingsQuery = useTenantSettingsQuery();
   const defaultVatPctSetting = tenantSettingsQuery.data?.find(
     (setting) => setting.key === DEFAULT_QUOTE_VAT_PCT_KEY,
@@ -85,6 +90,7 @@ export function QuoteEditPage() {
   // secili oldugu bilinmez, kullanici degistirmek isterse yeniden secer.
   const [ibanOptionId, setIbanOptionId] = useState('');
   const [templateId, setTemplateId] = useState('');
+  const [senderId, setSenderId] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('');
   const [salesTerms, setSalesTerms] = useState('');
   const [deliveryTerms, setDeliveryTerms] = useState('');
@@ -119,6 +125,7 @@ export function QuoteEditPage() {
     setDeliveryTerms(quoteQuery.data.deliveryTerms ?? '');
     setGeneralTerms(quoteQuery.data.generalTerms ?? '');
     setTemplateId(quoteQuery.data.templateId ?? '');
+    setSenderId(quoteQuery.data.senderId ?? '');
     setQuoteCurrency(quoteQuery.data.quoteCurrency);
     const savedRates = quoteQuery.data.exchangeRates;
     setExchangeRates({
@@ -135,6 +142,11 @@ export function QuoteEditPage() {
       value: contact.id,
       label: `${contact.firstName} ${contact.lastName}`,
     }));
+
+  const senderOptions = (assignableUsersQuery.data ?? []).map((user) => ({
+    value: user.id,
+    label: user.name,
+  }));
 
   const [pickerPage, setPickerPage] = useState(1);
   const [pickerQuery, setPickerQuery] = useState('');
@@ -312,6 +324,7 @@ export function QuoteEditPage() {
         // Duzenlemede undefined "dokunma" anlamina gelir (bkz.
         // UpdateQuoteSchema) - bu yuzden burada daima acik deger gonderilir.
         templateId: templateId || null,
+        senderId: senderId || undefined,
         quoteCurrency,
         exchangeRates:
           Object.keys(exchangeRates.rates).length > 0
@@ -557,6 +570,7 @@ export function QuoteEditPage() {
               </div>
             }
             contactOptions={contactOptions}
+            senderOptions={senderOptions}
             values={{
               contactId: contactId ?? '',
               quoteDate,
@@ -565,6 +579,7 @@ export function QuoteEditPage() {
               ibanOptionId,
               quoteCurrency,
               templateId,
+              senderId,
             }}
             onChange={(field, value) => {
               if (field === 'contactId') {
@@ -585,6 +600,8 @@ export function QuoteEditPage() {
                 setExchangeRates({ rates: {} });
               } else if (field === 'templateId') {
                 setTemplateId(value);
+              } else if (field === 'senderId') {
+                setSenderId(value);
               }
             }}
             ibanCurrentInfo={
