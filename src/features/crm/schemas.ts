@@ -328,6 +328,7 @@ export const purchaseOrderFormSchema = z.object({
   /** UI-only: teklif secicisini filtrelemek icin, gonderilen payload'a dahil edilmez. */
   accountId: z.string().optional(),
   quoteId: z.string().optional(),
+  title: z.string().trim().max(200).optional(),
   items: z.array(
     z.object({
       id: z.string().optional(),
@@ -349,6 +350,7 @@ export type PurchaseOrderFormValues = z.infer<typeof purchaseOrderFormSchema>;
 export const purchaseOrderCreateFormSchema = z.object({
   accountId: z.string().optional(),
   quoteId: z.string().optional(),
+  title: z.string().trim().max(200).optional(),
   items: z
     .array(
       z.object({

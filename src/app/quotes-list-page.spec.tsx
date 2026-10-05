@@ -140,6 +140,7 @@ describe('QuotesListPage', () => {
     const createSpy = vi.spyOn(api, 'createPurchaseOrderFromQuote').mockResolvedValue({
       id: 'po-1',
       orderNumber: 'SIP-2026-09-07-001',
+      title: null,
       quoteId: 'q-approved',
       quote: {
         ...makeQuote({ id: 'q-approved', quoteNumber: 'TEK-A', status: 'APPROVED' }),

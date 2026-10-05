@@ -14,10 +14,12 @@ import { ConfirmModal } from '../components/ui/confirm-modal';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
 import { Table } from '../components/ui/table';
+import { Tooltip } from '../components/ui/tooltip';
 import { TruncatedText } from '../components/ui/truncated-text';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
+  useAssignableCalendarUsersQuery,
   useCalendarEventsQuery,
   useDeleteCalendarEventMutation,
   usePendingCalendarInvitesQuery,
@@ -27,6 +29,7 @@ import {
 import { useCalendarsSharedWithMeQuery } from '../features/crm/use-calendar-shares';
 import {
   ApiError,
+  type AssignableUser,
   type CalendarAttendeeStatus,
   type CalendarEvent,
   type PendingCalendarInvite,
@@ -90,6 +93,27 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
+function initialOf(name: string): string {
+  return name.trim().charAt(0).toUpperCase() || '?';
+}
+
+/** Hatirlatici satirinin basina muhatabin minik avatar thumbnail'ini koyar, hover'da
+ * isim tooltip olarak cikar (bkz. calendar-event-detail-modal.tsx'teki ayni desen). */
+function AttendeeAvatarThumb({ user }: { user: AssignableUser }) {
+  const avatar = user.avatarUrl ? (
+    <img src={user.avatarUrl} alt="" className="h-4 w-4 shrink-0 rounded-full object-cover" />
+  ) : (
+    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-app-brand/20 text-[8px] font-bold text-app-brand">
+      {initialOf(user.name)}
+    </span>
+  );
+  return (
+    <Tooltip content={user.name}>
+      <span className="flex">{avatar}</span>
+    </Tooltip>
+  );
+}
+
 function eventsOnDay(events: CalendarEvent[], day: Date): CalendarEvent[] {
   return events.filter((event) => {
     const start = new Date(event.startAt);
@@ -115,6 +139,11 @@ export function CalendarTabContent() {
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
   const sharedWithMeQuery = useCalendarsSharedWithMeQuery();
+  const assignableUsersQuery = useAssignableCalendarUsersQuery();
+  const usersById = useMemo(
+    () => new Map<string, AssignableUser>((assignableUsersQuery.data ?? []).map((u) => [u.id, u])),
+    [assignableUsersQuery.data],
+  );
   const [viewedUserId, setViewedUserId] = useState<string | undefined>(undefined);
   // currentUserId sonradan gelir (meQuery async) - dropdown'in varsayilan degeri icin.
   const selectedUserId = viewedUserId ?? currentUserId;
@@ -352,11 +381,21 @@ export function CalendarTabContent() {
                         setSelectedEvent(event);
                       }}
                       className={clsx(
-                        'truncate rounded px-1.5 py-0.5 text-[11px] font-semibold',
+                        'flex items-center gap-1 truncate rounded px-1.5 py-0.5 text-[11px] font-semibold',
                         CHIP_CLASS_BY_VISIBILITY[getCalendarEventVisibility(event, selectedUserId)],
                       )}
                     >
-                      {displayEventTitle(event.title)}
+                      {event.attendees.length > 0 && (
+                        <span className="flex shrink-0 -space-x-1">
+                          {event.attendees.slice(0, 3).map((attendee) => {
+                            const user = usersById.get(attendee.userId);
+                            return user ? (
+                              <AttendeeAvatarThumb key={attendee.id} user={user} />
+                            ) : null;
+                          })}
+                        </span>
+                      )}
+                      <span className="truncate">{displayEventTitle(event.title)}</span>
                     </span>
                   ))}
                 </button>

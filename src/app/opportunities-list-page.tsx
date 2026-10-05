@@ -8,6 +8,7 @@ import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picke
 import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { InlineSelect } from '../components/ui/inline-select';
+import { Modal } from '../components/ui/modal';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { DateField } from '../components/ui/date-field';
 import { TextField } from '../components/ui/text-field';
@@ -43,6 +44,28 @@ const DESCRIPTION_TRUNCATE_LENGTH = 40;
 
 function truncate(text: string, maxLength: number): string {
   return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}
+
+function DescriptionCell({
+  description,
+  onOpen,
+}: {
+  description: string;
+  onOpen: (description: string) => void;
+}) {
+  if (description.length <= DESCRIPTION_TRUNCATE_LENGTH) return <>{description}</>;
+  return (
+    <button
+      type="button"
+      className="cursor-pointer text-left text-app-muted hover:text-blue-600"
+      onClick={(event) => {
+        event.stopPropagation();
+        onOpen(description);
+      }}
+    >
+      {truncate(description, DESCRIPTION_TRUNCATE_LENGTH)}
+    </button>
+  );
 }
 
 function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
@@ -87,6 +110,7 @@ export function OpportunitiesListPage() {
   const [rangeFromInput, setRangeFromInput] = useState('');
   const [rangeToInput, setRangeToInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [descriptionModal, setDescriptionModal] = useState<string | null>(null);
   const debouncedMinEstimatedValueInput = useDebouncedValue(minEstimatedValueInput.trim());
   const minEstimatedValue = debouncedMinEstimatedValueInput
     ? Number(debouncedMinEstimatedValueInput)
@@ -155,7 +179,12 @@ export function OpportunitiesListPage() {
       key: 'description',
       header: tr.crm.opportunities.descriptionColumn,
       className: 'text-app-muted',
-      render: (o) => (o.description ? truncate(o.description, DESCRIPTION_TRUNCATE_LENGTH) : '—'),
+      render: (o) =>
+        o.description ? (
+          <DescriptionCell description={o.description} onOpen={setDescriptionModal} />
+        ) : (
+          '—'
+        ),
     },
     {
       key: 'occurredAt',
@@ -344,6 +373,15 @@ export function OpportunitiesListPage() {
             </Button>
           </div>
         </Drawer>
+      )}
+
+      {descriptionModal && (
+        <Modal
+          title={tr.crm.opportunities.descriptionModal.title}
+          onClose={() => setDescriptionModal(null)}
+        >
+          <p className="whitespace-pre-wrap text-sm text-app-text">{descriptionModal}</p>
+        </Modal>
       )}
     </AppShell>
   );

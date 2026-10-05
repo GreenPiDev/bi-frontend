@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Download, ListFilter, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
+import { Copy, Download, ListFilter, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -108,6 +108,11 @@ export function ContactsListPage() {
     setFilterResetKey((k) => k + 1);
   }
 
+  async function handleCopyEmail(email: string) {
+    await navigator.clipboard.writeText(email);
+    toast.success(tr.crm.contacts.emailCopiedToast);
+  }
+
   function handleConfirmDelete() {
     if (!deletingContact) return;
     deleteMutation.mutate(deletingContact.id, {
@@ -155,7 +160,21 @@ export function ContactsListPage() {
       key: 'email',
       header: tr.crm.contacts.emailColumn,
       className: 'text-app-muted',
-      render: (c) => c.email ?? '—',
+      render: (c) => {
+        const email = c.email;
+        if (!email) return '—';
+        return (
+          <div className="flex items-center gap-1">
+            <span>{email}</span>
+            <IconActionButton
+              icon={Copy}
+              tooltip={tr.crm.contacts.copyEmailButton}
+              iconSize={14}
+              onClick={() => void handleCopyEmail(email)}
+            />
+          </div>
+        );
+      },
     },
     {
       key: 'status',

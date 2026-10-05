@@ -179,6 +179,7 @@ export function PurchaseOrderCreatePage() {
     createMutation.mutate(
       {
         quoteId: values.quoteId || undefined,
+        title: values.title || undefined,
         items: values.items.map((item) => ({
           productId: item.productId || undefined,
           description: item.description,
@@ -248,6 +249,16 @@ export function PurchaseOrderCreatePage() {
                 {...field}
               />
             )}
+          />
+        </div>
+
+        <div className="mt-4">
+          <TextField
+            label={tr.crm.purchaseOrders.form.titleLabel}
+            placeholder={tr.crm.purchaseOrders.form.titlePlaceholder}
+            hint={tr.crm.purchaseOrders.form.titleHint}
+            error={errors.title?.message}
+            {...register('title')}
           />
         </div>
 

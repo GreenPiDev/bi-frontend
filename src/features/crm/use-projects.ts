@@ -21,7 +21,12 @@ export function useProjectAssignableUsersQuery() {
 }
 
 export function useProjectsQuery(
-  params: { page?: number; pageSize?: number; accountId?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    q?: string;
+  } = {},
   options: { enabled?: boolean } = {},
 ) {
   return useQuery({

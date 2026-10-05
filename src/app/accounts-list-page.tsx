@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  Copy,
   Download,
   ListFilter,
   Pencil,
@@ -71,6 +72,11 @@ export function AccountsListPage() {
   const deleteMutation = useDeleteAccountMutation();
   const hasActiveFilter = Boolean(from) || Boolean(notContactedDays) || Boolean(createdById);
 
+  async function handleCopyEmail(email: string) {
+    await navigator.clipboard.writeText(email);
+    toast.success(tr.crm.accounts.emailCopiedToast);
+  }
+
   function handleConfirmDelete() {
     if (!deletingAccount) return;
     deleteMutation.mutate(deletingAccount.id, {
@@ -140,7 +146,21 @@ export function AccountsListPage() {
       key: 'email',
       header: tr.crm.accounts.emailColumn,
       className: 'text-app-muted',
-      render: (a) => a.email ?? '—',
+      render: (a) => {
+        const email = a.email;
+        if (!email) return '—';
+        return (
+          <div className="flex items-center gap-1">
+            <span>{email}</span>
+            <IconActionButton
+              icon={Copy}
+              tooltip={tr.crm.accounts.copyEmailButton}
+              iconSize={14}
+              onClick={() => void handleCopyEmail(email)}
+            />
+          </div>
+        );
+      },
     },
     {
       key: 'sector',

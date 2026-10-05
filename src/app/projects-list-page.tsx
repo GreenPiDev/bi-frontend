@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -11,6 +11,7 @@ import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useDeleteProjectMutation, useProjectsQuery } from '../features/crm/use-projects';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { ApiError, type Project } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -25,10 +26,17 @@ export function ProjectsListPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const projectsQuery = useProjectsQuery({ page, pageSize });
+  const projectsQuery = useProjectsQuery({ page, pageSize, q: q || undefined });
   const deleteMutation = useDeleteProjectMutation();
+
+  async function handleCopyProjectNumber(projectNumber: string) {
+    await navigator.clipboard.writeText(projectNumber);
+    toast.success(tr.crm.projects.projectNumberCopiedToast);
+  }
 
   function handleDelete(project: Project) {
     if (!window.confirm(tr.crm.projects.deleteConfirm)) {
@@ -43,17 +51,33 @@ export function ProjectsListPage() {
 
   const ALL_COLUMNS: TableColumn<Project>[] = [
     {
-      key: 'projectNumber',
-      header: tr.crm.projects.numberColumn,
-      className: 'font-semibold text-app-text',
-      required: true,
-      render: (p) => p.projectNumber,
-    },
-    {
       key: 'name',
       header: tr.crm.projects.nameColumn,
+      className: 'font-semibold text-app-text',
       required: true,
       render: (p) => p.name,
+    },
+    {
+      key: 'accountName',
+      header: tr.crm.projects.accountColumn,
+      className: 'text-app-muted',
+      render: (p) => p.accountName ?? '—',
+    },
+    {
+      key: 'projectNumber',
+      header: tr.crm.projects.numberColumn,
+      required: true,
+      render: (p) => (
+        <div className="flex items-center gap-1">
+          <span>{p.projectNumber}</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.crm.projects.copyProjectNumberButton}
+            iconSize={14}
+            onClick={() => void handleCopyProjectNumber(p.projectNumber)}
+          />
+        </div>
+      ),
     },
     {
       key: 'estimatedBudget',
@@ -129,6 +153,23 @@ export function ProjectsListPage() {
           strokeWidth={3}
           onClick={() => navigate('/projeler/yeni')}
           className="mt-1"
+        />
+      </div>
+
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.projects.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
         />
       </div>
 

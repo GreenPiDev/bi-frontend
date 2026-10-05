@@ -20,6 +20,7 @@ export function usePurchaseOrdersQuery(
     quoteId?: string;
     projectId?: string;
     status?: PurchaseOrderStatus;
+    q?: string;
   } = {},
 ) {
   return useQuery({

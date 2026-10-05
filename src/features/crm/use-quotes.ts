@@ -23,6 +23,9 @@ export function useQuotesQuery(
     accountId?: string;
     status?: QuoteStatus;
     createdById?: string;
+    q?: string;
+    from?: string;
+    to?: string;
   } = {},
   options: { enabled?: boolean } = {},
 ) {

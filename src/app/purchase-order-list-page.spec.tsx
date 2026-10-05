@@ -86,6 +86,7 @@ const quote: api.Quote = {
 const purchaseOrder: api.PurchaseOrder = {
   id: 'po-1',
   orderNumber: 'SIP-2026-09-07-001',
+  title: null,
   quoteId: 'q1',
   quote: { ...quote, project: null },
   status: 'DRAFT',

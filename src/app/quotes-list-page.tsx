@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { ListFilter, Pencil, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import { Copy, ListFilter, Pencil, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
 import { InlineSelect } from '../components/ui/inline-select';
 import { Select } from '../components/ui/select';
@@ -33,6 +34,7 @@ import {
   formatCurrencyAmount,
   groupQuoteItemTotals,
 } from '../lib/quote-totals';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
@@ -139,8 +141,13 @@ export function QuotesListPage() {
   const meQuery = useMeQuery();
   const usersQuery = useUsersQuery();
   const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [status, setStatus] = useState<QuoteStatus | ''>('');
   const [createdById, setCreatedById] = useState('');
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deletingQuote, setDeletingQuote] = useState<Quote | undefined>(undefined);
   const [pendingStatusChange, setPendingStatusChange] = useState<
@@ -149,13 +156,21 @@ export function QuotesListPage() {
   const [pendingPurchaseOrderQuote, setPendingPurchaseOrderQuote] = useState<Quote | undefined>(
     undefined,
   );
-  const hasActiveFilter = Boolean(status) || Boolean(createdById);
+  // Iki tarih filtresi ayni quoteDate alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. opportunities-list-page.tsx).
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter = Boolean(status) || Boolean(createdById) || Boolean(from) || Boolean(to);
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const quotesQuery = useQuotesQuery({
     page,
     pageSize,
+    q: q || undefined,
     status: status || undefined,
     createdById: createdById || undefined,
+    from,
+    to,
   });
   const statusCounts = useQuoteStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<QuoteStatus | '', number>> = {
@@ -185,10 +200,18 @@ export function QuotesListPage() {
     });
   }
 
+  async function handleCopyQuoteNumber(quoteNumber: string) {
+    await navigator.clipboard.writeText(quoteNumber);
+    toast.success(tr.crm.quotes.quoteNumberCopiedToast);
+  }
+
   function resetFilters() {
     setPage(1);
     setStatus('');
     setCreatedById('');
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
   }
 
   function handleConfirmDelete() {
@@ -226,15 +249,37 @@ export function QuotesListPage() {
 
   const ALL_COLUMNS: TableColumn<Quote>[] = [
     {
+      key: 'title',
+      header: tr.crm.quotes.titleColumn,
+      className: 'text-app-muted',
+      render: (q) => q.title ?? '—',
+    },
+    {
       key: 'quoteNumber',
       header: tr.crm.quotes.numberColumn,
       required: true,
-      render: (q) => <span className="font-semibold text-app-text">{q.quoteNumber}</span>,
+      render: (q) => (
+        <div className="flex items-center gap-1">
+          <span className="font-semibold text-app-text">{q.quoteNumber}</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.crm.quotes.copyQuoteNumberButton}
+            iconSize={14}
+            onClick={() => void handleCopyQuoteNumber(q.quoteNumber)}
+          />
+        </div>
+      ),
     },
     {
       key: 'account',
       header: tr.crm.quotes.accountColumn,
       render: (q) => q.account.name,
+    },
+    {
+      key: 'quoteDate',
+      header: tr.crm.quotes.quoteDateColumn,
+      className: 'text-app-muted',
+      render: (q) => new Date(q.quoteDate).toLocaleDateString('tr-TR'),
     },
     {
       key: 'status',
@@ -348,7 +393,24 @@ export function QuotesListPage() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.quotes.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <FilterButtonGroup
           label={tr.crm.quotes.statusFilterLabel}
           value={status}
@@ -420,6 +482,49 @@ export function QuotesListPage() {
               onClear={() => {
                 setPage(1);
                 setCreatedById('');
+              }}
+            />
+            <DateField
+              label={tr.crm.quotes.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setPage(1);
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setSinceInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.quotes.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeFromInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.quotes.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeToInput('');
               }}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>

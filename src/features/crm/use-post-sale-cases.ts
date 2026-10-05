@@ -15,6 +15,7 @@ export function usePostSaleCasesQuery(
     pageSize?: number;
     accountId?: string;
     status?: PostSaleCaseStatus;
+    q?: string;
   } = {},
 ) {
   return useQuery({

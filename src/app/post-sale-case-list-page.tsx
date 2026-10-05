@@ -1,9 +1,11 @@
 import { clsx } from 'clsx';
+import { Copy, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { InlineSelect } from '../components/ui/inline-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
@@ -16,6 +18,7 @@ import {
   usePostSaleCasesQuery,
 } from '../features/crm/use-post-sale-cases';
 import { ApiError, type PostSaleCase, type PostSaleCaseStatus } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: PostSaleCaseStatus; label: string }[] = (
@@ -83,44 +86,68 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
   );
 }
 
-const ALL_COLUMNS: TableColumn<PostSaleCase>[] = [
-  {
-    key: 'quote',
-    header: tr.crm.postSaleCases.quoteColumn,
-    required: true,
-    render: (c) => <span className="font-semibold text-app-text">{c.quote.quoteNumber}</span>,
-  },
-  {
-    key: 'account',
-    header: tr.crm.postSaleCases.accountColumn,
-    required: true,
-    render: (c) => c.account.name,
-  },
-  {
-    key: 'contact',
-    header: tr.crm.postSaleCases.contactColumn,
-    render: (c) =>
-      c.contact ? `${c.contact.firstName} ${c.contact.lastName}` : tr.crm.postSaleCases.noContact,
-  },
-  {
-    key: 'status',
-    header: tr.crm.postSaleCases.statusColumn,
-    render: (c) => <PostSaleCaseStatusSelect postSaleCase={c} />,
-  },
-];
-
 export function PostSaleCaseListPage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<PostSaleCaseStatus | ''>('');
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const casesQuery = usePostSaleCasesQuery({ page, pageSize, status: status || undefined });
+  const casesQuery = usePostSaleCasesQuery({
+    page,
+    pageSize,
+    status: status || undefined,
+    q: q || undefined,
+  });
   const statusCounts = usePostSaleCaseStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<PostSaleCaseStatus | '', number>> = {
     '': statusCounts.all,
     ...statusCounts.counts,
   };
+
+  async function handleCopyQuoteNumber(quoteNumber: string) {
+    await navigator.clipboard.writeText(quoteNumber);
+    toast.success(tr.crm.postSaleCases.quoteNumberCopiedToast);
+  }
+
+  const ALL_COLUMNS: TableColumn<PostSaleCase>[] = [
+    {
+      key: 'quote',
+      header: tr.crm.postSaleCases.quoteColumn,
+      required: true,
+      render: (c) => (
+        <div className="flex items-center gap-1">
+          <span className="font-semibold text-app-text">{c.quote.quoteNumber}</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.crm.postSaleCases.copyQuoteNumberButton}
+            iconSize={14}
+            onClick={() => void handleCopyQuoteNumber(c.quote.quoteNumber)}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'account',
+      header: tr.crm.postSaleCases.accountColumn,
+      required: true,
+      render: (c) => c.account.name,
+    },
+    {
+      key: 'contact',
+      header: tr.crm.postSaleCases.contactColumn,
+      render: (c) =>
+        c.contact ? `${c.contact.firstName} ${c.contact.lastName}` : tr.crm.postSaleCases.noContact,
+    },
+    {
+      key: 'status',
+      header: tr.crm.postSaleCases.statusColumn,
+      render: (c) => <PostSaleCaseStatusSelect postSaleCase={c} />,
+    },
+  ];
+
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
     useColumnVisibility(
       'post-sale-cases',
@@ -138,7 +165,24 @@ export function PostSaleCaseListPage() {
         <p className="mt-1 text-sm text-app-muted">{tr.crm.postSaleCases.subtitle}</p>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.postSaleCases.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <FilterButtonGroup
           label={tr.crm.postSaleCases.statusFilterLabel}
           value={status}

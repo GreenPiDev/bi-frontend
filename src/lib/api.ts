@@ -2290,6 +2290,9 @@ export function listQuotes(
     accountId?: string;
     status?: QuoteStatus;
     createdById?: string;
+    q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ): Promise<PagedResult<Quote>> {
   const query = new URLSearchParams();
@@ -2298,6 +2301,9 @@ export function listQuotes(
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   if (params.createdById) query.set('createdById', params.createdById);
+  if (params.q) query.set('q', params.q);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
   const qs = query.toString();
   return request(`/quotes${qs ? `?${qs}` : ''}`);
 }
@@ -2362,6 +2368,8 @@ export interface Project {
   id: string;
   projectNumber: string;
   accountId: string;
+  /** Sadece liste ucunda (GET /projects) doner, detayda (GET /projects/:id) yok. */
+  accountName?: string;
   name: string;
   estimatedBudget: string;
   actualCost: string | null;
@@ -2420,12 +2428,18 @@ export function renameProjectAttachment(
 }
 
 export function listProjects(
-  params: { page?: number; pageSize?: number; accountId?: string } = {},
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    q?: string;
+  } = {},
 ): Promise<PagedResult<Project>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
+  if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/projects${qs ? `?${qs}` : ''}`);
 }
@@ -2607,6 +2621,7 @@ export function listPostSaleCases(
     pageSize?: number;
     accountId?: string;
     status?: PostSaleCaseStatus;
+    q?: string;
   } = {},
 ): Promise<PagedResult<PostSaleCase>> {
   const query = new URLSearchParams();
@@ -2614,6 +2629,7 @@ export function listPostSaleCases(
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
+  if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/post-sale-cases${qs ? `?${qs}` : ''}`);
 }
@@ -2661,6 +2677,7 @@ export interface PurchaseOrderItem {
 export interface PurchaseOrder {
   id: string;
   orderNumber: string;
+  title: string | null;
   quoteId: string | null;
   /** Siparisin kendi projectId alani YOK - proje iliskisi her zaman quote.project
    * uzerinden okunur (bkz. Quote.project doc comment'i). quoteId opsiyonel oldugu
@@ -2686,6 +2703,7 @@ export interface UpdatePurchaseOrderInput {
   items?: PurchaseOrderItemInput[];
   status?: PurchaseOrderStatus;
   quoteId?: string | null;
+  title?: string | null;
 }
 
 export interface CreatePurchaseOrderItemInput {
@@ -2696,6 +2714,7 @@ export interface CreatePurchaseOrderItemInput {
 
 export interface CreatePurchaseOrderInput {
   quoteId?: string;
+  title?: string;
   items: CreatePurchaseOrderItemInput[];
 }
 
@@ -2706,6 +2725,7 @@ export function listPurchaseOrders(
     quoteId?: string;
     projectId?: string;
     status?: PurchaseOrderStatus;
+    q?: string;
   } = {},
 ): Promise<PagedResult<PurchaseOrder>> {
   const query = new URLSearchParams();
@@ -2714,6 +2734,7 @@ export function listPurchaseOrders(
   if (params.quoteId) query.set('quoteId', params.quoteId);
   if (params.projectId) query.set('projectId', params.projectId);
   if (params.status) query.set('status', params.status);
+  if (params.q) query.set('q', params.q);
   const qs = query.toString();
   return request(`/purchase-orders${qs ? `?${qs}` : ''}`);
 }

@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -21,6 +21,7 @@ import {
   useUpdatePurchaseOrderMutation,
 } from '../features/crm/use-purchase-orders';
 import { ApiError, type PurchaseOrder, type PurchaseOrderStatus } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: PurchaseOrderStatus; label: string }[] = (
@@ -80,6 +81,8 @@ export function PurchaseOrderListPage() {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [status, setStatus] = useState<PurchaseOrderStatus | ''>('');
   const quoteId = searchParams.get('quoteId') ?? undefined;
   const projectId = searchParams.get('projectId') ?? undefined;
@@ -88,6 +91,7 @@ export function PurchaseOrderListPage() {
   const purchaseOrdersQuery = usePurchaseOrdersQuery({
     page,
     pageSize,
+    q: q || undefined,
     quoteId,
     projectId,
     status: status || undefined,
@@ -105,6 +109,16 @@ export function PurchaseOrderListPage() {
     'CREATE',
   );
 
+  async function handleCopyQuoteNumber(quoteNumber: string) {
+    await navigator.clipboard.writeText(quoteNumber);
+    toast.success(tr.crm.purchaseOrders.quoteCopiedToast);
+  }
+
+  async function handleCopyOrderNumber(orderNumber: string) {
+    await navigator.clipboard.writeText(orderNumber);
+    toast.success(tr.crm.purchaseOrders.orderNumberCopiedToast);
+  }
+
   function handleConfirmDelete() {
     if (!deletingOrder) return;
     deleteMutation.mutate(deletingOrder.id, {
@@ -119,16 +133,46 @@ export function PurchaseOrderListPage() {
 
   const ALL_COLUMNS: TableColumn<PurchaseOrder>[] = [
     {
+      key: 'title',
+      header: tr.crm.purchaseOrders.titleColumn,
+      className: 'text-app-muted',
+      render: (order) => order.title ?? '—',
+    },
+    {
       key: 'orderNumber',
       header: tr.crm.purchaseOrders.numberColumn,
       className: 'font-semibold text-app-text',
       required: true,
-      render: (order) => order.orderNumber,
+      render: (order) => (
+        <div className="flex items-center gap-1">
+          <span>{order.orderNumber}</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.crm.purchaseOrders.copyOrderNumberButton}
+            iconSize={14}
+            onClick={() => void handleCopyOrderNumber(order.orderNumber)}
+          />
+        </div>
+      ),
     },
     {
       key: 'quote',
       header: tr.crm.purchaseOrders.quoteColumn,
-      render: (order) => order.quote?.quoteNumber ?? '—',
+      render: (order) => {
+        const quoteNumber = order.quote?.quoteNumber;
+        if (!quoteNumber) return '—';
+        return (
+          <div className="flex items-center gap-1">
+            <span>{quoteNumber}</span>
+            <IconActionButton
+              icon={Copy}
+              tooltip={tr.crm.purchaseOrders.copyQuoteButton}
+              iconSize={14}
+              onClick={() => void handleCopyQuoteNumber(quoteNumber)}
+            />
+          </div>
+        );
+      },
     },
     {
       key: 'project',
@@ -198,7 +242,24 @@ export function PurchaseOrderListPage() {
         )}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.purchaseOrders.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <FilterButtonGroup
           label={tr.crm.purchaseOrders.statusFilterLabel}
           value={status}

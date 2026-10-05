@@ -42,14 +42,18 @@ export function ProductAutocomplete({
 }: ProductAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
+  // productListId zaten secilmisse (bu bilesen o durumda cagrilir), bos arama da
+  // listenin ilk sayfasini gosterir - kullanici her seferinde yazmaya basmak zorunda
+  // kalmasin diye (bkz. kullanici bildirimi, /siparisler/yeni).
+  const shouldSearch = Boolean(debouncedQuery) || Boolean(productListId);
   const searchQuery = useProductsQuery(
     { q: debouncedQuery || undefined, pageSize: PAGE_SIZE, productListId },
-    { enabled: !disabled && Boolean(debouncedQuery) },
+    { enabled: !disabled && shouldSearch },
   );
   const selectedProductQuery = useProductQuery(value ?? '');
 
   const displayValue = typedQuery ?? selectedProductQuery.data?.name ?? '';
-  const options = debouncedQuery
+  const options = shouldSearch
     ? (searchQuery.data?.data ?? []).map((product) => ({
         id: product.id,
         label: product.name,

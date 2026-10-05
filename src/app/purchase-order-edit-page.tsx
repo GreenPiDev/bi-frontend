@@ -88,6 +88,7 @@ export function PurchaseOrderEditPage() {
       reset({
         accountId: purchaseOrderQuery.data.quote?.accountId ?? undefined,
         quoteId: purchaseOrderQuery.data.quoteId ?? undefined,
+        title: purchaseOrderQuery.data.title ?? undefined,
         items: purchaseOrderQuery.data.items.map((item) => ({
           id: item.id,
           productListId: item.product?.productListId ?? undefined,
@@ -220,6 +221,7 @@ export function PurchaseOrderEditPage() {
     updateMutation.mutate(
       {
         quoteId: values.quoteId || null,
+        title: values.title || null,
         items: values.items.map((item) => ({
           id: item.id,
           productId: item.productId || undefined,
@@ -289,6 +291,16 @@ export function PurchaseOrderEditPage() {
                 {...field}
               />
             )}
+          />
+        </div>
+
+        <div className="mt-4">
+          <TextField
+            label={tr.crm.purchaseOrders.form.titleLabel}
+            placeholder={tr.crm.purchaseOrders.form.titlePlaceholder}
+            hint={tr.crm.purchaseOrders.form.titleHint}
+            error={errors.title?.message}
+            {...register('title')}
           />
         </div>
 
