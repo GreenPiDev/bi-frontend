@@ -2,6 +2,8 @@ import {
   Briefcase,
   Building2,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
   Contact2,
   FileStack,
   FileText,
@@ -21,7 +23,7 @@ import {
   User,
   Warehouse,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { Link, useLocation } from 'react-router-dom';
@@ -90,6 +92,30 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
       setNavSearch('');
     }
     setSidebarOpen(!sidebarOpen);
+  }
+
+  // Nav icindeki bos bir alana (link/input olmayan bir yer) tiklaninca sidebar
+  // acilip kapansin - link/input tiklamalari kendi davranisini (navigate/yazma)
+  // yapmaya devam eder, bu handler sadece onlarin disinda kalan bosluklar icin
+  // devreye girer.
+  function handleNavAreaClick(event: ReactMouseEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+    if (target.closest('a, button, input')) {
+      return;
+    }
+    if (sidebarOpen) {
+      setNavSearch('');
+    }
+    setSidebarOpen(!sidebarOpen);
+  }
+
+  // Bos alanin uzerindeyken kullaniciya "tiklarsan acilir/kapanir" hissini veren
+  // kucuk bir ok gostergesi - sidebarin kendi arka plan rengini degistirmiyoruz,
+  // sadece hafif bir yer degistirme (nudge) animasyonu + sag kenarda bir ok.
+  const [emptyAreaHovered, setEmptyAreaHovered] = useState(false);
+  function handleNavMouseOver(event: ReactMouseEvent<HTMLElement>) {
+    const target = event.target as HTMLElement;
+    setEmptyAreaHovered(!target.closest('a, button, input'));
   }
 
   useEffect(() => {
@@ -245,7 +271,12 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           ref={toggleButtonRef}
           type="button"
           onClick={toggleSidebar}
-          className="flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center border-b border-white/20 bg-app-brand text-white transition-colors duration-200 hover:bg-app-brand-dark"
+          className={clsx(
+            'flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center border-b transition-colors duration-200',
+            sidebarOpen
+              ? 'border-app-border bg-app-surface text-app-brand-dark hover:bg-app-bg-muted'
+              : 'border-white/20 bg-app-brand text-white hover:bg-app-brand-dark',
+          )}
           aria-label={sidebarOpen ? tr.shell.collapseSidebar : tr.shell.expandSidebar}
         >
           <PanelLeft size={20} />
@@ -286,6 +317,9 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
 
       <nav
         ref={navRef}
+        onClick={handleNavAreaClick}
+        onMouseOver={handleNavMouseOver}
+        onMouseLeave={() => setEmptyAreaHovered(false)}
         className={clsx(
           'fixed top-16 bottom-0 left-0 z-[90] hidden flex-col overflow-hidden border-r border-app-brand-dark bg-app-brand transition-[width] duration-200 md:flex',
           sidebarOpen ? 'w-60' : 'w-16',
@@ -394,6 +428,24 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           {hoveredNavItem.label}
         </span>
       )}
+
+      {/* Bos alan hover gostergesi: tiklarsan sidebar acilir/kapanir hissini veren,
+       * arka fonsuz lacivert bir ok - sidebar ve ok yerinden oynamaz, ok oldugu
+       * yerde belirip animasyonlu sekilde kaybolur (sadece opaklik gecisi). */}
+      <div
+        aria-hidden="true"
+        className={clsx(
+          'pointer-events-none fixed top-1/2 z-[95] hidden -translate-y-1/2 items-center justify-center text-app-brand-dark transition-opacity duration-200 md:flex',
+          sidebarOpen ? 'left-60' : 'left-16',
+          emptyAreaHovered ? 'opacity-100' : 'opacity-0',
+        )}
+      >
+        {sidebarOpen ? (
+          <ChevronLeft size={22} strokeWidth={2.5} />
+        ) : (
+          <ChevronRight size={22} strokeWidth={2.5} />
+        )}
+      </div>
 
       <main className="pt-16 md:pl-16">
         <div className="p-6 pb-24 md:p-8 md:pb-24">{children}</div>
