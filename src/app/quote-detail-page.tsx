@@ -34,11 +34,13 @@ import {
   useRejectQuoteMutation,
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
+import { useDrawingsQuery } from '../features/crm/use-drawings';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import {
   ApiError,
   exportQuotePdf,
   getQuotePrintData,
+  type Drawing,
   type Quote,
   type QuoteItem,
   type QuotePrintCompanyData,
@@ -460,6 +462,86 @@ function InfoLinkRow({
   );
 }
 
+const DRAWING_STATUS_BADGE_VARIANT: Record<Drawing['status'], 'success' | 'info'> = {
+  DRAFT: 'info',
+  FINALIZED: 'success',
+};
+
+/**
+ * Faz D7: her Drawing zaten dogrudan bir Quote'a bagli (zorunlu `quoteId` FK) - bu
+ * bolum yeni bir iliski KURMAZ, mevcut iliskiyi teklif ekraninda gorunur kilar
+ * (bkz. docs/VARSAYIMLAR.md V55).
+ */
+function QuoteDrawingsSection({ quoteId }: { quoteId: string }) {
+  const navigate = useNavigate();
+  const drawingsQuery = useDrawingsQuery({ quoteId });
+  const drawings = drawingsQuery.data ?? [];
+
+  return (
+    <div className="mt-8 border-t border-app-border pt-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-bold text-app-text">{tr.crm.drawings.quoteSection.title}</h2>
+        <button
+          type="button"
+          className="text-sm text-app-brand underline"
+          onClick={() => navigate(`/cizimler/pdf-ice-aktar?quoteId=${quoteId}`)}
+        >
+          {tr.crm.drawings.quoteSection.createFromPdf}
+        </button>
+      </div>
+
+      {!drawingsQuery.isPending && drawings.length === 0 && (
+        <p className="mt-2 text-sm text-app-muted">{tr.crm.drawings.quoteSection.empty}</p>
+      )}
+
+      {drawings.length > 0 && (
+        <table className="mt-3 w-full text-sm">
+          <thead className="text-left text-xs font-semibold text-app-muted">
+            <tr>
+              <th className="py-1">{tr.crm.drawings.quoteSection.nameColumn}</th>
+              <th className="py-1">{tr.crm.drawings.quoteSection.panelGroupColumn}</th>
+              <th className="py-1">{tr.crm.drawings.quoteSection.statusColumn}</th>
+              <th className="py-1">{tr.crm.drawings.quoteSection.downloadColumn}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {drawings.map((drawing) => (
+              <tr
+                key={drawing.id}
+                className="cursor-pointer border-t border-app-border hover:bg-app-surface-muted"
+                onClick={() => navigate(`/cizimler/${drawing.id}`)}
+              >
+                <td className="py-2 font-semibold text-app-text">{drawing.name}</td>
+                <td className="py-2 text-app-muted">{drawing.panelGroupLabel ?? '—'}</td>
+                <td className="py-2">
+                  <Badge variant={DRAWING_STATUS_BADGE_VARIANT[drawing.status]}>
+                    {drawing.status}
+                  </Badge>
+                </td>
+                <td className="py-2">
+                  {drawing.exportFileUrl ? (
+                    <a
+                      href={drawing.exportFileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-app-brand underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {tr.crm.drawings.quoteSection.downloadLink}
+                    </a>
+                  ) : (
+                    tr.crm.drawings.quoteSection.notExportedYet
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 export function QuoteDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
@@ -701,6 +783,8 @@ export function QuoteDetailPage() {
           sender={printDataQuery.data?.sender}
         />
       </div>
+
+      {!isPrintMode && <QuoteDrawingsSection quoteId={quote.id} />}
 
       {!isPrintMode && (quote.status === 'DRAFT' || quote.status === 'REVIZE') && (
         <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">

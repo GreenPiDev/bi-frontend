@@ -7,6 +7,7 @@ import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picke
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
+import { ExportMenuButton } from '../components/ui/export-menu-button';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
@@ -22,11 +23,13 @@ import { InteractionStatusSelect } from '../features/crm/interaction-status-sele
 import { useInteractionTypeOptionsQuery } from '../features/crm/use-interaction-type-options';
 import {
   useDeleteInteractionMutation,
+  useExportInteractionsMutation,
   useInteractionCreatorsQuery,
   useInteractionsQuery,
   useInteractionTypeCounts,
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction, type InteractionType } from '../lib/api';
+import { downloadBlob } from '../lib/download';
 import { tr } from '../i18n/tr';
 
 export function InteractionsListPage() {
@@ -83,6 +86,7 @@ export function InteractionsListPage() {
     ...typeCounts.counts,
   };
   const deleteMutation = useDeleteInteractionMutation();
+  const exportMutation = useExportInteractionsMutation();
 
   function resetFilters() {
     setPage(1);
@@ -206,6 +210,15 @@ export function InteractionsListPage() {
             icon={Download}
             tooltip={tr.crm.interactions.importButton}
             onClick={() => navigate('/gorusmeler/ice-aktar')}
+          />
+          <ExportMenuButton
+            tooltip={tr.crm.interactions.exportButton}
+            disabled={exportMutation.isPending}
+            onSelect={(format) =>
+              exportMutation.mutate(format, {
+                onSuccess: (blob) => downloadBlob(blob, `gorusmeler.${format}`),
+              })
+            }
           />
           <CircleIconButton
             icon={Plus}

@@ -75,6 +75,12 @@ export function ProductFormPage() {
         description: productQuery.data.description ?? undefined,
         category: productQuery.data.category ?? undefined,
         brand: productQuery.data.brand ?? undefined,
+        drawingWidthMm: productQuery.data.drawingSpec?.widthMm ?? undefined,
+        drawingHeightMm: productQuery.data.drawingSpec?.heightMm ?? undefined,
+        drawingDepthMm: productQuery.data.drawingSpec?.depthMm ?? undefined,
+        drawingLibraryComponentKey: productQuery.data.drawingSpec?.libraryComponentKey ?? undefined,
+        drawingBandOrder: productQuery.data.drawingSpec?.bandOrder?.toString() ?? undefined,
+        drawingBandKey: productQuery.data.drawingSpec?.bandKey ?? undefined,
       });
     }
   }, [productQuery.data, reset]);
@@ -108,6 +114,14 @@ export function ProductFormPage() {
       description: values.description || emptyValue,
       category: values.category || emptyValue,
       brand: values.brand || emptyValue,
+      drawingSpec: {
+        widthMm: values.drawingWidthMm ? Number(values.drawingWidthMm) : emptyValue,
+        heightMm: values.drawingHeightMm ? Number(values.drawingHeightMm) : emptyValue,
+        depthMm: values.drawingDepthMm ? Number(values.drawingDepthMm) : emptyValue,
+        libraryComponentKey: values.drawingLibraryComponentKey || emptyValue,
+        bandOrder: values.drawingBandOrder ? Number(values.drawingBandOrder) : emptyValue,
+        bandKey: values.drawingBandKey || emptyValue,
+      },
     };
 
     try {

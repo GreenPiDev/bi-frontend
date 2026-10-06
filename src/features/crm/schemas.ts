@@ -253,6 +253,91 @@ export const warehouseFormSchema = z.object({
 
 export type WarehouseFormValues = z.infer<typeof warehouseFormSchema>;
 
+export const drawingLibraryComponentFormSchema = z.object({
+  key: z
+    .string()
+    .min(1, 'Anahtar gerekli.')
+    .max(100)
+    .regex(/^[a-z0-9-]+$/, 'Sadece küçük harf, rakam ve tire (-) kullanılabilir.'),
+  name: z.string().min(2, 'Ad en az 2 karakter olmalı.').max(200),
+  category: z.string().min(1, 'Kategori gerekli.').max(100),
+  defaultWidthMm: z.string().min(1, 'Genişlik gerekli.'),
+  defaultHeightMm: z.string().min(1, 'Yükseklik gerekli.'),
+});
+
+export type DrawingLibraryComponentFormValues = z.infer<typeof drawingLibraryComponentFormSchema>;
+
+export const drawingPanelTemplateFormSchema = z.object({
+  name: z.string().min(2, 'Ad en az 2 karakter olmalı.').max(200),
+  type: z.enum(['AG_BACKPLATE', 'OG_CELL']),
+  widthMm: z.string().min(1, 'Genişlik gerekli.'),
+  heightMm: z.string().min(1, 'Yükseklik gerekli.'),
+  layoutJson: z.string().refine((value) => {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed);
+    } catch {
+      return false;
+    }
+  }, 'Geçerli bir JSON nesnesi olmalı (örn. { "bands": [] }).'),
+});
+
+export type DrawingPanelTemplateFormValues = z.infer<typeof drawingPanelTemplateFormSchema>;
+
+export const drawingPreviewFormSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        libraryComponentKey: z.string().min(1, 'Komponent seçin.'),
+        bandKey: z.string().min(1, 'Bant seçin.'),
+        quantity: z.string().min(1, 'Adet gerekli.'),
+      }),
+    )
+    .max(100),
+  busbars: z
+    .array(
+      z.object({
+        startX: z.string().min(1, 'Gerekli.'),
+        startY: z.string().min(1, 'Gerekli.'),
+        endX: z.string().min(1, 'Gerekli.'),
+        endY: z.string().min(1, 'Gerekli.'),
+        thicknessMm: z.string().min(1, 'Gerekli.'),
+      }),
+    )
+    .max(20),
+});
+
+export type DrawingPreviewFormValues = z.infer<typeof drawingPreviewFormSchema>;
+
+export const drawingCreateFormSchema = z.object({
+  quoteId: z.string().min(1, 'Teklif seçin.'),
+  templateId: z.string().min(1, 'Şablon seçin.'),
+  name: z.string().min(1, 'Ad gerekli.').max(200),
+  panelGroupLabel: z.string().max(200).optional(),
+  items: z
+    .array(
+      z.object({
+        libraryComponentKey: z.string().min(1, 'Komponent seçin.'),
+        bandKey: z.string().min(1, 'Bant seçin.'),
+        quantity: z.string().min(1, 'Adet gerekli.'),
+      }),
+    )
+    .max(100),
+  busbars: z
+    .array(
+      z.object({
+        startX: z.string().min(1, 'Gerekli.'),
+        startY: z.string().min(1, 'Gerekli.'),
+        endX: z.string().min(1, 'Gerekli.'),
+        endY: z.string().min(1, 'Gerekli.'),
+        thicknessMm: z.string().min(1, 'Gerekli.'),
+      }),
+    )
+    .max(20),
+});
+
+export type DrawingCreateFormValues = z.infer<typeof drawingCreateFormSchema>;
+
 export const quoteTemplateFormSchema = z.object({
   name: z.string().min(2, 'Şablon adı en az 2 karakter olmalı.').max(200),
   isDefault: z.boolean().optional(),
@@ -274,6 +359,14 @@ export const productFormSchema = z.object({
   description: z.string().max(2000).optional(),
   category: z.string().max(100).optional(),
   brand: z.string().max(100).optional(),
+  // "Teknik Ozellikler / Pano Cizim Bilgileri" - hepsi opsiyonel, string olarak tutulur
+  // (diger sayisal alanlarla - minStockLevel, maxDiscountPct - ayni desen).
+  drawingWidthMm: z.string().optional(),
+  drawingHeightMm: z.string().optional(),
+  drawingDepthMm: z.string().optional(),
+  drawingLibraryComponentKey: z.string().max(100).optional(),
+  drawingBandOrder: z.string().optional(),
+  drawingBandKey: z.string().max(100).optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

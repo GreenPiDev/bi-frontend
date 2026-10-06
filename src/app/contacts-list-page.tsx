@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Copy, Download, ListFilter, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
+import { Copy, Download, ListFilter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -7,6 +7,7 @@ import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
+import { ExportMenuButton } from '../components/ui/export-menu-button';
 import { InlineSelect } from '../components/ui/inline-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
@@ -237,16 +238,14 @@ export function ContactsListPage() {
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
             )}
           </CircleIconButton>
-          <CircleIconButton
-            icon={Upload}
+          <ExportMenuButton
             tooltip={tr.crm.contacts.exportButton}
             disabled={exportMutation.isPending}
-            onClick={() =>
-              exportMutation.mutate(undefined, {
-                onSuccess: (blob) => downloadBlob(blob, 'kisiler.xlsx'),
+            onSelect={(format) =>
+              exportMutation.mutate(format, {
+                onSuccess: (blob) => downloadBlob(blob, `kisiler.${format}`),
               })
             }
-            className="disabled:opacity-50"
           />
           <CircleIconButton
             icon={Download}

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   exportEntity,
+  type ExportFormat,
   previewAccountImportMapped,
   previewAccountImportRaw,
   previewImport,
@@ -35,7 +36,7 @@ export function useRunImportMutation(entity: ImportEntity) {
 
 export function useExportEntityMutation(entity: ImportEntity) {
   return useMutation({
-    mutationFn: () => exportEntity(entity),
+    mutationFn: (format: ExportFormat) => exportEntity(entity, format),
   });
 }
 

@@ -1303,8 +1303,10 @@ export function runImport(
   return request(`/imports/${entity}`, { method: 'POST', body: formData });
 }
 
-export function exportEntity(entity: ImportEntity): Promise<Blob> {
-  return requestBlob(`/imports/${entity}/export`, 'GET');
+export type ExportFormat = 'xlsx' | 'pdf';
+
+export function exportEntity(entity: ImportEntity, format: ExportFormat): Promise<Blob> {
+  return requestBlob(`/imports/${entity}/export?format=${format}`, 'GET');
 }
 
 // --- Firma İçe Aktarma (marka/kaynak-bağımsız, product-imports ile aynı sihirbaz) ------
@@ -1868,6 +1870,10 @@ export function listInteractionCreators(): Promise<InteractionCreator[]> {
   return request('/interactions/creators');
 }
 
+export function exportInteractions(format: ExportFormat): Promise<Blob> {
+  return requestBlob(`/interactions/export?format=${format}`, 'GET');
+}
+
 export function getInteraction(id: string): Promise<Interaction> {
   return request(`/interactions/${id}`);
 }
@@ -1989,6 +1995,301 @@ export function deleteWarehouse(id: string): Promise<void> {
   return request(`/warehouses/${id}`, { method: 'DELETE' });
 }
 
+/**
+ * Pano cizim kutuphanesi komponenti (bkz. docs/VARSAYIMLAR.md V52, Faz D3) - tenant
+ * bazinda, built-in satirlar "drawings" modulu acilinca otomatik kopyalanir
+ * (isBuiltIn=true), tenant kendi kopyasini serbestce duzenleyebilir/silebilir.
+ */
+export interface DrawingLibraryComponent {
+  id: string;
+  key: string;
+  name: string;
+  category: string;
+  defaultWidthMm: string;
+  defaultHeightMm: string;
+  symbol: Record<string, unknown> | null;
+  isBuiltIn: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DrawingLibraryComponentInput {
+  key: string;
+  name: string;
+  category: string;
+  defaultWidthMm: number;
+  defaultHeightMm: number;
+  symbol?: Record<string, unknown>;
+}
+
+export function listDrawingLibraryComponents(): Promise<DrawingLibraryComponent[]> {
+  return request('/drawing-library');
+}
+
+export function createDrawingLibraryComponent(
+  input: DrawingLibraryComponentInput,
+): Promise<DrawingLibraryComponent> {
+  return request('/drawing-library', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateDrawingLibraryComponent(
+  id: string,
+  input: Partial<DrawingLibraryComponentInput>,
+): Promise<DrawingLibraryComponent> {
+  return request(`/drawing-library/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteDrawingLibraryComponent(id: string): Promise<void> {
+  return request(`/drawing-library/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Tenant bazinda pano sablonu (bkz. docs/VARSAYIMLAR.md V52, Faz D3) - `layout` render
+ * motorunun (Faz D4) yorumlayacagi serbest JSON, bu turda sadece ham metin olarak
+ * duzenlenebiliyor (bant/yerlesim editoru henuz yok).
+ */
+export type DrawingTemplateType = 'AG_BACKPLATE' | 'OG_CELL';
+
+export interface DrawingPanelTemplate {
+  id: string;
+  name: string;
+  type: DrawingTemplateType;
+  widthMm: string;
+  heightMm: string;
+  layout: Record<string, unknown>;
+  isBuiltIn: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DrawingPanelTemplateInput {
+  name: string;
+  type?: DrawingTemplateType;
+  widthMm: number;
+  heightMm: number;
+  layout: Record<string, unknown>;
+}
+
+export function listDrawingPanelTemplates(): Promise<DrawingPanelTemplate[]> {
+  return request('/drawing-templates');
+}
+
+export function createDrawingPanelTemplate(
+  input: DrawingPanelTemplateInput,
+): Promise<DrawingPanelTemplate> {
+  return request('/drawing-templates', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateDrawingPanelTemplate(
+  id: string,
+  input: Partial<DrawingPanelTemplateInput>,
+): Promise<DrawingPanelTemplate> {
+  return request(`/drawing-templates/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteDrawingPanelTemplate(id: string): Promise<void> {
+  return request(`/drawing-templates/${id}`, { method: 'DELETE' });
+}
+
+/**
+ * Faz D4 render motoru (bkz. docs/VARSAYIMLAR.md V52/V53) - Drawing.model JSON'unun
+ * frontend karsiligi. Hicbir zaman DB'ye yazilmaz, sadece salt-okunur onizleme icin.
+ */
+export type DrawingViewKey = 'internal' | 'coverPlate' | 'external';
+
+export interface DrawingElementInstance {
+  id: string;
+  libraryComponentKey: string;
+  label: string;
+  category: string;
+  bandKey: string;
+  x: number;
+  y: number;
+  widthMm: number;
+  heightMm: number;
+  rotationDeg: number;
+}
+
+export interface DrawingBusbarInstance {
+  id: string;
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  thicknessMm: number;
+  phaseCount: number;
+}
+
+export interface DrawingModel {
+  plateWidthMm: number;
+  plateHeightMm: number;
+  views: Record<DrawingViewKey, { elements: DrawingElementInstance[] }>;
+  busbars: DrawingBusbarInstance[];
+}
+
+export interface DrawingPreviewItemInput {
+  libraryComponentKey: string;
+  label: string;
+  category: string;
+  widthMm: number;
+  heightMm: number;
+  bandKey: string;
+  quantity: number;
+  hiddenInCoverPlate?: boolean;
+}
+
+export interface DrawingPreviewBusbarInput {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+  thicknessMm: number;
+  phaseCount?: number;
+}
+
+export interface DrawingPreviewRequest {
+  templateId: string;
+  items: DrawingPreviewItemInput[];
+  busbars: DrawingPreviewBusbarInput[];
+}
+
+export interface DrawingPreviewResponse {
+  model: DrawingModel;
+  svg: Record<DrawingViewKey, string>;
+}
+
+export function previewDrawing(input: DrawingPreviewRequest): Promise<DrawingPreviewResponse> {
+  return request('/drawings/preview', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export type DrawingStatus = 'DRAFT' | 'FINALIZED';
+
+/**
+ * Faz D5: persist edilen bir cizim kaydi (bkz. docs/VARSAYIMLAR.md V52/V53). `model`
+ * editorun (Fabric.js) tek dogruluk kaynagidir - canvas sadece bir view.
+ */
+export interface Drawing {
+  id: string;
+  quoteId: string;
+  templateId: string | null;
+  panelGroupLabel: string | null;
+  name: string;
+  status: DrawingStatus;
+  model: DrawingModel;
+  exportedAt: string | null;
+  exportFileKey: string | null;
+  /** Faz D7: urun gorseli/avatar ile ayni desen - `/files` proxy'sine hazir, indirilebilir URL. */
+  exportFileUrl: string | null;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDrawingInput {
+  quoteId: string;
+  templateId: string;
+  name: string;
+  panelGroupLabel?: string;
+  items: DrawingPreviewItemInput[];
+  busbars: DrawingPreviewBusbarInput[];
+}
+
+export interface UpdateDrawingInput {
+  name?: string;
+  status?: DrawingStatus;
+  model?: DrawingModel;
+}
+
+export function listDrawings(params: { quoteId?: string } = {}): Promise<Drawing[]> {
+  const query = new URLSearchParams();
+  if (params.quoteId) query.set('quoteId', params.quoteId);
+  const qs = query.toString();
+  return request(`/drawings${qs ? `?${qs}` : ''}`);
+}
+
+export function getDrawing(id: string): Promise<Drawing> {
+  return request(`/drawings/${id}`);
+}
+
+export function createDrawing(input: CreateDrawingInput): Promise<Drawing> {
+  return request('/drawings', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateDrawing(id: string, input: UpdateDrawingInput): Promise<Drawing> {
+  return request(`/drawings/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteDrawing(id: string): Promise<void> {
+  return request(`/drawings/${id}`, { method: 'DELETE' });
+}
+
+// --- Dışa Aktarma (Faz D7, bkz. docs/VARSAYIMLAR.md V55) -----------------------------
+
+/** Tek bir görünümün SVG'si - saf/determinist, hiç saklanmaz, her çağrıda anlık üretilir. */
+export function exportDrawingSvg(id: string, view: DrawingViewKey): Promise<Blob> {
+  return requestBlob(`/drawings/${id}/export/svg?view=${view}`, 'GET');
+}
+
+/** 3 görünümü de içeren birleşik PDF - R2'ye yüklenir, dönen Drawing.exportFileUrl ile indirilir. */
+export function exportDrawingPdf(id: string): Promise<Drawing> {
+  return request(`/drawings/${id}/export/pdf`, { method: 'POST' });
+}
+
+/** Faz D8: 3 görünümü de ayrı katmanlarda (layer) içeren tek bir DXF - SVG gibi saf/
+ * determinist, hiç saklanmaz, her çağrıda anlık üretilir. */
+export function exportDrawingDxf(id: string): Promise<Blob> {
+  return requestBlob(`/drawings/${id}/export/dxf`, 'GET');
+}
+
+// --- PDF'den Otomatik Cizim (Faz D6, bkz. docs/VARSAYIMLAR.md V52) --------------------
+
+/**
+ * AI'nin uretebilecegi tek sema - kasitli olarak x/y/geometri alani YOK (bkz.
+ * docs/VARSAYIMLAR.md V52 "AI asla koordinat uretmez" kurali).
+ */
+export interface DrawingImportSuggestedLine {
+  rawLine: string;
+  panelGroupLabel: string;
+  productId: string | null;
+  productName: string | null;
+  quantity: number;
+  confidence: number;
+  needsReview: boolean;
+}
+
+export interface DrawingImportPreviewResponse {
+  lines: DrawingImportSuggestedLine[];
+}
+
+export function previewDrawingImportFromPdf(
+  quoteId: string,
+  file: File,
+): Promise<DrawingImportPreviewResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('quoteId', quoteId);
+  return request('/drawing-imports/preview', { method: 'POST', body: formData });
+}
+
+export interface DrawingImportCommitGroupInput {
+  panelGroupLabel: string;
+  name: string;
+  items: { productId: string; quantity: number }[];
+}
+
+export interface DrawingImportCommitInput {
+  quoteId: string;
+  templateId: string;
+  groups: DrawingImportCommitGroupInput[];
+}
+
+export function commitDrawingImport(input: DrawingImportCommitInput): Promise<Drawing[]> {
+  return request('/drawing-imports/commit', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export interface ProductList {
   id: string;
   name: string;
@@ -2032,6 +2333,31 @@ export function deleteProductList(id: string): Promise<void> {
   return request(`/product-lists/${id}`, { method: 'DELETE' });
 }
 
+/**
+ * "Teknik Ozellikler / Pano Cizim Bilgileri" - urunun pano cizim motorunda (bkz.
+ * docs/VARSAYIMLAR.md V52) kullanilabilmesi icin gereken opsiyonel geometrik alanlar.
+ * Hicbir alan zorunlu degil.
+ */
+export interface ProductDrawingSpec {
+  id: string;
+  productId: string;
+  widthMm: string | null;
+  heightMm: string | null;
+  depthMm: string | null;
+  libraryComponentKey: string | null;
+  bandOrder: number | null;
+  bandKey: string | null;
+}
+
+export interface ProductDrawingSpecInput {
+  widthMm?: number | null;
+  heightMm?: number | null;
+  depthMm?: number | null;
+  libraryComponentKey?: string | null;
+  bandOrder?: number | null;
+  bandKey?: string | null;
+}
+
 export interface Product {
   id: string;
   productListId: string;
@@ -2051,6 +2377,7 @@ export interface Product {
    * Statik costPrice'in yerini aldi, stok girisi (increaseStockItem) uzerinden hesaplanir,
    * urun formundan elle girilemez. */
   avgCost: string | null;
+  drawingSpec: ProductDrawingSpec | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -2076,6 +2403,7 @@ export interface ProductInput {
   description?: string | null;
   category?: string | null;
   brand?: string | null;
+  drawingSpec?: ProductDrawingSpecInput;
 }
 
 export function listProducts(

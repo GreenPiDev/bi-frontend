@@ -16,6 +16,13 @@ import { DatasetDetailPage } from './app/dataset-detail-page';
 import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
 import { DatasetsListPage } from './app/datasets-list-page';
+import { DrawingCreatePage } from './app/drawing-create-page';
+import { DrawingEditorPage } from './app/drawing-editor-page';
+import { DrawingImportPage } from './app/drawing-import-page';
+import { DrawingLibraryComponentFormPage } from './app/drawing-library-component-form-page';
+import { DrawingPanelTemplateFormPage } from './app/drawing-panel-template-form-page';
+import { DrawingPanelTemplatePreviewPage } from './app/drawing-panel-template-preview-page';
+import { DrawingSettingsPage } from './app/drawing-settings-page';
 import { InteractionDetailPage } from './app/interaction-detail-page';
 import { InteractionEditPage } from './app/interaction-edit-page';
 import { InteractionFormPage } from './app/interaction-form-page';
@@ -112,6 +119,9 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'product-lists', path: '/envanter' },
   { pageKey: 'stock', path: '/envanter' },
   { pageKey: 'warehouses', path: '/envanter' },
+  { pageKey: 'drawing-library', path: '/cizim-ayarlari' },
+  { pageKey: 'drawing-templates', path: '/cizim-ayarlari' },
+  { pageKey: 'drawings', path: '/cizim-ayarlari' },
   { pageKey: 'messages', path: '/mesajlar' },
   { pageKey: 'settings', path: '/settings' },
 ];
@@ -580,6 +590,62 @@ function App() {
             <ProtectedRoute>
               <InventoryManagementPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cizimler/yeni"
+          element={
+            <TenantPageRoute pageKey="drawings">
+              <DrawingCreatePage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/cizimler/:id"
+          element={
+            <TenantPageRoute pageKey="drawings">
+              <DrawingEditorPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/cizimler/pdf-ice-aktar"
+          element={
+            <TenantPageRoute pageKey="drawings">
+              <DrawingImportPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/cizim-ayarlari"
+          element={
+            <ProtectedRoute>
+              <DrawingSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cizim-kutuphanesi/yeni"
+          element={
+            <TenantPageRoute pageKey="drawing-library">
+              <DrawingLibraryComponentFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/pano-sablonlari/yeni"
+          element={
+            <TenantPageRoute pageKey="drawing-templates">
+              <DrawingPanelTemplateFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/pano-sablonlari/:id/onizle"
+          element={
+            <TenantPageRoute pageKey="drawing-templates">
+              <DrawingPanelTemplatePreviewPage />
+            </TenantPageRoute>
           }
         />
         <Route

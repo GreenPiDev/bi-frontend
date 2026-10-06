@@ -2,11 +2,13 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import {
   createInteraction,
   deleteInteraction,
+  exportInteractions,
   getInteraction,
   listInteractionCreators,
   listInteractions,
   updateInteraction,
   type CreateInteractionInput,
+  type ExportFormat,
   type InteractionStatus,
   type InteractionType,
   type UpdateInteractionInput,
@@ -66,6 +68,12 @@ export function useInteractionCreatorsQuery() {
   return useQuery({
     queryKey: ['interactions', 'creators'],
     queryFn: () => listInteractionCreators(),
+  });
+}
+
+export function useExportInteractionsMutation() {
+  return useMutation({
+    mutationFn: (format: ExportFormat) => exportInteractions(format),
   });
 }
 

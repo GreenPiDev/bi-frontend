@@ -15,6 +15,7 @@ import {
   Mail,
   MessageCircle,
   PanelLeft,
+  PenTool,
   Search,
   Settings,
   Table2,
@@ -160,6 +161,8 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
     stock: useIsPageModuleAccessible('stock'),
     warehouses: useIsPageModuleAccessible('warehouses'),
+    'drawing-library': useIsPageModuleAccessible('drawing-library'),
+    'drawing-templates': useIsPageModuleAccessible('drawing-templates'),
     messages: useIsPageModuleAccessible('messages'),
     settings: useIsPageModuleAccessible('settings'),
   };
@@ -219,6 +222,9 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     canAccessPage('products') ||
     canAccessPage('warehouses')
       ? [{ label: tr.shell.nav.inventory, icon: Warehouse, path: '/envanter' }]
+      : []),
+    ...(canAccessPage('drawing-library') || canAccessPage('drawing-templates')
+      ? [{ label: tr.shell.nav.drawingSettings, icon: PenTool, path: '/cizim-ayarlari' }]
       : []),
     ...(canAccessPage('datasets')
       ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]

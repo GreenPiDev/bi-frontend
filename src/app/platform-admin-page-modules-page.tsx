@@ -11,6 +11,9 @@ export function PlatformAdminPageModulesPage() {
         <PageHelp text={tr.help.platformAdminPageModules} />
       </div>
       <p className="mt-1 text-sm text-app-muted">{tr.platformAdmin.pageModulesSubtitle}</p>
+      <p className="mt-2 rounded-lg border border-app-border bg-app-surface p-4 text-sm text-app-muted">
+        {tr.platformAdmin.pageModulesUnassignedNote}
+      </p>
       <PlatformAdminPageModules />
     </AppShell>
   );

@@ -99,6 +99,7 @@ const product: api.Product = {
   category: null,
   brand: null,
   avgCost: null,
+  drawingSpec: null,
   deletedAt: null,
   createdAt: '2026-08-01T00:00:00.000Z',
   updatedAt: '2026-08-01T00:00:00.000Z',
