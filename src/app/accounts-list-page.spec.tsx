@@ -138,7 +138,7 @@ describe('AccountsListPage', () => {
     );
 
     expect(await screen.findByText('Acme A.S.')).toBeInTheDocument();
-    const actionButtons = container.querySelectorAll('table tbody button');
+    const actionButtons = container.querySelectorAll('table tbody tr td:last-child button');
     expect(actionButtons).toHaveLength(2);
     await user.click(actionButtons[0]);
     expect(await screen.findByText('edit-page')).toBeInTheDocument();
@@ -178,7 +178,7 @@ describe('AccountsListPage', () => {
     const { container } = renderAccountsListPage();
 
     expect(await screen.findByText('Acme A.S.')).toBeInTheDocument();
-    const actionButtons = container.querySelectorAll('table tbody button');
+    const actionButtons = container.querySelectorAll('table tbody tr td:last-child button');
     await user.click(actionButtons[1]);
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('button', { name: 'Sil' }));
@@ -231,7 +231,15 @@ describe('AccountsListPage', () => {
 
     expect(updateProfileSpy).toHaveBeenCalledWith({
       columnPreferences: {
-        accounts: ['phone', 'email', 'sector', 'accountTypes', 'createdByName'],
+        accounts: [
+          'phone',
+          'email',
+          'sector',
+          'accountTypes',
+          'interactionCount',
+          'quoteCount',
+          'createdByName',
+        ],
       },
     });
     expect(screen.queryByText('Istanbul')).not.toBeInTheDocument();
