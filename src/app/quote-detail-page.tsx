@@ -53,6 +53,7 @@ import {
   computeLineTotal,
   convertTotalsToQuoteCurrency,
   formatCurrencyAmount,
+  getQuoteCurrencyTotals,
   groupQuoteItemTotals,
 } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
@@ -61,6 +62,7 @@ const STATUS_BADGE_VARIANT: Record<
   QuoteStatus,
   'success' | 'warning' | 'danger' | 'neutral' | 'orange'
 > = {
+  UNSPECIFIED: 'neutral',
   DRAFT: 'neutral',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
@@ -80,15 +82,7 @@ function lineTotal(item: QuoteItem): number {
 }
 
 function computeTotals(quote: Quote) {
-  return groupQuoteItemTotals(
-    quote.items.map((item) => ({
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      discountPct: Number(item.discountPct),
-      vatPct: Number(item.vatPct),
-      currency: item.currency,
-    })),
-  );
+  return getQuoteCurrencyTotals(quote);
 }
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
@@ -235,7 +229,11 @@ export function QuoteContentBody({
             columns={itemColumns}
             data={quote.items}
             keyField={(item) => item.id}
-            emptyMessage={tr.crm.quotes.form.summaryEmpty}
+            emptyMessage={
+              quote.itemsEntryMode === 'MANUAL_TOTAL'
+                ? tr.crm.quotes.detail.manualTotalItemsEmpty
+                : tr.crm.quotes.form.summaryEmpty
+            }
             fixedLayout
           />
         </div>
@@ -300,6 +298,23 @@ export function QuoteContentBody({
           </div>
         )}
       </div>
+
+      {quote.itemsEntryMode === 'MANUAL_TOTAL' && !isPrintMode && (
+        <div className="mt-8 rounded-xl bg-white p-5 shadow-sm">
+          <SectionHeader>{tr.crm.quotes.detail.attributesTitle}</SectionHeader>
+          {quote.attributes && Object.keys(quote.attributes).length > 0 ? (
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(quote.attributes).map(([key, value]) => (
+                <MetaCell key={key} label={key}>
+                  {value}
+                </MetaCell>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-sm text-app-muted">{tr.crm.quotes.detail.attributesEmpty}</p>
+          )}
+        </div>
+      )}
 
       {quote.ibanNumber && (
         <div className="print-page-break mt-8">
@@ -704,7 +719,8 @@ export function QuoteDetailPage() {
             />
             {(quote.status === 'DRAFT' ||
               quote.status === 'PENDING_APPROVAL' ||
-              quote.status === 'REVIZE') && (
+              quote.status === 'REVIZE' ||
+              quote.status === 'UNSPECIFIED') && (
               <>
                 <CircleIconButton
                   icon={Pencil}
@@ -736,7 +752,8 @@ export function QuoteDetailPage() {
             )}
             {(quote.status === 'DRAFT' ||
               quote.status === 'PENDING_APPROVAL' ||
-              quote.status === 'APPROVED') && (
+              quote.status === 'APPROVED' ||
+              quote.status === 'UNSPECIFIED') && (
               <CircleIconButton
                 icon={FileDown}
                 tooltip={tr.crm.quotes.detail.exportPdfButton}

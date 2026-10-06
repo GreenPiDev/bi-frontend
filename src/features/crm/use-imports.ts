@@ -4,35 +4,18 @@ import {
   type ExportFormat,
   previewAccountImportMapped,
   previewAccountImportRaw,
-  previewImport,
+  previewContactImportMapped,
+  previewContactImportRaw,
   previewInteractionImportMapped,
   previewInteractionImportRaw,
   runAccountImport,
-  runImport,
+  runContactImport,
   runInteractionImport,
   type ImportEntity,
 } from '../../lib/api';
 import { ACCOUNTS_QUERY_KEY } from './use-accounts';
 import { CONTACTS_QUERY_KEY } from './use-contacts';
 import { INTERACTIONS_QUERY_KEY } from './use-interactions';
-
-export function usePreviewImportMutation() {
-  return useMutation({
-    mutationFn: (file: File) => previewImport(file),
-  });
-}
-
-export function useRunImportMutation(entity: ImportEntity) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ file, mapping }: { file: File; mapping: Record<string, string> }) =>
-      runImport(entity, file, mapping),
-    onSuccess: () => {
-      const key = entity === 'accounts' ? ACCOUNTS_QUERY_KEY : CONTACTS_QUERY_KEY;
-      void queryClient.invalidateQueries({ queryKey: key });
-    },
-  });
-}
 
 export function useExportEntityMutation(entity: ImportEntity) {
   return useMutation({
@@ -69,6 +52,39 @@ export function useRunAccountImportMutation() {
     }) => runAccountImport(file, headerRowIndex, mapping, attributeColumns),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ACCOUNTS_QUERY_KEY });
+    },
+  });
+}
+
+export function usePreviewContactImportRawMutation() {
+  return useMutation({
+    mutationFn: (file: File) => previewContactImportRaw(file),
+  });
+}
+
+export function usePreviewContactImportMappedMutation() {
+  return useMutation({
+    mutationFn: ({ file, headerRowIndex }: { file: File; headerRowIndex: number }) =>
+      previewContactImportMapped(file, headerRowIndex),
+  });
+}
+
+export function useRunContactImportMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      file,
+      headerRowIndex,
+      mapping,
+      attributeColumns,
+    }: {
+      file: File;
+      headerRowIndex: number;
+      mapping: Record<string, string>;
+      attributeColumns: string[];
+    }) => runContactImport(file, headerRowIndex, mapping, attributeColumns),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: CONTACTS_QUERY_KEY });
     },
   });
 }

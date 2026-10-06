@@ -71,6 +71,49 @@ export function groupQuoteItemTotals(items: QuoteLineForTotals[]): QuoteCurrency
  * kendisi icin kur gerekmez (1 kabul edilir). Eksik kuru olan bir para birimi varsa
  * (henuz cekilmemis/girilmemis) o grup toplama dahil edilmez - caller
  * `missingRateCurrencies` ile bunu kullanıcıya bildirmeli. */
+/** Ad-hoc /teklifler Excel ice aktarma (bkz. docs/VARSAYIMLAR.md) - MANUAL_TOTAL
+ * tekliflerde items bos olur, kalem detayi yok, sadece tek bir toplam tutar var. */
+export interface QuoteForTotals {
+  itemsEntryMode: 'ITEMIZED' | 'MANUAL_TOTAL';
+  manualSubtotal: string | null;
+  manualVatAmount: string | null;
+  manualCurrency: string | null;
+  items: {
+    quantity: string;
+    unitPrice: string;
+    discountPct: string;
+    vatPct: string;
+    currency: string;
+  }[];
+}
+
+/** groupQuoteItemTotals'un MANUAL_TOTAL farkindaligi olan sarmalayicisi - detay/liste/
+ * yazdirma ekranlarinin tamami buradan gecer, boylece ikisi arasindaki fark tek yerde
+ * yonetilir. */
+export function getQuoteCurrencyTotals(quote: QuoteForTotals): QuoteCurrencyTotals[] {
+  if (quote.itemsEntryMode === 'MANUAL_TOTAL') {
+    const subtotal = Number(quote.manualSubtotal ?? 0);
+    const vatTotal = Number(quote.manualVatAmount ?? 0);
+    return [
+      {
+        currency: quote.manualCurrency || 'TRY',
+        subtotal,
+        vatTotal,
+        grandTotal: subtotal + vatTotal,
+      },
+    ];
+  }
+  return groupQuoteItemTotals(
+    quote.items.map((item) => ({
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discountPct: Number(item.discountPct),
+      vatPct: Number(item.vatPct),
+      currency: item.currency,
+    })),
+  );
+}
+
 export function convertTotalsToQuoteCurrency(
   totals: QuoteCurrencyTotals[],
   quoteCurrency: string,

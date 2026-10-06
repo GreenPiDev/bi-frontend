@@ -1,7 +1,8 @@
-import { Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Copy, Mail, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NewMessageModal } from './new-message-modal';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { IconActionButton } from '../components/ui/icon-action-button';
@@ -32,6 +33,7 @@ export function ProjectsListPage() {
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const projectsQuery = useProjectsQuery({ page, pageSize, q: q || undefined });
   const deleteMutation = useDeleteProjectMutation();
+  const [messageProject, setMessageProject] = useState<Project | undefined>(undefined);
 
   async function handleCopyProjectNumber(projectNumber: string) {
     await navigator.clipboard.writeText(projectNumber);
@@ -113,6 +115,11 @@ export function ProjectsListPage() {
       required: true,
       render: (p) => (
         <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Mail}
+            tooltip={tr.crm.projects.detail.createMessageTooltip}
+            onClick={() => setMessageProject(p)}
+          />
           <IconActionButton
             icon={Pencil}
             tooltip={tr.crm.projects.detail.editButton}
@@ -200,6 +207,15 @@ export function ProjectsListPage() {
           onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
+        />
+      )}
+
+      {messageProject && (
+        <NewMessageModal
+          onClose={() => setMessageProject(undefined)}
+          defaultToUserIds={messageProject.createdById ? [messageProject.createdById] : []}
+          defaultRelatedEntity="PROJECT"
+          defaultRelatedEntityId={messageProject.id}
         />
       )}
     </AppShell>

@@ -1,9 +1,22 @@
+import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
-import { Copy, ListFilter, Pencil, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
+import {
+  Copy,
+  Download,
+  FileDown,
+  ListFilter,
+  Mail,
+  Pencil,
+  Plus,
+  Search,
+  ShoppingCart,
+  Trash2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ApproveQuoteModal } from './approve-quote-modal';
+import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
@@ -27,20 +40,22 @@ import {
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
 import { useUsersQuery } from '../features/roles/use-users';
-import { ApiError, type Quote, type QuoteStatus } from '../lib/api';
+import { ApiError, exportQuotePdf, type Quote, type QuoteStatus } from '../lib/api';
+import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
 import {
   convertTotalsToQuoteCurrency,
   formatCurrencyAmount,
-  groupQuoteItemTotals,
+  getQuoteCurrencyTotals,
 } from '../lib/quote-totals';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
-  ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'REVIZE'] as const
+  ['UNSPECIFIED', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'REVIZE'] as const
 ).map((status) => ({ value: status, label: tr.crm.quotes.statusOptions[status] }));
 
 const STATUS_TEXT_CLASS: Record<QuoteStatus, string> = {
+  UNSPECIFIED: 'text-app-muted',
   DRAFT: 'text-app-muted',
   PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
   APPROVED: 'text-app-success',
@@ -102,15 +117,7 @@ function QuoteStatusSelect({
 }
 
 function quoteTotalsByCurrency(quote: Quote) {
-  return groupQuoteItemTotals(
-    quote.items.map((item) => ({
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      discountPct: Number(item.discountPct),
-      vatPct: Number(item.vatPct),
-      currency: item.currency,
-    })),
-  );
+  return getQuoteCurrencyTotals(quote);
 }
 
 /** Teklif kalemleri farklı para birimlerinde olabilir - bu yüzden tek bir "Genel Toplam"
@@ -139,6 +146,12 @@ export function QuotesListPage() {
   const toast = useToast();
   const meQuery = useMeQuery();
   const usersQuery = useUsersQuery();
+  // "Teklifi Oluşturan" kolonu Quote.senderId'yi gösterir (PDF'te temsilci olarak
+  // görünen kullanıcı, bkz. quote-meta-fields.tsx senderLabel) - senderId yoksa (örn.
+  // içe aktarılan bir teklifte "Teklifi Oluşturan" sütunu eşlenmemiş/eşleşmemişse)
+  // quotes.service.ts'teki getPrintData'daki AYNI `senderId ?? createdById` fallback'i
+  // kullanılır, importu yapan kullanıcı degil gercek gonderen gosterilsin diye.
+  const senderNameById = new Map((usersQuery.data ?? []).map((u) => [u.id, u.name]));
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
@@ -149,6 +162,7 @@ export function QuotesListPage() {
   const [rangeToInput, setRangeToInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deletingQuote, setDeletingQuote] = useState<Quote | undefined>(undefined);
+  const [messageQuote, setMessageQuote] = useState<Quote | undefined>(undefined);
   const [pendingStatusChange, setPendingStatusChange] = useState<
     { quote: Quote; status: QuoteStatus } | undefined
   >(undefined);
@@ -175,11 +189,21 @@ export function QuotesListPage() {
   };
   const deleteMutation = useDeleteQuoteMutation();
   const confirmStatusMutation = useUpdateQuoteMutation(pendingStatusChange?.quote.id ?? '');
+  const canImportQuotes = hasPermission(meQuery.data?.permissions, 'quotes', 'IMPORT');
   const canCreatePurchaseOrder = hasPermission(
     meQuery.data?.permissions,
     'purchase-orders',
     'CREATE',
   );
+  const exportPdfMutation = useMutation({
+    mutationFn: (quoteId: string) => exportQuotePdf(quoteId),
+    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
+    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
+    onError: (error, _vars, context) => {
+      context?.tabHandle?.close();
+      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
+    },
+  });
 
   async function handleCopyQuoteNumber(quoteNumber: string) {
     await navigator.clipboard.writeText(quoteNumber);
@@ -295,17 +319,26 @@ export function QuotesListPage() {
       key: 'createdByName',
       header: tr.crm.quotes.createdByColumn,
       className: 'text-app-muted',
-      render: (q) => q.createdByName ?? '—',
+      render: (q) =>
+        (q.senderId ? senderNameById.get(q.senderId) : undefined) ?? q.createdByName ?? '—',
     },
     {
       key: 'actions',
       header: tr.crm.quotes.actionsColumn,
       className: 'w-px',
       required: true,
-      render: (q) => {
-        if (q.status === 'DRAFT' || q.status === 'PENDING_APPROVAL' || q.status === 'REVIZE') {
-          return (
-            <div className="flex items-center gap-1">
+      render: (q) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Mail}
+            tooltip={tr.crm.quotes.detail.createMessageTooltip}
+            onClick={() => setMessageQuote(q)}
+          />
+          {(q.status === 'DRAFT' ||
+            q.status === 'PENDING_APPROVAL' ||
+            q.status === 'REVIZE' ||
+            q.status === 'UNSPECIFIED') && (
+            <>
               <IconActionButton
                 icon={Pencil}
                 tooltip={tr.crm.quotes.editTooltip}
@@ -317,20 +350,27 @@ export function QuotesListPage() {
                 variant="danger"
                 onClick={() => setDeletingQuote(q)}
               />
-            </div>
-          );
-        }
-        if (q.status === 'APPROVED' && canCreatePurchaseOrder) {
-          return (
+            </>
+          )}
+          {q.status === 'UNSPECIFIED' && (
             <IconActionButton
-              icon={ShoppingCart}
-              tooltip={tr.crm.quotes.createPurchaseOrderButton}
-              onClick={() => navigate(`/siparisler/yeni?quoteId=${q.id}`)}
+              icon={FileDown}
+              tooltip={tr.crm.quotes.detail.exportPdfButton}
+              onClick={() => exportPdfMutation.mutate(q.id)}
+              disabled={exportPdfMutation.isPending}
             />
-          );
-        }
-        return null;
-      },
+          )}
+          {q.status === 'APPROVED' &&
+            canCreatePurchaseOrder &&
+            q.itemsEntryMode !== 'MANUAL_TOTAL' && (
+              <IconActionButton
+                icon={ShoppingCart}
+                tooltip={tr.crm.quotes.createPurchaseOrderButton}
+                onClick={() => navigate(`/siparisler/yeni?quoteId=${q.id}`)}
+              />
+            )}
+        </div>
+      ),
     },
   ];
 
@@ -361,6 +401,13 @@ export function QuotesListPage() {
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
             )}
           </CircleIconButton>
+          {canImportQuotes && (
+            <CircleIconButton
+              icon={Download}
+              tooltip={tr.crm.quotes.importButton}
+              onClick={() => navigate('/teklifler/ice-aktar')}
+            />
+          )}
           <CircleIconButton
             icon={Plus}
             tooltip={tr.crm.quotes.newButton}
@@ -544,6 +591,15 @@ export function QuotesListPage() {
           isPending={confirmStatusMutation.isPending}
           onConfirm={() => handleConfirmStatusChange()}
           onCancel={() => setPendingStatusChange(undefined)}
+        />
+      )}
+
+      {messageQuote && (
+        <NewMessageModal
+          onClose={() => setMessageQuote(undefined)}
+          defaultToUserIds={messageQuote.createdById ? [messageQuote.createdById] : []}
+          defaultRelatedEntity="QUOTE"
+          defaultRelatedEntityId={messageQuote.id}
         />
       )}
     </AppShell>

@@ -14,7 +14,7 @@ import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import { useProjectsQuery } from '../features/crm/use-projects';
 import { useQuotesQuery } from '../features/crm/use-quotes';
-import { formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import { formatCurrencyAmount, getQuoteCurrencyTotals } from '../lib/quote-totals';
 import type { Contact, Interaction, Opportunity, Project, Quote } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -44,15 +44,7 @@ function formatBudget(value: string | null): string {
 }
 
 function quoteTotalsByCurrency(quote: Quote) {
-  return groupQuoteItemTotals(
-    quote.items.map((item) => ({
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      discountPct: Number(item.discountPct),
-      vatPct: Number(item.vatPct),
-      currency: item.currency,
-    })),
-  );
+  return getQuoteCurrencyTotals(quote);
 }
 
 function SectionHeader({ children }: { children: ReactNode }) {

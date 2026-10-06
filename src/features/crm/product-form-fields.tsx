@@ -5,6 +5,7 @@ import { TextField } from '../../components/ui/text-field';
 import { TextareaField } from '../../components/ui/textarea-field';
 import { BrandSelect } from './brand-select';
 import { CategorySelect } from './category-select';
+import { LibraryComponentSelect } from './library-component-select';
 import { ProductListSelect } from './product-list-select';
 import { UnitSelect } from './unit-select';
 import type { ProductFormValues } from './schemas';
@@ -198,11 +199,16 @@ export function ProductFormFields({
               drawingDepthMmField.onChange(event);
             }}
           />
-          <TextField
-            label={tr.crm.products.form.drawingSection.libraryComponentKeyLabel}
-            hint={tr.crm.products.form.drawingSection.libraryComponentKeyHint}
-            error={errors.drawingLibraryComponentKey?.message}
-            {...register('drawingLibraryComponentKey')}
+          <Controller
+            name="drawingLibraryComponentKey"
+            control={control}
+            render={({ field }) => (
+              <LibraryComponentSelect
+                value={field.value ?? ''}
+                onChange={field.onChange}
+                error={errors.drawingLibraryComponentKey?.message}
+              />
+            )}
           />
           <TextField
             type="text"

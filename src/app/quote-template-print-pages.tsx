@@ -5,7 +5,7 @@ import {
   computeLineTotal,
   convertTotalsToQuoteCurrency,
   formatCurrencyAmount,
-  groupQuoteItemTotals,
+  getQuoteCurrencyTotals,
 } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
@@ -34,6 +34,11 @@ export interface QuoteTemplatePrintDocumentData {
     city: string | null;
   };
   contact: { firstName: string; lastName: string } | null;
+  /** Ad-hoc /teklifler Excel ice aktarma (bkz. docs/VARSAYIMLAR.md). */
+  itemsEntryMode: 'ITEMIZED' | 'MANUAL_TOTAL';
+  manualSubtotal: string | null;
+  manualVatAmount: string | null;
+  manualCurrency: string | null;
   items: Array<{
     id: string;
     quantity: string;
@@ -79,15 +84,7 @@ function lineTotal(item: QuoteTemplatePrintDocumentData['items'][number]): numbe
 export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentData): ReactNode[] {
   const template = quote.template!;
   const strings = tr.crm.quoteTemplatePrint;
-  const totals = groupQuoteItemTotals(
-    quote.items.map((item) => ({
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      discountPct: Number(item.discountPct),
-      vatPct: Number(item.vatPct),
-      currency: item.currency,
-    })),
-  );
+  const totals = getQuoteCurrencyTotals(quote);
   const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
   const conversion =
     foreignCurrencyTotals.length > 0
@@ -220,36 +217,44 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
         </div>
       </div>
 
-      <table className="mt-8 w-full table-fixed border-collapse text-xs">
-        <thead>
-          <tr className="bg-gray-900 text-white">
-            <th className="p-3 text-left">{strings.itemsProductColumn}</th>
-            <th className="w-16 p-3 whitespace-nowrap text-right">{strings.itemsQuantityColumn}</th>
-            <th className="w-24 p-3 whitespace-nowrap text-right">
-              {strings.itemsUnitPriceColumn}
-            </th>
-            <th className="w-16 p-3 whitespace-nowrap text-right">{strings.itemsDiscountColumn}</th>
-            <th className="w-14 p-3 whitespace-nowrap text-right">{strings.itemsVatColumn}</th>
-            <th className="w-24 p-3 whitespace-nowrap text-right">{strings.itemsTotalColumn}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {quote.items.map((item, index) => (
-            <tr key={item.id} className={index % 2 === 1 ? 'bg-gray-50' : undefined}>
-              <td className="p-3 break-words">{item.product.name}</td>
-              <td className="p-3 whitespace-nowrap text-right">{item.quantity}</td>
-              <td className="p-3 whitespace-nowrap text-right">
-                {formatCurrencyAmount(Number(item.unitPrice), item.currency)}
-              </td>
-              <td className="p-3 whitespace-nowrap text-right">{`%${item.discountPct}`}</td>
-              <td className="p-3 whitespace-nowrap text-right">{`%${item.vatPct}`}</td>
-              <td className="p-3 whitespace-nowrap text-right">
-                {formatCurrencyAmount(lineTotal(item), item.currency)}
-              </td>
+      {quote.itemsEntryMode === 'MANUAL_TOTAL' ? (
+        <p className="mt-8 text-xs text-app-muted">{strings.manualTotalItemsNote}</p>
+      ) : (
+        <table className="mt-8 w-full table-fixed border-collapse text-xs">
+          <thead>
+            <tr className="bg-gray-900 text-white">
+              <th className="p-3 text-left">{strings.itemsProductColumn}</th>
+              <th className="w-16 p-3 whitespace-nowrap text-right">
+                {strings.itemsQuantityColumn}
+              </th>
+              <th className="w-24 p-3 whitespace-nowrap text-right">
+                {strings.itemsUnitPriceColumn}
+              </th>
+              <th className="w-16 p-3 whitespace-nowrap text-right">
+                {strings.itemsDiscountColumn}
+              </th>
+              <th className="w-14 p-3 whitespace-nowrap text-right">{strings.itemsVatColumn}</th>
+              <th className="w-24 p-3 whitespace-nowrap text-right">{strings.itemsTotalColumn}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {quote.items.map((item, index) => (
+              <tr key={item.id} className={index % 2 === 1 ? 'bg-gray-50' : undefined}>
+                <td className="p-3 break-words">{item.product.name}</td>
+                <td className="p-3 whitespace-nowrap text-right">{item.quantity}</td>
+                <td className="p-3 whitespace-nowrap text-right">
+                  {formatCurrencyAmount(Number(item.unitPrice), item.currency)}
+                </td>
+                <td className="p-3 whitespace-nowrap text-right">{`%${item.discountPct}`}</td>
+                <td className="p-3 whitespace-nowrap text-right">{`%${item.vatPct}`}</td>
+                <td className="p-3 whitespace-nowrap text-right">
+                  {formatCurrencyAmount(lineTotal(item), item.currency)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <div className="mt-4 flex flex-wrap justify-end gap-4 text-sm">
         {totals.map((t) => (
@@ -262,7 +267,13 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
               <span>{formatCurrencyAmount(t.subtotal, t.currency)}</span>
             </div>
             <div className="flex justify-between">
-              <span>{strings.vatLabel(String(quote.items[0]?.vatPct ?? '0'))}</span>
+              <span>
+                {strings.vatLabel(
+                  quote.itemsEntryMode === 'MANUAL_TOTAL'
+                    ? String(t.subtotal > 0 ? Math.round((t.vatTotal / t.subtotal) * 100) : 0)
+                    : String(quote.items[0]?.vatPct ?? '0'),
+                )}
+              </span>
               <span>{formatCurrencyAmount(t.vatTotal, t.currency)}</span>
             </div>
             <div

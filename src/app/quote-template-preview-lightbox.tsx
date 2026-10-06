@@ -187,6 +187,10 @@ function buildSampleQuote(
       city: strings.sampleAccountCity,
     },
     contact: { firstName: strings.sampleContactFirstName, lastName: strings.sampleContactLastName },
+    itemsEntryMode: 'ITEMIZED',
+    manualSubtotal: null,
+    manualVatAmount: null,
+    manualCurrency: null,
     items: [
       {
         id: 'preview-item-1',

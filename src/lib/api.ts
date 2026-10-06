@@ -1286,23 +1286,6 @@ export interface ImportResult {
   errors: ImportRowError[];
 }
 
-export function previewImport(file: File): Promise<ImportPreview> {
-  const formData = new FormData();
-  formData.append('file', file);
-  return request('/imports/preview', { method: 'POST', body: formData });
-}
-
-export function runImport(
-  entity: ImportEntity,
-  file: File,
-  mapping: Record<string, string>,
-): Promise<ImportResult> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('mapping', JSON.stringify(mapping));
-  return request(`/imports/${entity}`, { method: 'POST', body: formData });
-}
-
 export type ExportFormat = 'xlsx' | 'pdf';
 
 export function exportEntity(entity: ImportEntity, format: ExportFormat): Promise<Blob> {
@@ -1343,6 +1326,40 @@ export function runAccountImport(
   formData.append('mapping', JSON.stringify(mapping));
   formData.append('attributeColumns', JSON.stringify(attributeColumns));
   return request('/imports/accounts', { method: 'POST', body: formData });
+}
+
+// --- Kisi Ice Aktarma (marka/kaynak-bagimsiz, accounts ile ayni sihirbaz) ------
+
+export type ContactImportRawPreview = AccountImportRawPreview;
+
+export function previewContactImportRaw(file: File): Promise<ContactImportRawPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/imports/contacts/preview', { method: 'POST', body: formData });
+}
+
+export function previewContactImportMapped(
+  file: File,
+  headerRowIndex: number,
+): Promise<ImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  return request('/imports/contacts/preview', { method: 'POST', body: formData });
+}
+
+export function runContactImport(
+  file: File,
+  headerRowIndex: number,
+  mapping: Record<string, string>,
+  attributeColumns: string[],
+): Promise<ImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  formData.append('mapping', JSON.stringify(mapping));
+  formData.append('attributeColumns', JSON.stringify(attributeColumns));
+  return request('/imports/contacts', { method: 'POST', body: formData });
 }
 
 // --- Ürün İçe Aktarma (Faz B, marka bazlı heterojen liste import) ----------
@@ -1394,6 +1411,55 @@ export function runProductImport(
   formData.append('attributeColumns', JSON.stringify(attributeColumns));
   formData.append('numberFormat', numberFormat);
   return request(`/product-imports/${productListId}`, { method: 'POST', body: formData });
+}
+
+// --- Teklif İçe Aktarma (kalem detayı taşımayan, özet/toplam-tutar excel'leri) -----
+
+export interface QuoteImportRawPreview {
+  rows: string[][];
+}
+
+export interface QuoteImportPreview {
+  headers: string[];
+  sampleRows: Record<string, string>[];
+  totalRows: number;
+}
+
+export interface QuoteImportResult extends ImportResult {
+  created: number;
+  updated: number;
+}
+
+export function previewQuoteImportRaw(file: File): Promise<QuoteImportRawPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/quote-imports/preview', { method: 'POST', body: formData });
+}
+
+export function previewQuoteImportMapped(
+  file: File,
+  headerRowIndex: number,
+): Promise<QuoteImportPreview> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  return request('/quote-imports/preview', { method: 'POST', body: formData });
+}
+
+export function runQuoteImport(
+  file: File,
+  headerRowIndex: number,
+  mapping: Record<string, string>,
+  attributeColumns: string[],
+  numberFormat: NumberFormat,
+): Promise<QuoteImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('headerRowIndex', String(headerRowIndex));
+  formData.append('mapping', JSON.stringify(mapping));
+  formData.append('attributeColumns', JSON.stringify(attributeColumns));
+  formData.append('numberFormat', numberFormat);
+  return request('/quote-imports', { method: 'POST', body: formData });
 }
 
 // --- Görüşme İçe Aktarma (marka/kaynak-bağımsız, accounts/product-imports ile aynı sihirbaz) --
@@ -2495,7 +2561,20 @@ export function bulkDeleteProducts(productIds: string[]): Promise<{ deletedCount
   });
 }
 
-export type QuoteStatus = 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'REVIZE';
+export type QuoteStatus =
+  | 'DRAFT'
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'REVIZE'
+  /** Ad-hoc /teklifler Excel ice aktarma - import'tan gelen tekliflerin baslangic
+   * durumu (bkz. docs/VARSAYIMLAR.md). Normal /teklifler/yeni akisi hic uretmez. */
+  | 'UNSPECIFIED';
+
+/** Ad-hoc /teklifler Excel ice aktarma (bkz. docs/VARSAYIMLAR.md). ITEMIZED = normal
+ * /teklifler/yeni formuyla olusturulan tekliflerin tamami. MANUAL_TOTAL = sadece
+ * quote-imports modulunun yazdigi, kalem detayi tasimayan tekliflerde kullanilir. */
+export type QuoteItemsEntryMode = 'ITEMIZED' | 'MANUAL_TOTAL';
 
 export interface QuoteItem {
   id: string;
@@ -2569,6 +2648,14 @@ export interface Quote {
   senderId: string | null;
   createdById: string;
   createdByName: string | null;
+  itemsEntryMode: QuoteItemsEntryMode;
+  manualSubtotal: string | null;
+  manualVatAmount: string | null;
+  manualCurrency: string | null;
+  /** Ad-hoc /teklifler Excel ice aktarma - Product.attributes ile ayni "bilinen alana
+   * eslenmeyen ama kaybedilmek istenmeyen kolon" catch-all deseni. quote-imports
+   * disinda hic yazilmaz. */
+  attributes: Record<string, string> | null;
   items: QuoteItem[];
   opportunity: Opportunity | null;
   /** Ad-hoc revizyon takibi - sadece EN SON revizyonu tutar, PDF export'ta gosterilmez. */

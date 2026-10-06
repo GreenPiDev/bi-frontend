@@ -1,7 +1,8 @@
-import { Download, ListFilter, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, ListFilter, Mail, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
@@ -40,6 +41,7 @@ export function InteractionsListPage() {
     undefined,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [messageInteraction, setMessageInteraction] = useState<Interaction | undefined>(undefined);
   // AccountAutocomplete/ContactAutocomplete yazilan metni kendi ic state'inde tutar
   // (bkz. o bilesenlerdeki yorum) - disaridan sadece accountId/contactId'yi sifirlamak
   // gorunen metni temizlemez, bu yuzden Sifirla'da bu key degistirilip bilesenler
@@ -156,22 +158,30 @@ export function InteractionsListPage() {
       header: tr.crm.interactions.actionsColumn,
       className: 'w-px',
       required: true,
-      render: (i) =>
-        i.createdById === meQuery.data?.id ? (
-          <div className="flex items-center gap-1">
-            <IconActionButton
-              icon={Pencil}
-              tooltip={tr.crm.interactions.editTooltip}
-              onClick={() => navigate(`/gorusmeler/duzenle/${i.id}`)}
-            />
-            <IconActionButton
-              icon={Trash2}
-              tooltip={tr.crm.interactions.deleteTooltip}
-              variant="danger"
-              onClick={() => setDeletingInteraction(i)}
-            />
-          </div>
-        ) : null,
+      render: (i) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Mail}
+            tooltip={tr.crm.interactions.detail.createMessageTooltip}
+            onClick={() => setMessageInteraction(i)}
+          />
+          {i.createdById === meQuery.data?.id && (
+            <>
+              <IconActionButton
+                icon={Pencil}
+                tooltip={tr.crm.interactions.editTooltip}
+                onClick={() => navigate(`/gorusmeler/duzenle/${i.id}`)}
+              />
+              <IconActionButton
+                icon={Trash2}
+                tooltip={tr.crm.interactions.deleteTooltip}
+                variant="danger"
+                onClick={() => setDeletingInteraction(i)}
+              />
+            </>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -375,6 +385,15 @@ export function InteractionsListPage() {
           isPending={deleteMutation.isPending}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeletingInteraction(undefined)}
+        />
+      )}
+
+      {messageInteraction && (
+        <NewMessageModal
+          onClose={() => setMessageInteraction(undefined)}
+          defaultToUserIds={messageInteraction.createdById ? [messageInteraction.createdById] : []}
+          defaultRelatedEntity="INTERACTION"
+          defaultRelatedEntityId={messageInteraction.id}
         />
       )}
     </AppShell>

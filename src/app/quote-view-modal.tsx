@@ -10,6 +10,7 @@ const STATUS_BADGE_VARIANT: Record<
   QuoteStatus,
   'success' | 'warning' | 'danger' | 'neutral' | 'orange'
 > = {
+  UNSPECIFIED: 'neutral',
   DRAFT: 'neutral',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',

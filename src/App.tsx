@@ -7,8 +7,8 @@ import { AccountsListPage } from './app/accounts-list-page';
 import { CalendarPage } from './app/calendar-page';
 import { ContactDetailPage } from './app/contact-detail-page';
 import { ContactFormPage } from './app/contact-form-page';
+import { ContactImportPage } from './app/contact-import-page';
 import { ContactsListPage } from './app/contacts-list-page';
-import { CrmImportPage } from './app/crm-import-page';
 import { DashboardEditPage } from './app/dashboard-edit-page';
 import { DashboardViewPage } from './app/dashboard-view-page';
 import { DashboardsListPage } from './app/dashboards-list-page';
@@ -62,6 +62,7 @@ import { PurchaseOrderListPage } from './app/purchase-order-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteEditPage } from './app/quote-edit-page';
 import { QuoteFormPage } from './app/quote-form-page';
+import { QuoteImportPage } from './app/quote-import-page';
 import { QuoteTemplateFormPage } from './app/quote-template-form-page';
 import { QuoteTemplateListPage } from './app/quote-template-list-page';
 import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
@@ -324,7 +325,7 @@ function App() {
           path="/kisiler/ice-aktar"
           element={
             <TenantPageRoute pageKey="contacts">
-              <CrmImportPage entity="contacts" />
+              <ContactImportPage />
             </TenantPageRoute>
           }
         />
@@ -437,6 +438,14 @@ function App() {
           element={
             <TenantPageRoute pageKey="quotes">
               <QuoteFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teklifler/ice-aktar"
+          element={
+            <TenantPageRoute pageKey="quotes">
+              <QuoteImportPage />
             </TenantPageRoute>
           }
         />
