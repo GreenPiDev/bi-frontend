@@ -29,7 +29,7 @@ import {
   useInteractionTypeCounts,
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction, type InteractionType } from '../lib/api';
-import { downloadBlob } from '../lib/download';
+import { openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { tr } from '../i18n/tr';
 
 export function InteractionsListPage() {
@@ -209,11 +209,14 @@ export function InteractionsListPage() {
           <ExportMenuButton
             tooltip={tr.crm.interactions.exportButton}
             disabled={exportMutation.isPending}
-            onSelect={(format) =>
+            onSelect={(format) => {
+              const tabHandle = openExportPreviewTab(format);
               exportMutation.mutate(format, {
-                onSuccess: (blob) => downloadBlob(blob, `gorusmeler.${format}`),
-              })
-            }
+                onSuccess: (blob) =>
+                  resolveExportResult(format, tabHandle, blob, `gorusmeler.${format}`),
+                onError: () => tabHandle?.close(),
+              });
+            }}
           />
           <CircleIconButton
             icon={Download}

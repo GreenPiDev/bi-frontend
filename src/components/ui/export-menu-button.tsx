@@ -11,28 +11,49 @@ interface ExportMenuButtonProps {
   onSelect: (format: ExportFormat) => void;
 }
 
-/** Firmalar/Kisiler listelerinin "Disa Aktar" butonu - CircleIconButton'in ayni
- * gorunumu, ama tiklaninca bir modal degil, butonun hemen altinda PDF/Excel secimi
- * sunan kucuk bir dropdown panel acar (autocomplete.tsx'teki disari-tiklama-ile-kapat
- * desenin ayni kopyasi). */
+// animate-export-menu-out'un (index.css) suresiyle esit olmali.
+const EXIT_ANIMATION_MS = 140;
+
+/** Firmalar/Kisiler/Gorusmeler listelerinin "Disa Aktar" butonu - CircleIconButton'in
+ * ayni gorunumu, ama tiklaninca bir modal degil, butonun hemen altinda PDF/Excel
+ * secimi sunan kucuk bir dropdown panel acar (autocomplete.tsx'teki disari-tiklama-ile-
+ * kapat desenin ayni kopyasi). Acilis/kapanis, drawer.tsx'teki ertelemeli-unmount
+ * deseniyle animasyonlu: kapanista panel hemen kaldirilmaz, cikis animasyonu
+ * (EXIT_ANIMATION_MS) bitene kadar DOM'da kalir. */
 export function ExportMenuButton({ tooltip, disabled, onSelect }: ExportMenuButtonProps) {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const t = tr.common.exportFormatModal;
 
+  function requestClose() {
+    if (!isOpen) return;
+    setIsClosing(true);
+  }
+
+  useEffect(() => {
+    if (!isClosing) return;
+    const timeoutId = window.setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, EXIT_ANIMATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isClosing]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      if (!isOpen) return;
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false);
+        setIsClosing(true);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isOpen]);
 
   function handleSelect(format: ExportFormat) {
-    setOpen(false);
     onSelect(format);
+    requestClose();
   }
 
   return (
@@ -42,31 +63,34 @@ export function ExportMenuButton({ tooltip, disabled, onSelect }: ExportMenuButt
           type="button"
           aria-label={tooltip}
           disabled={disabled}
-          onClick={() => setOpen((v) => !v)}
-          className={clsx(
-            'relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60',
-          )}
+          onClick={() => (isOpen ? requestClose() : setIsOpen(true))}
+          className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload size={20} />
         </button>
       </Tooltip>
 
-      {open && (
-        <div className="absolute top-full right-0 z-20 mt-2 w-36 overflow-hidden rounded-lg border border-app-border bg-app-surface py-1 shadow-lg">
+      {isOpen && (
+        <div
+          className={clsx(
+            'absolute top-full right-0 z-20 mt-2 w-40 origin-top-right overflow-hidden rounded-lg border border-app-border bg-app-surface py-1 shadow-lg',
+            isClosing ? 'animate-export-menu-out' : 'animate-export-menu-in',
+          )}
+        >
           <button
             type="button"
             onClick={() => handleSelect('pdf')}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
           >
-            <FileText size={16} />
+            <FileText size={16} className="text-app-danger" />
             {t.pdf}
           </button>
           <button
             type="button"
             onClick={() => handleSelect('xlsx')}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
           >
-            <FileSpreadsheet size={16} />
+            <FileSpreadsheet size={16} className="text-app-success" />
             {t.excel}
           </button>
         </div>

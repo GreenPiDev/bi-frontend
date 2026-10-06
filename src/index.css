@@ -287,3 +287,44 @@ body {
     animation: none;
   }
 }
+
+/* ExportMenuButton (components/ui/export-menu-button.tsx): tetikleyicinin hemen
+   altinda, yukaridan hafifce kayarak/buyuyerek acilir; kapanista ayni yonde
+   kuculup solarak kaybolur - cikis suresi bilesendeki EXIT_ANIMATION_MS ile
+   esit olmali (drawer.tsx'teki ayni ertelemeli-unmount deseni). */
+@keyframes export-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes export-menu-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+}
+
+.animate-export-menu-in {
+  animation: export-menu-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-export-menu-out {
+  animation: export-menu-out 0.14s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-export-menu-in,
+  .animate-export-menu-out {
+    animation: none;
+  }
+}

@@ -32,7 +32,7 @@ import { useAccountsQuery, useDeleteAccountMutation } from '../features/crm/use-
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Account } from '../lib/api';
-import { downloadBlob } from '../lib/download';
+import { openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -256,11 +256,14 @@ export function AccountsListPage() {
           <ExportMenuButton
             tooltip={tr.crm.accounts.exportButton}
             disabled={exportMutation.isPending}
-            onSelect={(format) =>
+            onSelect={(format) => {
+              const tabHandle = openExportPreviewTab(format);
               exportMutation.mutate(format, {
-                onSuccess: (blob) => downloadBlob(blob, `firmalar.${format}`),
-              })
-            }
+                onSuccess: (blob) =>
+                  resolveExportResult(format, tabHandle, blob, `firmalar.${format}`),
+                onError: () => tabHandle?.close(),
+              });
+            }}
           />
           <CircleIconButton
             icon={Download}

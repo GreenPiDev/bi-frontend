@@ -26,7 +26,7 @@ import {
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Contact, type ContactStatus } from '../lib/api';
-import { downloadBlob } from '../lib/download';
+import { openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -241,11 +241,14 @@ export function ContactsListPage() {
           <ExportMenuButton
             tooltip={tr.crm.contacts.exportButton}
             disabled={exportMutation.isPending}
-            onSelect={(format) =>
+            onSelect={(format) => {
+              const tabHandle = openExportPreviewTab(format);
               exportMutation.mutate(format, {
-                onSuccess: (blob) => downloadBlob(blob, `kisiler.${format}`),
-              })
-            }
+                onSuccess: (blob) =>
+                  resolveExportResult(format, tabHandle, blob, `kisiler.${format}`),
+                onError: () => tabHandle?.close(),
+              });
+            }}
           />
           <CircleIconButton
             icon={Download}

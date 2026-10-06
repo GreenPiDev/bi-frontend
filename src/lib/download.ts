@@ -1,3 +1,5 @@
+import type { ExportFormat } from './api';
+
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -23,5 +25,26 @@ export function loadBlobIntoTabHandle(tabHandle: Window | null, blob: Blob): voi
     link.href = url;
     link.target = '_blank';
     link.click();
+  }
+}
+
+/** Firmalar/Kisiler/Gorusmeler "Disa Aktar" menusunun ortak davranisi -
+ * quote-detail-page.tsx'teki PDF onizleme deseniyle ayni: PDF secilince yeni bir
+ * sekme ACILIR (popup engelleyiciyi atlatmak icin tiklamayla SENKRON), Excel
+ * secilince hicbir sekme acilmaz, direkt indirilir. */
+export function openExportPreviewTab(format: ExportFormat): Window | null {
+  return format === 'pdf' ? openBlobInNewTabHandle() : null;
+}
+
+export function resolveExportResult(
+  format: ExportFormat,
+  tabHandle: Window | null,
+  blob: Blob,
+  fileName: string,
+): void {
+  if (format === 'pdf') {
+    loadBlobIntoTabHandle(tabHandle, blob);
+  } else {
+    downloadBlob(blob, fileName);
   }
 }
