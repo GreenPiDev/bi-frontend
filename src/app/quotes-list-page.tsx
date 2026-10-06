@@ -43,6 +43,7 @@ import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, exportQuotePdf, type Quote, type QuoteStatus } from '../lib/api';
 import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
 import {
+  QUOTE_STATUS_OPTIONS,
   convertTotalsToQuoteCurrency,
   formatCurrencyAmount,
   getQuoteCurrencyTotals,
@@ -50,9 +51,7 @@ import {
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
-const STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
-  ['UNSPECIFIED', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'REVIZE'] as const
-).map((status) => ({ value: status, label: tr.crm.quotes.statusOptions[status] }));
+const STATUS_OPTIONS = QUOTE_STATUS_OPTIONS;
 
 const STATUS_TEXT_CLASS: Record<QuoteStatus, string> = {
   UNSPECIFIED: 'text-app-muted',
@@ -141,7 +140,7 @@ function quoteGrandTotalDisplay(quote: Quote): string {
   return formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency);
 }
 
-export function QuotesListPage() {
+export function QuotesListContent() {
   const navigate = useNavigate();
   const toast = useToast();
   const meQuery = useMeQuery();
@@ -397,7 +396,7 @@ export function QuotesListPage() {
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
-    <AppShell>
+    <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -617,6 +616,14 @@ export function QuotesListPage() {
           defaultRelatedEntityId={messageQuote.id}
         />
       )}
+    </>
+  );
+}
+
+export function QuotesListPage() {
+  return (
+    <AppShell>
+      <QuotesListContent />
     </AppShell>
   );
 }

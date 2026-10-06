@@ -119,6 +119,8 @@ export const tr = {
       'Ürün listenizdeki her satırı açarak o ürünün fiyat değişim geçmişini görüntüleyin: kim, ne zaman, hangi fiyattan hangi fiyata değiştirdi.',
     inventory:
       'Ürün kataloğunuzu, ürün listelerinizi (kataloglarınızı) ve stok durumunuzu tek yerden yönetin.',
+    quoteManagement:
+      'Tekliflerinizi ve teklif PDF çıktısında kullanılan şablonları tek yerden yönetin.',
     drawingSettings:
       'Otomatik pano çizim motorunun kullandığı komponent kütüphanesini ve pano şablonlarını buradan yönetin.',
     profile:
@@ -175,7 +177,6 @@ export const tr = {
       interactions: 'Görüşmeler',
       opportunities: 'Fırsatlar',
       quotes: 'Teklifler',
-      quoteTemplates: 'Teklif Şablonları',
       postSaleSupport: 'Satış Sonrası Destek',
       projects: 'Projeler',
       purchaseOrders: 'Satın Alma Siparişleri',
@@ -233,6 +234,16 @@ export const tr = {
       warehouses: 'Depo',
       stockHistory: 'Stok Geçmişi',
       priceHistory: 'Fiyat Geçmişi',
+    },
+  },
+  quoteManagement: {
+    title: 'Teklif Yönetimi',
+    subtitle: 'Teklifler ve teklif şablonları tek ekranda.',
+    noAccess: 'Bu sayfadaki sekmelerden hiçbirine erişim yetkiniz yok.',
+    tabs: {
+      quotes: 'Teklifler',
+      reports: 'Raporlar',
+      templates: 'Teklif Şablonları',
     },
   },
   drawingSettings: {
@@ -2662,6 +2673,9 @@ export const tr = {
         revisionNoteHint: 'Zorunlu. Sadece kayıt için tutulur, PDF çıktısında görünmez.',
         revisionNoteRequired: 'Revizyon notu zorunludur.',
       },
+    },
+    quoteReports: {
+      totalLabel: 'Toplam Teklif',
     },
     postSaleCases: {
       title: 'Satış Sonrası Destek',

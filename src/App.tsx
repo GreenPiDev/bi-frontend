@@ -63,10 +63,10 @@ import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteEditPage } from './app/quote-edit-page';
 import { QuoteFormPage } from './app/quote-form-page';
 import { QuoteImportPage } from './app/quote-import-page';
+import { QuoteManagementPage } from './app/quote-management-page';
 import { QuoteTemplateFormPage } from './app/quote-template-form-page';
 import { QuoteTemplateListPage } from './app/quote-template-list-page';
 import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
-import { QuotesListPage } from './app/quotes-list-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
 import { UserStatsPage } from './app/user-stats-page';
@@ -113,6 +113,7 @@ const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
   { pageKey: 'interactions', path: '/gorusmeler' },
   { pageKey: 'opportunities', path: '/firsatlar' },
   { pageKey: 'quotes', path: '/teklifler' },
+  { pageKey: 'quote-templates', path: '/teklifler' },
   { pageKey: 'post-sale-cases', path: '/satis-sonrasi' },
   { pageKey: 'projects', path: '/projeler' },
   { pageKey: 'purchase-orders', path: '/siparisler' },
@@ -429,7 +430,7 @@ function App() {
           path="/teklifler"
           element={
             <TenantPageRoute pageKey="quotes">
-              <QuotesListPage />
+              <QuoteManagementPage />
             </TenantPageRoute>
           }
         />
