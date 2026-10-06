@@ -206,11 +206,6 @@ export function InteractionsListPage() {
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
             )}
           </CircleIconButton>
-          <CircleIconButton
-            icon={Download}
-            tooltip={tr.crm.interactions.importButton}
-            onClick={() => navigate('/gorusmeler/ice-aktar')}
-          />
           <ExportMenuButton
             tooltip={tr.crm.interactions.exportButton}
             disabled={exportMutation.isPending}
@@ -219,6 +214,11 @@ export function InteractionsListPage() {
                 onSuccess: (blob) => downloadBlob(blob, `gorusmeler.${format}`),
               })
             }
+          />
+          <CircleIconButton
+            icon={Download}
+            tooltip={tr.crm.interactions.importButton}
+            onClick={() => navigate('/gorusmeler/ice-aktar')}
           />
           <CircleIconButton
             icon={Plus}
