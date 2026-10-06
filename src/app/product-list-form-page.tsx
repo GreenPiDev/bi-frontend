@@ -1,13 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
-import { Switch } from '../components/ui/switch';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
@@ -92,7 +91,6 @@ export function ProductListFormPage() {
 
   const {
     register,
-    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -102,10 +100,7 @@ export function ProductListFormPage() {
 
   useEffect(() => {
     if (productListQuery.data) {
-      reset({
-        name: productListQuery.data.name,
-        isDefault: productListQuery.data.isDefault,
-      });
+      reset({ name: productListQuery.data.name });
     }
   }, [productListQuery.data, reset]);
 
@@ -118,7 +113,7 @@ export function ProductListFormPage() {
   }
 
   const onSubmit = handleSubmit((values) => {
-    const input: ProductListInput = { name: values.name, isDefault: values.isDefault };
+    const input: ProductListInput = { name: values.name };
     mutation.mutate(input, {
       onSuccess: () => {
         toast.success(
@@ -151,18 +146,6 @@ export function ProductListFormPage() {
               label={tr.crm.productLists.form.nameLabel}
               error={errors.name?.message}
               {...register('name')}
-            />
-            <Controller
-              name="isDefault"
-              control={control}
-              render={({ field }) => (
-                <div className="flex items-center gap-2">
-                  <Switch checked={field.value ?? false} onChange={field.onChange} />
-                  <span className="text-sm font-semibold text-app-text">
-                    {tr.crm.productLists.form.isDefaultLabel}
-                  </span>
-                </div>
-              )}
             />
           </div>
 

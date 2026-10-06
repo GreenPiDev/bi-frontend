@@ -94,7 +94,7 @@ describe('DatasetsListPage', () => {
     expect(await screen.findByText('Veri kümesi silindi.')).toBeInTheDocument();
   });
 
-  it('sistem tarafindan yonetilen (CRM) veri kumesinde sil butonu devre disi', async () => {
+  it('CRM rapor veri kumesinde sil butonu diger veri kumeleri gibi aktif', async () => {
     vi.spyOn(api, 'listDatasets').mockResolvedValue([
       {
         id: 'ds-crm',
@@ -109,6 +109,6 @@ describe('DatasetsListPage', () => {
 
     expect(await screen.findByText('Teklif Kalemleri')).toBeInTheDocument();
     const deleteButton = container.querySelector('table tbody button');
-    expect(deleteButton).toBeDisabled();
+    expect(deleteButton).not.toBeDisabled();
   });
 });

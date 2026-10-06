@@ -77,6 +77,11 @@ export function AccountsListPage() {
     toast.success(tr.crm.accounts.emailCopiedToast);
   }
 
+  async function handleCopyName(name: string) {
+    await navigator.clipboard.writeText(name);
+    toast.success(tr.crm.accounts.nameCopiedToast);
+  }
+
   function handleConfirmDelete() {
     if (!deletingAccount) return;
     deleteMutation.mutate(deletingAccount.id, {
@@ -127,6 +132,12 @@ export function AccountsListPage() {
             </Tooltip>
           )}
           {a.name}
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.crm.accounts.copyNameButton}
+            iconSize={14}
+            onClick={() => void handleCopyName(a.name)}
+          />
         </span>
       ),
     },
@@ -176,6 +187,18 @@ export function AccountsListPage() {
         a.accountTypes.length > 0
           ? a.accountTypes.map((type) => tr.crm.accounts.accountTypeOptions[type]).join(', ')
           : '—',
+    },
+    {
+      key: 'interactionCount',
+      header: tr.crm.accounts.interactionCountColumn,
+      className: 'text-app-muted text-right',
+      render: (a) => a.interactionCount,
+    },
+    {
+      key: 'quoteCount',
+      header: tr.crm.accounts.quoteCountColumn,
+      className: 'text-app-muted text-right',
+      render: (a) => a.quoteCount,
     },
     ...attributeColumns,
     {

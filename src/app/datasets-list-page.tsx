@@ -67,12 +67,7 @@ export function DatasetsListPage() {
           <IconActionButton
             icon={Trash2}
             variant="danger"
-            tooltip={
-              dataset.sourceKind === 'CRM_TABLE'
-                ? tr.datasets.deleteReadonlyTooltip
-                : tr.datasets.deleteTooltip
-            }
-            disabled={dataset.sourceKind === 'CRM_TABLE'}
+            tooltip={tr.datasets.deleteTooltip}
             onClick={() => setDeletingDataset(dataset)}
             className="disabled:hover:bg-transparent disabled:hover:text-app-muted"
           />

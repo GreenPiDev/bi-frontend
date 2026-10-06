@@ -824,6 +824,8 @@ export interface Account {
   missingCriticalFields: string[];
   customFields: Record<string, string> | null;
   createdByName: string | null;
+  interactionCount: number;
+  quoteCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -1902,6 +1904,7 @@ export function listInteractions(
   params: {
     page?: number;
     pageSize?: number;
+    q?: string;
     accountId?: string;
     contactId?: string;
     createdById?: string;
@@ -1915,6 +1918,7 @@ export function listInteractions(
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.contactId) query.set('contactId', params.contactId);
   if (params.createdById) query.set('createdById', params.createdById);
@@ -2359,14 +2363,12 @@ export function commitDrawingImport(input: DrawingImportCommitInput): Promise<Dr
 export interface ProductList {
   id: string;
   name: string;
-  isDefault: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ProductListInput {
   name: string;
-  isDefault?: boolean;
 }
 
 export function listProductLists(

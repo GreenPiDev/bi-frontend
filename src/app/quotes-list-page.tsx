@@ -210,6 +210,11 @@ export function QuotesListPage() {
     toast.success(tr.crm.quotes.quoteNumberCopiedToast);
   }
 
+  async function handleCopyAccountName(accountName: string) {
+    await navigator.clipboard.writeText(accountName);
+    toast.success(tr.crm.quotes.accountNameCopiedToast);
+  }
+
   function resetFilters() {
     setPage(1);
     setStatus('');
@@ -278,7 +283,17 @@ export function QuotesListPage() {
     {
       key: 'account',
       header: tr.crm.quotes.accountColumn,
-      render: (q) => q.account.name,
+      render: (q) => (
+        <div className="flex items-center gap-1">
+          <span>{q.account.name}</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.crm.quotes.copyAccountNameButton}
+            iconSize={14}
+            onClick={() => void handleCopyAccountName(q.account.name)}
+          />
+        </div>
+      ),
     },
     {
       key: 'quoteDate',

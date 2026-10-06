@@ -2,7 +2,6 @@ import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { IconActionButton } from '../components/ui/icon-action-button';
@@ -10,6 +9,7 @@ import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
+import { NewProductListModal } from '../features/crm/new-product-list-modal';
 import {
   useDeleteProductListMutation,
   useProductListsQuery,
@@ -23,6 +23,7 @@ export function ProductListsListContent() {
   const backState = { from: `${location.pathname}${location.search}` };
   const toast = useToast();
   const [page, setPage] = useState(1);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deletingProductList, setDeletingProductList] = useState<ProductList | undefined>(
     undefined,
   );
@@ -49,12 +50,7 @@ export function ProductListsListContent() {
       key: 'name',
       header: tr.crm.productLists.nameColumn,
       required: true,
-      render: (pl) => (
-        <span className="flex items-center gap-2 font-semibold text-app-text">
-          {pl.name}
-          {pl.isDefault && <Badge variant="info">{tr.crm.productLists.defaultBadge}</Badge>}
-        </span>
-      ),
+      render: (pl) => <span className="font-semibold text-app-text">{pl.name}</span>,
     },
     {
       key: 'actions',
@@ -82,10 +78,7 @@ export function ProductListsListContent() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.crm.productLists.subtitle}</p>
         </div>
-        <Button
-          type="button"
-          onClick={() => navigate('/urun-listeleri/yeni', { state: backState })}
-        >
+        <Button type="button" onClick={() => setIsCreateModalOpen(true)}>
           {tr.crm.productLists.newButton}
         </Button>
       </div>
@@ -122,6 +115,13 @@ export function ProductListsListContent() {
           isPending={deleteMutation.isPending}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeletingProductList(undefined)}
+        />
+      )}
+
+      {isCreateModalOpen && (
+        <NewProductListModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreated={() => setIsCreateModalOpen(false)}
         />
       )}
     </>

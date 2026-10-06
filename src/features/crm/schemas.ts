@@ -240,7 +240,6 @@ export type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export const productListFormSchema = z.object({
   name: z.string().min(2, 'Ürün listesi adı en az 2 karakter olmalı.').max(200),
-  isDefault: z.boolean().optional(),
 });
 
 export type ProductListFormValues = z.infer<typeof productListFormSchema>;

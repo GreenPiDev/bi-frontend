@@ -1,4 +1,4 @@
-import { Download, ListFilter, Mail, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, ListFilter, Mail, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -31,12 +31,15 @@ import {
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction, type InteractionType } from '../lib/api';
 import { openExportPreviewTab, resolveExportResult } from '../lib/download';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 export function InteractionsListPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [deletingInteraction, setDeletingInteraction] = useState<Interaction | undefined>(
     undefined,
   );
@@ -74,6 +77,7 @@ export function InteractionsListPage() {
   const interactionsQuery = useInteractionsQuery({
     page,
     pageSize,
+    q: q || undefined,
     accountId: accountId || undefined,
     contactId: contactId || undefined,
     createdById: createdById || undefined,
@@ -243,7 +247,24 @@ export function InteractionsListPage() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.interactions.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <FilterButtonGroup
           label={tr.crm.interactions.typeFilterLabel}
           value={type}

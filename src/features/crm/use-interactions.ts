@@ -20,6 +20,7 @@ export function useInteractionsQuery(
   params: {
     page?: number;
     pageSize?: number;
+    q?: string;
     accountId?: string;
     contactId?: string;
     createdById?: string;
