@@ -1,18 +1,10 @@
+import { ChartCard } from '../components/ui/chart-card';
 import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
 import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
 import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
 import type { Quote } from '../lib/api';
 import { computeQuoteCostBreakdown, formatCurrencyAmountPrecise } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
-
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="border border-app-border bg-app-surface p-5">
-      <h2 className="mb-4 text-[11px] font-bold tracking-wide text-app-muted uppercase">{title}</h2>
-      <div className="h-80">{children}</div>
-    </div>
-  );
-}
 
 export function QuoteChartsContent({ quote }: { quote: Quote }) {
   const breakdown = computeQuoteCostBreakdown(quote);

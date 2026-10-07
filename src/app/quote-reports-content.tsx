@@ -1,5 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { ChartCard } from '../components/ui/chart-card';
 import { useQuoteStatusCounts } from '../features/crm/use-quotes';
+import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
+import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
+import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
 import { tr } from '../i18n/tr';
 import type { QuoteStatus } from '../lib/api';
 import { QUOTE_STATUS_OPTIONS } from '../lib/quote-totals';
@@ -32,6 +36,7 @@ function KpiCard({
 export function QuoteReportsContent() {
   const navigate = useNavigate();
   const statusCounts = useQuoteStatusCounts(QUOTE_STATUS_OPTIONS.map((option) => option.value));
+  const theme = getChartTheme();
 
   function goToQuotes(status?: QuoteStatus) {
     const params = new URLSearchParams({ tab: 'quotes' });
@@ -39,21 +44,49 @@ export function QuoteReportsContent() {
     navigate(`/teklifler?${params.toString()}`);
   }
 
+  const statusDistributionPoints = QUOTE_STATUS_OPTIONS.map((option) => ({
+    status: option.value,
+    name: option.label,
+    value: statusCounts.counts[option.value] ?? 0,
+  })).filter((point) => point.value > 0);
+  const hasQuotes = statusDistributionPoints.length > 0;
+  const statusDistributionOption = buildPieOptionFromPoints(
+    theme,
+    statusDistributionPoints,
+    (value) => numberFormatter.format(value),
+  );
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <KpiCard
-        label={tr.crm.quoteReports.totalLabel}
-        value={statusCounts.all}
-        onClick={() => goToQuotes()}
-      />
-      {QUOTE_STATUS_OPTIONS.map((option) => (
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          key={option.value}
-          label={option.label}
-          value={statusCounts.counts[option.value]}
-          onClick={() => goToQuotes(option.value)}
+          label={tr.crm.quoteReports.totalLabel}
+          value={statusCounts.all}
+          onClick={() => goToQuotes()}
         />
-      ))}
+        {QUOTE_STATUS_OPTIONS.map((option) => (
+          <KpiCard
+            key={option.value}
+            label={option.label}
+            value={statusCounts.counts[option.value]}
+            onClick={() => goToQuotes(option.value)}
+          />
+        ))}
+      </div>
+
+      <ChartCard title={tr.crm.quoteReports.statusDistributionTitle}>
+        {hasQuotes ? (
+          <ChartWithExport
+            option={statusDistributionOption}
+            fileName={tr.crm.quoteReports.statusDistributionTitle}
+            onEvents={{
+              click: (params) => goToQuotes(statusDistributionPoints[params.dataIndex]?.status),
+            }}
+          />
+        ) : (
+          <p className="text-sm text-app-muted">{tr.crm.quotes.costTab.empty}</p>
+        )}
+      </ChartCard>
     </div>
   );
 }

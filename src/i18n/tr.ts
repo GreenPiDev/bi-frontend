@@ -2552,7 +2552,7 @@ export const tr = {
       },
       tabs: {
         overview: 'Genel Bakış',
-        cost: 'Maliyet',
+        cost: 'Finansal Özet',
         charts: 'Grafikler',
       },
       chartsTab: {
@@ -2561,7 +2561,7 @@ export const tr = {
         exportPdfButton: 'Grafikleri PDF Olarak İndir',
       },
       costTab: {
-        exportPdfButton: 'Maliyet Tablosunu PDF Olarak İndir',
+        exportPdfButton: 'Finansal Özeti PDF Olarak İndir',
         grandTotalLabel: 'Genel Toplam',
         grandTotalTooltip:
           'KDV dahil, iskonto uygulandıktan sonraki tutarların toplamıdır: Σ [(miktar × birim fiyat × (1 − iskonto%)) × (1 + KDV%)].',
@@ -2744,6 +2744,7 @@ export const tr = {
     },
     quoteReports: {
       totalLabel: 'Toplam Teklif',
+      statusDistributionTitle: 'Durum Dağılımı',
     },
     postSaleCases: {
       title: 'Satış Sonrası Destek',
