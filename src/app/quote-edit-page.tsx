@@ -11,6 +11,7 @@ import { Select } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { NewProductModal } from '../features/crm/new-product-modal';
 import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
@@ -168,6 +169,28 @@ export function QuoteEditPage() {
   const [addUnitPrice, setAddUnitPrice] = useState('');
   const [addDiscountPct, setAddDiscountPct] = useState('0');
   const [addVatPct, setAddVatPct] = useState(defaultVatPct);
+
+  // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçili
+  // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
+  // varsayılan miktar/fiyatla doğrudan satır olarak eklenir - quote-form-page.tsx'teki
+  // handleProductCreated ile aynı desen.
+  const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+
+  function handleProductCreated(product: Product) {
+    setItems((prev) => [
+      ...(prev ?? []),
+      {
+        productId: product.id,
+        productName: product.name,
+        quantity: '1',
+        unitPrice: product.price ?? '',
+        currency: product.currency,
+        discountPct: '0',
+        vatPct: defaultVatPct,
+      },
+    ]);
+    setIsNewProductModalOpen(false);
+  }
 
   function handleToggleAdd(product: Product) {
     if (addingProductId === product.id) {
@@ -642,6 +665,16 @@ export function QuoteEditPage() {
                     setAddingProductId(null);
                     setEditingIndex(null);
                   }}
+                  trailingAction={
+                    <Button
+                      type="button"
+                      variant="navy"
+                      className="shrink-0"
+                      onClick={() => setIsNewProductModalOpen(true)}
+                    >
+                      {tr.crm.quotes.form.newProductButton}
+                    </Button>
+                  }
                 />
               </div>
 
@@ -822,6 +855,14 @@ export function QuoteEditPage() {
           </div>
         </div>
       </div>
+
+      {isNewProductModalOpen && (
+        <NewProductModal
+          defaultProductListId={productListId}
+          onClose={() => setIsNewProductModalOpen(false)}
+          onCreated={handleProductCreated}
+        />
+      )}
     </AppShell>
   );
 }

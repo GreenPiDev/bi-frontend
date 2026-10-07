@@ -68,7 +68,7 @@ export function HorizontalTabPanel({ tabs, queryParam, defaultTabKey }: Horizont
               onClick={() => setActiveKey(tab.key)}
               onKeyDown={(event) => handleKeyDown(event, index)}
               className={clsx(
-                'border-b-2 px-4 py-2 text-sm font-semibold transition-colors',
+                'cursor-pointer border-b-2 px-4 py-2 text-sm font-semibold transition-colors',
                 selected
                   ? 'border-app-brand text-app-brand'
                   : 'border-transparent text-app-muted hover:text-app-text',

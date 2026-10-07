@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useProductListsQuery } from './use-product-lists';
@@ -7,6 +8,11 @@ interface ProductListSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 ürün listesi tanımlıysa, select'in yanında ayrı sekmeye
+   * gitmeden tek bir yeni liste eklemeye yarayan "+ Yeni Liste" butonu gösterilir -
+   * `UnitSelect`/`BrandSelect`'teki `onRequestAddNew` ile aynı desen. Modal'ın kendisi bu
+   * bileşenin dışında (sayfa seviyesinde, dış `<form>`'un dışında) render edilmelidir. */
+  onRequestAddNew?: () => void;
 }
 
 /** Marka/Kategori/Birim seçicileriyle (`BrandSelect`/`CategorySelect`/`UnitSelect`) aynı
@@ -14,7 +20,12 @@ interface ProductListSelectProps {
  * `/urun-listeleri/yeni`'ye yönlendiren bir mesaj/link gösterilir. O sekmede liste
  * oluşturulunca `useProductListsRealtimeSync` bu sorguyu invalidate eder ve bu sekmedeki
  * dropdown sayfa yenilenmeden otomatik güncellenir. Birim gibi zorunlu bir alan. */
-export function ProductListSelect({ value, onChange, error }: ProductListSelectProps) {
+export function ProductListSelect({
+  value,
+  onChange,
+  error,
+  onRequestAddNew,
+}: ProductListSelectProps) {
   const productListsQuery = useProductListsQuery();
   const options = productListsQuery.data?.data ?? [];
 
@@ -54,6 +65,13 @@ export function ProductListSelect({ value, onChange, error }: ProductListSelectP
         value: productList.id,
         label: productList.name,
       }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.products.form.productListNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

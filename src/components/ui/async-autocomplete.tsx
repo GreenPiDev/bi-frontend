@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { ClearFieldButton } from './clear-field-button';
+import { tr } from '../../i18n/tr';
 
 export interface AsyncAutocompleteOption {
   id: string;
@@ -180,7 +181,6 @@ export function AsyncAutocomplete({
             className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-muted"
           />
           {open &&
-            options.length > 0 &&
             menuRect &&
             createPortal(
               <div
@@ -193,20 +193,28 @@ export function AsyncAutocomplete({
                 }}
                 className="z-[9999] mt-1 max-h-56 overflow-auto rounded-lg border border-app-border bg-app-surface p-1 shadow-lg"
               >
-                {options.map((option, index) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => selectOption(option)}
-                    className={clsx(
-                      'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
-                      index === highlighted && 'bg-app-bg',
-                    )}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                {options.length > 0 ? (
+                  options.map((option, index) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => selectOption(option)}
+                      className={clsx(
+                        'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
+                        index === highlighted && 'bg-app-bg',
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-2.5 py-2 text-sm text-app-muted">
+                    {value.trim()
+                      ? tr.common.asyncAutocompleteNoResults
+                      : tr.common.asyncAutocompleteTypeToSearch}
+                  </p>
+                )}
               </div>,
               document.body,
             )}

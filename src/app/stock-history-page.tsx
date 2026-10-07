@@ -6,36 +6,22 @@ import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { Drawer } from '../components/ui/drawer';
 import { Modal } from '../components/ui/modal';
+import { MultiSelect } from '../components/ui/multi-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
 import { Table, type TableColumn } from '../components/ui/table';
+import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
 import { ProductAutocomplete } from '../features/crm/product-autocomplete';
 import { useUsersQuery } from '../features/roles/use-users';
 import { useWarehousesQuery } from '../features/crm/use-warehouses';
 import { useStockHistoryQuery } from '../features/crm/use-stock-items';
-import type { StockMovement } from '../lib/api';
+import type { StockMovement, StockMovementType } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
   dateStyle: 'short',
   timeStyle: 'short',
 });
-
-const NOTE_TRUNCATE_LENGTH = 40;
-
-function NoteCell({ row, onOpen }: { row: StockMovement; onOpen: (row: StockMovement) => void }) {
-  if (!row.note) return <>—</>;
-  if (row.note.length <= NOTE_TRUNCATE_LENGTH) return <>{row.note}</>;
-  return (
-    <button
-      type="button"
-      className="cursor-pointer text-left text-app-text hover:text-blue-600"
-      onClick={() => onOpen(row)}
-    >
-      {`${row.note.slice(0, NOTE_TRUNCATE_LENGTH)}...`}
-    </button>
-  );
-}
 
 function DeltaBadge({ delta }: { delta: number }) {
   if (delta > 0) {
@@ -52,6 +38,7 @@ export function StockHistoryContent() {
   const [productId, setProductId] = useState<string | undefined>(undefined);
   const [warehouseId, setWarehouseId] = useState('');
   const [userId, setUserId] = useState('');
+  const [types, setTypes] = useState<StockMovementType[]>([]);
   const [noteModalRow, setNoteModalRow] = useState<StockMovement | null>(null);
   const usersQuery = useUsersQuery();
   const warehousesQuery = useWarehousesQuery({ pageSize: 100 });
@@ -59,13 +46,16 @@ export function StockHistoryContent() {
     productId: productId || undefined,
     warehouseId: warehouseId || undefined,
     userId: userId || undefined,
+    types: types.length ? types : undefined,
   });
-  const hasActiveFilter = Boolean(productId) || Boolean(warehouseId) || Boolean(userId);
+  const hasActiveFilter =
+    Boolean(productId) || Boolean(warehouseId) || Boolean(userId) || types.length > 0;
 
   function resetFilters() {
     setProductId(undefined);
     setWarehouseId('');
     setUserId('');
+    setTypes([]);
   }
 
   const columns: TableColumn<StockMovement>[] = [
@@ -109,7 +99,7 @@ export function StockHistoryContent() {
       key: 'note',
       header: tr.crm.stock.history.noteColumn,
       className: 'max-w-xs text-app-muted',
-      render: (row) => <NoteCell row={row} onOpen={setNoteModalRow} />,
+      render: (row) => <TruncatedTextCell text={row.note} onOpen={() => setNoteModalRow(row)} />,
     },
     {
       key: 'previousQuantity',
@@ -118,18 +108,18 @@ export function StockHistoryContent() {
       render: (row) => row.previousQuantity,
     },
     {
-      key: 'delta',
-      header: tr.crm.stock.history.deltaColumn,
-      className: 'whitespace-nowrap',
-      required: true,
-      render: (row) => <DeltaBadge delta={row.delta} />,
-    },
-    {
       key: 'quantity',
       header: tr.crm.stock.history.quantityColumn,
       className: 'whitespace-nowrap font-semibold text-app-text',
       required: true,
       render: (row) => row.newQuantity,
+    },
+    {
+      key: 'delta',
+      header: tr.crm.stock.history.deltaColumn,
+      className: 'whitespace-nowrap',
+      required: true,
+      render: (row) => <DeltaBadge delta={row.delta} />,
     },
     {
       key: 'unitCost',
@@ -218,6 +208,15 @@ export function StockHistoryContent() {
               options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
               clearable
               onClear={() => setUserId('')}
+            />
+            <MultiSelect
+              label={tr.crm.stock.history.filterDrawer.typeLabel}
+              placeholder={tr.crm.stock.history.filterDrawer.typePlaceholder}
+              value={types}
+              onChange={(value) => setTypes(value as StockMovementType[])}
+              options={(
+                Object.entries(tr.crm.stock.history.typeLabels) as [StockMovementType, string][]
+              ).map(([value, label]) => ({ value, label }))}
             />
             <Button type="button" variant="secondary" onClick={resetFilters}>
               {tr.crm.stock.history.filterDrawer.reset}

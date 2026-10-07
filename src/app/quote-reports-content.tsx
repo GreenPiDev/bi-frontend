@@ -23,9 +23,9 @@ function KpiCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex cursor-pointer flex-col gap-1 border border-app-border bg-app-surface p-6 text-left transition-colors hover:border-app-brand hover:bg-app-bg-muted"
+      className="flex cursor-pointer flex-col items-center gap-1 border border-app-border bg-app-surface p-4 text-center transition-colors hover:border-app-brand hover:bg-app-bg-muted"
     >
-      <span className="text-3xl font-bold text-app-text">
+      <span className="text-2xl font-bold text-app-text">
         {value === undefined ? '—' : numberFormatter.format(value)}
       </span>
       <span className="text-sm font-medium text-app-muted">{label}</span>
@@ -58,7 +58,7 @@ export function QuoteReportsContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
         <KpiCard
           label={tr.crm.quoteReports.totalLabel}
           value={statusCounts.all}

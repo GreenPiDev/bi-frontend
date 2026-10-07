@@ -6,6 +6,8 @@ import {
   getQuote,
   getQuoteFxRates,
   getQuoteRevisionSummary,
+  getQuoteStatusHistory,
+  getQuoteStockCheck,
   listQuoteAssignableUsers,
   listQuotes,
   rejectQuote,
@@ -76,6 +78,24 @@ export function useQuoteQuery(id: string) {
   return useQuery({
     queryKey: ['quotes', id],
     queryFn: () => getQuote(id),
+    enabled: Boolean(id),
+  });
+}
+
+/** /teklifler/:id "Durum" sekmesi + Genel Bakis'taki Revizyon Bilgisi karti. */
+export function useQuoteStatusHistoryQuery(id: string, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['quotes', id, 'status-history'],
+    queryFn: () => getQuoteStatusHistory(id),
+    enabled: Boolean(id) && (options?.enabled ?? true),
+  });
+}
+
+/** /teklifler/:id "Stok Kontrolu" sekmesi. */
+export function useQuoteStockCheckQuery(id: string) {
+  return useQuery({
+    queryKey: ['quotes', id, 'stock-check'],
+    queryFn: () => getQuoteStockCheck(id),
     enabled: Boolean(id),
   });
 }

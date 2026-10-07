@@ -2591,6 +2591,11 @@ export interface QuoteItem {
   discountPct: string;
   discountNote: string | null;
   vatPct: string;
+  /** Maliyet sekmesi icin donmus (snapshot) WAC maliyeti - satir olusturulurken/
+   * guncellenirken Product.avgCost'tan kopyalanir, urunun guncel avgCost'u sonradan
+   * degisse bile bu teklifteki kar/maliyet hesabini degistirmez. Eski (migration
+   * oncesi) kayitlarda en yakin tahmin olarak backfill edilmistir. */
+  costPriceAtSale: string | null;
 }
 
 /** quoteCurrency disindaki her item para biriminin quoteCurrency'ye cevrim kuru
@@ -3049,6 +3054,42 @@ export function getQuotePrintData(quoteId: string): Promise<QuotePrintData> {
   return request(`/quotes/${quoteId}/print-data`);
 }
 
+/** /teklifler/:id "Durum" sekmesi icin tek bir gecmis satiri (bkz. backend
+ * QuoteStatusHistory doc comment'i). */
+export interface QuoteStatusHistoryEntry {
+  id: string;
+  status: QuoteStatus;
+  note: string | null;
+  createdAt: string;
+  createdByName: string | null;
+}
+
+export function getQuoteStatusHistory(quoteId: string): Promise<QuoteStatusHistoryEntry[]> {
+  return request(`/quotes/${quoteId}/status-history`);
+}
+
+/** /teklifler/:id "Stok Kontrolu" sekmesi - teklifteki her urun satiri + tenant'in
+ * tum depolarindaki mevcut miktari (bkz. backend QuotesService.getStockCheck doc
+ * comment'i). */
+export interface QuoteStockCheckRow {
+  productId: string;
+  productName: string;
+  productSku: string | null;
+  unit: string;
+  quoteQuantity: number;
+  stockByWarehouseId: Record<string, number>;
+  totalStock: number;
+}
+
+export interface QuoteStockCheckResult {
+  warehouses: { id: string; name: string }[];
+  items: QuoteStockCheckRow[];
+}
+
+export function getQuoteStockCheck(quoteId: string): Promise<QuoteStockCheckResult> {
+  return request(`/quotes/${quoteId}/stock-check`);
+}
+
 export type PostSaleCaseStatus = 'BEKLEMEDE' | 'HATIRLATILDI' | 'GERI_BILDIRIM_ALINDI';
 
 export interface FeedbackSurvey {
@@ -3364,12 +3405,18 @@ export interface StockMovement {
 }
 
 export function listStockHistory(
-  params: { productId?: string; warehouseId?: string; userId?: string } = {},
+  params: {
+    productId?: string;
+    warehouseId?: string;
+    userId?: string;
+    types?: StockMovementType[];
+  } = {},
 ): Promise<StockMovement[]> {
   const query = new URLSearchParams();
   if (params.productId) query.set('productId', params.productId);
   if (params.warehouseId) query.set('warehouseId', params.warehouseId);
   if (params.userId) query.set('userId', params.userId);
+  if (params.types?.length) query.set('types', params.types.join(','));
   const qs = query.toString();
   return request(`/stock-items/history${qs ? `?${qs}` : ''}`);
 }

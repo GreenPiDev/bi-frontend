@@ -6,6 +6,7 @@ import { FormError } from '../../components/ui/form-error';
 import { Modal } from '../../components/ui/modal';
 import { useToast } from '../../components/ui/toast-context';
 import { AddOptionModal } from './add-option-modal';
+import { AddProductListModal } from './add-product-list-modal';
 import { ProductFormFields } from './product-form-fields';
 import { cleanEmptyStrings, productFormSchema, type ProductFormValues } from './schemas';
 import { useCreateBrandOptionMutation } from './use-brand-options';
@@ -15,7 +16,7 @@ import { useCreateUnitOptionMutation } from './use-unit-options';
 import { ApiError, type Product, type ProductInput } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 
-type OptionFieldKind = 'unit' | 'category' | 'brand';
+type OptionFieldKind = 'unit' | 'category' | 'brand' | 'productList';
 
 interface NewProductModalProps {
   defaultProductListId?: string;
@@ -97,6 +98,7 @@ export function NewProductModal({
             onRequestAddUnit={() => setActiveOptionModal('unit')}
             onRequestAddCategory={() => setActiveOptionModal('category')}
             onRequestAddBrand={() => setActiveOptionModal('brand')}
+            onRequestAddProductList={() => setActiveOptionModal('productList')}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={createMutation.isPending}>
@@ -149,6 +151,15 @@ export function NewProductModal({
           onClose={() => setActiveOptionModal(null)}
           onCreated={(label) => {
             setValue('brand', label, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
+      {activeOptionModal === 'productList' && (
+        <AddProductListModal
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(productList) => {
+            setValue('productListId', productList.id, { shouldValidate: true });
             setActiveOptionModal(null);
           }}
         />

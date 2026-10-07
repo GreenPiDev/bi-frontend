@@ -18,6 +18,7 @@ interface ProductFormFieldsProps {
   onRequestAddUnit: () => void;
   onRequestAddCategory: () => void;
   onRequestAddBrand: () => void;
+  onRequestAddProductList: () => void;
 }
 
 /** `product-form-page.tsx` ile `new-product-modal.tsx` arasında paylaşılan alan seti -
@@ -31,6 +32,7 @@ export function ProductFormFields({
   onRequestAddUnit,
   onRequestAddCategory,
   onRequestAddBrand,
+  onRequestAddProductList,
 }: ProductFormFieldsProps) {
   const priceField = register('price');
   const minStockLevelField = register('minStockLevel');
@@ -51,6 +53,7 @@ export function ProductFormFields({
               value={field.value ?? ''}
               onChange={field.onChange}
               error={errors.productListId?.message}
+              onRequestAddNew={onRequestAddProductList}
             />
           )}
         />

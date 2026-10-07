@@ -25,16 +25,20 @@ import { Badge } from '../components/ui/badge';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
+import { Modal } from '../components/ui/modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { Tooltip } from '../components/ui/tooltip';
+import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import {
   useApproveQuoteMutation,
   useDeleteQuoteMutation,
   useQuoteQuery,
+  useQuoteStatusHistoryQuery,
+  useQuoteStockCheckQuery,
   useRejectQuoteMutation,
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
@@ -51,7 +55,10 @@ import {
   type QuoteItem,
   type QuotePrintCompanyData,
   type QuotePrintSenderData,
+  type QuoteRevisionSnapshot,
   type QuoteStatus,
+  type QuoteStatusHistoryEntry,
+  type QuoteStockCheckRow,
 } from '../lib/api';
 import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
@@ -77,6 +84,28 @@ const STATUS_BADGE_VARIANT: Record<
 };
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
+const quantityFormatter = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 3 });
+const dateTimeFormatter = new Intl.DateTimeFormat('tr-TR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+});
+
+/** "Durum" sekmesi: iki ardisik gecis arasindaki sureyi "X gun Y sa Z dk" olarak
+ * bicimlendirir - sifir olan en buyuk birimler atlanir, hepsi sifirsa "0 dk" doner. */
+function formatStatusDuration(fromIso: string, toIso: string): string {
+  const diffMinutes = Math.max(
+    0,
+    Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60_000),
+  );
+  const days = Math.floor(diffMinutes / (24 * 60));
+  const hours = Math.floor((diffMinutes % (24 * 60)) / 60);
+  const minutes = diffMinutes % 60;
+  const parts: string[] = [];
+  if (days > 0) parts.push(`${days} gün`);
+  if (hours > 0) parts.push(`${hours} sa`);
+  if (minutes > 0 || parts.length === 0) parts.push(`${minutes} dk`);
+  return parts.join(' ');
+}
 
 function lineTotal(item: QuoteItem): number {
   return computeLineTotal({
@@ -89,6 +118,23 @@ function lineTotal(item: QuoteItem): number {
 
 function computeTotals(quote: Quote) {
   return getQuoteCurrencyTotals(quote);
+}
+
+function formatOldTotalFromSnapshot(snapshot: QuoteRevisionSnapshot): string {
+  const oldTotals = groupQuoteItemTotals(snapshot.items);
+  const foreignOldTotals = oldTotals.filter((t) => t.currency !== snapshot.quoteCurrency);
+  if (foreignOldTotals.length === 0) {
+    return oldTotals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  const oldConversion = convertTotalsToQuoteCurrency(
+    oldTotals,
+    snapshot.quoteCurrency,
+    snapshot.exchangeRates?.rates ?? {},
+  );
+  if (oldConversion.missingRateCurrencies.length > 0) {
+    return oldTotals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  return formatCurrencyAmount(oldConversion.grandTotal, snapshot.quoteCurrency);
 }
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
@@ -134,6 +180,35 @@ export function QuoteContentBody({
     foreignCurrencyTotals.length > 0
       ? convertTotalsToQuoteCurrency(totals, quote.quoteCurrency, quote.exchangeRates?.rates ?? {})
       : null;
+
+  const statusHistoryQuery = useQuoteStatusHistoryQuery(quote.id, { enabled: !isPrintMode });
+  const revisionEntries = (statusHistoryQuery.data ?? [])
+    .filter((entry) => entry.status === 'REVIZE' && entry.note)
+    .slice()
+    .reverse();
+  const [revisionNoteModalEntry, setRevisionNoteModalEntry] =
+    useState<QuoteStatusHistoryEntry | null>(null);
+  const revisionColumns: TableColumn<QuoteStatusHistoryEntry>[] = [
+    {
+      key: 'createdAt',
+      header: tr.crm.quotes.statusTab.dateColumn,
+      className: 'w-40 whitespace-nowrap text-app-muted',
+      render: (entry) => dateTimeFormatter.format(new Date(entry.createdAt)),
+    },
+    {
+      key: 'createdByName',
+      header: tr.crm.quotes.statusTab.actorColumn,
+      className: 'w-40 whitespace-nowrap text-app-muted',
+      render: (entry) => entry.createdByName ?? '—',
+    },
+    {
+      key: 'note',
+      header: tr.crm.quotes.statusTab.noteColumn,
+      render: (entry) => (
+        <TruncatedTextCell text={entry.note} onOpen={() => setRevisionNoteModalEntry(entry)} />
+      ),
+    },
+  ];
 
   const itemColumns: TableColumn<QuoteItem>[] = [
     {
@@ -211,40 +286,31 @@ export function QuoteContentBody({
         )}
       </div>
 
-      {!isPrintMode && quote.revisionCount > 0 && quote.revisionSnapshot && (
+      {!isPrintMode && revisionEntries.length > 0 && (
         <div className="mt-8">
-          <div className="rounded-xl bg-white p-5 shadow-sm">
-            <SectionHeader>{tr.crm.quotes.detail.revisionTitle}</SectionHeader>
-            {quote.revisionNote && (
-              <p className="text-sm whitespace-pre-wrap text-black">{quote.revisionNote}</p>
-            )}
+          <SectionHeader>{tr.crm.quotes.detail.revisionTitle}</SectionHeader>
+          <Table
+            columns={revisionColumns}
+            data={revisionEntries}
+            keyField={(entry) => entry.id}
+            fixedLayout
+          />
+          {quote.revisionSnapshot && (
             <p className="mt-2 text-xs text-app-muted">
               {tr.crm.quotes.detail.revisionOldTotalLabel}{' '}
-              {(() => {
-                const snapshot = quote.revisionSnapshot!;
-                const oldTotals = groupQuoteItemTotals(snapshot.items);
-                const foreignOldTotals = oldTotals.filter(
-                  (t) => t.currency !== snapshot.quoteCurrency,
-                );
-                if (foreignOldTotals.length === 0) {
-                  return oldTotals
-                    .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
-                    .join(' + ');
-                }
-                const oldConversion = convertTotalsToQuoteCurrency(
-                  oldTotals,
-                  snapshot.quoteCurrency,
-                  snapshot.exchangeRates?.rates ?? {},
-                );
-                if (oldConversion.missingRateCurrencies.length > 0) {
-                  return oldTotals
-                    .map((t) => formatCurrencyAmount(t.grandTotal, t.currency))
-                    .join(' + ');
-                }
-                return formatCurrencyAmount(oldConversion.grandTotal, snapshot.quoteCurrency);
-              })()}
+              {formatOldTotalFromSnapshot(quote.revisionSnapshot)}
             </p>
-          </div>
+          )}
+          {revisionNoteModalEntry && (
+            <Modal
+              title={tr.crm.quotes.statusTab.noteModalTitle}
+              onClose={() => setRevisionNoteModalEntry(null)}
+            >
+              <p className="whitespace-pre-wrap text-sm text-app-text">
+                {revisionNoteModalEntry.note}
+              </p>
+            </Modal>
+          )}
         </div>
       )}
 
@@ -578,6 +644,176 @@ function QuoteDrawingsSection({ quoteId }: { quoteId: string }) {
             ))}
           </tbody>
         </table>
+      )}
+    </div>
+  );
+}
+
+interface StatusHistoryRow {
+  id: string;
+  status: QuoteStatus;
+  statusLabelOverride: string | null;
+  createdAt: string;
+  createdByName: string | null;
+  note: string | null;
+  durationLabel: string;
+}
+
+/**
+ * Backend gecmisi bos donerse (ozellik eklenmeden once olusturulmus teklif) tek bir
+ * sentetik "Olusturuldu"/"Ice Aktarildi" satiri uretir - gercek QuoteStatusHistory
+ * kaydi degil, sadece Quote.createdAt'ten turetilir (bkz. backend doc comment'i).
+ */
+function buildStatusHistoryRows(
+  entries: QuoteStatusHistoryEntry[],
+  quote: Quote,
+): StatusHistoryRow[] {
+  if (entries.length === 0) {
+    return [
+      {
+        id: 'legacy-created',
+        status: quote.status,
+        statusLabelOverride:
+          quote.itemsEntryMode === 'MANUAL_TOTAL'
+            ? tr.crm.quotes.statusTab.importedLabel
+            : tr.crm.quotes.statusTab.createdLabel,
+        createdAt: quote.createdAt,
+        createdByName: quote.createdByName ?? null,
+        note: null,
+        durationLabel: tr.crm.quotes.statusTab.firstRowDuration,
+      },
+    ];
+  }
+  return entries.map((entry, index) => ({
+    id: entry.id,
+    status: entry.status,
+    statusLabelOverride:
+      index === 0
+        ? entry.status === 'UNSPECIFIED'
+          ? tr.crm.quotes.statusTab.importedLabel
+          : tr.crm.quotes.statusTab.createdLabel
+        : null,
+    createdAt: entry.createdAt,
+    createdByName: entry.createdByName,
+    note: entry.note,
+    durationLabel:
+      index === 0
+        ? tr.crm.quotes.statusTab.firstRowDuration
+        : formatStatusDuration(entries[index - 1].createdAt, entry.createdAt),
+  }));
+}
+
+function QuoteStatusHistoryContent({ quote }: { quote: Quote }) {
+  const historyQuery = useQuoteStatusHistoryQuery(quote.id);
+  const entries = historyQuery.data ?? [];
+  const rows = buildStatusHistoryRows(entries, quote);
+  const isLegacy = !historyQuery.isPending && entries.length === 0;
+  const [noteModalRow, setNoteModalRow] = useState<StatusHistoryRow | null>(null);
+
+  const columns: TableColumn<StatusHistoryRow>[] = [
+    {
+      key: 'status',
+      header: tr.crm.quotes.statusTab.statusColumn,
+      className: 'w-40 whitespace-nowrap',
+      render: (row) => (
+        <Badge variant={STATUS_BADGE_VARIANT[row.status]}>
+          {row.statusLabelOverride ?? tr.crm.quotes.statusOptions[row.status]}
+        </Badge>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: tr.crm.quotes.statusTab.dateColumn,
+      className: 'w-44 whitespace-nowrap text-app-muted',
+      render: (row) => dateTimeFormatter.format(new Date(row.createdAt)),
+    },
+    {
+      key: 'createdByName',
+      header: tr.crm.quotes.statusTab.actorColumn,
+      className: 'w-40 whitespace-nowrap text-app-muted',
+      render: (row) => row.createdByName ?? '—',
+    },
+    {
+      key: 'duration',
+      header: tr.crm.quotes.statusTab.durationColumn,
+      className: 'w-40 whitespace-nowrap text-app-muted',
+      render: (row) => row.durationLabel,
+    },
+    {
+      key: 'note',
+      header: tr.crm.quotes.statusTab.noteColumn,
+      render: (row) => <TruncatedTextCell text={row.note} onOpen={() => setNoteModalRow(row)} />,
+    },
+  ];
+
+  return (
+    <div>
+      <Table
+        columns={columns}
+        data={rows}
+        keyField={(row) => row.id}
+        isLoading={historyQuery.isPending}
+        emptyMessage={tr.crm.quotes.statusTab.emptyState}
+        fixedLayout
+      />
+      {isLegacy && (
+        <p className="mt-3 text-sm text-app-muted">{tr.crm.quotes.statusTab.legacyNotice}</p>
+      )}
+      {noteModalRow && (
+        <Modal title={tr.crm.quotes.statusTab.noteModalTitle} onClose={() => setNoteModalRow(null)}>
+          <p className="whitespace-pre-wrap text-sm text-app-text">{noteModalRow.note}</p>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/** /teklifler/:id "Stok Kontrolu" sekmesi: teklifteki her urun satiri + tenant'in
+ * depo isimleri dinamik kolon olarak eklenmis sekilde o depodaki mevcut miktar. */
+function QuoteStockCheckContent({ quoteId }: { quoteId: string }) {
+  const stockCheckQuery = useQuoteStockCheckQuery(quoteId);
+  const warehouses = stockCheckQuery.data?.warehouses ?? [];
+  const items = stockCheckQuery.data?.items ?? [];
+
+  const columns: TableColumn<QuoteStockCheckRow>[] = [
+    {
+      key: 'product',
+      header: tr.crm.quotes.stockTab.productColumn,
+      className: 'break-words',
+      render: (row) => row.productName,
+    },
+    {
+      key: 'quantity',
+      header: tr.crm.quotes.stockTab.quantityColumn,
+      className: 'w-28 whitespace-nowrap text-right text-app-muted',
+      render: (row) => quantityFormatter.format(row.quoteQuantity),
+    },
+    ...warehouses.map((warehouse): TableColumn<QuoteStockCheckRow> => ({
+      key: `warehouse-${warehouse.id}`,
+      header: warehouse.name,
+      className: 'w-32 whitespace-nowrap text-right text-app-muted',
+      render: (row) => quantityFormatter.format(row.stockByWarehouseId[warehouse.id] ?? 0),
+    })),
+    {
+      key: 'totalStock',
+      header: tr.crm.quotes.stockTab.totalColumn,
+      className: 'w-28 whitespace-nowrap text-right font-semibold text-app-text',
+      render: (row) => quantityFormatter.format(row.totalStock),
+    },
+  ];
+
+  return (
+    <div>
+      <Table
+        columns={columns}
+        data={items}
+        keyField={(row) => row.productId}
+        isLoading={stockCheckQuery.isPending}
+        emptyMessage={tr.crm.quotes.stockTab.empty}
+        fixedLayout
+      />
+      {!stockCheckQuery.isPending && warehouses.length === 0 && (
+        <p className="mt-3 text-sm text-app-muted">{tr.crm.quotes.stockTab.noWarehouses}</p>
       )}
     </div>
   );
@@ -938,6 +1174,16 @@ export function QuoteDetailPage() {
                   key: 'charts',
                   label: tr.crm.quotes.tabs.charts,
                   content: <QuoteChartsContent quote={quote} />,
+                },
+                {
+                  key: 'status',
+                  label: tr.crm.quotes.tabs.status,
+                  content: <QuoteStatusHistoryContent quote={quote} />,
+                },
+                {
+                  key: 'stock',
+                  label: tr.crm.quotes.tabs.stock,
+                  content: <QuoteStockCheckContent quoteId={quote.id} />,
                 },
               ] satisfies HorizontalTabItem[]
             }

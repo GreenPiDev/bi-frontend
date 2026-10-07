@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { useToast } from '../components/ui/toast-context';
 import { AddOptionModal } from '../features/crm/add-option-modal';
+import { AddProductListModal } from '../features/crm/add-product-list-modal';
 import { ProductFormFields } from '../features/crm/product-form-fields';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreateProductCategoryOptionMutation } from '../features/crm/use-product-categories';
@@ -21,7 +22,7 @@ import { productFormSchema, type ProductFormValues } from '../features/crm/schem
 import { ApiError, type ProductInput } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-type OptionFieldKind = 'unit' | 'category' | 'brand';
+type OptionFieldKind = 'unit' | 'category' | 'brand' | 'productList';
 
 export function ProductFormPage() {
   const { id } = useParams();
@@ -156,6 +157,7 @@ export function ProductFormPage() {
             onRequestAddUnit={() => setActiveOptionModal('unit')}
             onRequestAddCategory={() => setActiveOptionModal('category')}
             onRequestAddBrand={() => setActiveOptionModal('brand')}
+            onRequestAddProductList={() => setActiveOptionModal('productList')}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={isSaving}>
@@ -206,6 +208,15 @@ export function ProductFormPage() {
           onClose={() => setActiveOptionModal(null)}
           onCreated={(label) => {
             setValue('brand', label, { shouldValidate: true });
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
+      {activeOptionModal === 'productList' && (
+        <AddProductListModal
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(productList) => {
+            setValue('productListId', productList.id, { shouldValidate: true });
             setActiveOptionModal(null);
           }}
         />

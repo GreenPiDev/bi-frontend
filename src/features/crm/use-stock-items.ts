@@ -6,6 +6,7 @@ import {
   listStockHistory,
   listStockItems,
   transferStock,
+  type StockMovementType,
   type StockStatusFilter,
   type TransferStockInput,
 } from '../../lib/api';
@@ -41,7 +42,12 @@ export function useLowStockItemsQuery() {
 }
 
 export function useStockHistoryQuery(
-  params: { productId?: string; warehouseId?: string; userId?: string } = {},
+  params: {
+    productId?: string;
+    warehouseId?: string;
+    userId?: string;
+    types?: StockMovementType[];
+  } = {},
 ) {
   return useQuery({
     queryKey: [...STOCK_HISTORY_QUERY_KEY, params],

@@ -209,7 +209,11 @@ export interface QuoteItemForCost {
   discountPct: string;
   vatPct: string;
   currency: string;
-  product: { name: string; avgCost: string | null };
+  /** Satir olusturulurken/guncellenirken Product.avgCost'tan alinan donmus (snapshot)
+   * maliyet - urunun guncel avgCost'u (yeni stok girisiyle) degisse bile bu teklifteki
+   * kar/maliyet hesabi degismez. */
+  costPriceAtSale: string | null;
+  product: { name: string };
 }
 
 export interface QuoteForCost {
@@ -219,9 +223,12 @@ export interface QuoteForCost {
 }
 
 /** Maliyet tab'i (ürün kalemi bazında satış/iskonto/KDV/maliyet/kâr) için tek yer -
- * her ürünün WAC maliyeti (Product.avgCost) ile satış tutarı karşılaştırılır. Kalemler
- * quoteCurrency dışında bir para biriminde olabilir, aynı quote.exchangeRates.rates
- * kuruyla (bkz. convertTotalsToQuoteCurrency) quoteCurrency'ye çevrilir. */
+ * her satırın DONMUŞ maliyeti (QuoteItem.costPriceAtSale, satır oluşturulurken/
+ * güncellenirken Product.avgCost'tan alınan bir snapshot) ile satış tutarı
+ * karşılaştırılır - böylece ürünün güncel ortalama maliyeti sonradan değişse bile bu
+ * teklifteki kâr hesabı değişmez. Kalemler quoteCurrency dışında bir para biriminde
+ * olabilir, aynı quote.exchangeRates.rates kuruyla (bkz. convertTotalsToQuoteCurrency)
+ * quoteCurrency'ye çevrilir. */
 export function computeQuoteCostBreakdown(quote: QuoteForCost): QuoteCostBreakdown {
   const rates = quote.exchangeRates?.rates ?? {};
   const quoteCurrency = quote.quoteCurrency;
@@ -252,7 +259,7 @@ export function computeQuoteCostBreakdown(quote: QuoteForCost): QuoteCostBreakdo
     const grossAmount = quantity * unitPrice;
     const discountAmount = quantity * unitPrice * (discountPct / 100);
     const vatAmount = lineTotal - lineSubtotal;
-    const unitCost = Number(item.product.avgCost ?? 0);
+    const unitCost = Number(item.costPriceAtSale ?? 0);
     const cost = quantity * unitCost;
     const profit = lineSubtotal - cost;
 
