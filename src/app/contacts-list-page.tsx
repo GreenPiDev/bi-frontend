@@ -11,6 +11,7 @@ import { ExportMenuButton } from '../components/ui/export-menu-button';
 import { InlineSelect } from '../components/ui/inline-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
+import { SortPicker, type SortPickerOption } from '../components/ui/sort-picker';
 import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
@@ -218,6 +219,13 @@ export function ContactsListPage() {
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
+  const SORT_OPTIONS: SortPickerOption[] = [
+    { key: 'firstName', direction: 'asc', label: tr.crm.contacts.sortOptions.nameAsc },
+    { key: 'firstName', direction: 'desc', label: tr.crm.contacts.sortOptions.nameDesc },
+    { key: 'account', direction: 'asc', label: tr.crm.contacts.sortOptions.accountAsc },
+    { key: 'account', direction: 'desc', label: tr.crm.contacts.sortOptions.accountDesc },
+  ];
+
   return (
     <AppShell>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -282,7 +290,15 @@ export function ContactsListPage() {
         />
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-2">
+        <SortPicker
+          options={SORT_OPTIONS}
+          value={sort}
+          onChange={(next) => {
+            setSort(next);
+            setPage(1);
+          }}
+        />
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}

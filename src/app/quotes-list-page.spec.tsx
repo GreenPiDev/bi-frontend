@@ -65,6 +65,7 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     manualCurrency: null,
     attributes: null,
     projectId: null,
+    project: null,
     templateId: null,
     template: null,
     status: 'DRAFT',

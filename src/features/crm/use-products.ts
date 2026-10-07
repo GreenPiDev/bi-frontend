@@ -25,6 +25,7 @@ export function useProductsQuery(
     category?: string;
     attr?: Record<string, string>;
     includeDeleted?: boolean;
+    sort?: string;
   } = {},
   options: { enabled?: boolean } = {},
 ) {

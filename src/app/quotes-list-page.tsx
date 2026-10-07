@@ -42,12 +42,7 @@ import {
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, exportQuotePdf, type Quote, type QuoteStatus } from '../lib/api';
 import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
-import {
-  QUOTE_STATUS_OPTIONS,
-  convertTotalsToQuoteCurrency,
-  formatCurrencyAmount,
-  getQuoteCurrencyTotals,
-} from '../lib/quote-totals';
+import { QUOTE_STATUS_OPTIONS, quoteGrandTotalDisplay } from '../lib/quote-totals';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -113,31 +108,6 @@ function QuoteStatusSelect({
       }}
     />
   );
-}
-
-function quoteTotalsByCurrency(quote: Quote) {
-  return getQuoteCurrencyTotals(quote);
-}
-
-/** Teklif kalemleri farklı para birimlerinde olabilir - bu yüzden tek bir "Genel Toplam"
- * göstermek için hepsi teklifin kendi para birimine (quote.quoteCurrency) çevrilir (bkz.
- * quote-detail-page.tsx'teki aynı desen). Eksik kur varsa (henüz girilmemiş) tek satırda
- * gösterilemez, para birimi bazlı toplamlar "+" ile ayrılarak listelenir. */
-function quoteGrandTotalDisplay(quote: Quote): string {
-  const totals = quoteTotalsByCurrency(quote);
-  const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
-  if (foreignCurrencyTotals.length === 0) {
-    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
-  }
-  const conversion = convertTotalsToQuoteCurrency(
-    totals,
-    quote.quoteCurrency,
-    quote.exchangeRates?.rates ?? {},
-  );
-  if (conversion.missingRateCurrencies.length > 0) {
-    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
-  }
-  return formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency);
 }
 
 export function QuotesListContent() {

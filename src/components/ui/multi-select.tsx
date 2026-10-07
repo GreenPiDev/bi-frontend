@@ -202,11 +202,11 @@ export function MultiSelect({
                     : 'rounded-full bg-app-bg-muted py-1 pr-1.5 pl-3 text-xs text-app-text',
                 )}
               >
-                {option.label}
+                {option.chipLabel ?? option.label}
                 <button
                   type="button"
                   onClick={() => toggleValue(option.value)}
-                  aria-label={`${option.label} kaldır`}
+                  aria-label={`${option.chipLabel ?? option.label} kaldır`}
                   className={clsx(
                     'inline-flex items-center justify-center rounded-full',
                     chipVariant === 'solid'

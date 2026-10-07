@@ -128,7 +128,8 @@ export function ProjectFormPage() {
   );
   const quoteOptions = (quotesQuery.data?.data ?? []).map((quote) => ({
     value: quote.id,
-    label: quote.quoteNumber,
+    label: quote.title ? `${quote.quoteNumber} — ${quote.title}` : quote.quoteNumber,
+    chipLabel: quote.quoteNumber,
   }));
 
   const assignableUsersQuery = useProjectAssignableUsersQuery();

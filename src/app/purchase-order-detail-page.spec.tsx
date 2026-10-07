@@ -78,6 +78,7 @@ const quote: api.Quote = {
   contactId: null,
   contact: null,
   projectId: null,
+  project: null,
   status: 'APPROVED',
   approvedAt: '2026-09-01T00:00:00.000Z',
   approvedById: 'u1',

@@ -20,7 +20,8 @@ import { Drawer } from '../components/ui/drawer';
 import { ExportMenuButton } from '../components/ui/export-menu-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { SortPicker, type SortPickerOption } from '../components/ui/sort-picker';
+import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
@@ -56,6 +57,7 @@ export function AccountsListPage() {
   const [createdById, setCreatedById] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState<Account | undefined>(undefined);
+  const [sort, setSort] = useState<TableSort | null>(null);
   const meQuery = useMeQuery();
   const usersQuery = useUsersQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
@@ -67,6 +69,7 @@ export function AccountsListPage() {
     from: from || undefined,
     notContactedDays,
     createdById: createdById || undefined,
+    sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const exportMutation = useExportEntityMutation('accounts');
   const deleteMutation = useDeleteAccountMutation();
@@ -237,6 +240,31 @@ export function AccountsListPage() {
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
+  const SORT_OPTIONS: SortPickerOption[] = [
+    { key: 'name', direction: 'asc', label: tr.crm.accounts.sortOptions.nameAsc },
+    { key: 'name', direction: 'desc', label: tr.crm.accounts.sortOptions.nameDesc },
+    {
+      key: 'interactionCount',
+      direction: 'asc',
+      label: tr.crm.accounts.sortOptions.interactionCountAsc,
+    },
+    {
+      key: 'interactionCount',
+      direction: 'desc',
+      label: tr.crm.accounts.sortOptions.interactionCountDesc,
+    },
+    {
+      key: 'quoteCount',
+      direction: 'asc',
+      label: tr.crm.accounts.sortOptions.quoteCountAsc,
+    },
+    {
+      key: 'quoteCount',
+      direction: 'desc',
+      label: tr.crm.accounts.sortOptions.quoteCountDesc,
+    },
+  ];
+
   function applyLastNDays(value: string) {
     setLastNDaysInput(value);
     const days = Number(value);
@@ -320,7 +348,15 @@ export function AccountsListPage() {
         />
       </div>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-2">
+        <SortPicker
+          options={SORT_OPTIONS}
+          value={sort}
+          onChange={(next) => {
+            setSort(next);
+            setPage(1);
+          }}
+        />
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}

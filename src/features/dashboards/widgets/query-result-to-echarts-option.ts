@@ -1,4 +1,4 @@
-import type { EChartsOption } from 'echarts';
+import type { EChartsOption, TooltipComponentFormatterCallbackParams } from 'echarts';
 import type { QueryResult } from '../../../lib/api';
 import type { ChartTheme } from './chart-theme';
 
@@ -121,6 +121,53 @@ export function buildHorizontalBarOption(
   };
 }
 
+/** Pasta grafik gosterimi icin ortak catal - hem QueryResult tabanli dashboard
+ * widget'i (buildPieOption) hem de ad-hoc {name,value} noktalariyla calisan ekranlar
+ * (orn. teklif maliyet grafikleri) bunu kullanir. `tooltipValueFormatter` verilirse
+ * (orn. para birimi formatlamak icin) varsayilan ham sayi yerine kullanilir. */
+export function buildPieOptionFromPoints(
+  theme: ChartTheme,
+  data: { name: string; value: number }[],
+  tooltipValueFormatter?: (value: number) => string,
+): EChartsOption {
+  return {
+    color: theme.seriesColors,
+    tooltip: {
+      trigger: 'item',
+      formatter: tooltipValueFormatter
+        ? (params: TooltipComponentFormatterCallbackParams) => {
+            const point = Array.isArray(params) ? params[0] : params;
+            return `${point.marker ?? ''}${point.name}: ${tooltipValueFormatter(Number(point.value ?? 0))} (${point.percent}%)`;
+          }
+        : undefined,
+    },
+    legend: {
+      orient: 'vertical',
+      right: '22%',
+      top: 'middle',
+      textStyle: { color: theme.muted },
+      formatter: (name: string) => {
+        const point = data.find((item) => item.name === name);
+        if (!point) return name;
+        const formattedValue = tooltipValueFormatter
+          ? tooltipValueFormatter(point.value)
+          : numberFormatter.format(point.value);
+        return `${name}: ${formattedValue}`;
+      },
+    },
+    series: [
+      {
+        type: 'pie',
+        center: ['28%', '50%'],
+        radius: ['45%', '70%'],
+        itemStyle: { borderColor: theme.grid, borderWidth: 2, borderRadius: 4 },
+        label: { color: theme.muted, formatter: '{b}: {d}%' },
+        data,
+      },
+    ],
+  };
+}
+
 export function buildPieOption(
   result: QueryResult,
   dimensionCount: number,
@@ -128,18 +175,8 @@ export function buildPieOption(
 ): EChartsOption {
   const { categories, series } = toCategoriesAndSeries(result, dimensionCount);
   const values = series[0]?.data ?? [];
-  return {
-    color: theme.seriesColors,
-    tooltip: { trigger: 'item' },
-    legend: { bottom: 0, textStyle: { color: theme.muted } },
-    series: [
-      {
-        type: 'pie',
-        radius: ['45%', '70%'],
-        itemStyle: { borderColor: theme.grid, borderWidth: 2, borderRadius: 4 },
-        label: { color: theme.muted },
-        data: categories.map((name, index) => ({ name, value: values[index] ?? 0 })),
-      },
-    ],
-  };
+  return buildPieOptionFromPoints(
+    theme,
+    categories.map((name, index) => ({ name, value: values[index] ?? 0 })),
+  );
 }

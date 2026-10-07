@@ -2484,6 +2484,7 @@ export function listProducts(
     category?: string;
     attr?: Record<string, string>;
     includeDeleted?: boolean;
+    sort?: string;
   } = {},
 ): Promise<PagedResult<ProductWithStock>> {
   const query = new URLSearchParams();
@@ -2499,6 +2500,7 @@ export function listProducts(
     }
   }
   if (params.includeDeleted) query.set('includeDeleted', 'true');
+  if (params.sort) query.set('sort', params.sort);
   const qs = query.toString();
   return request(`/products${qs ? `?${qs}` : ''}`);
 }
@@ -2627,9 +2629,7 @@ export interface Quote {
   /** Ad-hoc: markali PDF sablonu (bkz. docs/VARSAYIMLAR.md V41). null = sade export. */
   templateId: string | null;
   template: { id: string; name: string } | null;
-  /** Sadece bazi uclarda (orn. siparis detayinda) nested olarak doner, her zaman
-   * gelmeyebilir. */
-  project?: Project | null;
+  project: { id: string; projectNumber: string; name: string } | null;
   status: QuoteStatus;
   quoteDate: string;
   leadTime: string | null;
@@ -2907,6 +2907,16 @@ export function rejectQuote(id: string): Promise<Quote> {
 
 export function exportQuotePdf(quoteId: string): Promise<Blob> {
   return requestBlob(`/exports/quote/${quoteId}/pdf`);
+}
+
+/** /teklifler/:id?tab=cost ekraninin kendi PDF export'u - exportQuotePdf'ten bagimsiz. */
+export function exportQuoteCostPdf(quoteId: string): Promise<Blob> {
+  return requestBlob(`/exports/quote/${quoteId}/cost-pdf`);
+}
+
+/** /teklifler/:id?tab=charts ekraninin kendi PDF export'u. */
+export function exportQuoteChartsPdf(quoteId: string): Promise<Blob> {
+  return requestBlob(`/exports/quote/${quoteId}/charts-pdf`);
 }
 
 export interface QuoteAssignableUser {

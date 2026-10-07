@@ -6,6 +6,9 @@ import { ClearFieldButton } from './clear-field-button';
 export interface SelectOption {
   value: string;
   label: string;
+  /** MultiSelect'in secili degerler icin alttaki (showChips) etiketinde label yerine
+   * gosterilecek daha kisa metin - verilmezse label kullanilir. */
+  chipLabel?: string;
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {

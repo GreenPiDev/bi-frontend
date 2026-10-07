@@ -1,3 +1,4 @@
+import { clsx } from 'clsx';
 import { Mail, Paperclip, Pencil, Trash2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState, type FormEvent } from 'react';
@@ -23,6 +24,7 @@ import {
   useRenameProjectAttachmentMutation,
 } from '../features/crm/use-projects';
 import { ApiError, type ProjectAttachment, type Quote } from '../lib/api';
+import { quoteGrandTotalDisplay } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 function formatCurrency(value: string | null): string {
@@ -32,15 +34,12 @@ function formatCurrency(value: string | null): string {
   );
 }
 
-const QUOTE_STATUS_BADGE_VARIANT: Record<
-  string,
-  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
-> = {
-  DRAFT: 'neutral',
-  PENDING_APPROVAL: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'danger',
-  REVIZE: 'orange',
+const QUOTE_STATUS_TEXT_CLASS: Record<string, string> = {
+  DRAFT: 'text-app-muted',
+  PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
+  APPROVED: 'text-app-success',
+  REJECTED: 'text-app-danger',
+  REVIZE: 'text-orange-600 dark:text-orange-400',
 };
 
 function SectionHeader({ children }: { children: ReactNode }) {
@@ -56,17 +55,28 @@ function SectionHeader({ children }: { children: ReactNode }) {
 
 const RELATED_QUOTE_COLUMNS: TableColumn<Quote>[] = [
   {
+    key: 'title',
+    header: tr.crm.quotes.titleColumn,
+    className: 'text-app-muted',
+    render: (q) => q.title ?? '—',
+  },
+  {
     key: 'quoteNumber',
     header: tr.crm.quotes.numberColumn,
     render: (q) => <span className="font-semibold text-app-text">{q.quoteNumber}</span>,
   },
   {
+    key: 'total',
+    header: tr.crm.quotes.totalColumn,
+    render: (q) => <span className="font-semibold text-app-text">{quoteGrandTotalDisplay(q)}</span>,
+  },
+  {
     key: 'status',
     header: tr.crm.quotes.statusColumn,
     render: (q) => (
-      <Badge variant={QUOTE_STATUS_BADGE_VARIANT[q.status]}>
+      <span className={clsx('font-semibold', QUOTE_STATUS_TEXT_CLASS[q.status])}>
         {tr.crm.quotes.statusOptions[q.status]}
-      </Badge>
+      </span>
     ),
   },
 ];

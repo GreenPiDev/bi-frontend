@@ -44,6 +44,28 @@ export function formatCurrencyAmount(amount: number, currencyCode: string): stri
   return formatter.format(amount);
 }
 
+const preciseFormattersByCurrency = new Map<string, Intl.NumberFormat>();
+
+/** formatCurrencyAmount'un en fazla 4 ondalik basamakli hali - teklif maliyet tab'i (WAC
+ * birim maliyet gibi kucuk kesirli farklarin 2 basamakta kaybolabilecegi) icin. Sondaki
+ * sifirlar gosterilmez (minimumFractionDigits: 0) - tam sayi bir tutar "591 TRY" olarak
+ * gorunur, "591,0000 TRY" degil. Diger ekranlardaki standart 2 basamakli para gosterimini
+ * etkilemez. */
+export function formatCurrencyAmountPrecise(amount: number, currencyCode: string): string {
+  const code = currencyCode || 'TRY';
+  let formatter = preciseFormattersByCurrency.get(code);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat('tr-TR', {
+      style: 'currency',
+      currency: code,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 4,
+    });
+    preciseFormattersByCurrency.set(code, formatter);
+  }
+  return formatter.format(amount);
+}
+
 export function computeLineTotal(
   line: Pick<QuoteLineForTotals, 'quantity' | 'unitPrice' | 'discountPct' | 'vatPct'>,
 ): { lineSubtotal: number; lineTotal: number } {
@@ -141,4 +163,159 @@ export function convertTotalsToQuoteCurrency(
     grandTotal += total.grandTotal * rate;
   }
   return { grandTotal, missingRateCurrencies };
+}
+
+export interface QuoteCostRow {
+  itemId: string;
+  productName: string;
+  quantity: number;
+  currency: string;
+  unitPrice: number;
+  unitCost: number;
+  /** Iskonto/KDV oncesi ham tutar: miktar * birim fiyat. */
+  grossAmount: number;
+  lineTotal: number;
+  discountPct: number;
+  discountAmount: number;
+  /** Iskonto dustukten sonraki, KDV haric net satis tutari: grossAmount - discountAmount.
+   * Kar bu tutardan maliyet cikarilarak bulunur (bkz. profit). */
+  netSalesAmount: number;
+  vatPct: number;
+  vatAmount: number;
+  cost: number;
+  profit: number;
+}
+
+export interface QuoteCostBreakdown {
+  rows: QuoteCostRow[];
+  totalQuantity: number;
+  grandTotal: number;
+  totalDiscount: number;
+  totalVat: number;
+  totalCost: number;
+  avgUnitCost: number;
+  netProfit: number;
+  totalGrossAmount: number;
+  totalNetSalesAmount: number;
+  /** Item para birimi quoteCurrency'den farkli ve rates'te kuru yoksa buraya eklenir -
+   * bu durumda ilgili satir/toplamlar donusturulmemis (ham) tutarla hesaplanmistir. */
+  missingRateCurrencies: string[];
+}
+
+export interface QuoteItemForCost {
+  id: string;
+  quantity: string;
+  unitPrice: string;
+  discountPct: string;
+  vatPct: string;
+  currency: string;
+  product: { name: string; avgCost: string | null };
+}
+
+export interface QuoteForCost {
+  quoteCurrency: string;
+  exchangeRates: { rates?: Record<string, number> } | null;
+  items: QuoteItemForCost[];
+}
+
+/** Maliyet tab'i (ürün kalemi bazında satış/iskonto/KDV/maliyet/kâr) için tek yer -
+ * her ürünün WAC maliyeti (Product.avgCost) ile satış tutarı karşılaştırılır. Kalemler
+ * quoteCurrency dışında bir para biriminde olabilir, aynı quote.exchangeRates.rates
+ * kuruyla (bkz. convertTotalsToQuoteCurrency) quoteCurrency'ye çevrilir. */
+export function computeQuoteCostBreakdown(quote: QuoteForCost): QuoteCostBreakdown {
+  const rates = quote.exchangeRates?.rates ?? {};
+  const quoteCurrency = quote.quoteCurrency;
+  const missing = new Set<string>();
+
+  function convert(amount: number, currency: string): number {
+    if (currency === quoteCurrency) return amount;
+    const rate = rates[currency];
+    if (rate === undefined) {
+      missing.add(currency);
+      return amount;
+    }
+    return amount * rate;
+  }
+
+  const rows: QuoteCostRow[] = quote.items.map((item) => {
+    const quantity = Number(item.quantity);
+    const unitPrice = Number(item.unitPrice);
+    const discountPct = Number(item.discountPct);
+    const vatPct = Number(item.vatPct);
+    const currency = item.currency || 'TRY';
+    const { lineSubtotal, lineTotal } = computeLineTotal({
+      quantity,
+      unitPrice,
+      discountPct,
+      vatPct,
+    });
+    const grossAmount = quantity * unitPrice;
+    const discountAmount = quantity * unitPrice * (discountPct / 100);
+    const vatAmount = lineTotal - lineSubtotal;
+    const unitCost = Number(item.product.avgCost ?? 0);
+    const cost = quantity * unitCost;
+    const profit = lineSubtotal - cost;
+
+    return {
+      itemId: item.id,
+      productName: item.product.name,
+      quantity,
+      currency,
+      unitPrice: convert(unitPrice, currency),
+      unitCost: convert(unitCost, currency),
+      grossAmount: convert(grossAmount, currency),
+      lineTotal: convert(lineTotal, currency),
+      discountPct,
+      discountAmount: convert(discountAmount, currency),
+      netSalesAmount: convert(lineSubtotal, currency),
+      vatPct,
+      vatAmount: convert(vatAmount, currency),
+      cost: convert(cost, currency),
+      profit: convert(profit, currency),
+    };
+  });
+
+  const totalQuantity = rows.reduce((sum, row) => sum + row.quantity, 0);
+  const totalCost = rows.reduce((sum, row) => sum + row.cost, 0);
+
+  return {
+    rows,
+    totalQuantity,
+    grandTotal: rows.reduce((sum, row) => sum + row.lineTotal, 0),
+    totalDiscount: rows.reduce((sum, row) => sum + row.discountAmount, 0),
+    totalVat: rows.reduce((sum, row) => sum + row.vatAmount, 0),
+    totalCost,
+    avgUnitCost: totalQuantity > 0 ? totalCost / totalQuantity : 0,
+    netProfit: rows.reduce((sum, row) => sum + row.profit, 0),
+    totalGrossAmount: rows.reduce((sum, row) => sum + row.grossAmount, 0),
+    totalNetSalesAmount: rows.reduce((sum, row) => sum + row.netSalesAmount, 0),
+    missingRateCurrencies: [...missing],
+  };
+}
+
+export interface QuoteForGrandTotalDisplay extends QuoteForTotals {
+  quoteCurrency: string;
+  exchangeRates: { rates?: Record<string, number> } | null;
+}
+
+/** Teklif kalemleri farklı para birimlerinde olabilir - bu yüzden tek bir "Genel Toplam"
+ * göstermek için hepsi teklifin kendi para birimine (quote.quoteCurrency) çevrilir. Eksik
+ * kur varsa (henüz girilmemiş) tek satırda gösterilemez, para birimi bazlı toplamlar "+"
+ * ile ayrılarak listelenir. quotes-list-page.tsx/project-detail-page.tsx'teki aynı ekran
+ * burada tek yerde toplanır. */
+export function quoteGrandTotalDisplay(quote: QuoteForGrandTotalDisplay): string {
+  const totals = getQuoteCurrencyTotals(quote);
+  const foreignCurrencyTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
+  if (foreignCurrencyTotals.length === 0) {
+    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  const conversion = convertTotalsToQuoteCurrency(
+    totals,
+    quote.quoteCurrency,
+    quote.exchangeRates?.rates ?? {},
+  );
+  if (conversion.missingRateCurrencies.length > 0) {
+    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  return formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency);
 }

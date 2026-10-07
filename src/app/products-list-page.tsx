@@ -10,8 +10,9 @@ import { Drawer } from '../components/ui/drawer';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
+import { SortPicker, type SortPickerOption } from '../components/ui/sort-picker';
 import { Switch } from '../components/ui/switch';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
 import { Tooltip } from '../components/ui/tooltip';
 import { useToast } from '../components/ui/toast-context';
@@ -54,6 +55,7 @@ export function ProductsListContent() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [moveTargetListId, setMoveTargetListId] = useState('');
   const [showDeleted, setShowDeleted] = useState(false);
+  const [sort, setSort] = useState<TableSort | null>(null);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const activeAttrFilters = Object.fromEntries(
@@ -68,6 +70,7 @@ export function ProductsListContent() {
     category: filterCategory || undefined,
     attr: Object.keys(activeAttrFilters).length > 0 ? activeAttrFilters : undefined,
     includeDeleted: showDeleted,
+    sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const productListsQuery = useProductListsQuery();
   const brandOptionsQuery = useBrandOptionsQuery();
@@ -304,6 +307,12 @@ export function ProductsListContent() {
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
+  const SORT_OPTIONS: SortPickerOption[] = [
+    { key: '', direction: 'asc', label: tr.crm.products.sortOptions.default },
+    { key: 'name', direction: 'asc', label: tr.crm.products.sortOptions.nameAsc },
+    { key: 'name', direction: 'desc', label: tr.crm.products.sortOptions.nameDesc },
+  ];
+
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -366,6 +375,14 @@ export function ProductsListContent() {
             </span>
           </div>
         </div>
+        <SortPicker
+          options={SORT_OPTIONS}
+          value={sort}
+          onChange={(next) => {
+            setSort(next);
+            setPage(1);
+          }}
+        />
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}

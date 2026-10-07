@@ -34,6 +34,10 @@ export const tr = {
       label: 'Gösterilecek Kolonlar',
       placeholder: 'Kolon seçin',
     },
+    sortPicker: {
+      label: 'Sırala',
+      placeholder: 'Varsayılan sıralama',
+    },
     fileDropzone: {
       instructions: 'Dosya seçmek için tıklayın veya dosyayı sürükleyip bırakın',
       selectedFile: (name: string) => `Seçilen dosya: ${name}`,
@@ -1112,6 +1116,14 @@ export const tr = {
         apply: 'Uygula',
         reset: 'Sıfırla',
       },
+      sortOptions: {
+        nameAsc: 'Ada göre (A-Z)',
+        nameDesc: 'Ada göre (Z-A)',
+        interactionCountAsc: 'Görüşmeye göre (küçükten büyüğe)',
+        interactionCountDesc: 'Görüşmeye göre (büyükten küçüğe)',
+        quoteCountAsc: 'Teklife göre (küçükten büyüğe)',
+        quoteCountDesc: 'Teklife göre (büyükten küçüğe)',
+      },
       form: {
         newTitle: 'Yeni Firma',
         editTitle: 'Firmayı Düzenle',
@@ -1257,6 +1269,12 @@ export const tr = {
         createdByLabel: 'Oluşturan',
         createdByPlaceholder: 'Tüm kullanıcılar',
         reset: 'Sıfırla',
+      },
+      sortOptions: {
+        nameAsc: 'Ad Soyada göre (A-Z)',
+        nameDesc: 'Ad Soyada göre (Z-A)',
+        accountAsc: 'Firmaya göre (A-Z)',
+        accountDesc: 'Firmaya göre (Z-A)',
       },
       form: {
         newTitle: 'Yeni Kişi',
@@ -2145,6 +2163,11 @@ export const tr = {
         attrPlaceholder: (key: string) => `${key} içinde ara...`,
         reset: 'Filtreleri Sıfırla',
       },
+      sortOptions: {
+        default: 'Varsayılan Sıralama',
+        nameAsc: 'Ürün Adına göre (A-Z)',
+        nameDesc: 'Ürün Adına göre (Z-A)',
+      },
       actionsColumn: 'Aksiyonlar',
       editTooltip: 'Düzenle',
       deleteTooltip: 'Sil',
@@ -2513,6 +2536,7 @@ export const tr = {
         leadTimeEmpty: '—',
         paymentMethodLabel: 'Ödeme Yöntemi',
         paymentMethodEmpty: '—',
+        relatedProjectLabel: 'İlişkili Proje',
         paymentTermsTitle: 'Ödeme Koşulları',
         salesTermsTitle: 'Satış Koşulları',
         deliveryTermsTitle: 'Teslimat Koşulları',
@@ -2525,6 +2549,50 @@ export const tr = {
         createMessageTooltip: 'Kayıt ile ilişkili mesaj oluştur',
         revisionTitle: 'Revizyon Bilgisi',
         revisionOldTotalLabel: 'Revizyon öncesi genel toplam:',
+      },
+      tabs: {
+        overview: 'Genel Bakış',
+        cost: 'Maliyet',
+        charts: 'Grafikler',
+      },
+      chartsTab: {
+        grandTotalBreakdownTitle: 'Genel Toplam Kırılımı',
+        productProfitTitle: 'Ürün Bazında Net Kâr Dağılımı',
+        exportPdfButton: 'Grafikleri PDF Olarak İndir',
+      },
+      costTab: {
+        exportPdfButton: 'Maliyet Tablosunu PDF Olarak İndir',
+        grandTotalLabel: 'Genel Toplam',
+        grandTotalTooltip:
+          'KDV dahil, iskonto uygulandıktan sonraki tutarların toplamıdır: Σ [(miktar × birim fiyat × (1 − iskonto%)) × (1 + KDV%)].',
+        totalDiscountLabel: 'Toplam İskonto',
+        totalDiscountTooltip:
+          'Tüm kalemler için uygulanan iskonto tutarlarının toplamıdır: Σ (miktar × birim fiyat × iskonto%).',
+        totalVatLabel: 'Toplam KDV',
+        totalVatTooltip:
+          'Tüm kalemler için hesaplanan KDV tutarlarının toplamıdır: Σ (iskontolu satır tutarı × KDV%).',
+        avgUnitCostLabel: 'Ortalama Ürün Maliyeti',
+        avgUnitCostTooltip:
+          'Toplam maliyetin toplam ürün adedine bölünmesiyle bulunur: (Σ miktar × birim maliyet) ÷ (Σ miktar). Birim maliyet, ürünün hareketli ağırlıklı ortalama maliyetidir (WAC).',
+        netProfitLabel: 'Net Kâr',
+        netProfitTooltip:
+          'KDV hariç, iskontolu satış tutarından toplam maliyetin çıkarılmasıyla bulunur: (Genel Toplam − Toplam KDV) − Toplam Maliyet.',
+        missingExchangeRate: (currencies: string[]) =>
+          `Şu para birimleri için kur girilmedi, bu kartlardaki tutarlar tam doğru olmayabilir: ${currencies.join(', ')}.`,
+        itemsTitle: 'Ürün Bazında Maliyet',
+        productColumn: 'Ürün',
+        quantityColumn: 'Miktar',
+        unitPriceColumn: 'Birim Fiyat',
+        unitCostColumn: 'Birim Maliyet',
+        grossAmountColumn: 'Brüt Tutar',
+        lineTotalColumn: 'Genel Toplam',
+        discountAmountColumn: 'İskonto',
+        netSalesAmountColumn: 'Net Satış Tutarı',
+        vatAmountColumn: 'KDV',
+        costColumn: 'Toplam Maliyet',
+        profitColumn: 'Net Kâr',
+        totalRowLabel: 'Toplam',
+        empty: 'Bu teklifte maliyet hesaplanacak bir ürün kalemi yok.',
       },
       form: {
         newTitle: 'Yeni Teklif',
@@ -2903,6 +2971,13 @@ export const tr = {
           unknown: 'Kritik stok seviyesi tanımlanmamış',
         },
         reset: 'Filtreleri Sıfırla',
+      },
+      sortOptions: {
+        default: 'Varsayılan Sıralama',
+        nameAsc: 'Ürün Adına göre (A-Z)',
+        nameDesc: 'Ürün Adına göre (Z-A)',
+        quantityAsc: 'Stok Miktarına göre (küçükten büyüğe)',
+        quantityDesc: 'Stok Miktarına göre (büyükten küçüğe)',
       },
       save: 'Kaydet',
       saving: 'Kaydediliyor...',

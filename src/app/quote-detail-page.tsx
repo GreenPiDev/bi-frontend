@@ -18,13 +18,17 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ApproveQuoteModal } from './approve-quote-modal';
 import { NewMessageModal } from './new-message-modal';
+import { QuoteChartsContent } from './quote-charts-content';
+import { QuoteCostContent } from './quote-cost-content';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
+import { Tooltip } from '../components/ui/tooltip';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import {
@@ -38,6 +42,8 @@ import { useDrawingsQuery } from '../features/crm/use-drawings';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import {
   ApiError,
+  exportQuoteChartsPdf,
+  exportQuoteCostPdf,
   exportQuotePdf,
   getQuotePrintData,
   type Drawing,
@@ -109,12 +115,14 @@ export function QuoteContentBody({
   quote,
   isPrintMode = false,
   onOpportunityClick,
+  onProjectClick,
   company,
   sender,
 }: {
   quote: Quote;
   isPrintMode?: boolean;
   onOpportunityClick: (opportunityId: string) => void;
+  onProjectClick?: (projectNumber: string) => void;
   /** Sadece yazdirma gorunumunde (isPrintMode) dolu gelir - bkz.
    * docs/VARSAYIMLAR.md "sirket bilgileri"/"gonderen" parite notu. */
   company?: QuotePrintCompanyData;
@@ -168,7 +176,12 @@ export function QuoteContentBody({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:grid-cols-4 sm:divide-x sm:divide-app-border">
+      <div
+        className={clsx(
+          'grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:divide-x sm:divide-app-border',
+          !isPrintMode && quote.project ? 'sm:grid-cols-5' : 'sm:grid-cols-4',
+        )}
+      >
         <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
           {dateFormatter.format(new Date(quote.quoteDate))}
         </MetaCell>
@@ -183,6 +196,19 @@ export function QuoteContentBody({
             ? formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)
             : totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ')}
         </MetaCell>
+        {!isPrintMode && quote.project && (
+          <MetaCell label={tr.crm.quotes.detail.relatedProjectLabel}>
+            <Tooltip content={quote.project.name}>
+              <button
+                type="button"
+                onClick={() => onProjectClick?.(quote.project!.projectNumber)}
+                className="cursor-pointer text-app-brand hover:underline"
+              >
+                {quote.project.projectNumber}
+              </button>
+            </Tooltip>
+          </MetaCell>
+        )}
       </div>
 
       {!isPrintMode && quote.revisionCount > 0 && quote.revisionSnapshot && (
@@ -563,6 +589,7 @@ export function QuoteDetailPage() {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const isPrintMode = searchParams.get('print') === '1';
+  const activeTab = searchParams.get('tab') ?? 'overview';
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'APPROVED' | 'REJECTED' | undefined>(
     undefined,
@@ -575,10 +602,14 @@ export function QuoteDetailPage() {
   // Sirket adresi/telefonu/e-postasi + gonderen bilgisi (bkz. docs/VARSAYIMLAR.md
   // "sirket bilgileri"/"gonderen" parite notu) - sadece yazdirma gorunumunde
   // gerekli, normal sayfa gorunumunde bu ek sorgu atilmaz.
+  // Maliyet/Grafikler PDF export'u sirket/gonderen bilgisi kullanmiyor - sadece
+  // Genel Bakis yazdirma gorunumunde bu ek sorgu atilir, aksi halde `enabled: false`
+  // sorgusu sonsuza kadar isPending kalip asagidaki yukleme ekranini takilirdi.
+  const needsPrintData = isPrintMode && activeTab !== 'cost' && activeTab !== 'charts';
   const printDataQuery = useQuery({
     queryKey: ['quotes', id, 'print-data'],
     queryFn: () => getQuotePrintData(id),
-    enabled: isPrintMode && Boolean(id),
+    enabled: needsPrintData && Boolean(id),
   });
   const approveMutation = useApproveQuoteMutation(id);
   const rejectMutation = useRejectQuoteMutation(id);
@@ -594,8 +625,26 @@ export function QuoteDetailPage() {
       toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
     },
   });
+  const exportCostPdfMutation = useMutation({
+    mutationFn: () => exportQuoteCostPdf(id),
+    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
+    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
+    onError: (error, _vars, context) => {
+      context?.tabHandle?.close();
+      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
+    },
+  });
+  const exportChartsPdfMutation = useMutation({
+    mutationFn: () => exportQuoteChartsPdf(id),
+    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
+    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
+    onError: (error, _vars, context) => {
+      context?.tabHandle?.close();
+      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
+    },
+  });
 
-  if (quoteQuery.isPending || (isPrintMode && printDataQuery.isPending)) {
+  if (quoteQuery.isPending || (needsPrintData && printDataQuery.isPending)) {
     return (
       <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
         <p className="text-sm text-app-muted">{tr.common.loading}</p>
@@ -710,7 +759,7 @@ export function QuoteDetailPage() {
             {quote.contact && ` · ${quote.contact.firstName} ${quote.contact.lastName}`}
           </p>
         </div>
-        {!isPrintMode && (
+        {!isPrintMode && activeTab === 'overview' && (
           <div className="flex items-center gap-2 pt-1">
             <CircleIconButton
               icon={Mail}
@@ -789,46 +838,109 @@ export function QuoteDetailPage() {
             )}
           </div>
         )}
+        {!isPrintMode && activeTab === 'cost' && (
+          <div className="flex items-center gap-2 pt-1">
+            <CircleIconButton
+              icon={FileDown}
+              tooltip={tr.crm.quotes.costTab.exportPdfButton}
+              onClick={() => exportCostPdfMutation.mutate()}
+              disabled={exportCostPdfMutation.isPending}
+            />
+          </div>
+        )}
+        {!isPrintMode && activeTab === 'charts' && (
+          <div className="flex items-center gap-2 pt-1">
+            <CircleIconButton
+              icon={FileDown}
+              tooltip={tr.crm.quotes.chartsTab.exportPdfButton}
+              onClick={() => exportChartsPdfMutation.mutate()}
+              disabled={exportChartsPdfMutation.isPending}
+            />
+          </div>
+        )}
       </div>
 
-      <div className="mt-6">
-        <QuoteContentBody
-          quote={quote}
-          isPrintMode={isPrintMode}
-          onOpportunityClick={(opportunityId) => navigate(`/firsatlar/${opportunityId}`)}
-          company={printDataQuery.data?.company}
-          sender={printDataQuery.data?.sender}
-        />
-      </div>
-
-      {!isPrintMode && <QuoteDrawingsSection quoteId={quote.id} />}
-
-      {!isPrintMode && (quote.status === 'DRAFT' || quote.status === 'REVIZE') && (
-        <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
-          <CircleIconButton
-            icon={Send}
-            tooltip={tr.crm.quotes.detail.sendForApprovalButton}
-            onClick={handleSendForApproval}
-            disabled={sendForApprovalMutation.isPending}
-          />
+      {isPrintMode ? (
+        <div className="mt-6">
+          {activeTab === 'cost' && <QuoteCostContent quote={quote} />}
+          {activeTab === 'charts' && <QuoteChartsContent quote={quote} />}
+          {activeTab !== 'cost' && activeTab !== 'charts' && (
+            <QuoteContentBody
+              quote={quote}
+              isPrintMode={isPrintMode}
+              onOpportunityClick={(opportunityId) => navigate(`/firsatlar/${opportunityId}`)}
+              onProjectClick={(projectNumber) => navigate(`/projeler/${projectNumber}`)}
+              company={printDataQuery.data?.company}
+              sender={printDataQuery.data?.sender}
+            />
+          )}
         </div>
-      )}
+      ) : (
+        <div className="mt-6">
+          <HorizontalTabPanel
+            queryParam="tab"
+            tabs={
+              [
+                {
+                  key: 'overview',
+                  label: tr.crm.quotes.tabs.overview,
+                  content: (
+                    <>
+                      <QuoteContentBody
+                        quote={quote}
+                        isPrintMode={false}
+                        onOpportunityClick={(opportunityId) =>
+                          navigate(`/firsatlar/${opportunityId}`)
+                        }
+                        onProjectClick={(projectNumber) => navigate(`/projeler/${projectNumber}`)}
+                      />
 
-      {!isPrintMode && quote.status === 'PENDING_APPROVAL' && canApprove && (
-        <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
-          <CircleIconButton
-            icon={Check}
-            variant="success"
-            tooltip={tr.crm.quotes.detail.approveButton}
-            onClick={() => setPendingAction('APPROVED')}
-            disabled={approveMutation.isPending}
-          />
-          <CircleIconButton
-            icon={X}
-            variant="danger"
-            tooltip={tr.crm.quotes.detail.rejectButton}
-            onClick={() => setPendingAction('REJECTED')}
-            disabled={rejectMutation.isPending}
+                      <QuoteDrawingsSection quoteId={quote.id} />
+
+                      {(quote.status === 'DRAFT' || quote.status === 'REVIZE') && (
+                        <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
+                          <CircleIconButton
+                            icon={Send}
+                            tooltip={tr.crm.quotes.detail.sendForApprovalButton}
+                            onClick={handleSendForApproval}
+                            disabled={sendForApprovalMutation.isPending}
+                          />
+                        </div>
+                      )}
+
+                      {quote.status === 'PENDING_APPROVAL' && canApprove && (
+                        <div className="mt-8 flex justify-end gap-2 border-t border-app-border pt-6">
+                          <CircleIconButton
+                            icon={Check}
+                            variant="success"
+                            tooltip={tr.crm.quotes.detail.approveButton}
+                            onClick={() => setPendingAction('APPROVED')}
+                            disabled={approveMutation.isPending}
+                          />
+                          <CircleIconButton
+                            icon={X}
+                            variant="danger"
+                            tooltip={tr.crm.quotes.detail.rejectButton}
+                            onClick={() => setPendingAction('REJECTED')}
+                            disabled={rejectMutation.isPending}
+                          />
+                        </div>
+                      )}
+                    </>
+                  ),
+                },
+                {
+                  key: 'cost',
+                  label: tr.crm.quotes.tabs.cost,
+                  content: <QuoteCostContent quote={quote} />,
+                },
+                {
+                  key: 'charts',
+                  label: tr.crm.quotes.tabs.charts,
+                  content: <QuoteChartsContent quote={quote} />,
+                },
+              ] satisfies HorizontalTabItem[]
+            }
           />
         </div>
       )}

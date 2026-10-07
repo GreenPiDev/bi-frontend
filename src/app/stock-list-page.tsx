@@ -18,6 +18,7 @@ import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
+import { SortPicker, type SortPickerOption } from '../components/ui/sort-picker';
 import { Tooltip } from '../components/ui/tooltip';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -209,6 +210,14 @@ export function StockListContent() {
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
+  const SORT_OPTIONS: SortPickerOption[] = [
+    { key: '', direction: 'asc', label: tr.crm.stock.sortOptions.default },
+    { key: 'name', direction: 'asc', label: tr.crm.stock.sortOptions.nameAsc },
+    { key: 'name', direction: 'desc', label: tr.crm.stock.sortOptions.nameDesc },
+    { key: 'quantity', direction: 'asc', label: tr.crm.stock.sortOptions.quantityAsc },
+    { key: 'quantity', direction: 'desc', label: tr.crm.stock.sortOptions.quantityDesc },
+  ];
+
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -255,7 +264,15 @@ export function StockListContent() {
           : tr.crm.stock.noLowStock}
       </p>
 
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-2">
+        <SortPicker
+          options={SORT_OPTIONS}
+          value={sort}
+          onChange={(next) => {
+            setSort(next);
+            setPage(1);
+          }}
+        />
         <ColumnVisibilityPicker
           columns={optionalColumns}
           value={visibleOptionalKeys}
