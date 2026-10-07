@@ -1,6 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
@@ -45,6 +45,31 @@ function formatBudget(value: string | null): string {
 
 function quoteTotalsByCurrency(quote: Quote) {
   return getQuoteCurrencyTotals(quote);
+}
+
+const numberFormatter = new Intl.NumberFormat('tr-TR');
+
+function StatCard({
+  label,
+  value,
+  onClick,
+}: {
+  label: string;
+  value: number | undefined;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex cursor-pointer flex-col items-center gap-1 border border-app-border bg-app-surface p-6 text-center transition-colors hover:border-app-brand hover:bg-app-bg-muted"
+    >
+      <span className="text-3xl font-bold text-app-text">
+        {value === undefined ? '—' : numberFormatter.format(value)}
+      </span>
+      <span className="text-sm font-medium text-app-muted">{label}</span>
+    </button>
+  );
 }
 
 function SectionHeader({ children }: { children: ReactNode }) {
@@ -194,11 +219,18 @@ export function AccountDetailPage() {
   const { slug = '' } = useParams();
   const id = extractAccountId(slug);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const accountQuery = useAccountQuery(id);
   const interactionsQuery = useInteractionsQuery({ accountId: id });
   const opportunitiesQuery = useOpportunitiesQuery({ accountId: id });
   const quotesQuery = useQuotesQuery({ accountId: id });
   const projectsQuery = useProjectsQuery({ accountId: id });
+
+  function goToTab(tabKey: string) {
+    const next = new URLSearchParams(searchParams);
+    next.set('tab', tabKey);
+    setSearchParams(next);
+  }
 
   if (accountQuery.isPending) {
     return (
@@ -267,6 +299,29 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabGeneral,
               content: (
                 <div className="flex flex-col gap-6">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <StatCard
+                      label={tr.crm.accounts.detail.tabInteractions}
+                      value={interactionsQuery.data?.meta.total}
+                      onClick={() => goToTab('interactions')}
+                    />
+                    <StatCard
+                      label={tr.crm.accounts.detail.tabOpportunities}
+                      value={opportunitiesQuery.data?.meta.total}
+                      onClick={() => goToTab('opportunities')}
+                    />
+                    <StatCard
+                      label={tr.crm.accounts.detail.tabQuotes}
+                      value={quotesQuery.data?.meta.total}
+                      onClick={() => goToTab('quotes')}
+                    />
+                    <StatCard
+                      label={tr.crm.accounts.detail.tabProjects}
+                      value={projectsQuery.data?.meta.total}
+                      onClick={() => goToTab('projects')}
+                    />
+                  </div>
+
                   <div className="rounded-xl border border-app-border bg-white p-5">
                     <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {fields.map((field) => (
