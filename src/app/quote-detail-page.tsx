@@ -258,7 +258,10 @@ export function QuoteContentBody({
     <>
       <div
         className={clsx(
-          'grid grid-cols-2 gap-4 border-y border-app-border py-4 sm:divide-x sm:divide-app-border',
+          'grid grid-cols-2 gap-4 sm:divide-x sm:divide-app-border',
+          isPrintMode
+            ? 'border-y border-app-border py-4'
+            : 'rounded-xl border border-app-border bg-white p-5',
           !isPrintMode && quote.project ? 'sm:grid-cols-5' : 'sm:grid-cols-4',
         )}
       >
@@ -756,7 +759,7 @@ function QuoteStatusHistoryContent({ quote }: { quote: Quote }) {
     {
       key: 'duration',
       header: tr.crm.quotes.statusTab.durationColumn,
-      className: 'w-40 whitespace-nowrap text-app-muted',
+      className: 'w-60 whitespace-nowrap text-app-muted',
       render: (row) => row.durationLabel,
     },
     {

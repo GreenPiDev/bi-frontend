@@ -2848,6 +2848,20 @@ export function getQuoteRejectionReasonsSummary(): Promise<QuoteRejectionReasonS
   return request('/quotes/rejection-reasons-summary');
 }
 
+export interface RejectedQuoteReasonRow {
+  id: string;
+  quoteNumber: string;
+  accountName: string;
+  rejectedAt: string | null;
+  reason: string | null;
+  note: string | null;
+}
+
+/** /teklifler?tab=reports "Reddedilme Notları" collapsible tablosu - en yeni reddedilen ustte. */
+export function getRejectedQuotesWithReasons(): Promise<RejectedQuoteReasonRow[]> {
+  return request('/quotes/rejected-reasons-list');
+}
+
 export interface ProjectResponsibleUser {
   id: string;
   name: string;

@@ -37,7 +37,11 @@ export function TruncatedTextCell({
     <button
       ref={ref}
       type="button"
-      onClick={() => isTruncated && onOpen()}
+      onClick={(event) => {
+        if (!isTruncated) return;
+        event.stopPropagation();
+        onOpen();
+      }}
       className={clsx(
         'block w-full truncate text-left',
         isTruncated

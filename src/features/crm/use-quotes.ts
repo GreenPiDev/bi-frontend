@@ -9,6 +9,7 @@ import {
   getQuoteRevisionSummary,
   getQuoteStatusHistory,
   getQuoteStockCheck,
+  getRejectedQuotesWithReasons,
   listQuoteAssignableUsers,
   listQuotes,
   rejectQuote,
@@ -80,6 +81,14 @@ export function useQuoteRejectionReasonsSummaryQuery() {
   return useQuery({
     queryKey: [...QUOTES_QUERY_KEY, 'rejection-reasons-summary'],
     queryFn: () => getQuoteRejectionReasonsSummary(),
+  });
+}
+
+/** /teklifler?tab=reports "Reddedilme Notları" collapsible tablosu. */
+export function useRejectedQuotesWithReasonsQuery() {
+  return useQuery({
+    queryKey: [...QUOTES_QUERY_KEY, 'rejected-reasons-list'],
+    queryFn: () => getRejectedQuotesWithReasons(),
   });
 }
 

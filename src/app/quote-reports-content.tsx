@@ -1,17 +1,81 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChartCard } from '../components/ui/chart-card';
+import { CollapsibleSection } from '../components/ui/collapsible-section';
+import { Modal } from '../components/ui/modal';
+import { Table, type TableColumn } from '../components/ui/table';
+import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
 import {
   useQuoteRejectionReasonsSummaryQuery,
   useQuoteStatusCounts,
+  useRejectedQuotesWithReasonsQuery,
 } from '../features/crm/use-quotes';
 import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
 import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
 import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
 import { tr } from '../i18n/tr';
-import type { QuoteStatus } from '../lib/api';
+import type { QuoteStatus, RejectedQuoteReasonRow } from '../lib/api';
 import { QUOTE_STATUS_OPTIONS } from '../lib/quote-totals';
 
 const numberFormatter = new Intl.NumberFormat('tr-TR');
+const dateFormatter = new Intl.DateTimeFormat('tr-TR');
+
+function RejectedQuotesReasonsTable() {
+  const navigate = useNavigate();
+  const rejectedQuotesQuery = useRejectedQuotesWithReasonsQuery();
+  const rows = (rejectedQuotesQuery.data ?? []).filter((row) => Boolean(row.note));
+  const [noteModalRow, setNoteModalRow] = useState<RejectedQuoteReasonRow | null>(null);
+
+  const columns: TableColumn<RejectedQuoteReasonRow>[] = [
+    {
+      key: 'quoteNumber',
+      header: tr.crm.quoteReports.rejectionNotesTable.quoteColumn,
+      render: (row) => row.quoteNumber,
+    },
+    {
+      key: 'accountName',
+      header: tr.crm.quoteReports.rejectionNotesTable.accountColumn,
+      render: (row) => row.accountName,
+    },
+    {
+      key: 'rejectedAt',
+      header: tr.crm.quoteReports.rejectionNotesTable.dateColumn,
+      render: (row) => (row.rejectedAt ? dateFormatter.format(new Date(row.rejectedAt)) : '—'),
+    },
+    {
+      key: 'reason',
+      header: tr.crm.quoteReports.rejectionNotesTable.reasonColumn,
+      render: (row) => row.reason ?? tr.crm.quoteReports.rejectionReasonUnspecified,
+    },
+    {
+      key: 'note',
+      header: tr.crm.quoteReports.rejectionNotesTable.noteColumn,
+      className: 'max-w-xs text-app-muted',
+      render: (row) => <TruncatedTextCell text={row.note} onOpen={() => setNoteModalRow(row)} />,
+    },
+  ];
+
+  return (
+    <>
+      <Table
+        columns={columns}
+        data={rows}
+        keyField={(row) => row.id}
+        onRowClick={(row) => navigate(`/teklifler/${row.id}`)}
+        isLoading={rejectedQuotesQuery.isLoading}
+        emptyMessage={tr.crm.quoteReports.rejectionNotesTable.empty}
+      />
+      {noteModalRow && (
+        <Modal
+          title={tr.crm.quoteReports.rejectionNotesTable.noteModalTitle}
+          onClose={() => setNoteModalRow(null)}
+        >
+          <p className="whitespace-pre-wrap text-sm text-app-text">{noteModalRow.note}</p>
+        </Modal>
+      )}
+    </>
+  );
+}
 
 function KpiCard({
   label,
@@ -111,6 +175,13 @@ export function QuoteReportsContent() {
           <p className="text-sm text-app-muted">{tr.crm.quoteReports.rejectionReasonsEmpty}</p>
         )}
       </ChartCard>
+
+      <CollapsibleSection
+        title={tr.crm.quoteReports.rejectionNotesSectionTitle}
+        subtitle={tr.crm.quoteReports.rejectionNotesSectionSubtitle}
+      >
+        <RejectedQuotesReasonsTable />
+      </CollapsibleSection>
     </div>
   );
 }

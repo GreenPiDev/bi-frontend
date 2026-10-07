@@ -2807,6 +2807,18 @@ export const tr = {
       rejectionReasonsTitle: 'Teklif Reddedilme Sebepleri',
       rejectionReasonUnspecified: 'Belirtilmemiş',
       rejectionReasonsEmpty: 'Henüz reddedilmiş teklif yok.',
+      rejectionNotesSectionTitle: 'Reddedilme Notları',
+      rejectionNotesSectionSubtitle: 'Reddedilen tekliflerin sebep ve notlarını görüntüleyin.',
+      rejectionNotesTable: {
+        quoteColumn: 'Teklif No',
+        accountColumn: 'Firma',
+        dateColumn: 'Tarih',
+        reasonColumn: 'Red Sebebi',
+        noteColumn: 'Not',
+        noNote: '—',
+        empty: 'Henüz reddedilmiş teklif yok.',
+        noteModalTitle: 'Reddedilme Notu',
+      },
     },
     postSaleCases: {
       title: 'Satış Sonrası Destek',
