@@ -12,8 +12,8 @@ import {
   ShoppingCart,
   Trash2,
 } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ApproveQuoteModal } from './approve-quote-modal';
 import { NewMessageModal } from './new-message-modal';
@@ -112,6 +112,7 @@ function QuoteStatusSelect({
 
 export function QuotesListContent() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
   const meQuery = useMeQuery();
   const usersQuery = useUsersQuery();
@@ -124,7 +125,22 @@ export function QuotesListContent() {
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
-  const [status, setStatus] = useState<QuoteStatus | ''>('');
+  const [status, setStatus] = useState<QuoteStatus | ''>(() => {
+    const fromUrl = searchParams.get('status');
+    return STATUS_OPTIONS.some((option) => option.value === fromUrl)
+      ? (fromUrl as QuoteStatus)
+      : '';
+  });
+  // Rapor sekmesindeki KPI kartlarindan "?status=..." ile gelindiginde baslangic
+  // filtresini uygulamak icin yukarida okunuyor - URL'de kalip kafa karistirmasin diye
+  // tuketildikten sonra temizlenir (tab parametresi dokunulmadan kalir).
+  useEffect(() => {
+    if (!searchParams.has('status')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('status');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [createdById, setCreatedById] = useState('');
   const [sinceInput, setSinceInput] = useState('');
   const [rangeFromInput, setRangeFromInput] = useState('');
