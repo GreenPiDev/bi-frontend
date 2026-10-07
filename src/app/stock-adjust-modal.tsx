@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import type { KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
@@ -15,6 +16,19 @@ import {
 } from '../features/crm/use-stock-items';
 import { ApiError, type StockItem } from '../lib/api';
 import { tr } from '../i18n/tr';
+
+/** Sadece sayi ve ondalik nokta girişine izin verir - harf/sembol tuş vuruşları
+ * en baştan engellenir (Zod şeması yalnızca gönderimde kontrol ediyordu). */
+function blockNonNumericKey(event: KeyboardEvent<HTMLInputElement>) {
+  if (event.ctrlKey || event.metaKey || event.key.length > 1) return;
+  if (event.key === '.' && event.currentTarget.value.includes('.')) {
+    event.preventDefault();
+    return;
+  }
+  if (!/^[0-9.]$/.test(event.key)) {
+    event.preventDefault();
+  }
+}
 
 interface StockAdjustModalProps {
   item: StockItem;
@@ -142,6 +156,7 @@ export function StockAdjustModal({ item, mode, onClose }: StockAdjustModalProps)
             error={errors.amount?.message}
             required
             autoFocus
+            onKeyDown={blockNonNumericKey}
             {...register('amount')}
           />
           {!errors.amount && amountHint && (
@@ -155,6 +170,7 @@ export function StockAdjustModal({ item, mode, onClose }: StockAdjustModalProps)
             inputMode="decimal"
             error={errors.unitCost?.message}
             required
+            onKeyDown={blockNonNumericKey}
             {...register('unitCost')}
           />
         )}

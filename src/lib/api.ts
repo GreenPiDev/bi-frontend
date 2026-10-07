@@ -2367,13 +2367,17 @@ export interface ProductList {
   updatedAt: string;
 }
 
+export interface ProductListWithCount extends ProductList {
+  productCount: number;
+}
+
 export interface ProductListInput {
   name: string;
 }
 
 export function listProductLists(
   params: { page?: number; pageSize?: number; q?: string } = {},
-): Promise<PagedResult<ProductList>> {
+): Promise<PagedResult<ProductListWithCount>> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));

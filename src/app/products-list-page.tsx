@@ -311,6 +311,16 @@ export function ProductsListContent() {
     { key: '', direction: 'asc', label: tr.crm.products.sortOptions.default },
     { key: 'name', direction: 'asc', label: tr.crm.products.sortOptions.nameAsc },
     { key: 'name', direction: 'desc', label: tr.crm.products.sortOptions.nameDesc },
+    {
+      key: 'stockQuantity',
+      direction: 'asc',
+      label: tr.crm.products.sortOptions.stockQuantityAsc,
+    },
+    {
+      key: 'stockQuantity',
+      direction: 'desc',
+      label: tr.crm.products.sortOptions.stockQuantityDesc,
+    },
   ];
 
   return (

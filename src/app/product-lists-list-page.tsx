@@ -14,7 +14,7 @@ import {
   useDeleteProductListMutation,
   useProductListsQuery,
 } from '../features/crm/use-product-lists';
-import { ApiError, type ProductList } from '../lib/api';
+import { ApiError, type ProductListWithCount } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 export function ProductListsListContent() {
@@ -24,7 +24,7 @@ export function ProductListsListContent() {
   const toast = useToast();
   const [page, setPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [deletingProductList, setDeletingProductList] = useState<ProductList | undefined>(
+  const [deletingProductList, setDeletingProductList] = useState<ProductListWithCount | undefined>(
     undefined,
   );
   const meQuery = useMeQuery();
@@ -45,12 +45,17 @@ export function ProductListsListContent() {
     });
   }
 
-  const columns: TableColumn<ProductList>[] = [
+  const columns: TableColumn<ProductListWithCount>[] = [
     {
       key: 'name',
       header: tr.crm.productLists.nameColumn,
       required: true,
       render: (pl) => <span className="font-semibold text-app-text">{pl.name}</span>,
+    },
+    {
+      key: 'productCount',
+      header: tr.crm.productLists.productCountColumn,
+      render: (pl) => <span className="text-app-text">{pl.productCount}</span>,
     },
     {
       key: 'actions',
