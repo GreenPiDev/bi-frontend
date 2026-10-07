@@ -5,6 +5,7 @@ import {
   deleteQuote,
   getQuote,
   getQuoteFxRates,
+  getQuoteRejectionReasonsSummary,
   getQuoteRevisionSummary,
   getQuoteStatusHistory,
   getQuoteStockCheck,
@@ -72,6 +73,14 @@ export function useQuoteStatusCounts(statuses: readonly QuoteStatus[]) {
   });
 
   return { all: allResult?.data?.meta.total, counts };
+}
+
+/** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
+export function useQuoteRejectionReasonsSummaryQuery() {
+  return useQuery({
+    queryKey: [...QUOTES_QUERY_KEY, 'rejection-reasons-summary'],
+    queryFn: () => getQuoteRejectionReasonsSummary(),
+  });
 }
 
 export function useQuoteQuery(id: string) {
@@ -168,7 +177,8 @@ export function useQuoteRevisionSummaryQuery(accountId: string | undefined) {
 export function useRejectQuoteMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => rejectQuote(id),
+    mutationFn: ({ reason, note }: { reason: string; note?: string }) =>
+      rejectQuote(id, reason, note),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['quotes', id] });

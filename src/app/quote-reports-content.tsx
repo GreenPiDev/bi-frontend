@@ -1,6 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { ChartCard } from '../components/ui/chart-card';
-import { useQuoteStatusCounts } from '../features/crm/use-quotes';
+import {
+  useQuoteRejectionReasonsSummaryQuery,
+  useQuoteStatusCounts,
+} from '../features/crm/use-quotes';
 import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
 import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
 import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
@@ -36,6 +39,7 @@ function KpiCard({
 export function QuoteReportsContent() {
   const navigate = useNavigate();
   const statusCounts = useQuoteStatusCounts(QUOTE_STATUS_OPTIONS.map((option) => option.value));
+  const rejectionReasonsQuery = useQuoteRejectionReasonsSummaryQuery();
   const theme = getChartTheme();
 
   function goToQuotes(status?: QuoteStatus) {
@@ -54,6 +58,15 @@ export function QuoteReportsContent() {
     theme,
     statusDistributionPoints,
     (value) => numberFormatter.format(value),
+  );
+
+  const rejectionReasonPoints = (rejectionReasonsQuery.data ?? []).map((row) => ({
+    name: row.reason ?? tr.crm.quoteReports.rejectionReasonUnspecified,
+    value: row.count,
+  }));
+  const hasRejectedQuotes = rejectionReasonPoints.length > 0;
+  const rejectionReasonsOption = buildPieOptionFromPoints(theme, rejectionReasonPoints, (value) =>
+    numberFormatter.format(value),
   );
 
   return (
@@ -85,6 +98,17 @@ export function QuoteReportsContent() {
           />
         ) : (
           <p className="text-sm text-app-muted">{tr.crm.quotes.costTab.empty}</p>
+        )}
+      </ChartCard>
+
+      <ChartCard title={tr.crm.quoteReports.rejectionReasonsTitle}>
+        {hasRejectedQuotes ? (
+          <ChartWithExport
+            option={rejectionReasonsOption}
+            fileName={tr.crm.quoteReports.rejectionReasonsTitle}
+          />
+        ) : (
+          <p className="text-sm text-app-muted">{tr.crm.quoteReports.rejectionReasonsEmpty}</p>
         )}
       </ChartCard>
     </div>

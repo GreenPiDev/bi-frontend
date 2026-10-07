@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ApproveQuoteModal } from './approve-quote-modal';
+import { RejectQuoteModal } from './reject-quote-modal';
 import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
@@ -151,6 +152,10 @@ export function QuotesListContent() {
   const [pendingStatusChange, setPendingStatusChange] = useState<
     { quote: Quote; status: QuoteStatus } | undefined
   >(undefined);
+  // REJECTED icin iki asamali akis: ConfirmModal "evet, degistir" sonrasi bu geri
+  // bildirim modali acilir (reason+opsiyonel not) - APPROVED'daki ApproveQuoteModal
+  // ile ayni "once onay, sonra form" deseni, REVIZE'de boyle bir ikinci adim yok.
+  const [rejectFeedbackOpen, setRejectFeedbackOpen] = useState(false);
   // Iki tarih filtresi ayni quoteDate alanini hedefler, birbirini sifirlar: aralik
   // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. opportunities-list-page.tsx).
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
@@ -222,15 +227,20 @@ export function QuotesListContent() {
     });
   }
 
-  function handleConfirmStatusChange(warehouseId?: string) {
+  function handleConfirmStatusChange(extra?: {
+    warehouseId?: string;
+    rejectionReason?: string;
+    rejectionNote?: string;
+  }) {
     if (!pendingStatusChange) return;
     const { quote, status } = pendingStatusChange;
     confirmStatusMutation.mutate(
-      { status, ...(warehouseId ? { warehouseId } : {}) },
+      { status, ...extra },
       {
         onSuccess: () => {
           toast.success(tr.crm.quotes.statusUpdateSuccess);
           setPendingStatusChange(undefined);
+          setRejectFeedbackOpen(false);
           if (status === 'REVIZE') {
             navigate(`/teklifler/duzenle/${quote.id}`);
           }
@@ -573,24 +583,44 @@ export function QuotesListContent() {
       {pendingStatusChange?.status === 'APPROVED' && (
         <ApproveQuoteModal
           isPending={confirmStatusMutation.isPending}
-          onConfirm={(warehouseId) => handleConfirmStatusChange(warehouseId)}
+          onConfirm={(warehouseId) => handleConfirmStatusChange({ warehouseId })}
           onCancel={() => setPendingStatusChange(undefined)}
         />
       )}
-      {pendingStatusChange && pendingStatusChange.status !== 'APPROVED' && (
-        <ConfirmModal
-          title={tr.crm.quotes.statusChangeConfirmTitle}
-          message={
-            pendingStatusChange.status === 'REVIZE'
-              ? tr.crm.quotes.reviseConfirmMessage
-              : tr.crm.quotes.statusChangeConfirm(
-                  tr.crm.quotes.statusOptions[pendingStatusChange.status],
-                )
-          }
-          confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
+      {pendingStatusChange &&
+        pendingStatusChange.status !== 'APPROVED' &&
+        !(pendingStatusChange.status === 'REJECTED' && rejectFeedbackOpen) && (
+          <ConfirmModal
+            title={tr.crm.quotes.statusChangeConfirmTitle}
+            message={
+              pendingStatusChange.status === 'REVIZE'
+                ? tr.crm.quotes.reviseConfirmMessage
+                : tr.crm.quotes.statusChangeConfirm(
+                    tr.crm.quotes.statusOptions[pendingStatusChange.status],
+                  )
+            }
+            confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
+            isPending={
+              pendingStatusChange.status === 'REJECTED' ? false : confirmStatusMutation.isPending
+            }
+            onConfirm={() =>
+              pendingStatusChange.status === 'REJECTED'
+                ? setRejectFeedbackOpen(true)
+                : handleConfirmStatusChange()
+            }
+            onCancel={() => setPendingStatusChange(undefined)}
+          />
+        )}
+      {pendingStatusChange?.status === 'REJECTED' && rejectFeedbackOpen && (
+        <RejectQuoteModal
           isPending={confirmStatusMutation.isPending}
-          onConfirm={() => handleConfirmStatusChange()}
-          onCancel={() => setPendingStatusChange(undefined)}
+          onConfirm={(reason, note) =>
+            handleConfirmStatusChange({ rejectionReason: reason, rejectionNote: note })
+          }
+          onCancel={() => {
+            setRejectFeedbackOpen(false);
+            setPendingStatusChange(undefined);
+          }}
         />
       )}
 

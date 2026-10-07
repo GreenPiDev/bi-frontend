@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { ApproveQuoteModal } from './approve-quote-modal';
+import { RejectQuoteModal } from './reject-quote-modal';
 import { NewMessageModal } from './new-message-modal';
 import { QuoteChartsContent } from './quote-charts-content';
 import { QuoteCostContent } from './quote-cost-content';
@@ -186,6 +187,10 @@ export function QuoteContentBody({
     .filter((entry) => entry.status === 'REVIZE' && entry.note)
     .slice()
     .reverse();
+  const rejectionEntries = (statusHistoryQuery.data ?? []).filter(
+    (entry) => entry.status === 'REJECTED' && entry.reason,
+  );
+  const rejectionEntry = rejectionEntries[rejectionEntries.length - 1] ?? null;
   const [revisionNoteModalEntry, setRevisionNoteModalEntry] =
     useState<QuoteStatusHistoryEntry | null>(null);
   const revisionColumns: TableColumn<QuoteStatusHistoryEntry>[] = [
@@ -310,6 +315,18 @@ export function QuoteContentBody({
                 {revisionNoteModalEntry.note}
               </p>
             </Modal>
+          )}
+        </div>
+      )}
+
+      {!isPrintMode && quote.status === 'REJECTED' && rejectionEntry && (
+        <div className="mt-8">
+          <SectionHeader>{tr.crm.quotes.detail.rejectionReasonTitle}</SectionHeader>
+          <p className="text-sm text-app-text">{rejectionEntry.reason}</p>
+          {rejectionEntry.note && (
+            <p className="mt-1 text-sm text-app-muted">
+              {tr.crm.quotes.detail.rejectionNoteLabel} {rejectionEntry.note}
+            </p>
           )}
         </div>
       )}
@@ -695,7 +712,10 @@ function buildStatusHistoryRows(
         : null,
     createdAt: entry.createdAt,
     createdByName: entry.createdByName,
-    note: entry.note,
+    note:
+      entry.status === 'REJECTED'
+        ? [entry.reason, entry.note].filter(Boolean).join(' — ') || null
+        : entry.note,
     durationLabel:
       index === 0
         ? tr.crm.quotes.statusTab.firstRowDuration
@@ -827,9 +847,9 @@ export function QuoteDetailPage() {
   const isPrintMode = searchParams.get('print') === '1';
   const activeTab = searchParams.get('tab') ?? 'overview';
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'APPROVED' | 'REJECTED' | undefined>(
-    undefined,
-  );
+  const [pendingAction, setPendingAction] = useState<
+    'APPROVED' | 'REJECTED' | 'REJECTED_FEEDBACK' | undefined
+  >(undefined);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isReviseConfirmOpen, setIsReviseConfirmOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
@@ -937,16 +957,19 @@ export function QuoteDetailPage() {
     });
   }
 
-  function handleConfirmReject() {
-    rejectMutation.mutate(undefined, {
-      onSuccess: () => {
-        toast.success(tr.crm.quotes.detail.rejectSuccess);
-        setPendingAction(undefined);
+  function handleConfirmReject(reason: string, note?: string) {
+    rejectMutation.mutate(
+      { reason, note },
+      {
+        onSuccess: () => {
+          toast.success(tr.crm.quotes.detail.rejectSuccess);
+          setPendingAction(undefined);
+        },
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
       },
-      onError: (error) => {
-        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-      },
-    });
+    );
   }
 
   function handleConfirmRevise() {
@@ -1204,6 +1227,14 @@ export function QuoteDetailPage() {
           title={tr.crm.quotes.statusChangeConfirmTitle}
           message={tr.crm.quotes.statusChangeConfirm(tr.crm.quotes.statusOptions.REJECTED)}
           confirmLabel={tr.crm.quotes.statusChangeConfirmButton}
+          isPending={false}
+          onConfirm={() => setPendingAction('REJECTED_FEEDBACK')}
+          onCancel={() => setPendingAction(undefined)}
+        />
+      )}
+
+      {pendingAction === 'REJECTED_FEEDBACK' && (
+        <RejectQuoteModal
           isPending={rejectMutation.isPending}
           onConfirm={handleConfirmReject}
           onCancel={() => setPendingAction(undefined)}

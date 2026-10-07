@@ -518,6 +518,15 @@ export const approveQuoteFormSchema = z.object({
 
 export type ApproveQuoteFormValues = z.infer<typeof approveQuoteFormSchema>;
 
+/** Teklif reddinde geri bildirim: sebep secimi (tanimli listeden) zorunlu, ek
+ * aciklama opsiyonel - ApproveQuoteModal ile ayni "once onay, sonra form" deseni. */
+export const rejectQuoteFormSchema = z.object({
+  reason: z.string().min(1, 'Red sebebi seçimi gerekli.'),
+  note: z.string().max(2000).optional(),
+});
+
+export type RejectQuoteFormValues = z.infer<typeof rejectQuoteFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {

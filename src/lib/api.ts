@@ -1218,6 +1218,39 @@ export function deletePaymentMethodOption(id: string): Promise<void> {
   return request(`/payment-method-options/${id}`, { method: 'DELETE' });
 }
 
+export interface QuoteRejectionReasonOption {
+  id: string;
+  label: string;
+  createdAt: string;
+}
+
+export function listQuoteRejectionReasonOptions(): Promise<QuoteRejectionReasonOption[]> {
+  return request('/quote-rejection-reason-options');
+}
+
+export function createQuoteRejectionReasonOption(
+  label: string,
+): Promise<QuoteRejectionReasonOption> {
+  return request('/quote-rejection-reason-options', {
+    method: 'POST',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function updateQuoteRejectionReasonOption(
+  id: string,
+  label: string,
+): Promise<QuoteRejectionReasonOption> {
+  return request(`/quote-rejection-reason-options/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ label }),
+  });
+}
+
+export function deleteQuoteRejectionReasonOption(id: string): Promise<void> {
+  return request(`/quote-rejection-reason-options/${id}`, { method: 'DELETE' });
+}
+
 export interface IbanOption {
   id: string;
   bankName: string;
@@ -2731,6 +2764,11 @@ export interface UpdateQuoteInput {
   exchangeRates?: QuoteExchangeRates;
   templateId?: string | null;
   senderId?: string;
+  /** status 'REJECTED' ise zorunlu - kullanicinin sectigi red sebebi (bkz.
+   * crm_quote_rejection_reason_options). */
+  rejectionReason?: string;
+  /** Opsiyonel ek aciklama - hangi sebep secilirse secilsin girilebilir. */
+  rejectionNote?: string;
 }
 
 export function listQuotes(
@@ -2798,6 +2836,16 @@ export function getQuoteFxRates(base: string, targets: string[]): Promise<FxRate
  * istedi") - bir firmanin tum tekliflerindeki revisionCount toplami. */
 export function getQuoteRevisionSummary(accountId: string): Promise<{ count: number }> {
   return request(`/quotes/revision-summary?accountId=${accountId}`);
+}
+
+export interface QuoteRejectionReasonSummaryRow {
+  reason: string | null;
+  count: number;
+}
+
+/** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
+export function getQuoteRejectionReasonsSummary(): Promise<QuoteRejectionReasonSummaryRow[]> {
+  return request('/quotes/rejection-reasons-summary');
 }
 
 export interface ProjectResponsibleUser {
@@ -2910,8 +2958,11 @@ export function deleteProject(id: string): Promise<void> {
   return request(`/projects/${id}`, { method: 'DELETE' });
 }
 
-export function rejectQuote(id: string): Promise<Quote> {
-  return request(`/quotes/${id}/reject`, { method: 'POST' });
+export function rejectQuote(id: string, reason: string, note?: string): Promise<Quote> {
+  return request(`/quotes/${id}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason, note }),
+  });
 }
 
 export function exportQuotePdf(quoteId: string): Promise<Blob> {
@@ -3063,6 +3114,7 @@ export function getQuotePrintData(quoteId: string): Promise<QuotePrintData> {
 export interface QuoteStatusHistoryEntry {
   id: string;
   status: QuoteStatus;
+  reason: string | null;
   note: string | null;
   createdAt: string;
   createdByName: string | null;

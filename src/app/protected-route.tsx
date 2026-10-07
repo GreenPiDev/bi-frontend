@@ -9,6 +9,7 @@ import { useIbanOptionsRealtimeSync } from '../features/crm/use-iban-options-rea
 import { useInteractionTypeOptionsRealtimeSync } from '../features/crm/use-interaction-type-options-realtime-sync';
 import { useMessagesRealtimeSync } from '../features/crm/use-messages-realtime-sync';
 import { usePaymentMethodOptionsRealtimeSync } from '../features/crm/use-payment-method-options-realtime-sync';
+import { useQuoteRejectionReasonOptionsRealtimeSync } from '../features/crm/use-quote-rejection-reason-options-realtime-sync';
 import { useProductCategoryOptionsRealtimeSync } from '../features/crm/use-product-categories-realtime-sync';
 import { useProductListsRealtimeSync } from '../features/crm/use-product-lists-realtime-sync';
 import { useTenantSettingsRealtimeSync } from '../features/crm/use-tenant-settings-realtime-sync';
@@ -51,6 +52,7 @@ export function ProtectedRoute({
   useTenantSettingsRealtimeSync();
   useTitleOptionsRealtimeSync();
   usePaymentMethodOptionsRealtimeSync();
+  useQuoteRejectionReasonOptionsRealtimeSync();
   useIbanOptionsRealtimeSync();
   useInteractionTypeOptionsRealtimeSync();
   useNotificationsRealtimeSync();

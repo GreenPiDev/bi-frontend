@@ -47,6 +47,12 @@ import {
   useUpdatePaymentMethodOptionMutation,
 } from './use-payment-method-options';
 import {
+  useCreateQuoteRejectionReasonOptionMutation,
+  useDeleteQuoteRejectionReasonOptionMutation,
+  useQuoteRejectionReasonOptionsQuery,
+  useUpdateQuoteRejectionReasonOptionMutation,
+} from './use-quote-rejection-reason-options';
+import {
   useCreateProductCategoryOptionMutation,
   useDeleteProductCategoryOptionMutation,
   useProductCategoryOptionsQuery,
@@ -613,6 +619,29 @@ function PaymentMethodOptionsManager() {
       createMutation={useCreatePaymentMethodOptionMutation()}
       updateMutation={useUpdatePaymentMethodOptionMutation()}
       deleteMutation={useDeletePaymentMethodOptionMutation()}
+    />
+  );
+}
+
+function QuoteRejectionReasonOptionsManager() {
+  return (
+    <OptionListManager
+      title={tr.settings.crm.quoteRejectionReasonOptions.title}
+      subtitle={tr.settings.crm.quoteRejectionReasonOptions.subtitle}
+      addPlaceholder={tr.settings.crm.quoteRejectionReasonOptions.addPlaceholder}
+      addButtonLabel={tr.settings.crm.quoteRejectionReasonOptions.addButton}
+      emptyText={tr.settings.crm.quoteRejectionReasonOptions.empty}
+      editButtonLabel={tr.settings.crm.quoteRejectionReasonOptions.editButton}
+      saveButtonLabel={tr.settings.crm.quoteRejectionReasonOptions.saveButton}
+      cancelButtonLabel={tr.settings.crm.quoteRejectionReasonOptions.cancelButton}
+      deleteButtonLabel={tr.settings.crm.quoteRejectionReasonOptions.deleteButton}
+      addSuccessMessage={tr.settings.crm.quoteRejectionReasonOptions.addSuccess}
+      editSuccessMessage={tr.settings.crm.quoteRejectionReasonOptions.editSuccess}
+      deleteSuccessMessage={tr.settings.crm.quoteRejectionReasonOptions.deleteSuccess}
+      optionsQuery={useQuoteRejectionReasonOptionsQuery()}
+      createMutation={useCreateQuoteRejectionReasonOptionMutation()}
+      updateMutation={useUpdateQuoteRejectionReasonOptionMutation()}
+      deleteMutation={useDeleteQuoteRejectionReasonOptionMutation()}
     />
   );
 }
@@ -1288,6 +1317,13 @@ export function CrmSettingsSection() {
       </div>
       <DefaultQuoteVatPctSetting />
       <DefaultQuoteTermsSettings />
+
+      <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
+        {tr.settings.crm.quoteRejectionGroupLabel}
+      </h2>
+      <div className="border-t border-app-border">
+        <QuoteRejectionReasonOptionsManager />
+      </div>
 
       <h2 className="mt-6 mb-1 text-base font-bold text-app-text">
         {tr.settings.crm.calendarGroupLabel}
