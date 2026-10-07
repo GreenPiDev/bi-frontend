@@ -64,7 +64,7 @@ export function ExportMenuButton({ tooltip, disabled, onSelect }: ExportMenuButt
           aria-label={tooltip}
           disabled={disabled}
           onClick={() => (isOpen ? requestClose() : setIsOpen(true))}
-          className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-[#1a2440] text-white transition-colors hover:bg-[#141c33] disabled:cursor-not-allowed disabled:opacity-60"
+          className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-xl bg-app-brand text-white transition-colors hover:bg-app-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Upload size={20} />
         </button>
