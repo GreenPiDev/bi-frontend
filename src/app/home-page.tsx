@@ -1,6 +1,7 @@
 import {
   Briefcase,
   CalendarClock,
+  ChevronDown,
   FileText,
   Mail,
   MessageCircle,
@@ -94,6 +95,7 @@ export function HomePage() {
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery(!meQuery.data?.isPlatformAdmin);
   const now = useNow();
+  const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
 
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -193,24 +195,54 @@ export function HomePage() {
                 {tr.home.todayEvents.viewAll}
               </Link>
             </div>
-            <div className="relative z-10">
+            <div className="relative z-10 max-h-72 overflow-y-auto">
               {todayEvents.length === 0 ? (
                 <p className="text-sm text-app-muted">{tr.home.todayEvents.empty}</p>
               ) : (
-                <ul className="space-y-3">
-                  {todayEvents.map((event) => (
-                    <li key={event.id} className="flex items-start gap-3">
-                      <CalendarClock size={16} className="mt-0.5 shrink-0 text-app-muted" />
-                      <div>
-                        <p className="text-sm font-medium text-app-text">{event.title}</p>
-                        <p className="text-xs text-app-muted">
-                          {event.allDay
-                            ? tr.crm.calendar.allDayLabel
-                            : eventTimeFormatter.format(new Date(event.startAt))}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
+                <ul className="divide-y divide-app-border">
+                  {todayEvents.map((event) => {
+                    const isExpanded = expandedEventId === event.id;
+                    return (
+                      <li key={event.id}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedEventId((current) =>
+                              current === event.id ? null : event.id,
+                            )
+                          }
+                          aria-expanded={isExpanded}
+                          className="group flex w-full cursor-pointer items-center gap-3 py-2 text-left"
+                        >
+                          <CalendarClock
+                            size={16}
+                            className="shrink-0 text-app-muted group-hover:text-app-primary"
+                          />
+                          <span className="shrink-0 text-xs text-app-muted group-hover:text-app-primary">
+                            {event.allDay
+                              ? tr.crm.calendar.allDayLabel
+                              : eventTimeFormatter.format(new Date(event.startAt))}
+                          </span>
+                          <span className="flex-1 truncate text-sm font-medium text-app-text group-hover:text-app-primary">
+                            {event.title}
+                          </span>
+                          <ChevronDown
+                            size={16}
+                            className={`shrink-0 text-app-muted transition-transform group-hover:text-app-primary ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+                        {isExpanded && (
+                          <div className="mb-2 border border-app-border bg-stone-50 p-3">
+                            <p className="text-sm text-black">
+                              {event.description || tr.home.todayEvents.noDescription}
+                            </p>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -224,7 +256,7 @@ export function HomePage() {
                 icon={FileText}
                 label={tr.home.stats.quotes}
                 value={quotesCountQuery.data?.meta.total}
-                to="/teklifler"
+                to="/teklifler?tab=reports"
               />
             )}
             {canAccessInteractions && (

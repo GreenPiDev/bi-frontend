@@ -52,15 +52,14 @@ describe('ProtectedRoute - platform-admin erisim kisitlamasi', () => {
     });
   });
 
-  it('normal tenant kullanicisi kok / rotasinda dashboards sayfasina duser', async () => {
+  it('normal tenant kullanicisi kok / rotasinda anasayfaya duser', async () => {
     const tenantUser = createMockUser({ isPlatformAdmin: false });
     vi.spyOn(api, 'me').mockResolvedValue(tenantUser);
     vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
-    vi.spyOn(api, 'listDashboards').mockResolvedValue([]);
     renderAppAt('/');
 
     await waitFor(() => {
-      expect(screen.getByText('Yeni Pano')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Ana Sayfa' })).toBeInTheDocument();
     });
   });
 
@@ -81,52 +80,36 @@ describe('ProtectedRoute - platform-admin erisim kisitlamasi', () => {
 });
 
 describe('TenantPageRoute / RootRedirect - VIEW izin kontrolu', () => {
-  it('dashboards VIEW izni olmayan kullanici /dashboards URLine elle gitse bile panolari gormez, / rotasina duser', async () => {
+  it('dashboards VIEW izni olmayan kullanici /dashboards URLine elle gitse bile panolari gormez, anasayfaya duser', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(userWithPermissions([]));
     vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
-    vi.spyOn(api, 'getProfile').mockResolvedValue({
-      ...userWithPermissions([]),
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: null,
-    });
     renderAppAt('/dashboards');
 
     await waitFor(() => {
-      expect(screen.getByText('Hesap bilgilerini görüntüle ve düzenle.')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Ana Sayfa' })).toBeInTheDocument();
     });
     expect(screen.queryByText('Yeni Pano')).not.toBeInTheDocument();
   });
 
-  it('kok / rotasi, dashboards izni olmayan ama accounts VIEW izni olan kullaniciyi firmalar sayfasina duser', async () => {
+  it('kok / rotasi, hangi sayfaya VIEW izni olursa olsun kullaniciyi anasayfaya duser', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(
       userWithPermissions([{ pageKey: 'accounts', tabKey: null, action: 'VIEW' }]),
     );
     vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
-    vi.spyOn(api, 'listAccounts').mockResolvedValue({
-      data: [],
-      meta: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
-    });
     renderAppAt('/');
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Yeni Firma' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Ana Sayfa' })).toBeInTheDocument();
     });
   });
 
-  it('hicbir sayfaya VIEW izni olmayan kullanici kok / rotasinda /profile sayfasina duser', async () => {
+  it('hicbir sayfaya VIEW izni olmayan kullanici kok / rotasinda anasayfaya duser', async () => {
     vi.spyOn(api, 'me').mockResolvedValue(userWithPermissions([]));
     vi.spyOn(api, 'getMyPageAccess').mockResolvedValue([]);
-    vi.spyOn(api, 'getProfile').mockResolvedValue({
-      ...userWithPermissions([]),
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: null,
-    });
     renderAppAt('/');
 
     await waitFor(() => {
-      expect(screen.getByText('Hesap bilgilerini görüntüle ve düzenle.')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Ana Sayfa' })).toBeInTheDocument();
     });
   });
 });

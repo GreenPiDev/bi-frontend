@@ -243,6 +243,7 @@ export const tr = {
       title: 'Bugünün Hatırlatıcıları',
       empty: 'Bugün için planlanmış bir hatırlatıcı/etkinlik yok.',
       viewAll: 'Ajandaya Git',
+      noDescription: 'Açıklama eklenmemiş.',
     },
     unreadMessages: {
       title: 'Okunmamış Mesaj',
