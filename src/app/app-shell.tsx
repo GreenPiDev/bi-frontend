@@ -312,14 +312,28 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
         </div>
       </header>
 
+      {/* Mobilde sidebar acikken icerigin ustune koyulan yari saydam arka plan -
+       * tiklaninca disardan kapatma mantigi zaten navRef disi mousedown dinleyicisiyle
+       * calisiyor, bu sadece gorsel karartma + dokunma hedefi sagliyor. */}
+      {sidebarOpen && (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-[85] bg-black/40 md:hidden"
+          onClick={() => {
+            setSidebarOpen(false);
+            setNavSearch('');
+          }}
+        />
+      )}
+
       <nav
         ref={navRef}
         onClick={handleNavAreaClick}
         onMouseOver={handleNavMouseOver}
         onMouseLeave={() => setEmptyAreaHovered(false)}
         className={clsx(
-          'fixed top-16 bottom-0 left-0 z-[90] hidden flex-col overflow-hidden border-r border-app-brand-dark bg-app-brand transition-[width] duration-200 md:flex',
-          sidebarOpen ? 'w-60' : 'w-16',
+          'fixed top-16 bottom-0 left-0 z-[90] flex w-60 flex-col overflow-hidden border-r border-app-brand-dark bg-app-brand transition-transform duration-200 md:transition-[width] md:translate-x-0',
+          sidebarOpen ? 'translate-x-0 md:w-60' : '-translate-x-full md:w-16',
         )}
       >
         <div className="px-3 pt-3 pb-2">
