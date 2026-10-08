@@ -23,6 +23,7 @@ import { DrawingLibraryComponentFormPage } from './app/drawing-library-component
 import { DrawingPanelTemplateFormPage } from './app/drawing-panel-template-form-page';
 import { DrawingPanelTemplatePreviewPage } from './app/drawing-panel-template-preview-page';
 import { DrawingSettingsPage } from './app/drawing-settings-page';
+import { HomePage } from './app/home-page';
 import { InteractionDetailPage } from './app/interaction-detail-page';
 import { InteractionEditPage } from './app/interaction-edit-page';
 import { InteractionFormPage } from './app/interaction-form-page';
@@ -72,9 +73,7 @@ import { StockListPage } from './app/stock-list-page';
 import { UserStatsPage } from './app/user-stats-page';
 import { WarehouseFormPage } from './app/warehouse-form-page';
 import { WarehousesListPage } from './app/warehouses-list-page';
-import { hasPermission } from './features/auth/permissions';
 import { useMeQuery } from './features/auth/use-auth';
-import { usePageAccessQuery } from './features/crm/use-page-access';
 import { tr } from './i18n/tr';
 
 function DashboardEditRoute() {
@@ -102,39 +101,11 @@ function TenantPageRoute({ pageKey, children }: { pageKey: string; children: Rea
   );
 }
 
-/** Sidebar'daki (app-shell.tsx) ile ayni sira - kullanicinin gercekten erisebildigi ilk
- * sayfa. Hicbiri erisilebilir degilse /profile'a duser (her zaman gorunur, bkz. G1). */
-const ROOT_REDIRECT_CANDIDATES: readonly { pageKey: string; path: string }[] = [
-  { pageKey: 'dashboards', path: '/dashboards' },
-  { pageKey: 'datasets', path: '/datasets' },
-  { pageKey: 'accounts', path: '/firmalar' },
-  { pageKey: 'contacts', path: '/kisiler' },
-  { pageKey: 'calendar', path: '/ajanda' },
-  { pageKey: 'interactions', path: '/gorusmeler' },
-  { pageKey: 'opportunities', path: '/firsatlar' },
-  { pageKey: 'quotes', path: '/teklifler' },
-  { pageKey: 'quote-templates', path: '/teklifler' },
-  { pageKey: 'post-sale-cases', path: '/satis-sonrasi' },
-  { pageKey: 'projects', path: '/projeler' },
-  { pageKey: 'purchase-orders', path: '/siparisler' },
-  { pageKey: 'products', path: '/envanter' },
-  { pageKey: 'product-lists', path: '/envanter' },
-  { pageKey: 'stock', path: '/envanter' },
-  { pageKey: 'warehouses', path: '/envanter' },
-  { pageKey: 'drawing-library', path: '/cizim-ayarlari' },
-  { pageKey: 'drawing-templates', path: '/cizim-ayarlari' },
-  { pageKey: 'drawings', path: '/cizim-ayarlari' },
-  { pageKey: 'messages', path: '/mesajlar' },
-  { pageKey: 'settings', path: '/settings' },
-];
-
+/** /anasayfa artik her rol icin alwaysVisible oldugundan (bkz. page-registry.ts),
+ * kok rota eskideki "kullanicinin erisebildigi ilk sayfayi bul" mantigina artik
+ * gerek kalmadan dogrudan oraya yonlendirir. */
 function RootRedirect() {
   const meQuery = useMeQuery();
-  // Platform-admin hicbir tenant sayfa/modul verisine ihtiyac duymaz - sorguyu
-  // sadece normal tenant kullanicisi icin calistiririz (aksi halde gereksiz yere
-  // bu sorgunun donmesini bekleriz).
-  const isPlatformAdmin = meQuery.data?.isPlatformAdmin ?? false;
-  const pageAccessQuery = usePageAccessQuery({ enabled: !!meQuery.data && !isPlatformAdmin });
 
   if (meQuery.isPending) {
     return (
@@ -148,28 +119,11 @@ function RootRedirect() {
     return <Navigate to="/login" replace />;
   }
 
-  if (isPlatformAdmin) {
+  if (meQuery.data.isPlatformAdmin) {
     return <Navigate to="/platform-admin" replace />;
   }
 
-  if (pageAccessQuery.isPending) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-sm text-app-muted">
-        {tr.common.loading}
-      </div>
-    );
-  }
-
-  const permissions = meQuery.data.permissions;
-  const isModuleAccessible = (pageKey: string) => {
-    const entry = pageAccessQuery.data?.find((row) => row.pageKey === pageKey);
-    return entry?.accessible ?? true;
-  };
-  const firstAccessible = ROOT_REDIRECT_CANDIDATES.find(
-    ({ pageKey }) => hasPermission(permissions, pageKey, 'VIEW') && isModuleAccessible(pageKey),
-  );
-
-  return <Navigate to={firstAccessible?.path ?? '/profile'} replace />;
+  return <Navigate to="/anasayfa" replace />;
 }
 
 function App() {
@@ -202,6 +156,14 @@ function App() {
           }
         />
         <Route path="/" element={<RootRedirect />} />
+        <Route
+          path="/anasayfa"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/onboarding"
           element={

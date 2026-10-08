@@ -7,6 +7,7 @@ import {
   Contact2,
   FileText,
   HeartHandshake,
+  Home,
   LayoutDashboard,
   Layers,
   LogOut,
@@ -169,6 +170,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
   const unreadConversationsTotal = useUnreadConversationsTotal(canAccessMessages);
 
   const navItems: NavItem[] = [
+    { label: tr.shell.nav.home, icon: Home, path: '/anasayfa' },
     ...(canAccessPage('accounts')
       ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
       : []),

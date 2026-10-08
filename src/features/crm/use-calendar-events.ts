@@ -31,10 +31,12 @@ export function useCalendarEventsQuery(
     order?: 'asc' | 'desc';
     userId?: string;
   } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...CALENDAR_EVENTS_QUERY_KEY, params],
     queryFn: () => listCalendarEvents(params),
+    enabled: options.enabled ?? true,
   });
 }
 
@@ -77,10 +79,11 @@ export function useDeleteCalendarEventMutation() {
   });
 }
 
-export function usePendingCalendarInvitesQuery() {
+export function usePendingCalendarInvitesQuery(enabled = true) {
   return useQuery({
     queryKey: PENDING_CALENDAR_INVITES_QUERY_KEY,
     queryFn: () => listPendingCalendarInvites(),
+    enabled,
   });
 }
 

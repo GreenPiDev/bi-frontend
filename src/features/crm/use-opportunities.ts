@@ -22,10 +22,12 @@ export function useOpportunitiesQuery(
     from?: string;
     to?: string;
   } = {},
+  options: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [...OPPORTUNITIES_QUERY_KEY, params],
     queryFn: () => listOpportunities(params),
+    enabled: options.enabled ?? true,
   });
 }
 

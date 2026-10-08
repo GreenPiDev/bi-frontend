@@ -143,6 +143,7 @@ export const tr = {
       'Şirket içi mesajlarınızın gelen/gönderilen kutusu. Bir mesajı bir projeye, teklife veya görüşmeye bağlayabilirsiniz.',
     userStats:
       'Bu kullanıcının sistemde oluşturduğu firma, kişi, görüşme, fırsat, teklif, proje ve sipariş sayılarını görüntüleyin. Salt okunur bir özet ekranıdır.',
+    home: 'Sisteme girdiğinizde ilk bilmeniz gerekenler burada: bekleyen davetleriniz, bugünün hatırlatıcıları ve genel rakamlar. Her kart sizi ilgili sayfaya yönlendirir.',
   },
   health: {
     checking: 'Bağlantı kontrol ediliyor...',
@@ -175,6 +176,7 @@ export const tr = {
     logout: 'Çıkış yap',
     welcome: (name: string) => `Hoş geldin, ${name}`,
     nav: {
+      home: 'Ana Sayfa',
       dashboards: 'Panolar',
       datasets: 'Veri Kümeleri',
       accounts: 'Firmalar',
@@ -228,6 +230,31 @@ export const tr = {
     markAsUnread: 'Okunmadı olarak işaretle',
     readStatusUpdateSuccess: 'Bildirim durumu güncellendi.',
     readStatusUpdateError: 'Bildirim durumu güncellenemedi.',
+  },
+  home: {
+    title: 'Ana Sayfa',
+    subtitle: 'Sisteme girdiğinizde bilmeniz gereken her şey burada.',
+    welcome: (name: string) => `Hoş geldin, ${name}`,
+    pendingInvites: {
+      title: (count: number) => `Yanıt beklenen ${count} davetiniz var`,
+      cta: 'Davetleri Görüntüle',
+    },
+    todayEvents: {
+      title: 'Bugünün Hatırlatıcıları',
+      empty: 'Bugün için planlanmış bir hatırlatıcı/etkinlik yok.',
+      viewAll: 'Ajandaya Git',
+    },
+    unreadMessages: {
+      title: 'Okunmamış Mesaj',
+      cta: 'Mesajlara Git',
+    },
+    stats: {
+      quotes: 'Toplam Teklif',
+      interactions: 'Toplam Görüşme',
+      opportunities: 'Toplam Fırsat',
+      projects: 'Toplam Proje',
+      lowStock: 'Kritik Stok Seviyesindeki Ürün',
+    },
   },
   inventory: {
     title: 'Envanter Yönetimi',

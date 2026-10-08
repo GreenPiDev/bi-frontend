@@ -34,10 +34,11 @@ export function useStockItemsQuery(
   });
 }
 
-export function useLowStockItemsQuery() {
+export function useLowStockItemsQuery(enabled = true) {
   return useQuery({
     queryKey: LOW_STOCK_ITEMS_QUERY_KEY,
     queryFn: () => listLowStockItems(),
+    enabled,
   });
 }
 
