@@ -19,7 +19,7 @@ export function UserLink({ userId, name }: UserLinkProps) {
   return (
     <Link
       to={`/settings/kullanicilar/${buildUserSlug({ id: userId, name })}`}
-      className="cursor-pointer text-app-brand hover:underline"
+      className="cursor-pointer text-app-brand underline"
       onClick={(event: MouseEvent) => event.stopPropagation()}
     >
       {name}
