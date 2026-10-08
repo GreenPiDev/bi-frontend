@@ -670,6 +670,7 @@ export const tr = {
           purchaseOrdersLabel: 'Oluşturduğu Siparişler',
           responsibleProjectsTitle: 'Bizden İlgili Olduğu Projeler',
           noResponsibleProjects: 'Bu kullanıcı hiçbir projede "bizden ilgili" olarak atanmamış.',
+          sendMessageTooltip: 'Bu kullanıcıya mesaj gönder',
         },
         credentialsResult: {
           createTitle: 'Kullanıcı Oluşturuldu',

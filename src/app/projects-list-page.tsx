@@ -8,6 +8,7 @@ import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picke
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { UserLink } from '../components/ui/user-link';
 import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -101,7 +102,7 @@ export function ProjectsListPage() {
         p.responsibleUsers.length > 0 ? (
           <div className="flex flex-col gap-0.5">
             {p.responsibleUsers.map((u) => (
-              <span key={u.id}>{u.name}</span>
+              <UserLink key={u.id} userId={u.id} name={u.name} />
             ))}
           </div>
         ) : (

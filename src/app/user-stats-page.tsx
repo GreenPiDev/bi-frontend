@@ -1,7 +1,11 @@
+import { Mail } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NewMessageModal } from './new-message-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useUserStatsQuery } from '../features/roles/use-users';
@@ -41,6 +45,7 @@ export function UserStatsPage() {
   const id = extractUserId(slug);
   const statsQuery = useUserStatsQuery(id);
   const strings = tr.settings.roles.users.statsPage;
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
 
   return (
     <AppShell>
@@ -50,30 +55,37 @@ export function UserStatsPage() {
 
       {statsQuery.data && (
         <>
-          <div className="mt-6 flex items-center gap-4">
-            {statsQuery.data.user.avatarUrl ? (
-              <img
-                src={statsQuery.data.user.avatarUrl}
-                alt=""
-                className="h-14 w-14 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-app-bg-muted text-lg font-bold text-app-muted">
-                {statsQuery.data.user.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-bold text-app-text">{statsQuery.data.user.name}</h1>
-                <PageHelp text={tr.help.userStats} />
-              </div>
-              <p className="text-sm text-app-muted">{statsQuery.data.user.email}</p>
-              <div className="mt-1 flex flex-wrap gap-1">
-                {statsQuery.data.user.roles.map((role) => (
-                  <Badge key={role.id}>{role.name}</Badge>
-                ))}
+          <div className="mt-6 flex items-start justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {statsQuery.data.user.avatarUrl ? (
+                <img
+                  src={statsQuery.data.user.avatarUrl}
+                  alt=""
+                  className="h-14 w-14 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-app-bg-muted text-lg font-bold text-app-muted">
+                  {statsQuery.data.user.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-xl font-bold text-app-text">{statsQuery.data.user.name}</h1>
+                  <PageHelp text={tr.help.userStats} />
+                </div>
+                <p className="text-sm text-app-muted">{statsQuery.data.user.email}</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {statsQuery.data.user.roles.map((role) => (
+                    <Badge key={role.id}>{role.name}</Badge>
+                  ))}
+                </div>
               </div>
             </div>
+            <CircleIconButton
+              icon={Mail}
+              tooltip={strings.sendMessageTooltip}
+              onClick={() => setIsMessageModalOpen(true)}
+            />
           </div>
           <p className="mt-2 text-sm text-app-muted">{strings.subtitle}</p>
 
@@ -110,6 +122,13 @@ export function UserStatsPage() {
             />
           </div>
         </>
+      )}
+
+      {isMessageModalOpen && statsQuery.data && (
+        <NewMessageModal
+          onClose={() => setIsMessageModalOpen(false)}
+          defaultToUserIds={[statsQuery.data.user.id]}
+        />
       )}
     </AppShell>
   );

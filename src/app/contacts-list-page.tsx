@@ -16,6 +16,7 @@ import { Pagination, Table, type TableColumn, type TableSort } from '../componen
 import { useToast } from '../components/ui/toast-context';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { IconActionButton } from '../components/ui/icon-action-button';
+import { UserLink } from '../components/ui/user-link';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -187,7 +188,7 @@ export function ContactsListPage() {
       key: 'createdByName',
       header: tr.crm.contacts.createdByColumn,
       className: 'text-app-muted',
-      render: (c) => c.createdByName ?? '—',
+      render: (c) => <UserLink userId={c.createdById} name={c.createdByName} />,
     },
     {
       key: 'actions',

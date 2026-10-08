@@ -285,7 +285,10 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           <div className="flex items-center gap-4">
             <NotificationBell />
             {meQuery.data && (
-              <div className="hidden items-center gap-2 sm:flex">
+              <Link
+                to="/profile?tab=general"
+                className="group hidden cursor-pointer items-center gap-2 sm:flex"
+              >
                 {meQuery.data.avatarUrl ? (
                   <img
                     src={meQuery.data.avatarUrl}
@@ -297,10 +300,10 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
                     {meQuery.data.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-semibold text-app-brand">
+                <span className="text-sm font-semibold text-app-brand group-hover:underline">
                   {tr.shell.welcome(meQuery.data.name)}
                 </span>
-              </div>
+              </Link>
             )}
             <button
               type="button"

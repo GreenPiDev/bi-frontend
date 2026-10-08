@@ -16,6 +16,7 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
+import { UserLink } from '../components/ui/user-link';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { ContactAutocomplete } from '../features/crm/contact-autocomplete';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
@@ -155,7 +156,7 @@ export function InteractionsListPage() {
       key: 'createdByName',
       header: tr.crm.interactions.createdByColumn,
       className: 'text-app-muted',
-      render: (i) => i.createdByName ?? '—',
+      render: (i) => <UserLink userId={i.createdById} name={i.createdByName} />,
     },
     {
       key: 'actions',

@@ -31,6 +31,7 @@ import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
 import { IconActionButton } from '../components/ui/icon-action-button';
+import { UserLink } from '../components/ui/user-link';
 import { hasPermission } from '../features/auth/permissions';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -329,8 +330,12 @@ export function QuotesListContent() {
       key: 'createdByName',
       header: tr.crm.quotes.createdByColumn,
       className: 'text-app-muted',
-      render: (q) =>
-        (q.senderId ? senderNameById.get(q.senderId) : undefined) ?? q.createdByName ?? '—',
+      render: (q) => {
+        const resolvedUserId = q.senderId ?? q.createdById ?? null;
+        const resolvedName =
+          (q.senderId ? senderNameById.get(q.senderId) : undefined) ?? q.createdByName ?? null;
+        return <UserLink userId={resolvedUserId} name={resolvedName} />;
+      },
     },
     {
       key: 'actions',

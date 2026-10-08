@@ -912,6 +912,7 @@ export interface Contact {
   ownerId: string | null;
   status: ContactStatus;
   lastContactedAt: string | null;
+  createdById: string | null;
   createdByName: string | null;
   createdAt: string;
   updatedAt: string;
