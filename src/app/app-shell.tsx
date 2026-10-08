@@ -279,7 +279,9 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
           <PanelLeft size={20} />
         </button>
         <div className="flex flex-1 items-center justify-between pr-5">
-          <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
+          <Link to="/anasayfa" className="cursor-pointer">
+            <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
+          </Link>
           <div className="flex items-center gap-4">
             <NotificationBell />
             {meQuery.data && (
