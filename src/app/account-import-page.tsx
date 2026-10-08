@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { FileDropzone } from '../components/ui/file-dropzone';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
+import { SampleTemplateNote } from '../components/ui/sample-template-note';
 import {
   usePreviewAccountImportMappedMutation,
   usePreviewAccountImportRawMutation,
@@ -19,6 +20,8 @@ type Assignment = 'ignore' | 'attribute' | string;
 const TARGET_FIELDS = Object.keys(
   tr.crm.accountImports.fieldLabels,
 ) as (keyof typeof tr.crm.accountImports.fieldLabels)[];
+
+const REQUIRED_FIELDS: ReadonlySet<string> = new Set(['name']);
 
 export function AccountImportPage() {
   const navigate = useNavigate();
@@ -111,6 +114,13 @@ export function AccountImportPage() {
         </div>
 
         {!rawRows && (
+          <SampleTemplateNote
+            href="/sample-templates/ornek-firma.xlsx"
+            fileName="ornek-firma.xlsx"
+          />
+        )}
+
+        {!rawRows && (
           <div className="mt-6">
             <h2 className="text-sm font-bold text-app-text">{tr.crm.accountImports.stepUpload}</h2>
             <div className="mt-3 flex flex-col gap-3">
@@ -137,26 +147,21 @@ export function AccountImportPage() {
         {rawRows && headerRowIndex === null && (
           <div className="mt-6">
             <h2 className="text-sm font-bold text-app-text">{tr.crm.accountImports.stepUpload}</h2>
-            <p className="mt-1 text-sm text-app-muted">
+            <p className="mt-1 text-sm text-app-text">
               {tr.crm.accountImports.rawPreviewInstructions}
             </p>
             <FormError message={headerRowError} />
-            <div className="mt-3 overflow-x-auto rounded-lg border border-app-border">
+            <div className="mt-3 overflow-x-auto rounded-lg border border-app-border bg-white">
               <table className="w-full min-w-[480px] text-left text-sm">
                 <tbody>
                   {rawRows.map((row, index) => (
-                    <tr key={index} className="border-t border-app-border first:border-t-0">
-                      <td className="w-40 py-2 pl-3 pr-2 align-top">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          disabled={mappedPreviewMutation.isPending}
-                          onClick={() => handlePickHeaderRow(index)}
-                        >
-                          {tr.crm.accountImports.pickHeaderRowButton}
-                        </Button>
-                      </td>
-                      <td className="py-2 pr-3 align-top text-app-text">{row.join(' | ')}</td>
+                    <tr
+                      key={index}
+                      onClick={() => !mappedPreviewMutation.isPending && handlePickHeaderRow(index)}
+                      className="cursor-pointer border-t border-app-border first:border-t-0 hover:bg-app-primary/5 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                      aria-disabled={mappedPreviewMutation.isPending}
+                    >
+                      <td className="py-2 px-3 text-app-text">{row.join(' | ')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -164,7 +169,7 @@ export function AccountImportPage() {
             </div>
             <Button
               type="button"
-              variant="secondary"
+              variant="navy"
               className="mt-3"
               onClick={() => {
                 setFile(null);
@@ -180,8 +185,11 @@ export function AccountImportPage() {
           <div className="mt-6">
             <h2 className="text-sm font-bold text-app-text">{tr.crm.accountImports.stepMap}</h2>
             <p className="mt-1 text-sm text-app-muted">{tr.crm.accountImports.mapInstructions}</p>
+            <p className="mt-1 text-base font-semibold text-app-danger text-justify">
+              {tr.crm.accountImports.requiredFieldsHint}
+            </p>
 
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 overflow-x-auto rounded-lg border border-app-border bg-white">
               <table className="w-full min-w-[640px] text-left text-sm">
                 <thead className="text-xs font-semibold uppercase text-app-muted">
                   <tr>
@@ -212,6 +220,7 @@ export function AccountImportPage() {
                           {TARGET_FIELDS.map((field) => (
                             <option key={field} value={field}>
                               {tr.crm.accountImports.fieldLabels[field]}
+                              {REQUIRED_FIELDS.has(field) ? ' *' : ''}
                             </option>
                           ))}
                         </select>
