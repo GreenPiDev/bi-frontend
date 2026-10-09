@@ -2,7 +2,12 @@ import { useMutation } from '@tanstack/react-query';
 import { FileDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { AccountReportsContent } from './account-reports-content';
 import { AppShell } from './app-shell';
+import { ContactReportsContent } from './contact-reports-content';
+import { InteractionReportsContent } from './interaction-reports-content';
+import { OpportunityReportsContent } from './opportunity-reports-content';
+import { ProjectReportsContent } from './project-reports-content';
 import { QuoteReportsContent } from './quote-reports-content';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
@@ -36,6 +41,11 @@ function reportTabBody(tabKey: ReportTabKey, isPrintMode: boolean, headerActions
   if (tabKey === 'quotes') {
     return <QuoteReportsContent isPrintMode={isPrintMode} headerActions={headerActions} />;
   }
+  if (tabKey === 'accounts') return <AccountReportsContent />;
+  if (tabKey === 'contacts') return <ContactReportsContent />;
+  if (tabKey === 'interactions') return <InteractionReportsContent />;
+  if (tabKey === 'projects') return <ProjectReportsContent />;
+  if (tabKey === 'opportunities') return <OpportunityReportsContent />;
   return <ComingSoonContent />;
 }
 

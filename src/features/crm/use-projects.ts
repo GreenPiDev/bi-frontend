@@ -36,6 +36,31 @@ export function useProjectsQuery(
   });
 }
 
+/** /raporlar "Projeler" tab'indaki KPI kartlari - `/projects` ucu toplam butce/maliyet
+ * gibi bir agregasyon dondurmuyor, bu yuzden tum sayfalar (pageSize=100, izin verilen
+ * maksimum - bkz. ListQuerySchema) sirayla cekilip istemci tarafinda toplanir. Tenant
+ * olcegindeki proje sayisi icin bu kabul edilebilir bir maliyet. */
+export function useProjectAggregatesQuery() {
+  return useQuery({
+    queryKey: [...PROJECTS_QUERY_KEY, 'aggregates'],
+    queryFn: async () => {
+      const pageSize = 100;
+      const first = await listProjects({ page: 1, pageSize });
+      const pages = [first];
+      for (let page = 2; page <= first.meta.totalPages; page += 1) {
+        pages.push(await listProjects({ page, pageSize }));
+      }
+      const allProjects = pages.flatMap((p) => p.data);
+      return {
+        total: first.meta.total,
+        estimatedBudgetTotal: allProjects.reduce((sum, p) => sum + Number(p.estimatedBudget), 0),
+        actualCostTotal: allProjects.reduce((sum, p) => sum + Number(p.actualCost ?? 0), 0),
+        withQuoteCount: allProjects.filter((p) => p.quotes.length > 0).length,
+      };
+    },
+  });
+}
+
 export function useProjectQuery(id: string) {
   return useQuery({
     queryKey: ['projects', id],

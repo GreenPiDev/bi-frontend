@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createAccount,
   deleteAccount,
@@ -9,6 +9,44 @@ import {
 } from '../../lib/api';
 
 export const ACCOUNTS_QUERY_KEY = ['accounts'];
+
+/** /raporlar "Firmalar" tab'indaki KPI kartlari - `/accounts` ucu kirilim dondurmuyor,
+ * bu yuzden her kart icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total
+ * kullanilir). "Bu ay eklenen" icin ayin ilk gunu `from` filtresine verilir. */
+export function useAccountReportCounts() {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: [...ACCOUNTS_QUERY_KEY, 'count', 'all'],
+        queryFn: () => listAccounts({ pageSize: 1 }),
+      },
+      {
+        queryKey: [...ACCOUNTS_QUERY_KEY, 'count', 'thisMonth'],
+        queryFn: () => listAccounts({ pageSize: 1, from: startOfMonth.toISOString() }),
+      },
+      {
+        queryKey: [...ACCOUNTS_QUERY_KEY, 'count', 'notContacted30'],
+        queryFn: () => listAccounts({ pageSize: 1, notContactedDays: 30 }),
+      },
+      {
+        queryKey: [...ACCOUNTS_QUERY_KEY, 'count', 'notContacted60'],
+        queryFn: () => listAccounts({ pageSize: 1, notContactedDays: 60 }),
+      },
+    ],
+  });
+
+  const [all, thisMonth, notContacted30, notContacted60] = results;
+  return {
+    total: all?.data?.meta.total,
+    thisMonth: thisMonth?.data?.meta.total,
+    notContacted30: notContacted30?.data?.meta.total,
+    notContacted60: notContacted60?.data?.meta.total,
+  };
+}
 
 export function useAccountsQuery(
   params: {

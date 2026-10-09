@@ -298,6 +298,36 @@ export const tr = {
       purchaseOrders: 'Siparişler',
       opportunities: 'Fırsatlar',
     },
+    accountsKpi: {
+      totalLabel: 'Toplam Firma',
+      thisMonthLabel: 'Bu Ay Eklenen',
+      notContacted30Label: '30+ Gün İletişimsiz',
+      notContacted60Label: '60+ Gün İletişimsiz',
+    },
+    contactsKpi: {
+      totalLabel: 'Toplam Kişi',
+      activeLabel: 'Aktif Kişi',
+      inactiveLabel: 'Pasif Kişi',
+    },
+    interactionsKpi: {
+      totalLabel: 'Toplam Görüşme',
+      openLabel: 'Açık',
+      closedLabel: 'Kapalı',
+      thisWeekLabel: 'Bu Hafta',
+      thisMonthLabel: 'Bu Ay',
+    },
+    projectsKpi: {
+      totalLabel: 'Toplam Proje',
+      estimatedBudgetLabel: 'Toplam Tahmini Bütçe',
+      actualCostLabel: 'Toplam Gerçekleşen Maliyet',
+      withQuoteLabel: 'Teklifle İlişkili Proje',
+    },
+    opportunitiesKpi: {
+      totalLabel: 'Toplam Fırsat',
+      openLabel: 'Devam Eden',
+      wonLabel: 'Kazanılan',
+      lostLabel: 'Kaybedilen',
+    },
   },
   drawingSettings: {
     title: 'Teknik Çizim Ayarları',
