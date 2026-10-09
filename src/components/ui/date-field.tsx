@@ -142,7 +142,7 @@ export function DateField({
           aria-label={label}
           onClick={() => (open ? closeMenu() : setOpen(true))}
           className={clsx(
-            'flex w-full items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
+            'flex w-full cursor-pointer items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
             showClear && 'pr-9',
             error && 'border-app-danger',
             value ? 'text-app-text' : 'text-app-muted',

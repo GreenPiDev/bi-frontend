@@ -80,7 +80,7 @@ export function ExportMenuButton({ tooltip, disabled, onSelect }: ExportMenuButt
           <button
             type="button"
             onClick={() => handleSelect('pdf')}
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
+            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
           >
             <FileText size={16} className="text-app-danger" />
             {t.pdf}
@@ -88,7 +88,7 @@ export function ExportMenuButton({ tooltip, disabled, onSelect }: ExportMenuButt
           <button
             type="button"
             onClick={() => handleSelect('xlsx')}
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
+            className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-sm text-app-text hover:bg-app-bg-muted"
           >
             <FileSpreadsheet size={16} className="text-app-success" />
             {t.excel}

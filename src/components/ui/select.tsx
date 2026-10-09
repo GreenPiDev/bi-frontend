@@ -65,7 +65,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             ref={ref}
             id={selectId}
             className={clsx(
-              'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',
+              'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary cursor-pointer disabled:cursor-not-allowed',
               clearable && 'appearance-none pr-16',
               error && 'border-app-danger',
               className,

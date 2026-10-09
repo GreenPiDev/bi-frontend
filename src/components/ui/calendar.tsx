@@ -120,7 +120,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
           type="button"
           onClick={goToPrevMonth}
           aria-label="Önceki ay"
-          className="flex-none rounded-md p-1 text-app-text hover:bg-app-bg"
+          className="flex-none cursor-pointer rounded-md p-1 text-app-text hover:bg-app-bg"
         >
           <ChevronLeft size={18} />
         </button>
@@ -128,7 +128,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
           value={viewMonth}
           onChange={(event) => setViewMonth(Number(event.target.value))}
           aria-label="Ay"
-          className="min-w-0 flex-1 rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:border-app-primary"
+          className="min-w-0 flex-1 cursor-pointer rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:border-app-primary"
         >
           {months.map((name, index) => (
             <option key={name} value={index}>
@@ -140,7 +140,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
           value={viewYear}
           onChange={(event) => setViewYear(Number(event.target.value))}
           aria-label="Yıl"
-          className="min-w-0 flex-1 rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:border-app-primary"
+          className="min-w-0 flex-1 cursor-pointer rounded-md border border-app-border bg-app-surface px-1.5 py-1 text-xs text-app-text outline-none focus:border-app-primary"
         >
           {years.map((year) => (
             <option key={year} value={year}>
@@ -152,7 +152,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
           type="button"
           onClick={goToNextMonth}
           aria-label="Sonraki ay"
-          className="flex-none rounded-md p-1 text-app-text hover:bg-app-bg"
+          className="flex-none cursor-pointer rounded-md p-1 text-app-text hover:bg-app-bg"
         >
           <ChevronRight size={18} />
         </button>
@@ -180,7 +180,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
               onClick={() => !isDisabled && handleSelectDay(cell)}
               disabled={isDisabled}
               className={clsx(
-                'rounded-md py-1.5 text-center text-sm text-app-text hover:bg-app-bg',
+                'cursor-pointer rounded-md py-1.5 text-center text-sm text-app-text hover:bg-app-bg',
                 cell.outside && 'text-app-muted opacity-55',
                 isToday && !isSelected && 'border border-app-primary',
                 isSelected && 'bg-app-primary text-white hover:bg-app-primary',
@@ -202,7 +202,7 @@ export function Calendar({ value, onSelect, maxDate }: CalendarProps) {
               year: today.getFullYear(),
             })
           }
-          className="text-xs font-semibold text-app-primary hover:underline"
+          className="cursor-pointer text-xs font-semibold text-app-primary hover:underline"
         >
           Bugün
         </button>

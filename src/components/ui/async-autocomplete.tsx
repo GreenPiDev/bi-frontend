@@ -201,7 +201,7 @@ export function AsyncAutocomplete({
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => selectOption(option)}
                       className={clsx(
-                        'block w-full rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
+                        'block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
                         index === highlighted && 'bg-app-bg',
                       )}
                     >
