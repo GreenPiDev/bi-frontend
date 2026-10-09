@@ -137,7 +137,12 @@ export function HomePage() {
   const lowStockItemsQuery = useLowStockItemsQuery(canAccessStock);
 
   const pendingInvites = pendingInvitesQuery.data ?? [];
-  const todayEvents = todayEventsQuery.data ?? [];
+  const myUserId = meQuery.data?.id;
+  const todayEvents = (todayEventsQuery.data ?? []).filter(
+    (event) =>
+      event.createdById === myUserId ||
+      event.attendees.some((attendee) => attendee.userId === myUserId),
+  );
 
   const hasAnyStat =
     canAccessQuotes ||
