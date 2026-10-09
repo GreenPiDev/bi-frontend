@@ -52,16 +52,19 @@ export function useQuotesQuery(
 /** "Durum" buton filtresindeki her secenegin (Tumu + her QuoteStatus) yanina yazilacak
  * kayit sayisini getirir - `/quotes` ucu durum bazli kirilim dondurmuyor, bu yuzden her
  * secenek icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total kullanilir). */
-export function useQuoteStatusCounts(statuses: readonly QuoteStatus[]) {
+export function useQuoteStatusCounts(
+  statuses: readonly QuoteStatus[],
+  range: { from?: string; to?: string } = {},
+) {
   const results = useQueries({
     queries: [
       {
-        queryKey: [...QUOTES_QUERY_KEY, 'count', 'all'],
-        queryFn: () => listQuotes({ pageSize: 1 }),
+        queryKey: [...QUOTES_QUERY_KEY, 'count', 'all', range],
+        queryFn: () => listQuotes({ pageSize: 1, ...range }),
       },
       ...statuses.map((status) => ({
-        queryKey: [...QUOTES_QUERY_KEY, 'count', status],
-        queryFn: () => listQuotes({ pageSize: 1, status }),
+        queryKey: [...QUOTES_QUERY_KEY, 'count', status, range],
+        queryFn: () => listQuotes({ pageSize: 1, status, ...range }),
       })),
     ],
   });
@@ -77,18 +80,18 @@ export function useQuoteStatusCounts(statuses: readonly QuoteStatus[]) {
 }
 
 /** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
-export function useQuoteRejectionReasonsSummaryQuery() {
+export function useQuoteRejectionReasonsSummaryQuery(range: { from?: string; to?: string } = {}) {
   return useQuery({
-    queryKey: [...QUOTES_QUERY_KEY, 'rejection-reasons-summary'],
-    queryFn: () => getQuoteRejectionReasonsSummary(),
+    queryKey: [...QUOTES_QUERY_KEY, 'rejection-reasons-summary', range],
+    queryFn: () => getQuoteRejectionReasonsSummary(range),
   });
 }
 
 /** /teklifler?tab=reports "Reddedilme Notları" collapsible tablosu. */
-export function useRejectedQuotesWithReasonsQuery() {
+export function useRejectedQuotesWithReasonsQuery(range: { from?: string; to?: string } = {}) {
   return useQuery({
-    queryKey: [...QUOTES_QUERY_KEY, 'rejected-reasons-list'],
-    queryFn: () => getRejectedQuotesWithReasons(),
+    queryKey: [...QUOTES_QUERY_KEY, 'rejected-reasons-list', range],
+    queryFn: () => getRejectedQuotesWithReasons(range),
   });
 }
 

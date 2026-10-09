@@ -2864,6 +2864,20 @@ export const tr = {
       rejectionReasonsEmpty: 'Henüz reddedilmiş teklif yok.',
       rejectionNotesSectionTitle: 'Reddedilme Notları',
       rejectionNotesSectionSubtitle: 'Reddedilen tekliflerin sebep ve notlarını görüntüleyin.',
+      filterButton: 'Filtrele',
+      filterDrawer: {
+        title: 'Rapor Filtresi',
+        sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
+        rangeFromLabel: 'Başlangıç tarihi',
+        rangeToLabel: 'Bitiş tarihi',
+        reset: 'Filtreyi Temizle',
+      },
+      activeFilterAll: 'Tüm zamanlar baz alınıyor.',
+      activeFilterSince: (date: string) => `${date} tarihinden itibaren baz alınıyor.`,
+      activeFilterRangeBoth: (from: string, to: string) =>
+        `${from} - ${to} tarihleri arası baz alınıyor.`,
+      activeFilterRangeFrom: (from: string) => `${from} tarihinden itibaren baz alınıyor.`,
+      activeFilterRangeTo: (to: string) => `${to} tarihine kadar baz alınıyor.`,
       rejectionNotesTable: {
         quoteColumn: 'Teklif No',
         accountColumn: 'Firma',

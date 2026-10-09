@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { FileDown } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { QuoteReportsContent } from './quote-reports-content';
@@ -31,8 +32,10 @@ function ComingSoonContent() {
   );
 }
 
-function reportTabBody(tabKey: ReportTabKey, isPrintMode: boolean) {
-  if (tabKey === 'quotes') return <QuoteReportsContent isPrintMode={isPrintMode} />;
+function reportTabBody(tabKey: ReportTabKey, isPrintMode: boolean, headerActions?: ReactNode) {
+  if (tabKey === 'quotes') {
+    return <QuoteReportsContent isPrintMode={isPrintMode} headerActions={headerActions} />;
+  }
   return <ComingSoonContent />;
 }
 
@@ -56,30 +59,40 @@ export function ReportsPage() {
     );
   }
 
-  const tabs: HorizontalTabItem[] = TAB_KEYS.map((key) => ({
-    key,
-    label: tr.reports.tabs[key],
-    content: (
-      <>
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <CircleIconButton
-            icon={FileDown}
-            tooltip={tr.reports.exportPdfButton}
-            onClick={() => exportPdfMutation.mutate(key)}
-            disabled={exportPdfMutation.isPending}
-          />
-        </div>
-        {exportPdfMutation.error && exportPdfMutation.variables === key && (
-          <p className="mt-2 text-right text-sm text-app-danger">
-            {exportPdfMutation.error instanceof ApiError
-              ? exportPdfMutation.error.message
-              : tr.reports.exportPdfError}
-          </p>
-        )}
-        <div className="mt-4">{reportTabBody(key, false)}</div>
-      </>
-    ),
-  }));
+  const tabs: HorizontalTabItem[] = TAB_KEYS.map((key) => {
+    const exportPdfButton = (
+      <CircleIconButton
+        icon={FileDown}
+        tooltip={tr.reports.exportPdfButton}
+        onClick={() => exportPdfMutation.mutate(key)}
+        disabled={exportPdfMutation.isPending}
+      />
+    );
+    // "quotes" sekmesinde PDF disa aktarma butonu QuoteReportsContent'in kendi
+    // filtre satirina (hint + filtre butonu) tasiniyor - diger sekmelerde (henuz
+    // ComingSoonContent) ayri bir ust satirda kalmaya devam ediyor.
+    return {
+      key,
+      label: tr.reports.tabs[key],
+      content: (
+        <>
+          {key !== 'quotes' && (
+            <div className="mt-4 flex items-center justify-end gap-2">{exportPdfButton}</div>
+          )}
+          {exportPdfMutation.error && exportPdfMutation.variables === key && (
+            <p className="mt-2 text-right text-sm text-app-danger">
+              {exportPdfMutation.error instanceof ApiError
+                ? exportPdfMutation.error.message
+                : tr.reports.exportPdfError}
+            </p>
+          )}
+          <div className="mt-4">
+            {reportTabBody(key, false, key === 'quotes' ? exportPdfButton : undefined)}
+          </div>
+        </>
+      ),
+    };
+  });
 
   return (
     <AppShell>

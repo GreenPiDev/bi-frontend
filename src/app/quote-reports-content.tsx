@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { ListFilter } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
 import { ChartCard } from '../components/ui/chart-card';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { CollapsibleSection } from '../components/ui/collapsible-section';
+import { DateField } from '../components/ui/date-field';
+import { Drawer } from '../components/ui/drawer';
 import { Modal } from '../components/ui/modal';
 import { Table, type TableColumn } from '../components/ui/table';
 import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
@@ -20,9 +25,9 @@ import { QUOTE_STATUS_OPTIONS } from '../lib/quote-totals';
 const numberFormatter = new Intl.NumberFormat('tr-TR');
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
-function RejectedQuotesReasonsTable() {
+function RejectedQuotesReasonsTable({ range }: { range: { from?: string; to?: string } }) {
   const navigate = useNavigate();
-  const rejectedQuotesQuery = useRejectedQuotesWithReasonsQuery();
+  const rejectedQuotesQuery = useRejectedQuotesWithReasonsQuery(range);
   const rows = (rejectedQuotesQuery.data ?? []).filter((row) => Boolean(row.note));
   const [noteModalRow, setNoteModalRow] = useState<RejectedQuoteReasonRow | null>(null);
 
@@ -100,10 +105,50 @@ function KpiCard({
   );
 }
 
-export function QuoteReportsContent({ isPrintMode = false }: { isPrintMode?: boolean }) {
+export function QuoteReportsContent({
+  isPrintMode = false,
+  headerActions,
+}: {
+  isPrintMode?: boolean;
+  /** Filtre butonuyla ayni satira, butonun soluna yerlestirilen ekstra aksiyon(lar) -
+   * ornegin /raporlar?tab=quotes'teki PDF disa aktarma butonu (bkz. reports-page.tsx). */
+  headerActions?: ReactNode;
+}) {
   const navigate = useNavigate();
-  const statusCounts = useQuoteStatusCounts(QUOTE_STATUS_OPTIONS.map((option) => option.value));
-  const rejectionReasonsQuery = useQuoteRejectionReasonsSummaryQuery();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
+  // Iki tarih filtresi ayni quoteDate alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. quotes-list-page.tsx).
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter = Boolean(from) || Boolean(to);
+  const range = { from, to };
+
+  function resetFilters() {
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
+  }
+
+  const activeFilterLabel = !hasActiveFilter
+    ? tr.crm.quoteReports.activeFilterAll
+    : from && to
+      ? tr.crm.quoteReports.activeFilterRangeBoth(
+          dateFormatter.format(new Date(from)),
+          dateFormatter.format(new Date(to)),
+        )
+      : from
+        ? tr.crm.quoteReports.activeFilterSince(dateFormatter.format(new Date(from)))
+        : tr.crm.quoteReports.activeFilterRangeTo(dateFormatter.format(new Date(to as string)));
+
+  const statusCounts = useQuoteStatusCounts(
+    QUOTE_STATUS_OPTIONS.map((option) => option.value),
+    range,
+  );
+  const rejectionReasonsQuery = useQuoteRejectionReasonsSummaryQuery(range);
   const theme = getChartTheme();
 
   function goToQuotes(status?: QuoteStatus) {
@@ -135,6 +180,24 @@ export function QuoteReportsContent({ isPrintMode = false }: { isPrintMode?: boo
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-app-muted">{activeFilterLabel}</p>
+        {!isPrintMode && (
+          <div className="flex items-center gap-2">
+            {headerActions}
+            <CircleIconButton
+              icon={ListFilter}
+              tooltip={tr.crm.quoteReports.filterButton}
+              onClick={() => setDrawerOpen(true)}
+            >
+              {hasActiveFilter && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+              )}
+            </CircleIconButton>
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
         <KpiCard
           label={tr.crm.quoteReports.totalLabel}
@@ -189,8 +252,49 @@ export function QuoteReportsContent({ isPrintMode = false }: { isPrintMode?: boo
           title={tr.crm.quoteReports.rejectionNotesSectionTitle}
           subtitle={tr.crm.quoteReports.rejectionNotesSectionSubtitle}
         >
-          <RejectedQuotesReasonsTable />
+          <RejectedQuotesReasonsTable range={range} />
         </CollapsibleSection>
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.quoteReports.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <DateField
+              label={tr.crm.quoteReports.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+              clearable
+              onClear={() => setSinceInput('')}
+            />
+            <DateField
+              label={tr.crm.quoteReports.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => setRangeFromInput('')}
+            />
+            <DateField
+              label={tr.crm.quoteReports.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => setRangeToInput('')}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.quoteReports.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
     </div>
   );

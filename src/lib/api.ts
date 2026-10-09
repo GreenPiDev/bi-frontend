@@ -2847,8 +2847,14 @@ export interface QuoteRejectionReasonSummaryRow {
 }
 
 /** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
-export function getQuoteRejectionReasonsSummary(): Promise<QuoteRejectionReasonSummaryRow[]> {
-  return request('/quotes/rejection-reasons-summary');
+export function getQuoteRejectionReasonsSummary(
+  params: { from?: string; to?: string } = {},
+): Promise<QuoteRejectionReasonSummaryRow[]> {
+  const query = new URLSearchParams();
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  const qs = query.toString();
+  return request(`/quotes/rejection-reasons-summary${qs ? `?${qs}` : ''}`);
 }
 
 export interface RejectedQuoteReasonRow {
@@ -2861,8 +2867,14 @@ export interface RejectedQuoteReasonRow {
 }
 
 /** /teklifler?tab=reports "Reddedilme Notları" collapsible tablosu - en yeni reddedilen ustte. */
-export function getRejectedQuotesWithReasons(): Promise<RejectedQuoteReasonRow[]> {
-  return request('/quotes/rejected-reasons-list');
+export function getRejectedQuotesWithReasons(
+  params: { from?: string; to?: string } = {},
+): Promise<RejectedQuoteReasonRow[]> {
+  const query = new URLSearchParams();
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  const qs = query.toString();
+  return request(`/quotes/rejected-reasons-list${qs ? `?${qs}` : ''}`);
 }
 
 export interface ProjectResponsibleUser {
