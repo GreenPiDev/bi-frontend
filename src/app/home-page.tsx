@@ -161,14 +161,14 @@ export function HomePage() {
       <p className="text-sm text-app-muted">{tr.home.subtitle}</p>
 
       {meQuery.data && (
-        <div className="mt-6 flex flex-wrap items-baseline justify-between gap-2 border border-app-border bg-app-surface p-5">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border border-app-border bg-app-surface p-5">
           <div>
             <p className="text-lg font-bold text-app-brand">{tr.home.welcome(meQuery.data.name)}</p>
             {tenantProfileQuery.data?.name && (
               <p className="text-sm text-app-muted">{tenantProfileQuery.data.name}</p>
             )}
           </div>
-          <p className="text-sm font-medium text-app-text">{dateTimeFormatter.format(now)}</p>
+          <p className="text-lg font-semibold text-app-text">{dateTimeFormatter.format(now)}</p>
         </div>
       )}
 
