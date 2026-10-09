@@ -144,14 +144,24 @@ export const interactionFormSchema = z
 
 export type InteractionFormValues = z.infer<typeof interactionFormSchema>;
 
-// Backend PATCH /interactions/:id sadece type/notes/occurredAt/status gunceller (firma/kisi,
-// katilimci, firsat ve hatirlatma alanlari olusturma sonrasi degistirilemez) - bu yuzden
+// Backend PATCH /interactions/:id sadece type/notes/occurredAt/status/participants gunceller
+// (firma/kisi, firsat ve hatirlatma alanlari olusturma sonrasi degistirilemez) - bu yuzden
 // duzenleme formu, olusturma formunun (interactionFormSchema) bir alt kumesi.
 export const interactionEditFormSchema = z.object({
   type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
   subject: z.string().max(200).optional(),
   notes: z.string().max(5000).optional(),
   occurredAt: z.string().min(1, 'Tarih gerekli.'),
+  participants: z
+    .array(
+      z.object({
+        name: z.string().min(1, 'Ad gerekli.'),
+        isInternal: z.boolean(),
+        note: z.string().optional(),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export type InteractionEditFormValues = z.infer<typeof interactionEditFormSchema>;

@@ -1,16 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Autocomplete } from '../components/ui/autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { DateTimeField } from '../components/ui/date-time-field';
 import { FormError } from '../components/ui/form-error';
+import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { InteractionTypeSelect } from '../features/crm/interaction-type-select';
+import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
 import {
   useInteractionQuery,
   useUpdateInteractionMutation,
@@ -29,25 +32,32 @@ function toDatetimeLocal(iso: string): string {
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 }
 
-/** Backend PATCH /interactions/:id sadece type/notes/occurredAt/status gunceller - bu yuzden
- * bu form, olusturma formunun (interaction-form-page.tsx) aksine firma/kisi/katilimci/
- * firsat/hatirlatma alanlarini icermez, sadece gercekten guncellenebilen alanlari gosterir. */
+/** Backend PATCH /interactions/:id sadece type/notes/occurredAt/status/participants gunceller -
+ * bu yuzden bu form, olusturma formunun (interaction-form-page.tsx) aksine firsat/hatirlatma
+ * alanlarini icermez. Firma/Gorusulen Kisi degistirilemez ama baglami gormek icin salt
+ * okunur (readOnly+disabled, forma submit edilmez) olarak gosterilir. "Diger Katilimcilar"
+ * (M10) ise create formuyla ayni Autocomplete/Switch deseniyle duzenlenebilir. */
 export function InteractionEditPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
   const interactionQuery = useInteractionQuery(id);
   const updateMutation = useUpdateInteractionMutation(id);
+  const assignableUsersQuery = useAssignableCalendarUsersQuery();
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
     formState: { errors },
   } = useForm<InteractionEditFormValues>({
     resolver: zodResolver(interactionEditFormSchema),
+    defaultValues: { participants: [] },
   });
+
+  const { fields, append, remove } = useFieldArray({ control, name: 'participants' });
 
   useEffect(() => {
     if (interactionQuery.data) {
@@ -56,6 +66,11 @@ export function InteractionEditPage() {
         subject: interactionQuery.data.subject ?? undefined,
         notes: interactionQuery.data.notes ?? undefined,
         occurredAt: toDatetimeLocal(interactionQuery.data.occurredAt),
+        participants: interactionQuery.data.participants.map((participant) => ({
+          name: participant.name,
+          isInternal: participant.isInternal,
+          note: participant.note ?? '',
+        })),
       });
     }
   }, [interactionQuery.data, reset]);
@@ -70,7 +85,13 @@ export function InteractionEditPage() {
 
   const onSubmit = handleSubmit((values) => {
     updateMutation.mutate(
-      { ...values, occurredAt: new Date(values.occurredAt).toISOString() },
+      {
+        ...values,
+        occurredAt: new Date(values.occurredAt).toISOString(),
+        participants: (values.participants ?? [])
+          .filter((p) => p.name.trim().length > 0)
+          .map((p) => ({ name: p.name, isInternal: p.isInternal, note: p.note || undefined })),
+      },
       {
         onSuccess: () => {
           toast.success(tr.crm.interactions.form.updateSuccess);
@@ -97,6 +118,22 @@ export function InteractionEditPage() {
           <FormError message={apiErrorMessage} />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              label={tr.crm.interactions.form.accountLabel}
+              value={interactionQuery.data?.account?.name ?? ''}
+              readOnly
+              disabled
+            />
+            <TextField
+              label={tr.crm.interactions.form.contactLabel}
+              value={
+                interactionQuery.data?.contact
+                  ? `${interactionQuery.data.contact.firstName} ${interactionQuery.data.contact.lastName}`
+                  : ''
+              }
+              readOnly
+              disabled
+            />
             <Controller
               name="type"
               control={control}
@@ -138,6 +175,70 @@ export function InteractionEditPage() {
                 error={errors.notes?.message}
                 {...register('notes')}
               />
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-app-border bg-app-surface p-4">
+            <span className="text-sm font-semibold text-app-text">
+              {tr.crm.interactions.form.participantsSectionTitle}
+            </span>
+            <div className="mt-3 flex flex-col gap-3">
+              {fields.map((field, index) => {
+                const isInternal = watch(`participants.${index}.isInternal` as const);
+                return (
+                  <div key={field.id} className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <Controller
+                        name={`participants.${index}.name` as const}
+                        control={control}
+                        render={({ field: nameField }) => (
+                          <Autocomplete
+                            label={tr.crm.interactions.form.participantNamePlaceholder}
+                            value={nameField.value ?? ''}
+                            onChange={nameField.onChange}
+                            options={
+                              isInternal
+                                ? (assignableUsersQuery.data ?? []).map((user) => user.name)
+                                : []
+                            }
+                          />
+                        )}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <TextField
+                        label={tr.crm.interactions.form.participantNoteLabel}
+                        {...register(`participants.${index}.note` as const)}
+                      />
+                    </div>
+                    <Controller
+                      name={`participants.${index}.isInternal` as const}
+                      control={control}
+                      render={({ field: internalField }) => (
+                        <div className="flex items-center gap-1.5 pb-2.5">
+                          <Switch
+                            checked={internalField.value ?? false}
+                            onChange={internalField.onChange}
+                          />
+                          <span className="text-xs text-app-muted">
+                            {tr.crm.interactions.form.participantInternalLabel}
+                          </span>
+                        </div>
+                      )}
+                    />
+                    <Button type="button" variant="secondary" onClick={() => remove(index)}>
+                      {tr.crm.interactions.form.removeParticipant}
+                    </Button>
+                  </div>
+                );
+              })}
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => append({ name: '', isInternal: false, note: '' })}
+              >
+                {tr.crm.interactions.form.addParticipant}
+              </Button>
             </div>
           </div>
 

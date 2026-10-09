@@ -1922,6 +1922,8 @@ export interface UpdateInteractionInput {
   /** Sadece "Bağlı Görüşme Ekle" ile oluşturulan kayıtların düzenleme modalından gelir. */
   contactId?: string;
   performedByUserId?: string;
+  /** M10: verilince mevcut katılımcı listesinin tamamının yerine geçer (replace). */
+  participants?: { name: string; isInternal: boolean; note?: string }[];
 }
 
 export interface ReminderConflict {
