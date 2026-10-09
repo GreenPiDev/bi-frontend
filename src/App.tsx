@@ -68,6 +68,7 @@ import { QuoteManagementPage } from './app/quote-management-page';
 import { QuoteTemplateFormPage } from './app/quote-template-form-page';
 import { QuoteTemplateListPage } from './app/quote-template-list-page';
 import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
+import { ReportsPage } from './app/reports-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
 import { UserStatsPage } from './app/user-stats-page';
@@ -457,6 +458,14 @@ function App() {
           element={
             <TenantPageRoute pageKey="quote-templates">
               <QuoteTemplateFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/raporlar"
+          element={
+            <TenantPageRoute pageKey="reports">
+              <ReportsPage />
             </TenantPageRoute>
           }
         />

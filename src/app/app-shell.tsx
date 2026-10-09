@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Briefcase,
   Building2,
   CalendarDays,
@@ -163,6 +164,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     'drawing-library': useIsPageModuleAccessible('drawing-library'),
     'drawing-templates': useIsPageModuleAccessible('drawing-templates'),
     messages: useIsPageModuleAccessible('messages'),
+    reports: useIsPageModuleAccessible('reports'),
     settings: useIsPageModuleAccessible('settings'),
   };
   const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
@@ -213,6 +215,9 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     canAccessPage('products') ||
     canAccessPage('warehouses')
       ? [{ label: tr.shell.nav.inventory, icon: Warehouse, path: '/envanter' }]
+      : []),
+    ...(canAccessPage('reports')
+      ? [{ label: tr.shell.nav.reports, icon: BarChart3, path: '/raporlar' }]
       : []),
     ...(canAccessPage('drawing-library') || canAccessPage('drawing-templates')
       ? [{ label: tr.shell.nav.drawingSettings, icon: PenTool, path: '/cizim-ayarlari' }]

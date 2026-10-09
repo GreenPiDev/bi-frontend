@@ -8,11 +8,19 @@ interface ChartWithExportProps {
   option: EChartsOption;
   fileName: string;
   onEvents?: Record<string, (params: { dataIndex: number }) => void>;
+  /** PDF/yazdirma goruntusunde (bkz. quote-reports-content.tsx reports-page.tsx print
+   * modu) bu buton anlamsiz/gorsel curuftur - verilince tamamen render edilmez. */
+  hideExportButton?: boolean;
 }
 
 /** F10: grafik widget'lari icin ortak "PNG indir" davranisi. ECharts'in kendi
  * getDataURL()'ini kullandigindan sunucuya istek atmaz (bkz. docs/VARSAYIMLAR.md). */
-export function ChartWithExport({ option, fileName, onEvents }: ChartWithExportProps) {
+export function ChartWithExport({
+  option,
+  fileName,
+  onEvents,
+  hideExportButton = false,
+}: ChartWithExportProps) {
   const chartRef = useRef<ReactECharts>(null);
 
   function downloadPng() {
@@ -34,15 +42,17 @@ export function ChartWithExport({ option, fileName, onEvents }: ChartWithExportP
         notMerge
         onEvents={onEvents}
       />
-      <button
-        type="button"
-        onClick={downloadPng}
-        aria-label={tr.dashboards.widget.exportPng}
-        title={tr.dashboards.widget.exportPng}
-        className="absolute right-1 top-1 rounded-md bg-app-surface/90 p-1 text-app-muted hover:text-app-text"
-      >
-        <Download size={14} />
-      </button>
+      {!hideExportButton && (
+        <button
+          type="button"
+          onClick={downloadPng}
+          aria-label={tr.dashboards.widget.exportPng}
+          title={tr.dashboards.widget.exportPng}
+          className="absolute right-1 top-1 rounded-md bg-app-surface/90 p-1 text-app-muted hover:text-app-text"
+        >
+          <Download size={14} />
+        </button>
+      )}
     </div>
   );
 }

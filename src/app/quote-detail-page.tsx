@@ -84,6 +84,15 @@ const STATUS_BADGE_VARIANT: Record<
   REVIZE: 'orange',
 };
 
+const STATUS_TEXT_CLASSES: Record<QuoteStatus, string> = {
+  UNSPECIFIED: 'text-app-muted',
+  DRAFT: 'text-app-muted',
+  PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
+  APPROVED: 'text-app-success',
+  REJECTED: 'text-app-danger',
+  REVIZE: 'text-orange-600 dark:text-orange-400',
+};
+
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 const quantityFormatter = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 3 });
 const dateTimeFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -739,9 +748,9 @@ function QuoteStatusHistoryContent({ quote }: { quote: Quote }) {
       header: tr.crm.quotes.statusTab.statusColumn,
       className: 'w-40 whitespace-nowrap',
       render: (row) => (
-        <Badge variant={STATUS_BADGE_VARIANT[row.status]}>
+        <span className={clsx('font-medium', STATUS_TEXT_CLASSES[row.status])}>
           {row.statusLabelOverride ?? tr.crm.quotes.statusOptions[row.status]}
-        </Badge>
+        </span>
       ),
     },
     {
@@ -793,10 +802,19 @@ function QuoteStatusHistoryContent({ quote }: { quote: Quote }) {
 
 /** /teklifler/:id "Stok Kontrolu" sekmesi: teklifteki her urun satiri + tenant'in
  * depo isimleri dinamik kolon olarak eklenmis sekilde o depodaki mevcut miktar. */
-function QuoteStockCheckContent({ quoteId }: { quoteId: string }) {
+function QuoteStockCheckContent({
+  quoteId,
+  showCreatePurchaseOrderButton,
+}: {
+  quoteId: string;
+  showCreatePurchaseOrderButton: boolean;
+}) {
+  const navigate = useNavigate();
   const stockCheckQuery = useQuoteStockCheckQuery(quoteId);
   const warehouses = stockCheckQuery.data?.warehouses ?? [];
   const items = stockCheckQuery.data?.items ?? [];
+  const isShortage = (row: QuoteStockCheckRow) => row.quoteQuantity > row.totalStock;
+  const sortedItems = [...items].sort((a, b) => Number(isShortage(b)) - Number(isShortage(a)));
 
   const columns: TableColumn<QuoteStockCheckRow>[] = [
     {
@@ -827,12 +845,22 @@ function QuoteStockCheckContent({ quoteId }: { quoteId: string }) {
 
   return (
     <div>
+      {showCreatePurchaseOrderButton && (
+        <div className="flex justify-end">
+          <CircleIconButton
+            icon={ShoppingCart}
+            tooltip={tr.crm.quotes.createPurchaseOrderButton}
+            onClick={() => navigate(`/siparisler/yeni?quoteId=${quoteId}`)}
+          />
+        </div>
+      )}
       <Table
         columns={columns}
-        data={items}
+        data={sortedItems}
         keyField={(row) => row.productId}
         isLoading={stockCheckQuery.isPending}
         emptyMessage={tr.crm.quotes.stockTab.empty}
+        rowClassName={(row) => (isShortage(row) ? 'bg-red-50' : undefined)}
         fixedLayout
       />
       {!stockCheckQuery.isPending && warehouses.length === 0 && (
@@ -1209,7 +1237,14 @@ export function QuoteDetailPage() {
                 {
                   key: 'stock',
                   label: tr.crm.quotes.tabs.stock,
-                  content: <QuoteStockCheckContent quoteId={quote.id} />,
+                  content: (
+                    <QuoteStockCheckContent
+                      quoteId={quote.id}
+                      showCreatePurchaseOrderButton={
+                        quote.status === 'APPROVED' && canCreatePurchaseOrder
+                      }
+                    />
+                  ),
                 },
               ] satisfies HorizontalTabItem[]
             }

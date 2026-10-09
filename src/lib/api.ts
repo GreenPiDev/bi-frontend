@@ -2996,6 +2996,11 @@ export function exportQuoteChartsPdf(quoteId: string): Promise<Blob> {
   return requestBlob(`/exports/quote/${quoteId}/charts-pdf`);
 }
 
+/** /raporlar?tab=... ekraninin aktif sekmesinin PDF export'u. */
+export function exportReportsPdf(tab: string): Promise<Blob> {
+  return requestBlob(`/exports/reports/pdf?tab=${encodeURIComponent(tab)}`);
+}
+
 export interface QuoteAssignableUser {
   id: string;
   name: string;

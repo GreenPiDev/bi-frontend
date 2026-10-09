@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
@@ -27,6 +27,7 @@ import {
   useUpdateMyCalendarGrantsMutation,
 } from '../features/crm/use-calendar-shares';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
+import { PhoneField } from '../features/crm/phone-field';
 import {
   changePasswordFormSchema,
   updateProfileFormSchema,
@@ -311,6 +312,7 @@ function ProfileEditForm({
   const updateMutation = useUpdateProfileMutation();
   const {
     register: registerField,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -362,11 +364,17 @@ function ProfileEditForm({
           error={errors.title?.message}
           {...registerField('title')}
         />
-        <TextField
-          label={tr.profile.editSection.phoneLabel}
-          autoComplete="tel"
-          error={errors.phone?.message}
-          {...registerField('phone')}
+        <Controller
+          name="phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneField
+              label={tr.profile.editSection.phoneLabel}
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              error={errors.phone?.message}
+            />
+          )}
         />
         <Button type="submit" disabled={updateMutation.isPending} className="self-start">
           {updateMutation.isPending

@@ -127,6 +127,8 @@ export const tr = {
       'Ürün kataloğunuzu, ürün listelerinizi (kataloglarınızı) ve stok durumunuzu tek yerden yönetin.',
     quoteManagement:
       'Tekliflerinizi ve teklif PDF çıktısında kullanılan şablonları tek yerden yönetin.',
+    reports:
+      'Firmalar, kişiler, görüşmeler, projeler, teklifler, siparişler ve fırsatlarınızla ilgili raporları sekmeler halinde buradan görüntüleyin.',
     drawingSettings:
       'Otomatik pano çizim motorunun kullandığı komponent kütüphanesini ve pano şablonlarını buradan yönetin.',
     profile:
@@ -185,6 +187,7 @@ export const tr = {
       interactions: 'Görüşmeler',
       opportunities: 'Fırsatlar',
       quotes: 'Teklifler',
+      reports: 'Raporlar',
       postSaleSupport: 'Satış Sonrası Destek',
       projects: 'Projeler',
       purchaseOrders: 'Satın Alma Siparişleri',
@@ -278,6 +281,22 @@ export const tr = {
       quotes: 'Teklifler',
       reports: 'Raporlar',
       templates: 'Teklif Şablonları',
+    },
+  },
+  reports: {
+    title: 'Raporlar',
+    subtitle: 'Satış ve CRM kayıtlarınızla ilgili raporları tek ekranda görüntüleyin.',
+    comingSoon: 'Bu rapor henüz hazırlanıyor.',
+    exportPdfButton: 'PDF Olarak Dışa Aktar',
+    exportPdfError: 'PDF oluşturulurken bir hata oluştu.',
+    tabs: {
+      accounts: 'Firmalar',
+      contacts: 'Kişiler',
+      interactions: 'Görüşmeler',
+      projects: 'Projeler',
+      quotes: 'Teklifler',
+      purchaseOrders: 'Siparişler',
+      opportunities: 'Fırsatlar',
     },
   },
   drawingSettings: {
@@ -2625,7 +2644,7 @@ export const tr = {
         overview: 'Genel Bakış',
         cost: 'Finansal Özet',
         charts: 'Grafikler',
-        status: 'Durum',
+        status: 'Durum Geçmişi',
         stock: 'Stok Kontrolü',
       },
       stockTab: {

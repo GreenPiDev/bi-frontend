@@ -100,7 +100,7 @@ function KpiCard({
   );
 }
 
-export function QuoteReportsContent() {
+export function QuoteReportsContent({ isPrintMode = false }: { isPrintMode?: boolean }) {
   const navigate = useNavigate();
   const statusCounts = useQuoteStatusCounts(QUOTE_STATUS_OPTIONS.map((option) => option.value));
   const rejectionReasonsQuery = useQuoteRejectionReasonsSummaryQuery();
@@ -156,6 +156,7 @@ export function QuoteReportsContent() {
           <ChartWithExport
             option={statusDistributionOption}
             fileName={tr.crm.quoteReports.statusDistributionTitle}
+            hideExportButton={isPrintMode}
             onEvents={{
               click: (params) => goToQuotes(statusDistributionPoints[params.dataIndex]?.status),
             }}
@@ -165,23 +166,32 @@ export function QuoteReportsContent() {
         )}
       </ChartCard>
 
-      <ChartCard title={tr.crm.quoteReports.rejectionReasonsTitle}>
+      {/* PDF'te sayfa sonuna denk gelince ikiye bolunmesini onlemek icin ikinci
+       * grafik her zaman yeni bir sayfadan baslar (bkz. index.css .print-page-break,
+       * quote-detail-page.tsx'teki ayni desen). */}
+      <ChartCard
+        title={tr.crm.quoteReports.rejectionReasonsTitle}
+        className={isPrintMode ? 'print-page-break' : undefined}
+      >
         {hasRejectedQuotes ? (
           <ChartWithExport
             option={rejectionReasonsOption}
             fileName={tr.crm.quoteReports.rejectionReasonsTitle}
+            hideExportButton={isPrintMode}
           />
         ) : (
           <p className="text-sm text-app-muted">{tr.crm.quoteReports.rejectionReasonsEmpty}</p>
         )}
       </ChartCard>
 
-      <CollapsibleSection
-        title={tr.crm.quoteReports.rejectionNotesSectionTitle}
-        subtitle={tr.crm.quoteReports.rejectionNotesSectionSubtitle}
-      >
-        <RejectedQuotesReasonsTable />
-      </CollapsibleSection>
+      {!isPrintMode && (
+        <CollapsibleSection
+          title={tr.crm.quoteReports.rejectionNotesSectionTitle}
+          subtitle={tr.crm.quoteReports.rejectionNotesSectionSubtitle}
+        >
+          <RejectedQuotesReasonsTable />
+        </CollapsibleSection>
+      )}
     </div>
   );
 }
