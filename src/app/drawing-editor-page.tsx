@@ -1,4 +1,4 @@
-import { Canvas, Group, Line, Rect, Textbox, type FabricObject, type TPointerEvent } from 'fabric';
+import { Canvas, Line, Rect, Textbox, type FabricObject, type TPointerEvent } from 'fabric';
 import { clsx } from 'clsx';
 import { Maximize, ZoomIn, ZoomOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -53,12 +53,26 @@ function fitFontSizeMm(text: string, widthMm: number, heightMm: number): number 
   return Math.max(2.5, Math.min(byWidth, 0.45 * heightMm, 10));
 }
 
-type FabricObjectWithId = FabricObject & { elementId?: string };
+/** `isLabel` ile kutu (Rect) mi etiket (Textbox) mi oldugunu ayirt ederiz - ikisi de
+ * ayni `elementId`'yi tasir (kullanici talebi: "labelların da yerini/boyutunu
+ * degistirebilmek" - artik kutudan BAGIMSIZ, kendi basina secilebilir/tasinabilir/
+ * boyutlandirilabilir iki ayri Fabric nesnesi, eskiden tek bir Group'tu). */
+type FabricObjectWithId = FabricObject & { elementId?: string; isLabel?: boolean };
 
-function getGroupLabelText(group: Group): string {
-  const textObj = group.getObjects().find((o): o is Textbox => o.type === 'textbox') as
-    Textbox | undefined;
-  return textObj?.text ?? '';
+function findRectById(canvas: Canvas, id: string): Rect | undefined {
+  return canvas
+    .getObjects()
+    .find(
+      (o) => (o as FabricObjectWithId).elementId === id && !(o as FabricObjectWithId).isLabel,
+    ) as Rect | undefined;
+}
+
+function findLabelById(canvas: Canvas, id: string): Textbox | undefined {
+  return canvas
+    .getObjects()
+    .find(
+      (o) => (o as FabricObjectWithId).elementId === id && (o as FabricObjectWithId).isLabel,
+    ) as Textbox | undefined;
 }
 
 const VIEW_KEYS: readonly DrawingViewKey[] = ['internal', 'coverPlate', 'external'];
@@ -95,7 +109,19 @@ export function DrawingEditorPage() {
   const [activeView, setActiveView] = useState<DrawingViewKey>('internal');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [labelDraft, setLabelDraft] = useState('');
+  /** Secili etiketin punto degeri (mm) - Word'deki yazi boyutu kutusu gibi,
+   * surukleyerek degil DOGRUDAN SAYI girerek belirlenebilsin diye (kullanici
+   * talebi). Secim degisince handleSelection/selectElementById'de doldurulur. */
+  const [fontSizeDraftMm, setFontSizeDraftMm] = useState(0);
   const [zoom, setZoom] = useState(1);
+  /** A4'un saginda gosterilen "yerlestirilmis urunler" listesi - aktif goruntudeki
+   * her komponent, secili olani vurgulanacak sekilde. Canli Fabric nesnelerinden
+   * degil, bu React state'inden render edilir (liste tiklanabilir/vurgulanabilir
+   * olsun diye); canvas kurulurken bir kere doldurulur, etiket degisince
+   * handleLabelChange'de de guncellenir. */
+  const [elementList, setElementList] = useState<{ id: string; label: string; bandKey: string }[]>(
+    [],
+  );
 
   // Model yuklenince bir kerelik ic referanslara kopyalanir - sonrasi (konum/aci/etiket
   // duzenleme) dogrudan bu referanslar uzerinden, React state'ini tetiklemeden yurur
@@ -124,23 +150,36 @@ export function DrawingEditorPage() {
   function flushCurrentView(view: DrawingViewKey) {
     const canvas = fabricCanvasRef.current;
     if (!canvas || !viewsRef.current) return;
-    const objects = canvas
-      .getObjects()
-      .filter((o): o is Group & FabricObjectWithId => Boolean((o as FabricObjectWithId).elementId));
     const existing = viewsRef.current[view];
-    const updated = objects.map((obj) => {
-      const original = existing.find((el) => el.id === obj.elementId);
+    const scale = scaleRef.current;
+    const updated = existing.map((original) => {
+      const rect = findRectById(canvas, original.id);
+      const label = findLabelById(canvas, original.id);
       return {
-        id: obj.elementId!,
-        libraryComponentKey: original?.libraryComponentKey ?? '',
-        category: original?.category ?? 'OTHER',
-        bandKey: original?.bandKey ?? '',
-        label: getGroupLabelText(obj),
-        x: +((obj.left ?? 0) / scaleRef.current).toFixed(2),
-        y: +((obj.top ?? 0) / scaleRef.current).toFixed(2),
-        widthMm: original?.widthMm ?? 0,
-        heightMm: original?.heightMm ?? 0,
-        rotationDeg: +(obj.angle ?? 0).toFixed(2),
+        id: original.id,
+        libraryComponentKey: original.libraryComponentKey,
+        category: original.category,
+        bandKey: original.bandKey,
+        label: label ? (label.text ?? '') : original.label,
+        x: rect ? +((rect.left ?? 0) / scale).toFixed(2) : original.x,
+        y: rect ? +((rect.top ?? 0) / scale).toFixed(2) : original.y,
+        // getScaledWidth/Height (width*scaleX, height*scaleY) - kose tutamaciyla
+        // yeniden boyutlandirma nesnenin olcegini (scaleX/scaleY) degistirir, kendi
+        // width/height'ini degil; bu yuzden orijinal widthMm/heightMm yerine
+        // GERCEK render boyutu buradan okunur (bkz. kullanici talebi: "boyutunu
+        // degistirebilmek").
+        widthMm: rect ? +(rect.getScaledWidth() / scale).toFixed(2) : original.widthMm,
+        heightMm: rect ? +(rect.getScaledHeight() / scale).toFixed(2) : original.heightMm,
+        rotationDeg: rect ? +(rect.angle ?? 0).toFixed(2) : original.rotationDeg,
+        // Etiket artik kutudan bagimsiz tasinabilir/boyutlandirilabilir (kullanici
+        // talebi) - labelX/Y onun MERKEZ noktasi (Textbox originX/Y='center' ile
+        // kuruldugu icin left/top zaten merkez konumu).
+        labelX: label ? +((label.left ?? 0) / scale).toFixed(2) : original.labelX,
+        labelY: label ? +((label.top ?? 0) / scale).toFixed(2) : original.labelY,
+        labelWidthMm: label ? +(label.getScaledWidth() / scale).toFixed(2) : original.labelWidthMm,
+        labelFontSizeMm: label
+          ? +(((label.fontSize ?? 0) * (label.scaleY ?? 1)) / scale).toFixed(2)
+          : original.labelFontSizeMm,
       } satisfies DrawingElementInstance;
     });
     viewsRef.current[view] = updated;
@@ -214,69 +253,73 @@ export function DrawingEditorPage() {
       }
     }
 
+    // Kutu (Rect) ve etiket (Textbox) ARTIK ayri, bagimsiz Fabric nesneleri -
+    // eskiden tek bir Group'tu, bu da etiketin kutuyla birlikte hareket etmesini
+    // zorunlu kiliyordu. Kullanici talebi: labelların da kutudan bagimsiz yerini/
+    // boyutunu degistirebilmek. Ikisi de ayni elementId'yi tasir (flushCurrentView
+    // bunlardan ikisini okuyup tek bir DrawingElementInstance'a birlestirir).
     for (const el of viewsRef.current[view]) {
-      const wPx = el.widthMm * scale;
-      const hPx = el.heightMm * scale;
       const rect = new Rect({
-        left: 0,
-        top: 0,
+        left: el.x * scale,
+        top: el.y * scale,
         // bkz. yukaridaki plateRect yorumu - origin acikca 'left'/'top' verilmezse
-        // Fabric v7 varsayilani 'center' bu kutuyu text/textbox'tan farkli bir yere
-        // kaydirip Group'un bounding box'ini sismis gosteriyordu.
+        // Fabric v7 varsayilani 'center' bu kutuyu beklenmedik bir yere kaydirir.
         originX: 'left',
         originY: 'top',
-        width: wPx,
-        height: hPx,
+        width: el.widthMm * scale,
+        height: el.heightMm * scale,
+        angle: el.rotationDeg,
         fill: '#fff',
         stroke: '#222',
         strokeWidth: 1,
       });
-      // Textbox (FabricText degil) kullanilir: FabricText'in otomatik genislik olcumu
-      // Group'un bounding box'ini kutunun kendi genisliginden daha genis hesaplatip
-      // panonun kenarindan tasmasina yol aciyordu (gercek Fabric nesne verisiyle
-      // dogrulandi - bkz. CLAUDE.md "Ad-hoc: Cizim Editoru Font/Clipping"). Textbox'a
-      // acik `width` vermek, metnin kutuyu ASLA asmamasini garanti eder (gerekirse
-      // satir kaydirir), olcum belirsizligine birakmaz.
-      const text = new Textbox(el.label, {
-        width: wPx,
-        fontSize: fitFontSizeMm(el.label, el.widthMm, el.heightMm) * scale,
+      (rect as unknown as FabricObjectWithId).elementId = el.id;
+      canvas.add(rect);
+
+      // Varsayilan (kullanici hic tasimamissa/boyutlandirmamissa) etiket konumu/
+      // boyutu: kutunun merkezi, kutu genisligiyle ayni, otomatik punto (eskisiyle
+      // birebir ayni gorunum). Kullanici tasimis/boyutlandirmissa labelX/Y/
+      // labelWidthMm/labelFontSizeMm kullanilir (bkz. backend render-svg.ts'teki
+      // ayni geriye-donuk-uyumlu mantik).
+      const labelWidthMm = el.labelWidthMm ?? el.widthMm;
+      const labelCenterXMm = el.labelX ?? el.x + el.widthMm / 2;
+      const labelCenterYMm = el.labelY ?? el.y + el.heightMm / 2;
+      const labelFontSizeMm =
+        el.labelFontSizeMm ?? fitFontSizeMm(el.label, labelWidthMm, el.heightMm);
+      // Textbox (FabricText degil) kullanilir: FabricText'in otomatik genislik
+      // olcumu nesnenin bounding box'ini kutunun kendi genisliginden daha genis
+      // hesaplatip panonun kenarindan tasmasina yol aciyordu (gercek Fabric nesne
+      // verisiyle dogrulandi - bkz. CLAUDE.md "Ad-hoc: Cizim Editoru Font/Clipping").
+      const label = new Textbox(el.label, {
+        width: labelWidthMm * scale,
+        fontSize: labelFontSizeMm * scale,
         textAlign: 'center',
         originX: 'center',
         originY: 'center',
-        left: wPx / 2,
-        top: hPx / 2,
+        left: labelCenterXMm * scale,
+        top: labelCenterYMm * scale,
       });
-      const group = new Group([rect, text], {
-        // Group da Fabric v7'nin 'center' varsayilanini miras alir - acikca
-        // 'left'/'top' verilmezse el.x/el.y (backend'in auto-pack'teki top-left
-        // konumu) burada kutunun MERKEZI sanilip her eleman kendi yarim boyu kadar
-        // sola/yukari kayardi (bkz. yukaridaki rect yorumu, ayni kok sebep).
-        originX: 'left',
-        originY: 'top',
-        left: el.x * scale,
-        top: el.y * scale,
-        angle: el.rotationDeg,
-      });
-      group.setControlsVisibility({
-        mt: false,
-        mb: false,
-        ml: false,
-        mr: false,
-        bl: false,
-        br: false,
-        tl: false,
-        tr: false,
-        mtr: true,
-      });
-      (group as unknown as FabricObjectWithId).elementId = el.id;
-      canvas.add(group);
+      (label as unknown as FabricObjectWithId).elementId = el.id;
+      (label as unknown as FabricObjectWithId).isLabel = true;
+      // Etiket, kutudan SONRA eklenir - ayni ekrana tikladiginizda (kutu tam etiketin
+      // altinda kalsa bile) ustteki etiket secilir; kutuyu secmek icin etiketin
+      // disinda kalan bir kenarina tiklamak yeterli.
+      canvas.add(label);
     }
+
+    setElementList(
+      viewsRef.current[view].map((el) => ({ id: el.id, label: el.label, bandKey: el.bandKey })),
+    );
 
     function handleSelection(e: { selected?: FabricObject[] }) {
       const obj = e.selected?.[0] as FabricObjectWithId | undefined;
       if (obj?.elementId) {
         setSelectedElementId(obj.elementId);
-        setLabelDraft(getGroupLabelText(obj as unknown as Group));
+        // Kutu ya da etiket, hangisi secilmis olursa olsun "Etiket"/"Punto" alanlari
+        // her zaman o elementin etiket metnini/yazi boyutunu gosterir.
+        const labelObj = findLabelById(canvas, obj.elementId);
+        setLabelDraft(labelObj?.text ?? '');
+        setFontSizeDraftMm(getLabelFontSizeMm(labelObj));
       }
     }
     canvas.on('selection:created', handleSelection);
@@ -348,17 +391,55 @@ export function DrawingEditorPage() {
     setZoom(clamped);
   }
 
+  /** Bir Textbox'in o anki GORUNEN punto degeri (mm) - fontSize (px) * scaleY (kose
+   * tutamaciyla surukleyerek buyutme de fontSize'i degil scaleY'yi degistirir),
+   * scaleRef.current'a bolunerek mm'ye cevrilir. */
+  function getLabelFontSizeMm(label: Textbox | undefined): number {
+    if (!label) return 0;
+    return +(((label.fontSize ?? 0) * (label.scaleY ?? 1)) / scaleRef.current).toFixed(2);
+  }
+
+  /** "Punto (mm)" kutusuna dogrudan sayi girilince (Word'deki yazi boyutu kutusu
+   * gibi, surukleyerek degil) etiketin fontSize'ini DOGRUDAN bu deger yapar ve
+   * olcegi (scaleX/scaleY) sifirlar - aksi halde bir sonraki surukleyerek
+   * buyutmede eski olcekle birikerek (compounding) yanlis sonuc verirdi. */
+  function handleFontSizeChange(newSizeMm: number) {
+    setFontSizeDraftMm(newSizeMm);
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !selectedElementId || newSizeMm <= 0) return;
+    const labelObj = findLabelById(canvas, selectedElementId);
+    if (!labelObj) return;
+    labelObj.set({ fontSize: newSizeMm * scaleRef.current, scaleX: 1, scaleY: 1 });
+    canvas.requestRenderAll();
+  }
+
   function handleLabelChange(newLabel: string) {
     setLabelDraft(newLabel);
     const canvas = fabricCanvasRef.current;
     if (!canvas || !selectedElementId) return;
-    const obj = canvas
-      .getObjects()
-      .find((o) => (o as FabricObjectWithId).elementId === selectedElementId) as Group | undefined;
-    if (!obj) return;
-    const textObj = obj.getObjects().find((o): o is Textbox => o.type === 'textbox');
-    textObj?.set('text', newLabel);
+    const labelObj = findLabelById(canvas, selectedElementId);
+    if (!labelObj) return;
+    labelObj.set('text', newLabel);
     canvas.requestRenderAll();
+    setElementList((prev) =>
+      prev.map((item) => (item.id === selectedElementId ? { ...item, label: newLabel } : item)),
+    );
+  }
+
+  /** Sagdaki "yerlestirilmis urunler" listesinden bir satira tiklayinca semadaki
+   * karsilik gelen komponenti secer (kullanici talebi: "ordan secince semadan
+   * secilsin"). */
+  function selectElementById(id: string) {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+    const rect = findRectById(canvas, id);
+    if (!rect) return;
+    canvas.setActiveObject(rect);
+    canvas.requestRenderAll();
+    setSelectedElementId(id);
+    const labelObj = findLabelById(canvas, id);
+    setLabelDraft(labelObj?.text ?? '');
+    setFontSizeDraftMm(getLabelFontSizeMm(labelObj));
   }
 
   function handleSave() {
@@ -529,21 +610,63 @@ export function DrawingEditorPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col items-center gap-4">
+      <div className="mt-4 flex flex-wrap items-start justify-center gap-6">
         <div className="rounded-lg border border-app-border bg-white p-4 shadow-sm">
           <canvas ref={canvasElRef} />
         </div>
 
-        <div className="w-64">
-          {selectedElementId ? (
-            <TextField
-              label={tr.crm.drawings.editor.selectedLabelLabel}
-              value={labelDraft}
-              onChange={(e) => handleLabelChange(e.target.value)}
-            />
-          ) : (
-            <p className="text-xs text-app-muted">{tr.crm.drawings.editor.noSelectionHint}</p>
-          )}
+        <div className="flex w-64 shrink-0 flex-col gap-4">
+          <div>
+            {selectedElementId ? (
+              <div className="flex flex-col gap-3">
+                <TextField
+                  label={tr.crm.drawings.editor.selectedLabelLabel}
+                  value={labelDraft}
+                  onChange={(e) => handleLabelChange(e.target.value)}
+                />
+                <TextField
+                  label={tr.crm.drawings.editor.labelFontSizeLabel}
+                  type="number"
+                  min={1}
+                  step={0.5}
+                  value={fontSizeDraftMm}
+                  onChange={(e) => handleFontSizeChange(Number(e.target.value))}
+                />
+              </div>
+            ) : (
+              <p className="text-xs text-app-muted">{tr.crm.drawings.editor.noSelectionHint}</p>
+            )}
+          </div>
+
+          <div>
+            <h2 className="text-sm font-semibold text-app-text">
+              {tr.crm.drawings.editor.placedProductsTitle}
+            </h2>
+            {elementList.length === 0 ? (
+              <p className="mt-2 text-xs text-app-muted">
+                {tr.crm.drawings.editor.placedProductsEmpty}
+              </p>
+            ) : (
+              <ul className="mt-2 max-h-96 overflow-y-auto rounded-lg border border-app-border divide-y divide-app-border">
+                {elementList.map((item) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => selectElementById(item.id)}
+                      className={clsx(
+                        'block w-full px-3 py-2 text-left text-sm transition-colors',
+                        item.id === selectedElementId
+                          ? 'bg-app-brand/10 font-medium text-app-brand'
+                          : 'text-app-text hover:bg-app-bg-muted',
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </AppShell>

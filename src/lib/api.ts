@@ -2214,6 +2214,13 @@ export interface DrawingElementInstance {
   widthMm: number;
   heightMm: number;
   rotationDeg: number;
+  /** Etiketin kutudan bagimsiz konum/boyutu - hepsi opsiyonel, yoksa editor/export
+   * kutunun merkezine otomatik puntoyla yerlestirir (bkz. backend engine/types.ts
+   * ayni alanlar). labelX/labelY etiketin MERKEZ noktasidir. */
+  labelX?: number;
+  labelY?: number;
+  labelWidthMm?: number;
+  labelFontSizeMm?: number;
 }
 
 export interface DrawingBusbarInstance {
