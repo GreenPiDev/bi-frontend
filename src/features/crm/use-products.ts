@@ -26,6 +26,7 @@ export function useProductsQuery(
     attr?: Record<string, string>;
     includeDeleted?: boolean;
     sort?: string;
+    drawable?: boolean;
   } = {},
   options: { enabled?: boolean } = {},
 ) {

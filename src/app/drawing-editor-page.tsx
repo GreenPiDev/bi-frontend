@@ -1,10 +1,12 @@
-import { Canvas, FabricText, Group, Line, Rect, type FabricObject } from 'fabric';
+import { Canvas, Group, Line, Rect, Textbox, type FabricObject, type TPointerEvent } from 'fabric';
 import { clsx } from 'clsx';
+import { Maximize, ZoomIn, ZoomOut } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
@@ -23,14 +25,39 @@ import {
 } from '../lib/api';
 import { tr } from '../i18n/tr';
 
-/** mm -> px olcek faktoru - 1000x2000mm'lik tipik bir pano 500x1000px'e sigar. */
-const PX_PER_MM = 0.5;
+/** Canli editor, panonun gercek mm boyutundan BAGIMSIZ, sabit bir "sayfa" kutusuna
+ * (A4 kagidi hissi veren, ortalanmis, tasma/kaydirma olmayan) sigacak sekilde
+ * olceklenir - export/PDF (render-svg.ts) kendi mm tabanli olcegini kullanir, bu
+ * sabitlerden etkilenmez. Sabit bir PX_PER_MM (onceki yaklasim) hem kucuk panolarda
+ * fontu okunamaz kucultuyor hem de buyuk panolarda sayfadan tasip kaydirma
+ * gerektiriyordu (bkz. CLAUDE.md "Ad-hoc: Cizim Editoru Font/Clipping") - dogru cozum
+ * sabit bir oran degil, HER panoyu bu kutuya sigdiran DINAMIK bir olcek. */
+const PAGE_MAX_WIDTH_PX = 650;
+const PAGE_MAX_HEIGHT_PX = 850;
+
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 4;
+const ZOOM_STEP = 1.25;
+
+/** engine/render-svg.ts#fitFontSize ile BIREBIR AYNI formul (mm biriminde) - export'ta
+ * (PDF/SVG/DXF) etiketler kutuya sigacak sekilde kuculuyordu ama bu canli Fabric
+ * editorunde sabit fontSize:10 kullanildigi icin dar komponentlerin (ornegin 50mm'lik
+ * role kutusu) uzun urun adlari komsu kutulara/canvas kenarina tasip kesiliyordu -
+ * gercek canvas piksel verisiyle dogrulandi (dark pixeller canvas'in son kolonuna
+ * kadar kesintisiz devam ediyordu). Iki yerde ayri tutulmasi CLAUDE.md'nin "repo'lar
+ * arasi tip/mantik kasitli olarak iki kez tanimlanir" kuraliyla tutarli (bkz. CLAUDE.md
+ * SS3) - burada backend/frontend arasi, SVG/px birim farki yuzunden dogrudan paylasilamaz. */
+function fitFontSizeMm(text: string, widthMm: number, heightMm: number): number {
+  const len = Math.max(1, text.length);
+  const byWidth = (0.85 * widthMm) / (len * 0.62);
+  return Math.max(2.5, Math.min(byWidth, 0.45 * heightMm, 10));
+}
 
 type FabricObjectWithId = FabricObject & { elementId?: string };
 
 function getGroupLabelText(group: Group): string {
-  const textObj = group.getObjects().find((o): o is FabricText => o.type === 'text') as
-    FabricText | undefined;
+  const textObj = group.getObjects().find((o): o is Textbox => o.type === 'textbox') as
+    Textbox | undefined;
   return textObj?.text ?? '';
 }
 
@@ -56,11 +83,19 @@ export function DrawingEditorPage() {
   const viewsRef = useRef<Record<DrawingViewKey, DrawingElementInstance[]> | null>(null);
   const plateRef = useRef<{ widthMm: number; heightMm: number } | null>(null);
   const busbarsRef = useRef<DrawingModel['busbars']>([]);
+  /** Panonun mm boyutunu PAGE_MAX_WIDTH/HEIGHT_PX kutusuna sigdiran dinamik olcek
+   * (px/mm) - plate boyutu bilinir bilinmez bir kere hesaplanir, degismez. */
+  const scaleRef = useRef<number>(1);
+  /** Kullanicinin sectiği zoom carpani (1 = "sayfaya sig" taban olcek). Ref'te
+   * tutulur ki goruntu (tab) degisince canvas yeniden kurulurken korunabilsin -
+   * React state'i sadece UI'da yuzde gostermek icin ayrica tutuluyor. */
+  const zoomRef = useRef<number>(1);
 
   const [ready, setReady] = useState(false);
   const [activeView, setActiveView] = useState<DrawingViewKey>('internal');
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [labelDraft, setLabelDraft] = useState('');
+  const [zoom, setZoom] = useState(1);
 
   // Model yuklenince bir kerelik ic referanslara kopyalanir - sonrasi (konum/aci/etiket
   // duzenleme) dogrudan bu referanslar uzerinden, React state'ini tetiklemeden yurur
@@ -77,6 +112,10 @@ export function DrawingEditorPage() {
         widthMm: drawingQuery.data.model.plateWidthMm,
         heightMm: drawingQuery.data.model.plateHeightMm,
       };
+      scaleRef.current = Math.min(
+        PAGE_MAX_WIDTH_PX / plateRef.current.widthMm,
+        PAGE_MAX_HEIGHT_PX / plateRef.current.heightMm,
+      );
       busbarsRef.current = drawingQuery.data.model.busbars;
       setReady(true);
     }
@@ -97,8 +136,8 @@ export function DrawingEditorPage() {
         category: original?.category ?? 'OTHER',
         bandKey: original?.bandKey ?? '',
         label: getGroupLabelText(obj),
-        x: +((obj.left ?? 0) / PX_PER_MM).toFixed(2),
-        y: +((obj.top ?? 0) / PX_PER_MM).toFixed(2),
+        x: +((obj.left ?? 0) / scaleRef.current).toFixed(2),
+        y: +((obj.top ?? 0) / scaleRef.current).toFixed(2),
         widthMm: original?.widthMm ?? 0,
         heightMm: original?.heightMm ?? 0,
         rotationDeg: +(obj.angle ?? 0).toFixed(2),
@@ -115,16 +154,41 @@ export function DrawingEditorPage() {
       return;
     }
     const view = activeView;
-    const canvas = new Canvas(canvasElRef.current, { selection: true });
+    // selection:false - bos alanda tiklayip surukleme artik rubber-band secim
+    // kutusu degil, TARAYICI SAYFASINI kaydirma (asagidaki mouse:down/move/up)
+    // anlamina gelir. Bir komponentin uzerine tiklamak bundan etkilenmez, Fabric
+    // o durumda normal secim/tasima davranisini sürdürür (bu bayrak sadece BOS
+    // alan suruklemesini etkiler).
+    const canvas = new Canvas(canvasElRef.current, { selection: false });
     fabricCanvasRef.current = canvas;
+    canvas.defaultCursor = 'grab';
 
-    const plateWpx = plateRef.current.widthMm * PX_PER_MM;
-    const plateHpx = plateRef.current.heightMm * PX_PER_MM;
-    canvas.setDimensions({ width: plateWpx, height: plateHpx });
+    const scale = scaleRef.current;
+    const plateWpx = plateRef.current.widthMm * scale;
+    const plateHpx = plateRef.current.heightMm * scale;
+    // Zoom yapinca "sayfanin kendisi" (A4 kutusu) buyur - sabit boyutlu bir
+    // pencere icinde icerik olceklenmez (kullanici acikca bunu istedi: "sayfa
+    // buyumeli"). Tasma, bir ic ice scrollbar'la DEGIL, normal tarayici sayfa
+    // kaydirmasiyla cozulur (asagidaki JSX'te canvas'i saran div'de max-h/
+    // overflow-auto YOK - bkz. CLAUDE.md "Ad-hoc: Cizim Editoru Zoom").
+    canvas.setDimensions({
+      width: plateWpx * zoomRef.current,
+      height: plateHpx * zoomRef.current,
+    });
+    canvas.setZoom(zoomRef.current);
 
     const plateRect = new Rect({
       left: 0,
       top: 0,
+      // Fabric v7'de TUM nesnelerin varsayilan origin'i 'center' (bkz.
+      // node_modules/fabric/dist/src/shapes/Object/defaultValues.mjs) - 'left'/'top'
+      // DEGIL. Bu acikca belirtilmeden left:0,top:0 vermek, dikdortgeni (0,0)'da
+      // ORTALAR, sol-ust kosesini degil - panonun yarisi kanvasin GORUNMEZ
+      // (negatif koordinat) bolgesine tasiyordu. Bu projedeki TUM tasma/kesilme
+      // sorunlarinin gercek kok sebebi buydu (bkz. CLAUDE.md "Ad-hoc: Cizim Editoru
+      // Font/Clipping").
+      originX: 'left',
+      originY: 'top',
       width: plateWpx,
       height: plateHpx,
       fill: '#fafafa',
@@ -138,15 +202,10 @@ export function DrawingEditorPage() {
     if (view === 'internal') {
       for (const bar of busbarsRef.current) {
         const line = new Line(
-          [
-            bar.startX * PX_PER_MM,
-            bar.startY * PX_PER_MM,
-            bar.endX * PX_PER_MM,
-            bar.endY * PX_PER_MM,
-          ],
+          [bar.startX * scale, bar.startY * scale, bar.endX * scale, bar.endY * scale],
           {
             stroke: '#d97706',
-            strokeWidth: Math.max(1, bar.thicknessMm * PX_PER_MM),
+            strokeWidth: Math.max(1, bar.thicknessMm * scale),
             selectable: false,
             evented: false,
           },
@@ -156,27 +215,46 @@ export function DrawingEditorPage() {
     }
 
     for (const el of viewsRef.current[view]) {
-      const wPx = el.widthMm * PX_PER_MM;
-      const hPx = el.heightMm * PX_PER_MM;
+      const wPx = el.widthMm * scale;
+      const hPx = el.heightMm * scale;
       const rect = new Rect({
         left: 0,
         top: 0,
+        // bkz. yukaridaki plateRect yorumu - origin acikca 'left'/'top' verilmezse
+        // Fabric v7 varsayilani 'center' bu kutuyu text/textbox'tan farkli bir yere
+        // kaydirip Group'un bounding box'ini sismis gosteriyordu.
+        originX: 'left',
+        originY: 'top',
         width: wPx,
         height: hPx,
         fill: '#fff',
         stroke: '#222',
         strokeWidth: 1,
       });
-      const text = new FabricText(el.label, {
-        fontSize: 10,
+      // Textbox (FabricText degil) kullanilir: FabricText'in otomatik genislik olcumu
+      // Group'un bounding box'ini kutunun kendi genisliginden daha genis hesaplatip
+      // panonun kenarindan tasmasina yol aciyordu (gercek Fabric nesne verisiyle
+      // dogrulandi - bkz. CLAUDE.md "Ad-hoc: Cizim Editoru Font/Clipping"). Textbox'a
+      // acik `width` vermek, metnin kutuyu ASLA asmamasini garanti eder (gerekirse
+      // satir kaydirir), olcum belirsizligine birakmaz.
+      const text = new Textbox(el.label, {
+        width: wPx,
+        fontSize: fitFontSizeMm(el.label, el.widthMm, el.heightMm) * scale,
+        textAlign: 'center',
         originX: 'center',
         originY: 'center',
         left: wPx / 2,
         top: hPx / 2,
       });
       const group = new Group([rect, text], {
-        left: el.x * PX_PER_MM,
-        top: el.y * PX_PER_MM,
+        // Group da Fabric v7'nin 'center' varsayilanini miras alir - acikca
+        // 'left'/'top' verilmezse el.x/el.y (backend'in auto-pack'teki top-left
+        // konumu) burada kutunun MERKEZI sanilip her eleman kendi yarim boyu kadar
+        // sola/yukari kayardi (bkz. yukaridaki rect yorumu, ayni kok sebep).
+        originX: 'left',
+        originY: 'top',
+        left: el.x * scale,
+        top: el.y * scale,
         angle: el.rotationDeg,
       });
       group.setControlsVisibility({
@@ -205,6 +283,45 @@ export function DrawingEditorPage() {
     canvas.on('selection:updated', handleSelection);
     canvas.on('selection:cleared', () => setSelectedElementId(null));
 
+    // Ctrl/Cmd+tekerlek ile zoom (CAD araclarindaki standart konvansiyon) - duz
+    // tekerlek normal sayfa kaydirmasini bozmasin diye modifier zorunlu tutuldu.
+    function handleWheel(opt: { e: WheelEvent }) {
+      if (!opt.e.ctrlKey && !opt.e.metaKey) return;
+      opt.e.preventDefault();
+      opt.e.stopPropagation();
+      const factor = opt.e.deltaY > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
+      applyZoom(zoomRef.current * factor);
+    }
+    canvas.on('mouse:wheel', handleWheel);
+
+    // Bos alanda tiklayip surukleyerek TARAYICI SAYFASINI kaydirma - sayfa zoom'la
+    // buyudugunde (bkz. yukarida) icerigi gormenin yolu artik Fabric'in kendi
+    // viewport'u degil, gercek sayfa scroll'u; bu yuzden pan da window.scrollBy
+    // ile yapiliyor, Fabric viewportTransform'una DOKUNMUYOR.
+    let isPanning = false;
+    let lastClientX = 0;
+    let lastClientY = 0;
+    function handlePanStart(opt: { e: TPointerEvent; target?: FabricObject }) {
+      if (opt.target || !(opt.e instanceof MouseEvent)) return;
+      isPanning = true;
+      canvas.defaultCursor = 'grabbing';
+      lastClientX = opt.e.clientX;
+      lastClientY = opt.e.clientY;
+    }
+    function handlePanMove(opt: { e: TPointerEvent }) {
+      if (!isPanning || !(opt.e instanceof MouseEvent)) return;
+      window.scrollBy(lastClientX - opt.e.clientX, lastClientY - opt.e.clientY);
+      lastClientX = opt.e.clientX;
+      lastClientY = opt.e.clientY;
+    }
+    function handlePanEnd() {
+      isPanning = false;
+      canvas.defaultCursor = 'grab';
+    }
+    canvas.on('mouse:down', handlePanStart);
+    canvas.on('mouse:move', handlePanMove);
+    canvas.on('mouse:up', handlePanEnd);
+
     return () => {
       flushCurrentView(view);
       canvas.dispose();
@@ -214,6 +331,23 @@ export function DrawingEditorPage() {
     // re-render tetiklememeli).
   }, [ready, activeView]);
 
+  /** Zoom carpanini uygular - nesnelerin left/top/width degerlerine DOKUNMAZ, canvas'in
+   * KENDI boyutu da hic degismez (sabit "pencere", bkz. yukaridaki canvas kurulum
+   * yorumu) - sadece Fabric'in viewportTransform'u (zoomToPoint) degisir, bu yuzden
+   * flushCurrentView/export'un kullandigi "sayfaya sig" taban olcek (scaleRef) zoom'dan
+   * tamamen bagimsiz kalir. Pencerenin merkezi sabit kalacak sekilde yakinlasir/uzaklasir. */
+  function applyZoom(nextZoom: number) {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas || !plateRef.current) return;
+    const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextZoom));
+    zoomRef.current = clamped;
+    canvas.setZoom(clamped);
+    const plateWpx = plateRef.current.widthMm * scaleRef.current;
+    const plateHpx = plateRef.current.heightMm * scaleRef.current;
+    canvas.setDimensions({ width: plateWpx * clamped, height: plateHpx * clamped });
+    setZoom(clamped);
+  }
+
   function handleLabelChange(newLabel: string) {
     setLabelDraft(newLabel);
     const canvas = fabricCanvasRef.current;
@@ -222,7 +356,7 @@ export function DrawingEditorPage() {
       .getObjects()
       .find((o) => (o as FabricObjectWithId).elementId === selectedElementId) as Group | undefined;
     if (!obj) return;
-    const textObj = obj.getObjects().find((o): o is FabricText => o.type === 'text');
+    const textObj = obj.getObjects().find((o): o is Textbox => o.type === 'textbox');
     textObj?.set('text', newLabel);
     canvas.requestRenderAll();
   }
@@ -354,26 +488,49 @@ export function DrawingEditorPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex gap-1 border-b border-app-border">
-        {VIEW_KEYS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setActiveView(key)}
-            className={clsx(
-              'border-b-2 px-4 py-2 text-sm font-semibold transition-colors',
-              key === activeView
-                ? 'border-app-brand text-app-brand'
-                : 'border-transparent text-app-muted hover:text-app-text',
-            )}
-          >
-            {viewLabel(key)}
-          </button>
-        ))}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-app-border">
+        <div className="flex gap-1">
+          {VIEW_KEYS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveView(key)}
+              className={clsx(
+                'border-b-2 px-4 py-2 text-sm font-semibold transition-colors',
+                key === activeView
+                  ? 'border-app-brand text-app-brand'
+                  : 'border-transparent text-app-muted hover:text-app-text',
+              )}
+            >
+              {viewLabel(key)}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 pb-1">
+          <IconActionButton
+            icon={ZoomOut}
+            tooltip={tr.crm.drawings.editor.zoomOutTooltip}
+            onClick={() => applyZoom(zoomRef.current / ZOOM_STEP)}
+          />
+          <span className="w-12 text-center text-sm tabular-nums text-app-muted">
+            {Math.round(zoom * 100)}%
+          </span>
+          <IconActionButton
+            icon={ZoomIn}
+            tooltip={tr.crm.drawings.editor.zoomInTooltip}
+            onClick={() => applyZoom(zoomRef.current * ZOOM_STEP)}
+          />
+          <IconActionButton
+            icon={Maximize}
+            tooltip={tr.crm.drawings.editor.zoomResetTooltip}
+            onClick={() => applyZoom(1)}
+          />
+        </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-start gap-6">
-        <div className="overflow-auto rounded-lg border border-app-border bg-white p-4">
+      <div className="mt-4 flex flex-col items-center gap-4">
+        <div className="rounded-lg border border-app-border bg-white p-4 shadow-sm">
           <canvas ref={canvasElRef} />
         </div>
 

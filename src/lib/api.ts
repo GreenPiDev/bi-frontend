@@ -2525,6 +2525,7 @@ export function listProducts(
     attr?: Record<string, string>;
     includeDeleted?: boolean;
     sort?: string;
+    drawable?: boolean;
   } = {},
 ): Promise<PagedResult<ProductWithStock>> {
   const query = new URLSearchParams();
@@ -2541,6 +2542,7 @@ export function listProducts(
   }
   if (params.includeDeleted) query.set('includeDeleted', 'true');
   if (params.sort) query.set('sort', params.sort);
+  if (params.drawable) query.set('drawable', 'true');
   const qs = query.toString();
   return request(`/products${qs ? `?${qs}` : ''}`);
 }
@@ -3469,7 +3471,13 @@ export function transferStock(productId: string, input: TransferStockInput): Pro
 }
 
 export type StockMovementType =
-  'INCREASE' | 'DECREASE' | 'QUOTE_SALE' | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'CORRECTION';
+  | 'INCREASE'
+  | 'DECREASE'
+  | 'QUOTE_SALE'
+  | 'TRANSFER_OUT'
+  | 'TRANSFER_IN'
+  | 'CORRECTION'
+  | 'HOLDING_COST';
 
 export interface StockMovement {
   id: string;

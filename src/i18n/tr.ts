@@ -2006,6 +2006,9 @@ export const tr = {
         exportDxfButton: 'DXF indir',
         exportingDxf: 'DXF hazırlanıyor...',
         lastExportedAt: 'Son dışa aktarma',
+        zoomInTooltip: 'Yakınlaştır',
+        zoomOutTooltip: 'Uzaklaştır',
+        zoomResetTooltip: 'Sayfaya sığdır (100%)',
       },
       quoteSection: {
         title: 'Çizimler',

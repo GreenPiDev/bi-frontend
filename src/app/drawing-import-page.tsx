@@ -49,7 +49,7 @@ export function DrawingImportPage() {
   const [searchParams] = useSearchParams();
   const quotesQuery = useQuotesQuery({ pageSize: 50 });
   const templatesQuery = useDrawingPanelTemplatesQuery();
-  const productsQuery = useProductsQuery({ pageSize: 200 });
+  const productsQuery = useProductsQuery({ drawable: true, pageSize: 100 });
   const previewMutation = useDrawingImportPreviewMutation();
   const commitMutation = useDrawingImportCommitMutation();
 
