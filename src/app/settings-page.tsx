@@ -23,6 +23,7 @@ import { UsersSettingsSection } from '../features/roles/users-settings-section';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ReportsSection } from '../features/reports/reports-section';
 import { CacheSection } from '../features/settings/cache-section';
+import { StockHoldingCostSection } from '../features/settings/stock-holding-cost-section';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -148,6 +149,7 @@ function GeneralTab() {
     <div className="flex flex-col gap-6">
       <ReportsSection />
       <AlertsSection />
+      <StockHoldingCostSection />
       <CacheSection />
     </div>
   );

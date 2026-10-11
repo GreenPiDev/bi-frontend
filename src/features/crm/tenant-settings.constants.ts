@@ -20,3 +20,15 @@ export const DEFAULT_QUOTE_GENERAL_TERMS_KEY = 'crm.defaultQuoteGeneralTerms';
 /** `/settings?tab=crm#<bu id>` ile bu dort kosul metni ayarina baglanti verip
  * scroll etmek icin - KDV orani anchor'uyla ayni desen. */
 export const QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID = 'ayarlar-teklif-metinleri';
+
+/** Ad-hoc (bkz. CLAUDE.md, /settings?tab=general "Stok Bekletme Maliyeti") -
+ * backend ile ayni anahtar/varsayilan (bkz. tenant-settings.constants.ts). */
+export const STOCK_HOLDING_COST_KEY = 'crm.stockHoldingCost';
+export interface StockHoldingCostSetting {
+  enabled: boolean;
+  monthlyRatePct: number;
+}
+export const DEFAULT_STOCK_HOLDING_COST: StockHoldingCostSetting = {
+  enabled: false,
+  monthlyRatePct: 0,
+};

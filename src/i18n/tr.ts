@@ -1046,6 +1046,16 @@ export const tr = {
       success: 'Önbellekler boşaltıldı.',
       error: 'Önbellekler boşaltılamadı.',
     },
+    stockHoldingCost: {
+      title: 'Stok Bekletme Maliyeti (Opsiyonel)',
+      subtitle:
+        'Etkinleştirilirse, stoğu olan her ürünün birim maliyeti her gün (gece 00:30) belirlediğiniz aylık orana göre otomatik artar. Artış ay sonunda tek seferde değil, güne bölünmüş şekilde (bileşik) uygulanır.',
+      enabledLabel: 'Etkinleştir',
+      rateLabel: 'Aylık oran (%)',
+      hint: 'Oranı değiştirirseniz önceki birikmiş artış etkilenmez, yalnızca bugünden itibaren yeni oran uygulanır.',
+      saveButton: 'Kaydet',
+      saveSuccess: 'Stok bekletme maliyeti ayarı güncellendi.',
+    },
   },
   onboarding: {
     title: "PiLens'e Hoş Geldin",
@@ -3223,6 +3233,7 @@ export const tr = {
           TRANSFER_OUT: 'Depo Çıkışı (Transfer)',
           TRANSFER_IN: 'Depo Girişi (Transfer)',
           CORRECTION: 'Düzeltme',
+          HOLDING_COST: 'Stok Bekletme Maliyeti',
         },
         noteColumn: 'Açıklama',
         previousQuantityColumn: 'Eski Değer',
