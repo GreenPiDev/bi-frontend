@@ -3,6 +3,7 @@ import { PriceHistoryContent } from './product-price-history-page';
 import { ProductListsListContent } from './product-lists-list-page';
 import { ProductsListContent } from './products-list-page';
 import { StockHistoryContent } from './stock-history-page';
+import { StockHoldingCostLogContent } from './stock-holding-cost-log-page';
 import { StockListContent } from './stock-list-page';
 import { WarehousesListContent } from './warehouses-list-page';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
@@ -56,6 +57,15 @@ export function InventoryManagementPage() {
             key: 'stockHistory',
             label: tr.inventory.tabs.stockHistory,
             content: <StockHistoryContent />,
+          },
+        ]
+      : []),
+    ...(stockAccessible
+      ? [
+          {
+            key: 'stockHoldingCostLog',
+            label: tr.inventory.tabs.stockHoldingCostLog,
+            content: <StockHoldingCostLogContent />,
           },
         ]
       : []),

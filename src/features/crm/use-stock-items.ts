@@ -4,6 +4,7 @@ import {
   increaseStockItem,
   listLowStockItems,
   listStockHistory,
+  listStockHoldingCostLogs,
   listStockItems,
   transferStock,
   type StockMovementType,
@@ -15,6 +16,7 @@ import { PRODUCTS_QUERY_KEY } from './use-products';
 export const STOCK_ITEMS_QUERY_KEY = ['stock-items'];
 export const LOW_STOCK_ITEMS_QUERY_KEY = ['stock-items', 'low-stock'];
 export const STOCK_HISTORY_QUERY_KEY = ['stock-items', 'history'];
+export const STOCK_HOLDING_COST_LOG_QUERY_KEY = ['stock-items', 'holding-cost-log'];
 
 export function useStockItemsQuery(
   params: {
@@ -53,6 +55,13 @@ export function useStockHistoryQuery(
   return useQuery({
     queryKey: [...STOCK_HISTORY_QUERY_KEY, params],
     queryFn: () => listStockHistory(params),
+  });
+}
+
+export function useStockHoldingCostLogQuery() {
+  return useQuery({
+    queryKey: STOCK_HOLDING_COST_LOG_QUERY_KEY,
+    queryFn: () => listStockHoldingCostLogs(),
   });
 }
 

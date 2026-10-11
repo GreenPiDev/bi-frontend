@@ -3478,13 +3478,7 @@ export function transferStock(productId: string, input: TransferStockInput): Pro
 }
 
 export type StockMovementType =
-  | 'INCREASE'
-  | 'DECREASE'
-  | 'QUOTE_SALE'
-  | 'TRANSFER_OUT'
-  | 'TRANSFER_IN'
-  | 'CORRECTION'
-  | 'HOLDING_COST';
+  'INCREASE' | 'DECREASE' | 'QUOTE_SALE' | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'CORRECTION';
 
 export interface StockMovement {
   id: string;
@@ -3507,6 +3501,18 @@ export interface StockMovement {
   newAvgCost: number | null;
   quoteId: string | null;
   createdAt: string;
+}
+
+export interface StockHoldingCostLog {
+  id: string;
+  monthlyRatePct: number;
+  productCount: number;
+  totalCostDelta: number;
+  createdAt: string;
+}
+
+export function listStockHoldingCostLogs(): Promise<StockHoldingCostLog[]> {
+  return request('/stock-items/holding-cost-log');
 }
 
 export function listStockHistory(

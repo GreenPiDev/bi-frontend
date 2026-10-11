@@ -125,15 +125,13 @@ export function StockHistoryContent() {
       key: 'unitCost',
       header: tr.crm.stock.history.unitCostColumn,
       className: 'whitespace-nowrap text-app-muted',
-      render: (row) =>
-        row.type === 'HOLDING_COST' ? (row.previousAvgCost ?? '—') : (row.unitCost ?? '—'),
+      render: (row) => row.unitCost ?? '—',
     },
     {
       key: 'newAvgCost',
       header: tr.crm.stock.history.newAvgCostColumn,
       className: 'whitespace-nowrap text-app-muted',
-      render: (row) =>
-        row.type === 'INCREASE' || row.type === 'HOLDING_COST' ? (row.newAvgCost ?? '—') : '—',
+      render: (row) => (row.type === 'INCREASE' ? (row.newAvgCost ?? '—') : '—'),
     },
     {
       key: 'createdAt',

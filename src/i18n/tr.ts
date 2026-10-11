@@ -270,6 +270,7 @@ export const tr = {
       stock: 'Stok',
       warehouses: 'Depo',
       stockHistory: 'Stok Geçmişi',
+      stockHoldingCostLog: 'Bekletme Maliyeti',
       priceHistory: 'Fiyat Geçmişi',
     },
   },
@@ -3233,7 +3234,6 @@ export const tr = {
           TRANSFER_OUT: 'Depo Çıkışı (Transfer)',
           TRANSFER_IN: 'Depo Girişi (Transfer)',
           CORRECTION: 'Düzeltme',
-          HOLDING_COST: 'Stok Bekletme Maliyeti',
         },
         noteColumn: 'Açıklama',
         previousQuantityColumn: 'Eski Değer',
@@ -3267,6 +3267,16 @@ export const tr = {
           dateLabel: 'Tarih',
           close: 'Kapat',
         },
+      },
+      holdingCostLog: {
+        subtitle:
+          'Opsiyonel stok bekletme maliyetinin her gece eklediği artışın tenant bazlı özeti (gün başına tek satır).',
+        loading: 'Bekletme maliyeti geçmişi yükleniyor...',
+        empty: 'Henüz stok bekletme maliyeti uygulanmadı.',
+        dateColumn: 'Tarih',
+        rateColumn: 'Aylık Oran',
+        productCountColumn: 'Etkilenen Ürün Sayısı',
+        totalCostDeltaColumn: 'Toplam Maliyet Artışı',
       },
     },
     messages: {
