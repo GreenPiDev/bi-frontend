@@ -5,6 +5,7 @@ import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { FileDropzone } from '../components/ui/file-dropzone';
 import { FormError } from '../components/ui/form-error';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { Select } from '../components/ui/select';
@@ -171,11 +172,12 @@ export function DrawingImportPage() {
               <label className="block text-sm font-medium text-app-text">
                 {tr.crm.drawingImports.fileLabel}
               </label>
-              <input
-                type="file"
+              <FileDropzone
+                file={file}
+                onFileSelect={setFile}
                 accept="application/pdf"
-                className="mt-1 block w-full text-sm"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                disabled={previewMutation.isPending}
+                className="mt-1"
               />
             </div>
             <div>
