@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { useToast } from '../components/ui/toast-context';
 import { AccountFormFields } from '../features/crm/account-form-fields';
+import { AddOptionModal } from '../features/crm/add-option-modal';
 import { buildAccountSlug, extractAccountId } from '../features/crm/account-slug';
 import {
   accountFormSchema,
@@ -20,6 +21,7 @@ import {
   useUpdateAccountMutation,
 } from '../features/crm/use-accounts';
 import { useCreateContactMutation } from '../features/crm/use-contacts';
+import { useCreateSectorOptionMutation } from '../features/crm/use-sector-options';
 import { ApiError, type AccountInput } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -34,6 +36,10 @@ export function AccountFormPage() {
   const updateMutation = useUpdateAccountMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
   const createContactMutation = useCreateContactMutation();
+  const createSectorOptionMutation = useCreateSectorOptionMutation();
+  // Kategori/Birim/Marka modallarindaki ayni desen (bkz. product-form-page.tsx) -
+  // "+ Yeni Sektor" modal'i <form>'un disinda render edilir.
+  const [showAddSectorModal, setShowAddSectorModal] = useState(false);
 
   const {
     register,
@@ -41,6 +47,7 @@ export function AccountFormPage() {
     reset,
     control,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
@@ -157,6 +164,7 @@ export function AccountFormPage() {
             control={control}
             setValue={setValue}
             errors={errors}
+            onRequestAddSector={() => setShowAddSectorModal(true)}
           />
           <div className="mt-1 flex gap-2">
             <Button type="submit" disabled={mutation.isPending || createContactMutation.isPending}>
@@ -168,6 +176,22 @@ export function AccountFormPage() {
           </div>
         </form>
       </div>
+
+      {showAddSectorModal && (
+        <AddOptionModal
+          title={tr.crm.accounts.form.sectorNewModalTitle}
+          fieldLabel={tr.crm.accounts.form.sectorNewFieldLabel}
+          placeholder={tr.crm.accounts.form.sectorNewPlaceholder}
+          successMessage={tr.crm.accounts.form.sectorNewSuccess}
+          createMutation={createSectorOptionMutation}
+          onClose={() => setShowAddSectorModal(false)}
+          onCreated={(label) => {
+            const currentSectors = getValues('sector') ?? [];
+            setValue('sector', [...currentSectors, label], { shouldValidate: true });
+            setShowAddSectorModal(false);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

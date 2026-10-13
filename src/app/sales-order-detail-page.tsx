@@ -11,7 +11,7 @@ import {
   useSalesOrderQuery,
   useUpdateSalesOrderStatusMutation,
 } from '../features/crm/use-sales-orders';
-import { ApiError, type QuoteItem, type SalesOrderStatus } from '../lib/api';
+import { ApiError, type Product, type SalesOrderStatus } from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<SalesOrderStatus, 'success' | 'neutral' | 'warning' | 'danger'> =
@@ -37,7 +37,17 @@ const STATUS_OPTIONS: { value: SalesOrderStatus; label: string }[] = (
   ] as const
 ).map((status) => ({ value: status, label: tr.crm.salesOrders.statusOptions[status] }));
 
-const ITEM_COLUMNS: TableColumn<QuoteItem>[] = [
+/** Hem Quote.items hem kendi SalesOrderItem'lari ayni kolonlarda gosterilebilir -
+ * ikisi de product/quantity/unitPrice/currency tasiyor (bkz. SalesOrder.items alani). */
+interface DisplayItem {
+  id: string;
+  product: Product;
+  quantity: string;
+  unitPrice: string;
+  currency: string;
+}
+
+const ITEM_COLUMNS: TableColumn<DisplayItem>[] = [
   {
     key: 'product',
     header: tr.crm.salesOrders.detail.productColumn,
@@ -79,7 +89,12 @@ export function SalesOrderDetailPage() {
 
   const salesOrder = salesOrderQuery.data;
   const relatedProject = salesOrder.quote?.project ?? null;
-  const isManualTotal = salesOrder.quote?.itemsEntryMode === 'MANUAL_TOTAL';
+  // Teklifli siparislerde kalemler Quote.items'tan (MANUAL_TOTAL teklifte bos),
+  // teklifsiz (manuel) siparislerde kendi SalesOrderItem'larindan gelir.
+  const isManualTotalQuote = salesOrder.quote?.itemsEntryMode === 'MANUAL_TOTAL';
+  const displayItems: DisplayItem[] = salesOrder.quoteId
+    ? (salesOrder.quote?.items ?? [])
+    : salesOrder.items;
 
   return (
     <AppShell>
@@ -151,12 +166,12 @@ export function SalesOrderDetailPage() {
         <h2 className="text-sm font-bold text-app-text">{tr.crm.salesOrders.detail.itemsTitle}</h2>
 
         <div className="mt-3">
-          {isManualTotal ? (
+          {isManualTotalQuote ? (
             <p className="text-sm text-app-muted">{tr.crm.salesOrders.detail.itemsEmpty}</p>
           ) : (
             <Table
               columns={ITEM_COLUMNS}
-              data={salesOrder.quote?.items ?? []}
+              data={displayItems}
               keyField={(item) => item.id}
               emptyMessage={tr.crm.salesOrders.detail.itemsEmpty}
               fixedLayout

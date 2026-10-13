@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useDepartmentOptionsQuery } from './use-department-options';
@@ -7,13 +8,22 @@ interface DepartmentSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 departman tanımlıysa, select'in yanında ayarlara gitmeden tek
+   * bir yeni departman eklemeye yarayan "+ Yeni Departman" butonu gösterilir -
+   * `CategorySelect` ile aynı desen. */
+  onRequestAddNew?: () => void;
 }
 
 /** Sektör alanıyla (`SectorMultiSelect`) aynı desen: tenant henüz departman
  * tanımlamadıysa dropdown yerine ayarlara (yeni sekmede) yönlendiren bir mesaj/link
  * gösterilir. Departman oradan eklenince `useDepartmentOptionsRealtimeSync` bu sorguyu
  * invalidate eder ve dropdown sayfa yenilenmeden otomatik güncellenir. */
-export function DepartmentSelect({ value, onChange, error }: DepartmentSelectProps) {
+export function DepartmentSelect({
+  value,
+  onChange,
+  error,
+  onRequestAddNew,
+}: DepartmentSelectProps) {
   const departmentOptionsQuery = useDepartmentOptionsQuery();
   const options = departmentOptionsQuery.data ?? [];
 
@@ -47,6 +57,13 @@ export function DepartmentSelect({ value, onChange, error }: DepartmentSelectPro
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.contacts.form.departmentNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

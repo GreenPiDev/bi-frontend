@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useTitleOptionsQuery } from './use-title-options';
@@ -7,13 +8,17 @@ interface TitleSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 unvan tanımlıysa, select'in yanında ayarlara gitmeden tek bir
+   * yeni unvan eklemeye yarayan "+ Yeni Unvan" butonu gösterilir - `CategorySelect` ile
+   * aynı desen. */
+  onRequestAddNew?: () => void;
 }
 
 /** Sektör alanıyla (`SectorMultiSelect`) aynı desen: tenant henüz unvan tanımlamadıysa
  * dropdown yerine ayarlara (yeni sekmede) yönlendiren bir mesaj/link gösterilir. Unvan
  * oradan eklenince `useTitleOptionsRealtimeSync` bu sorguyu invalidate eder ve dropdown
  * sayfa yenilenmeden otomatik güncellenir. */
-export function TitleSelect({ value, onChange, error }: TitleSelectProps) {
+export function TitleSelect({ value, onChange, error, onRequestAddNew }: TitleSelectProps) {
   const titleOptionsQuery = useTitleOptionsQuery();
   const options = titleOptionsQuery.data ?? [];
 
@@ -47,6 +52,13 @@ export function TitleSelect({ value, onChange, error }: TitleSelectProps) {
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.contacts.form.titleNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

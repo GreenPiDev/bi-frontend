@@ -3391,17 +3391,32 @@ export type SalesOrderStatus =
   | 'COMPLETED'
   | 'CANCELLED';
 
+/** Sadece quoteId null olan (teklifsiz, manuel) siparislerde dolar - teklifli
+ * siparislerde kalemler quote.items'tan okunur (bkz. SalesOrder.items alani). */
+export interface SalesOrderItem {
+  id: string;
+  salesOrderId: string;
+  productId: string;
+  product: Product;
+  quantity: string;
+  unitPrice: string;
+  currency: string;
+}
+
 export interface SalesOrder {
   id: string;
   orderNumber: string;
-  quoteId: string;
+  /** Teklifsiz (manuel) siparislerde null - bkz. items alani. */
+  quoteId: string | null;
   accountId: string;
   account: Account;
   contactId: string | null;
   contact: Contact | null;
-  /** Kendi kalem tablosu YOK - satilan kalemler quote.items'tan salt-okunur
-   * gosterilir (bkz. backend SalesOrder model doc comment'i). */
+  /** quoteId doluysa kalemler quote.items'tan salt-okunur gosterilir, quoteId
+   * null ise kalemler kendi `items`'inda tutulur (bkz. backend SalesOrder model
+   * doc comment'i). */
   quote: Quote | null;
+  items: SalesOrderItem[];
   status: SalesOrderStatus;
   createdById: string;
   createdAt: string;
@@ -3410,6 +3425,26 @@ export interface SalesOrder {
 
 export interface UpdateSalesOrderInput {
   status: SalesOrderStatus;
+}
+
+export interface CreateSalesOrderItemInput {
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+/** Iki ayri yol (bkz. backend SalesOrdersService.create() doc comment'i):
+ * 1) quoteId: SalesOrder normalde Quote APPROVED olunca otomatik acilir - bu
+ *    sadece bu otomasyondan ONCE onaylanmis eski teklifleri elle tamamlamak
+ *    (backfill) icin.
+ * 2) accountId + items: teklife bagli olmayan, dogrudan firma + urun/miktar/
+ *    birim fiyat girilerek olusturulan manuel bir siparis. */
+export type CreateSalesOrderInput =
+  | { quoteId: string }
+  | { accountId: string; contactId?: string; items: CreateSalesOrderItemInput[] };
+
+export function createSalesOrder(input: CreateSalesOrderInput): Promise<SalesOrder> {
+  return request('/sales-orders', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export function listSalesOrders(

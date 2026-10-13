@@ -56,6 +56,7 @@ const salesOrder: api.SalesOrder = {
   contactId: null,
   contact: null,
   quote: null,
+  items: [],
   status: 'PENDING',
   createdById: 'u1',
   createdAt: '2026-10-13T00:00:00.000Z',

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useInteractionTypeOptionsQuery } from './use-interaction-type-options';
@@ -8,6 +9,10 @@ interface InteractionTypeSelectProps {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  /** Verilirse ve en az 1 görüşme şekli tanımlıysa, select'in yanında ayarlara gitmeden
+   * tek bir yeni görüşme şekli eklemeye yarayan "+ Yeni Görüşme Şekli" butonu gösterilir -
+   * `CategorySelect` ile aynı desen. */
+  onRequestAddNew?: () => void;
 }
 
 /** Gorusme sekli dropdown'u - sadece /settings?tab=crm'de tanimlanan listeden secilir,
@@ -20,6 +25,7 @@ export function InteractionTypeSelect({
   value,
   onChange,
   error,
+  onRequestAddNew,
 }: InteractionTypeSelectProps) {
   const optionsQuery = useInteractionTypeOptionsQuery();
   const options = optionsQuery.data ?? [];
@@ -53,6 +59,13 @@ export function InteractionTypeSelect({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.interactions.form.typeNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

@@ -14,12 +14,14 @@ import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { AddOptionModal } from '../features/crm/add-option-modal';
 import { InteractionTypeSelect } from '../features/crm/interaction-type-select';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewContactModal } from '../features/crm/new-contact-modal';
 import { useAccountQuery, useAccountsQuery } from '../features/crm/use-accounts';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
+import { useCreateInteractionTypeOptionMutation } from '../features/crm/use-interaction-type-options';
 import { useCreateInteractionMutation } from '../features/crm/use-interactions';
 import { interactionFormSchema, type InteractionFormValues } from '../features/crm/schemas';
 import {
@@ -52,8 +54,12 @@ export function InteractionFormPage() {
   const contactsQuery = useContactsQuery();
   const assignableUsersQuery = useAssignableCalendarUsersQuery();
   const createMutation = useCreateInteractionMutation();
+  const createInteractionTypeOptionMutation = useCreateInteractionTypeOptionMutation();
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
   const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
+  // Urun formundaki "+ Yeni Kategori" ile ayni desen (bkz. product-form-page.tsx) -
+  // modal <form>'un disinda render edilir.
+  const [isNewTypeModalOpen, setIsNewTypeModalOpen] = useState(false);
 
   const {
     register,
@@ -252,6 +258,7 @@ export function InteractionFormPage() {
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   error={errors.type?.message}
+                  onRequestAddNew={() => setIsNewTypeModalOpen(true)}
                 />
               )}
             />
@@ -503,6 +510,20 @@ export function InteractionFormPage() {
           onCreated={(account) => {
             setValue('accountName', account.name, { shouldValidate: true });
             setIsNewAccountModalOpen(false);
+          }}
+        />
+      )}
+      {isNewTypeModalOpen && (
+        <AddOptionModal
+          title={tr.crm.interactions.form.typeNewModalTitle}
+          fieldLabel={tr.crm.interactions.form.typeNewFieldLabel}
+          placeholder={tr.crm.interactions.form.typeNewPlaceholder}
+          successMessage={tr.crm.interactions.form.typeNewSuccess}
+          createMutation={createInteractionTypeOptionMutation}
+          onClose={() => setIsNewTypeModalOpen(false)}
+          onCreated={(label) => {
+            setValue('type', label, { shouldValidate: true });
+            setIsNewTypeModalOpen(false);
           }}
         />
       )}

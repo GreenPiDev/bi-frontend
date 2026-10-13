@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { ChevronDown, Search, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { tr } from '../../i18n/tr';
 import type { SelectOption } from './select';
 
@@ -13,6 +13,9 @@ interface MultiSelectProps {
   error?: string;
   required?: boolean;
   hint?: string;
+  /** Select'in buton kutusunun yanina, ayni satira yerlestirilecek bir aksiyon (or.
+   * "+ Yeni Sektor" butonu) - `Select`'in `trailingAction`'iyla ayni desen. */
+  trailingAction?: ReactNode;
   /** Secilen degerleri, alanin altinda kaldirma (X) ikonlu etiketler halinde de gosterir. */
   showChips?: boolean;
   /**
@@ -53,6 +56,7 @@ export function MultiSelect({
   chipVariant = 'muted',
   searchable,
   menuPosition = 'fixed',
+  trailingAction,
 }: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [menuRect, setMenuRect] = useState<{ top: number; left: number; width: number } | null>(
@@ -119,24 +123,27 @@ export function MultiSelect({
           </span>
         )}
       </span>
-      <button
-        ref={buttonRef}
-        type="button"
-        onClick={() =>
-          setOpen((prev) => {
-            if (prev) setFilterText('');
-            return !prev;
-          })
-        }
-        className={clsx(
-          'flex cursor-pointer items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
-          error && 'border-app-danger',
-          value.length === 0 ? 'text-app-muted' : 'text-app-text',
-        )}
-      >
-        <span className="truncate">{selectedLabels || placeholder}</span>
-        <ChevronDown size={16} className="shrink-0 text-app-muted" />
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          ref={buttonRef}
+          type="button"
+          onClick={() =>
+            setOpen((prev) => {
+              if (prev) setFilterText('');
+              return !prev;
+            })
+          }
+          className={clsx(
+            'flex flex-1 cursor-pointer items-center justify-between rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-left text-sm outline-none focus:border-app-primary',
+            error && 'border-app-danger',
+            value.length === 0 ? 'text-app-muted' : 'text-app-text',
+          )}
+        >
+          <span className="truncate">{selectedLabels || placeholder}</span>
+          <ChevronDown size={16} className="shrink-0 text-app-muted" />
+        </button>
+        {trailingAction}
+      </div>
       {open && (menuPosition === 'absolute' || menuRect) && (
         <div
           style={

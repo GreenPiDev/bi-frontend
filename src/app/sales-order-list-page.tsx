@@ -1,14 +1,16 @@
 import { clsx } from 'clsx';
-import { Copy, Search } from 'lucide-react';
+import { Copy, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
+import { hasPermission } from '../features/auth/permissions';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
@@ -108,6 +110,7 @@ export function SalesOrdersListContent() {
     '': statusCounts.all,
     ...statusCounts.counts,
   };
+  const canCreateSalesOrder = hasPermission(meQuery.data?.permissions, 'sales-orders', 'CREATE');
 
   async function handleCopyOrderNumber(orderNumber: string) {
     await navigator.clipboard.writeText(orderNumber);
@@ -169,7 +172,19 @@ export function SalesOrdersListContent() {
 
   return (
     <div>
-      <div className="relative w-full">
+      {canCreateSalesOrder && (
+        <div className="flex justify-end">
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.salesOrders.newButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => navigate('/satis-siparisleri/yeni')}
+          />
+        </div>
+      )}
+
+      <div className="relative mt-4 w-full">
         <Search
           size={16}
           className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"

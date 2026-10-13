@@ -34,12 +34,21 @@ interface AccountFormFieldsProps {
   control: Control<AccountFormValues>;
   setValue: UseFormSetValue<AccountFormValues>;
   errors: FieldErrors<AccountFormValues>;
+  /** `ProductFormFields.onRequestAddCategory` ile ayni desen - verilirse sektor
+   * `MultiSelect`'inin yanina "+ Yeni Sektor" butonu eklenir. */
+  onRequestAddSector?: () => void;
 }
 
 /** `account-form-page.tsx` (`/firmalar/yeni`, `/firmalar/duzenle/:slug`) ve
  * `new-account-modal.tsx` (teklif formundan "+ Yeni Firma") arasinda paylasilan alan
  * kumesi - `ContactFormFields`/`ProductFormFields` ile ayni desen. */
-export function AccountFormFields({ register, control, setValue, errors }: AccountFormFieldsProps) {
+export function AccountFormFields({
+  register,
+  control,
+  setValue,
+  errors,
+  onRequestAddSector,
+}: AccountFormFieldsProps) {
   const taxNumberRegistration = register('taxNumber');
   const selectedCity = useWatch({ control, name: 'city' });
   const districtOptions = selectedCity ? (TURKISH_DISTRICTS_BY_CITY[selectedCity] ?? []) : [];
@@ -78,6 +87,7 @@ export function AccountFormFields({ register, control, setValue, errors }: Accou
             value={field.value ?? []}
             onChange={field.onChange}
             error={errors.sector?.message}
+            onRequestAddNew={onRequestAddSector}
           />
         )}
       />

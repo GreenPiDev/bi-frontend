@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 import { MultiSelect } from '../../components/ui/multi-select';
 import { tr } from '../../i18n/tr';
 import { useSectorOptionsQuery } from './use-sector-options';
@@ -7,13 +8,23 @@ interface SectorMultiSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
   error?: string;
+  /** Verilirse ve en az 1 sektör tanımlıysa, select'in yanında ayarlara gitmeden tek
+   * bir yeni sektör eklemeye yarayan "+ Yeni Sektör" butonu gösterilir - `CategorySelect`
+   * ile aynı desen. Modal'ın kendisi bu bileşenin dışında (sayfa seviyesinde, dış
+   * `<form>`'un dışında) render edilir. */
+  onRequestAddNew?: () => void;
 }
 
 /** A2: boş durumda (hiç sektör tanımlı değilse) ödeme yöntemi seçicisiyle aynı desen —
  * kullanıcıyı ayarlardaki tanımlamalar sekmesine yeni sekmede yönlendiren bir link
  * gösterir. Sektör oradan eklenince `useSectorOptionsRealtimeSync` bu sorguyu invalidate
  * eder ve dropdown sayfa yenilenmeden otomatik güncellenir. */
-export function SectorMultiSelect({ value, onChange, error }: SectorMultiSelectProps) {
+export function SectorMultiSelect({
+  value,
+  onChange,
+  error,
+  onRequestAddNew,
+}: SectorMultiSelectProps) {
   const sectorOptionsQuery = useSectorOptionsQuery();
   const options = sectorOptionsQuery.data ?? [];
 
@@ -48,6 +59,13 @@ export function SectorMultiSelect({ value, onChange, error }: SectorMultiSelectP
       error={error}
       hint={tr.crm.accounts.form.sectorHintRestricted}
       showChips
+      trailingAction={
+        onRequestAddNew && (
+          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+            {tr.crm.accounts.form.sectorNewButton}
+          </Button>
+        )
+      }
     />
   );
 }

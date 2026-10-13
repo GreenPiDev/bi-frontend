@@ -461,6 +461,29 @@ export const purchaseOrderCreateFormSchema = z.object({
 
 export type PurchaseOrderCreateFormValues = z.infer<typeof purchaseOrderCreateFormSchema>;
 
+/** /satis-siparisleri/yeni - 2026-10-13 kullanici geri bildirimi uzerine teklif
+ * secimi kaldirildi ("butun siparislerim bir teklifle iliskili olmak zorunda
+ * degil"): dogrudan firma + urun/miktar/birim fiyat kalemleri girilir (bkz.
+ * backend SalesOrderItem modeli). */
+export const salesOrderCreateFormSchema = z.object({
+  accountId: z.string().min(1, 'Firma secilmelidir.'),
+  items: z
+    .array(
+      z.object({
+        // purchaseOrderCreateFormSchema ile ayni "once urun listesi, sonra urun"
+        // deseni (bkz. ProductAutocomplete'in productListId prop'u) - productListId
+        // sadece UI'da filtreleme icin, backend'e gonderilmez.
+        productListId: z.string().optional(),
+        productId: z.string().min(1, 'Urun secilmelidir.'),
+        quantity: z.string().min(1, 'Miktar gerekli.'),
+        unitPrice: z.string().min(1, 'Birim fiyat gerekli.'),
+      }),
+    )
+    .min(1, 'En az bir kalem eklemelisiniz.'),
+});
+
+export type SalesOrderCreateFormValues = z.infer<typeof salesOrderCreateFormSchema>;
+
 /** Hem "Yeni Mesaj" modali hem `/mesajlar/:id`'deki satir-ici yanit karti icin ortak
  * sema (bkz. features/crm/message-compose-form.tsx). Konu, sadece yeni bir konusma
  * baslatilirken (yeni mesaj modali her zaman, yanit kartinda "Yeni konusma olarak

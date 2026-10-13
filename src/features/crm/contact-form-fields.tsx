@@ -23,9 +23,19 @@ interface ContactFormFieldsProps {
   register: UseFormRegister<ContactFormValues>;
   control: Control<ContactFormValues>;
   errors: FieldErrors<ContactFormValues>;
+  /** `ProductFormFields.onRequestAddCategory` ile ayni desen - verilirse ilgili
+   * select'in yanina "+ Yeni ..." butonu eklenir. */
+  onRequestAddDepartment?: () => void;
+  onRequestAddTitle?: () => void;
 }
 
-export function ContactFormFields({ register, control, errors }: ContactFormFieldsProps) {
+export function ContactFormFields({
+  register,
+  control,
+  errors,
+  onRequestAddDepartment,
+  onRequestAddTitle,
+}: ContactFormFieldsProps) {
   const settingsQuery = useTenantSettingsQuery();
   const thresholdSetting = settingsQuery.data?.find(
     (setting) => setting.key === CONTACT_INACTIVITY_THRESHOLD_DAYS_KEY,
@@ -72,6 +82,7 @@ export function ContactFormFields({ register, control, errors }: ContactFormFiel
             value={field.value ?? ''}
             onChange={field.onChange}
             error={errors.department?.message}
+            onRequestAddNew={onRequestAddDepartment}
           />
         )}
       />
@@ -83,6 +94,7 @@ export function ContactFormFields({ register, control, errors }: ContactFormFiel
             value={field.value ?? ''}
             onChange={field.onChange}
             error={errors.title?.message}
+            onRequestAddNew={onRequestAddTitle}
           />
         )}
       />

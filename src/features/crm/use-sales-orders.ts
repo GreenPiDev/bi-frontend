@@ -1,8 +1,10 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createSalesOrder,
   getSalesOrder,
   listSalesOrders,
   updateSalesOrderStatus,
+  type CreateSalesOrderInput,
   type SalesOrderStatus,
   type UpdateSalesOrderInput,
 } from '../../lib/api';
@@ -49,6 +51,16 @@ export function useSalesOrderStatusCounts(statuses: readonly SalesOrderStatus[])
   });
 
   return { all: allResult?.data?.meta.total, counts };
+}
+
+export function useCreateSalesOrderMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateSalesOrderInput) => createSalesOrder(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SALES_ORDERS_QUERY_KEY });
+    },
+  });
 }
 
 export function useSalesOrderQuery(id: string) {

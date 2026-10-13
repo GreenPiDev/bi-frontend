@@ -69,6 +69,7 @@ import { QuoteTemplateFormPage } from './app/quote-template-form-page';
 import { QuoteTemplateListPage } from './app/quote-template-list-page';
 import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
 import { ReportsPage } from './app/reports-page';
+import { SalesOrderCreatePage } from './app/sales-order-create-page';
 import { SalesOrderDetailPage } from './app/sales-order-detail-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
@@ -540,6 +541,14 @@ function App() {
             <ProtectedRoute>
               <OrdersManagementPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/satis-siparisleri/yeni"
+          element={
+            <TenantPageRoute pageKey="sales-orders">
+              <SalesOrderCreatePage />
+            </TenantPageRoute>
           }
         />
         <Route
