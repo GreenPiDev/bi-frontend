@@ -7,7 +7,7 @@ import {
   type IbanOptionInput,
 } from '../../lib/api';
 
-const IBAN_OPTIONS_QUERY_KEY = ['iban-options'];
+export const IBAN_OPTIONS_QUERY_KEY = ['iban-options'];
 
 export function useIbanOptionsQuery() {
   return useQuery({

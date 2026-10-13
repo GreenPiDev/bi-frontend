@@ -437,29 +437,34 @@ export function QuoteContentBody({
         </div>
       )}
 
-      {quote.ibanNumber && (
+      {quote.ibanAccounts && quote.ibanAccounts.length > 0 && (
         <div className="print-page-break mt-8">
-          <div className="rounded-xl bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-sm">
             <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
-            <div
-              className={clsx(
-                'gap-4',
-                isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-4',
-              )}
-            >
-              <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{quote.ibanBankName}</MetaCell>
-              <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
-                {quote.ibanAccountHolderName}
-              </MetaCell>
-              {quote.ibanAccountNumber && (
-                <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
-                  {quote.ibanAccountNumber}
+            {quote.ibanAccounts.map((account, index) => (
+              <div
+                key={`${account.iban}-${index}`}
+                className={clsx(
+                  'gap-4',
+                  isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-5',
+                  index > 0 && 'border-t border-app-border pt-4',
+                )}
+              >
+                <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{account.bankName}</MetaCell>
+                <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
+                  {account.accountHolderName}
                 </MetaCell>
-              )}
-              <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
-                <span className="break-all">{formatIbanInput(quote.ibanNumber)}</span>
-              </MetaCell>
-            </div>
+                {account.accountNumber && (
+                  <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
+                    {account.accountNumber}
+                  </MetaCell>
+                )}
+                <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
+                  <span className="break-all">{formatIbanInput(account.iban)}</span>
+                </MetaCell>
+                <MetaCell label={tr.crm.quotes.detail.currencyLabel}>{account.currency}</MetaCell>
+              </div>
+            ))}
           </div>
         </div>
       )}

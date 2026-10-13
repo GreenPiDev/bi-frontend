@@ -21,7 +21,10 @@ export interface QuoteMetaFieldsValues {
   quoteDate: string;
   leadTime: string;
   paymentMethod: string;
-  ibanOptionId: string;
+  /** IbanSelect'in encode ettigi secim - "option:<id>" (tekil hesap) veya
+   * "group:<id>" (hesap grubu), bos string = secim yok. Cagiran bunu
+   * decodeIbanSelection ile ibanOptionId/ibanOptionGroupId'ye ayirir. */
+  ibanSelection: string;
   quoteCurrency: string;
   templateId: string;
   senderId: string;
@@ -32,7 +35,7 @@ export interface QuoteMetaFieldsErrors {
   quoteDate?: string;
   leadTime?: string;
   paymentMethod?: string;
-  ibanOptionId?: string;
+  ibanSelection?: string;
   quoteCurrency?: string;
   templateId?: string;
   senderId?: string;
@@ -53,8 +56,9 @@ interface QuoteMetaFieldsProps {
   errors?: QuoteMetaFieldsErrors;
   /** Duzenleme ekraninda, teklif zaten bir IBAN snapshot'i tasiyorsa ama kullanici
    * henuz yeni bir secim yapmadiysa gosterilecek bilgi notu - bkz. IbanOption doc
-   * comment'i (snapshot, FK degil, bu yuzden mevcut secim otomatik isaretlenemez). */
-  ibanCurrentInfo?: { bankName: string; ibanNumber: string } | null;
+   * comment'i (snapshot, FK degil, bu yuzden mevcut secim otomatik isaretlenemez).
+   * Grup secildiyse N elemanli olabilir. */
+  ibanCurrentInfo?: { bankName: string; ibanNumber: string }[] | null;
   /** Verilirse (ve en az 1 deger tanimliysa) PaymentMethodSelect/IbanSelect'in
    * yaninda ayarlara gitmeden yeni deger eklemeye yarayan "+ Yeni ..." butonu
    * gosterilir - sadece /teklifler/yeni bu callback'leri gecer, /teklifler/duzenle
@@ -131,15 +135,14 @@ export function QuoteMetaFields({
       <div>
         <IbanSelect
           label={tr.crm.quotes.form.ibanLabel}
-          value={values.ibanOptionId}
-          onChange={(value) => onChange('ibanOptionId', value)}
-          error={errors?.ibanOptionId}
+          value={values.ibanSelection}
+          onChange={(value) => onChange('ibanSelection', value)}
+          error={errors?.ibanSelection}
           onRequestAddNew={onRequestAddIban}
         />
-        {!values.ibanOptionId && ibanCurrentInfo && (
+        {!values.ibanSelection && ibanCurrentInfo && ibanCurrentInfo.length > 0 && (
           <p className="mt-1.5 text-xs text-app-muted">
-            {tr.crm.quotes.detail.bankNameLabel}: {ibanCurrentInfo.bankName} ·{' '}
-            {ibanCurrentInfo.ibanNumber}
+            {ibanCurrentInfo.map((info) => `${info.bankName} · ${info.ibanNumber}`).join(' / ')}
           </p>
         )}
       </div>

@@ -2,10 +2,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
+import { encodeIbanGroupSelection, encodeIbanOptionSelection } from './iban-selection';
+import { useIbanOptionGroupsQuery } from './use-iban-option-groups';
 import { useIbanOptionsQuery } from './use-iban-options';
 
 interface IbanSelectProps {
   label: string;
+  /** encodeIbanOptionSelection/encodeIbanGroupSelection ile uretilen
+   * "option:<id>" / "group:<id>" degeri, bos string = secim yok. */
   value: string;
   onChange: (value: string) => void;
   error?: string;
@@ -20,15 +24,21 @@ function maskIban(iban: string): string {
   return iban.length > 4 ? `••••${iban.slice(-4)}` : iban;
 }
 
-/** IBAN/banka hesabi dropdown'u - sadece /settings?tab=crm'de tanimlanan
- * listeden secilir, serbest metin girisi yok. Tenant henuz hic tanimlamamissa,
- * dropdown yerine ayarlara (yeni sekmede) yonlendiren bir mesaj/link gosterilir.
- * IBAN oradan eklenince `useIbanOptionsRealtimeSync` bu sorguyu invalidate eder
- * ve dropdown sayfa yenilenmeden otomatik guncellenir (departman/odeme yontemi
- * alanlariyla ayni desen, bkz. department-select.tsx). */
+/** IBAN/banka hesabi (veya hesap grubu) dropdown'u - sadece /settings?tab=crm'de
+ * tanimlanan listeden secilir, serbest metin girisi yok. Bir grup secilirse
+ * teklife gruptaki TUM hesaplar birlikte kopyalanir (kullanici talebi - bkz.
+ * IbanOptionGroup doc comment'i), gruplanmamis hesaplar tek basina secilebilir
+ * kalir. Tenant henuz hic tanimlamamissa, dropdown yerine ayarlara (yeni
+ * sekmede) yonlendiren bir mesaj/link gosterilir. IBAN/grup oradan eklenince
+ * `useIbanOptionsRealtimeSync` bu sorgulari invalidate eder ve dropdown sayfa
+ * yenilenmeden otomatik guncellenir (departman/odeme yontemi alanlariyla ayni
+ * desen, bkz. department-select.tsx). */
 export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: IbanSelectProps) {
   const optionsQuery = useIbanOptionsQuery();
+  const groupsQuery = useIbanOptionGroupsQuery();
   const options = optionsQuery.data ?? [];
+  const groups = groupsQuery.data ?? [];
+  const ungroupedOptions = options.filter((option) => !option.groupId);
 
   if (optionsQuery.isSuccess && options.length === 0) {
     return (
@@ -49,6 +59,22 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
     );
   }
 
+  const groupOptions = groups
+    .map((group) => {
+      const accountCount = options.filter((option) => option.groupId === group.id).length;
+      return { group, accountCount };
+    })
+    .filter(({ accountCount }) => accountCount > 0)
+    .map(({ group, accountCount }) => ({
+      value: encodeIbanGroupSelection(group.id),
+      label: `${group.name} (${tr.crm.quotes.form.ibanGroupAccountCount(accountCount)})`,
+    }));
+
+  const singleOptions = ungroupedOptions.map((option) => ({
+    value: encodeIbanOptionSelection(option.id),
+    label: `${option.bankName} • ${option.accountHolderName} • ${maskIban(option.iban)} • ${option.currency}`,
+  }));
+
   return (
     <Select
       label={label}
@@ -57,10 +83,7 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
       error={error}
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      options={options.map((option) => ({
-        value: option.id,
-        label: `${option.bankName} • ${option.accountHolderName} • ${maskIban(option.iban)} • ${option.currency}`,
-      }))}
+      options={[...groupOptions, ...singleOptions]}
       trailingAction={
         onRequestAddNew && (
           <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>

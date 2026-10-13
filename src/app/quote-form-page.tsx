@@ -19,6 +19,7 @@ import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
+import { decodeIbanSelection, encodeIbanOptionSelection } from '../features/crm/iban-selection';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
@@ -457,7 +458,7 @@ export function QuoteFormPage() {
       salesTerms: values.salesTerms || undefined,
       deliveryTerms: values.deliveryTerms || undefined,
       generalTerms: values.generalTerms || undefined,
-      ibanOptionId: values.ibanOptionId || undefined,
+      ...decodeIbanSelection(values.ibanSelection ?? ''),
       quoteCurrency: values.quoteCurrency,
       // Bos birakilirsa backend tenant'in varsayilan sablonunu otomatik atar
       // (bkz. QuotesService.resolveTemplateId) - bu yuzden burada undefined.
@@ -801,7 +802,7 @@ export function QuoteFormPage() {
               quoteDate: watch('quoteDate') ?? '',
               leadTime: watch('leadTime') ?? '',
               paymentMethod: watch('paymentMethod') ?? '',
-              ibanOptionId: watch('ibanOptionId') ?? '',
+              ibanSelection: watch('ibanSelection') ?? '',
               quoteCurrency,
               templateId: watch('templateId') ?? '',
               senderId: watch('senderId') ?? '',
@@ -812,7 +813,7 @@ export function QuoteFormPage() {
               quoteDate: errors.quoteDate?.message,
               leadTime: errors.leadTime?.message,
               paymentMethod: errors.paymentMethod?.message,
-              ibanOptionId: errors.ibanOptionId?.message,
+              ibanSelection: errors.ibanSelection?.message,
               quoteCurrency: errors.quoteCurrency?.message,
               templateId: errors.templateId?.message,
               senderId: errors.senderId?.message,
@@ -1118,7 +1119,9 @@ export function QuoteFormPage() {
         <AddIbanOptionModal
           onClose={() => setActiveOptionModal(null)}
           onCreated={(option) => {
-            setValue('ibanOptionId', option.id, { shouldValidate: true });
+            setValue('ibanSelection', encodeIbanOptionSelection(option.id), {
+              shouldValidate: true,
+            });
             setActiveOptionModal(null);
           }}
         />

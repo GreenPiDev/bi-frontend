@@ -52,10 +52,17 @@ export interface QuoteTemplatePrintDocumentData {
   salesTerms: string | null;
   deliveryTerms: string | null;
   generalTerms: string | null;
-  ibanBankName: string | null;
-  ibanAccountHolderName: string | null;
-  ibanAccountNumber: string | null;
-  ibanNumber: string | null;
+  /** Secilen hesap(lar)in snapshot'i - grup secildiyse N elemanli (bkz.
+   * IbanOptionGroup doc comment'i, Quote.ibanAccounts). */
+  ibanAccounts:
+    | {
+        bankName: string;
+        accountHolderName: string;
+        accountNumber: string | null;
+        iban: string;
+        currency: string;
+      }[]
+    | null;
   /** Tenant-genel sirket bilgisi (bkz. docs/VARSAYIMLAR.md) - artik sablon basina
    * degil, /settings?tab=crm'deki "Sirket Bilgileri"nden tek kaynaktan gelir. */
   company: { address: string | null; phone: string | null; email: string | null };
@@ -320,7 +327,7 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
 
   // 3. Banka bilgileri (teklif IBAN icerıyorsa, kendi sayfasinda - urun listesinin
   // hemen ardindan Word'deki Ctrl+Enter sayfa sonu gibi)
-  if (quote.ibanNumber) {
+  if (quote.ibanAccounts && quote.ibanAccounts.length > 0) {
     pages.push(
       <section key="bank" className="print-page-break p-10">
         <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
@@ -333,15 +340,19 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
               <th className="p-2">{strings.accountHolderNameColumn}</th>
               <th className="p-2">{strings.accountNumberColumn}</th>
               <th className="p-2">{strings.ibanColumn}</th>
+              <th className="p-2">{strings.currencyColumn}</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-100">
-              <td className="p-2">{quote.ibanBankName}</td>
-              <td className="p-2">{quote.ibanAccountHolderName}</td>
-              <td className="p-2">{quote.ibanAccountNumber ?? '—'}</td>
-              <td className="p-2">{formatIbanInput(quote.ibanNumber)}</td>
-            </tr>
+            {quote.ibanAccounts.map((account, index) => (
+              <tr key={`${account.iban}-${index}`} className="border-b border-gray-100">
+                <td className="p-2">{account.bankName}</td>
+                <td className="p-2">{account.accountHolderName}</td>
+                <td className="p-2">{account.accountNumber ?? '—'}</td>
+                <td className="p-2">{formatIbanInput(account.iban)}</td>
+                <td className="p-2">{account.currency}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </section>,

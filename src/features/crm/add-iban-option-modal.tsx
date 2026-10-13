@@ -8,6 +8,7 @@ import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type IbanOption } from '../../lib/api';
 import { formatIbanInput, normalizeIban, validateIban } from '../../lib/iban-validation';
 import { tr } from '../../i18n/tr';
+import { useIbanOptionGroupsQuery } from './use-iban-option-groups';
 import { useCreateIbanOptionMutation } from './use-iban-options';
 
 interface AddIbanOptionModalProps {
@@ -25,12 +26,18 @@ interface AddIbanOptionModalProps {
 export function AddIbanOptionModal({ onClose, onCreated }: AddIbanOptionModalProps) {
   const toast = useToast();
   const createMutation = useCreateIbanOptionMutation();
+  const groupsQuery = useIbanOptionGroupsQuery();
+  const groupOptions = [
+    { value: '', label: tr.settings.crm.ibanOptions.groupPlaceholder },
+    ...(groupsQuery.data ?? []).map((group) => ({ value: group.id, label: group.name })),
+  ];
 
   const [bankName, setBankName] = useState('');
   const [accountHolderName, setAccountHolderName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [iban, setIban] = useState('');
   const [currency, setCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [groupId, setGroupId] = useState('');
   const [ibanTouched, setIbanTouched] = useState(false);
   const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>();
 
@@ -49,6 +56,7 @@ export function AddIbanOptionModal({ onClose, onCreated }: AddIbanOptionModalPro
         accountNumber: accountNumber.trim() || undefined,
         iban: normalizeIban(iban),
         currency,
+        groupId: groupId || null,
       },
       {
         onSuccess: (option) => {
@@ -102,6 +110,13 @@ export function AddIbanOptionModal({ onClose, onCreated }: AddIbanOptionModalPro
             { value: 'USD', label: 'USD' },
             { value: 'EUR', label: 'EUR' },
           ]}
+        />
+        <Select
+          label={tr.settings.crm.ibanOptions.groupLabel}
+          placeholder={tr.settings.crm.ibanOptions.groupPlaceholder}
+          value={groupId}
+          onChange={(event) => setGroupId(event.target.value)}
+          options={groupOptions}
         />
         <div className="flex gap-2">
           <Button type="submit" disabled={createMutation.isPending}>

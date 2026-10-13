@@ -16,6 +16,7 @@ import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
+import { decodeIbanSelection } from '../features/crm/iban-selection';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -86,10 +87,12 @@ export function QuoteEditPage() {
   const [title, setTitle] = useState('');
   const [leadTime, setLeadTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
-  // Quote, secilen IbanOption'i FK olarak degil 4 alanin snapshot'i olarak tasir
-  // (bkz. QuotesService.resolveIbanSnapshot) - bu yuzden duzenlemede hangi tanimin
-  // secili oldugu bilinmez, kullanici degistirmek isterse yeniden secer.
-  const [ibanOptionId, setIbanOptionId] = useState('');
+  // Quote, secilen IbanOption('lar)i FK olarak degil Quote.ibanAccounts
+  // snapshot'i olarak tasir (bkz. QuotesService.resolveIbanSnapshot) - bu
+  // yuzden duzenlemede hangi tanimin secili oldugu bilinmez, kullanici
+  // degistirmek isterse yeniden secer (encodeIbanOptionSelection/
+  // encodeIbanGroupSelection ile encode edilmis "option:<id>"/"group:<id>").
+  const [ibanSelection, setIbanSelection] = useState('');
   const [templateId, setTemplateId] = useState('');
   const [senderId, setSenderId] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('');
@@ -339,7 +342,7 @@ export function QuoteEditPage() {
         title: title || null,
         leadTime: leadTime || null,
         paymentMethod: paymentMethod || null,
-        ibanOptionId: ibanOptionId || undefined,
+        ...decodeIbanSelection(ibanSelection),
         paymentTerms: paymentTerms || null,
         salesTerms: salesTerms || null,
         deliveryTerms: deliveryTerms || null,
@@ -599,7 +602,7 @@ export function QuoteEditPage() {
               quoteDate,
               leadTime,
               paymentMethod,
-              ibanOptionId,
+              ibanSelection,
               quoteCurrency,
               templateId,
               senderId,
@@ -613,8 +616,8 @@ export function QuoteEditPage() {
                 setLeadTime(value);
               } else if (field === 'paymentMethod') {
                 setPaymentMethod(value);
-              } else if (field === 'ibanOptionId') {
-                setIbanOptionId(value);
+              } else if (field === 'ibanSelection') {
+                setIbanSelection(value);
               } else if (field === 'quoteCurrency') {
                 setQuoteCurrency(value);
                 // Kur input'lari currency koduyla anahtarlanir (hangi quoteCurrency'ye
@@ -628,8 +631,11 @@ export function QuoteEditPage() {
               }
             }}
             ibanCurrentInfo={
-              quote.ibanNumber && quote.ibanBankName
-                ? { bankName: quote.ibanBankName, ibanNumber: quote.ibanNumber }
+              quote.ibanAccounts && quote.ibanAccounts.length > 0
+                ? quote.ibanAccounts.map((account) => ({
+                    bankName: account.bankName,
+                    ibanNumber: account.iban,
+                  }))
                 : null
             }
           />

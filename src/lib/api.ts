@@ -1252,8 +1252,47 @@ export function deleteQuoteRejectionReasonOption(id: string): Promise<void> {
   return request(`/quote-rejection-reason-options/${id}`, { method: 'DELETE' });
 }
 
+export interface IbanOptionGroup {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
+export interface IbanOptionGroupInput {
+  name: string;
+}
+
+export function listIbanOptionGroups(): Promise<IbanOptionGroup[]> {
+  return request('/iban-option-groups');
+}
+
+export function createIbanOptionGroup(input: IbanOptionGroupInput): Promise<IbanOptionGroup> {
+  return request('/iban-option-groups', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateIbanOptionGroup(
+  id: string,
+  input: IbanOptionGroupInput,
+): Promise<IbanOptionGroup> {
+  return request(`/iban-option-groups/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteIbanOptionGroup(id: string): Promise<void> {
+  return request(`/iban-option-groups/${id}`, { method: 'DELETE' });
+}
+
 export interface IbanOption {
   id: string;
+  /** Opsiyonel - bos ise hesap teklif formunda tek basina secilebilir kalir
+   * (bkz. IbanOptionGroup doc comment'i). */
+  groupId: string | null;
+  group: IbanOptionGroup | null;
   bankName: string;
   accountHolderName: string;
   accountNumber: string | null;
@@ -1263,6 +1302,7 @@ export interface IbanOption {
 }
 
 export interface IbanOptionInput {
+  groupId?: string | null;
   bankName: string;
   accountHolderName: string;
   accountNumber?: string;
@@ -2670,6 +2710,15 @@ export interface QuoteRevisionSnapshot {
   exchangeRates: QuoteExchangeRates | null;
 }
 
+/** Quote.ibanAccounts icindeki her elemanin sekli - bkz. IbanOption/IbanOptionGroup. */
+export interface IbanAccountSnapshot {
+  bankName: string;
+  accountHolderName: string;
+  accountNumber: string | null;
+  iban: string;
+  currency: string;
+}
+
 export interface Quote {
   id: string;
   quoteNumber: string;
@@ -2695,10 +2744,10 @@ export interface Quote {
   salesTerms: string | null;
   deliveryTerms: string | null;
   generalTerms: string | null;
-  ibanBankName: string | null;
-  ibanAccountHolderName: string | null;
-  ibanAccountNumber: string | null;
-  ibanNumber: string | null;
+  /** Secilen hesap (veya secilen grubun tum hesaplari) olusturma/guncelleme
+   * aninda buraya kopyalanir - FK degil, snapshot (bkz. IbanOption doc
+   * comment'i). Grup secildiyse N elemanli, tekil hesap secildiyse 1 elemanli. */
+  ibanAccounts: IbanAccountSnapshot[] | null;
   approvedAt: string | null;
   approvedById: string | null;
   /** Teklifin "gonderen"i (PDF'te gosterilen temsilci) - createdById'den bagimsiz,
@@ -2746,7 +2795,11 @@ export interface CreateQuoteInput {
   salesTerms?: string;
   deliveryTerms?: string;
   generalTerms?: string;
+  /** ibanOptionGroupId ile ayni anda verilemez. */
   ibanOptionId?: string;
+  /** Secilirse gruptaki TUM hesaplar teklife snapshot'lanir. ibanOptionId ile
+   * ayni anda verilemez. */
+  ibanOptionGroupId?: string;
   quoteCurrency: string;
   exchangeRates?: QuoteExchangeRates;
   /** Verilmezse tenant'in varsayilan sablonu otomatik atanir (varsa). */
@@ -2773,7 +2826,11 @@ export interface UpdateQuoteInput {
   salesTerms?: string | null;
   deliveryTerms?: string | null;
   generalTerms?: string | null;
+  /** ibanOptionGroupId ile ayni anda (ikisi de non-null) verilemez. */
   ibanOptionId?: string | null;
+  /** Secilirse gruptaki TUM hesaplar teklife snapshot'lanir. ibanOptionId ile
+   * ayni anda verilemez. */
+  ibanOptionGroupId?: string | null;
   quoteCurrency?: string;
   exchangeRates?: QuoteExchangeRates;
   templateId?: string | null;

@@ -215,10 +215,7 @@ function buildSampleQuote(
     salesTerms: strings.sampleSalesTerms,
     deliveryTerms: strings.sampleDeliveryTerms,
     generalTerms: strings.sampleGeneralTerms,
-    ibanBankName: null,
-    ibanAccountHolderName: null,
-    ibanAccountNumber: null,
-    ibanNumber: null,
+    ibanAccounts: null,
     company: {
       address: strings.sampleCompanyAddress,
       phone: strings.sampleCompanyPhone,

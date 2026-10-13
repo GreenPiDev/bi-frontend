@@ -10,7 +10,7 @@ import { TextareaField } from '../../components/ui/textarea-field';
 import { TextField } from '../../components/ui/text-field';
 import { Tooltip } from '../../components/ui/tooltip';
 import { useToast } from '../../components/ui/toast-context';
-import { ApiError, type IbanOption } from '../../lib/api';
+import { ApiError, type IbanOption, type IbanOptionGroup } from '../../lib/api';
 import { formatIbanInput, normalizeIban, validateIban } from '../../lib/iban-validation';
 import { tr } from '../../i18n/tr';
 import {
@@ -29,6 +29,12 @@ import {
   useDepartmentOptionsQuery,
   useUpdateDepartmentOptionMutation,
 } from './use-department-options';
+import {
+  useCreateIbanOptionGroupMutation,
+  useDeleteIbanOptionGroupMutation,
+  useIbanOptionGroupsQuery,
+  useUpdateIbanOptionGroupMutation,
+} from './use-iban-option-groups';
 import {
   useCreateIbanOptionMutation,
   useDeleteIbanOptionMutation,
@@ -699,6 +705,8 @@ interface IbanFormState {
   accountNumber: string;
   iban: string;
   currency: 'TRY' | 'USD' | 'EUR';
+  /** Bos string = grup yok (hesap tek basina secilebilir kalir). */
+  groupId: string;
 }
 
 const IBAN_CURRENCY_OPTIONS = [
@@ -713,14 +721,177 @@ const EMPTY_IBAN_FORM: IbanFormState = {
   accountNumber: '',
   iban: '',
   currency: 'TRY',
+  groupId: '',
 };
+
+/** Bir hesap grubunun ismi + icindeki hesap sayisi - IBAN formundaki Grup
+ * secicisinin besledigi kaynak, bkz. IbanOptionGroup doc comment'i. */
+function IbanOptionGroupsManager() {
+  const toast = useToast();
+  const groupsQuery = useIbanOptionGroupsQuery();
+  const optionsQuery = useIbanOptionsQuery();
+  const createMutation = useCreateIbanOptionGroupMutation();
+  const updateMutation = useUpdateIbanOptionGroupMutation();
+  const deleteMutation = useDeleteIbanOptionGroupMutation();
+
+  const [name, setName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+
+  function handleApiError(error: unknown) {
+    toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+  }
+
+  function handleAdd() {
+    if (name.trim().length < 2) {
+      return;
+    }
+    createMutation.mutate(
+      { name: name.trim() },
+      {
+        onSuccess: () => {
+          toast.success(tr.settings.crm.ibanOptionGroups.addSuccess);
+          setName('');
+        },
+        onError: handleApiError,
+      },
+    );
+  }
+
+  function startEdit(group: IbanOptionGroup) {
+    setEditingId(group.id);
+    setEditName(group.name);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditName('');
+  }
+
+  function handleSaveEdit() {
+    if (!editingId || editName.trim().length < 2) {
+      return;
+    }
+    updateMutation.mutate(
+      { id: editingId, input: { name: editName.trim() } },
+      {
+        onSuccess: () => {
+          toast.success(tr.settings.crm.ibanOptionGroups.editSuccess);
+          cancelEdit();
+        },
+        onError: handleApiError,
+      },
+    );
+  }
+
+  function handleDelete(id: string) {
+    deleteMutation.mutate(id, {
+      onSuccess: () => toast.success(tr.settings.crm.ibanOptionGroups.deleteSuccess),
+      onError: handleApiError,
+    });
+  }
+
+  function accountCountFor(groupId: string): number {
+    return (optionsQuery.data ?? []).filter((option) => option.groupId === groupId).length;
+  }
+
+  const columns: TableColumn<IbanOptionGroup>[] = [
+    { key: 'name', header: tr.settings.crm.ibanOptionGroups.nameColumn, render: (g) => g.name },
+    {
+      key: 'accountCount',
+      header: tr.settings.crm.ibanOptionGroups.accountCountColumn,
+      render: (g) => accountCountFor(g.id),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-16',
+      render: (g) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.settings.crm.ibanOptionGroups.editButton}
+            onClick={() => startEdit(g)}
+          />
+          <IconActionButton
+            icon={X}
+            tooltip={tr.settings.crm.ibanOptionGroups.deleteButton}
+            variant="danger"
+            onClick={() => handleDelete(g.id)}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <CollapsibleSection
+      title={tr.settings.crm.ibanOptionGroups.title}
+      subtitle={tr.settings.crm.ibanOptionGroups.subtitle}
+    >
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <TextField
+          label={tr.settings.crm.ibanOptionGroups.nameLabel}
+          placeholder={tr.settings.crm.ibanOptionGroups.namePlaceholder}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+      </div>
+      <Button
+        type="button"
+        className="mt-3"
+        disabled={createMutation.isPending}
+        onClick={handleAdd}
+      >
+        {tr.settings.crm.ibanOptionGroups.addButton}
+      </Button>
+
+      {groupsQuery.data && groupsQuery.data.length === 0 && (
+        <p className="mt-3 text-sm text-app-muted">{tr.settings.crm.ibanOptionGroups.empty}</p>
+      )}
+
+      {groupsQuery.data && groupsQuery.data.length > 0 && (
+        <Table
+          columns={columns}
+          data={groupsQuery.data}
+          keyField={(group) => group.id}
+          onRowClick={startEdit}
+          isRowExpanded={(group) => editingId === group.id}
+          rowClassName={(group) => (editingId === group.id ? 'bg-blue-50' : undefined)}
+          renderExpandedRow={() => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
+              <TextField
+                label={tr.settings.crm.ibanOptionGroups.nameLabel}
+                value={editName}
+                onChange={(event) => setEditName(event.target.value)}
+              />
+              <div className="col-span-2 flex gap-2">
+                <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
+                  {tr.settings.crm.ibanOptionGroups.saveButton}
+                </Button>
+                <Button type="button" variant="secondary" onClick={cancelEdit}>
+                  {tr.settings.crm.ibanOptionGroups.cancelButton}
+                </Button>
+              </div>
+            </div>
+          )}
+        />
+      )}
+    </CollapsibleSection>
+  );
+}
 
 function IbanOptionsManager() {
   const toast = useToast();
   const optionsQuery = useIbanOptionsQuery();
+  const groupsQuery = useIbanOptionGroupsQuery();
   const createMutation = useCreateIbanOptionMutation();
   const updateMutation = useUpdateIbanOptionMutation();
   const deleteMutation = useDeleteIbanOptionMutation();
+  const groupOptions = [
+    { value: '', label: tr.settings.crm.ibanOptions.groupPlaceholder },
+    ...(groupsQuery.data ?? []).map((group) => ({ value: group.id, label: group.name })),
+  ];
 
   const [form, setForm] = useState<IbanFormState>(EMPTY_IBAN_FORM);
   const [ibanTouched, setIbanTouched] = useState(false);
@@ -747,6 +918,7 @@ function IbanOptionsManager() {
         accountNumber: form.accountNumber.trim() || undefined,
         iban: normalizeIban(form.iban),
         currency: form.currency,
+        groupId: form.groupId || null,
       },
       {
         onSuccess: () => {
@@ -767,6 +939,7 @@ function IbanOptionsManager() {
       accountNumber: option.accountNumber ?? '',
       iban: formatIbanInput(option.iban),
       currency: option.currency,
+      groupId: option.groupId ?? '',
     });
     setEditIbanTouched(false);
   }
@@ -796,6 +969,7 @@ function IbanOptionsManager() {
           accountNumber: editForm.accountNumber.trim() || undefined,
           iban: normalizeIban(editForm.iban),
           currency: editForm.currency,
+          groupId: editForm.groupId || null,
         },
       },
       {
@@ -834,6 +1008,11 @@ function IbanOptionsManager() {
       render: (o) => o.currency,
     },
     {
+      key: 'group',
+      header: tr.settings.crm.ibanOptions.groupColumn,
+      render: (o) => o.group?.name ?? tr.settings.crm.ibanOptions.noGroup,
+    },
+    {
       key: 'actions',
       header: '',
       className: 'w-16',
@@ -860,7 +1039,7 @@ function IbanOptionsManager() {
       title={tr.settings.crm.ibanOptions.title}
       subtitle={tr.settings.crm.ibanOptions.subtitle}
     >
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
         <TextField
           label={tr.settings.crm.ibanOptions.bankNameLabel}
           placeholder={tr.settings.crm.ibanOptions.bankNamePlaceholder}
@@ -902,6 +1081,13 @@ function IbanOptionsManager() {
           }
           options={IBAN_CURRENCY_OPTIONS}
         />
+        <Select
+          label={tr.settings.crm.ibanOptions.groupLabel}
+          placeholder={tr.settings.crm.ibanOptions.groupPlaceholder}
+          value={form.groupId}
+          onChange={(event) => setForm((prev) => ({ ...prev, groupId: event.target.value }))}
+          options={groupOptions}
+        />
       </div>
       <Button
         type="button"
@@ -925,7 +1111,7 @@ function IbanOptionsManager() {
           isRowExpanded={(option) => editingId === option.id}
           rowClassName={(option) => (editingId === option.id ? 'bg-blue-50' : undefined)}
           renderExpandedRow={() => (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:items-end">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-6 sm:items-end">
               <TextField
                 label={tr.settings.crm.ibanOptions.bankNameLabel}
                 value={editForm.bankName}
@@ -967,7 +1153,16 @@ function IbanOptionsManager() {
                 }
                 options={IBAN_CURRENCY_OPTIONS}
               />
-              <div className="col-span-2 flex gap-2 sm:col-span-5">
+              <Select
+                label={tr.settings.crm.ibanOptions.groupLabel}
+                placeholder={tr.settings.crm.ibanOptions.groupPlaceholder}
+                value={editForm.groupId}
+                onChange={(event) =>
+                  setEditForm((prev) => ({ ...prev, groupId: event.target.value }))
+                }
+                options={groupOptions}
+              />
+              <div className="col-span-2 flex gap-2 sm:col-span-6">
                 <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
                   {tr.settings.crm.ibanOptions.saveButton}
                 </Button>
@@ -1350,6 +1545,9 @@ export function CrmSettingsSection() {
       </div>
       <div className="mt-3 border-t border-app-border">
         <PaymentMethodOptionsManager />
+      </div>
+      <div className="mt-3 border-t border-app-border">
+        <IbanOptionGroupsManager />
       </div>
       <div className="mt-3 border-t border-app-border">
         <IbanOptionsManager />
