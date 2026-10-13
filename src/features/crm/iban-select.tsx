@@ -59,7 +59,7 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({
         value: option.id,
-        label: `${option.bankName} • ${option.accountHolderName} • ${maskIban(option.iban)}`,
+        label: `${option.bankName} • ${option.accountHolderName} • ${maskIban(option.iban)} • ${option.currency}`,
       }))}
       trailingAction={
         onRequestAddNew && (

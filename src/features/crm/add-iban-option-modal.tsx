@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '../../components/ui/button';
 import { FormError } from '../../components/ui/form-error';
 import { Modal } from '../../components/ui/modal';
+import { Select } from '../../components/ui/select';
 import { TextField } from '../../components/ui/text-field';
 import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type IbanOption } from '../../lib/api';
@@ -29,6 +30,7 @@ export function AddIbanOptionModal({ onClose, onCreated }: AddIbanOptionModalPro
   const [accountHolderName, setAccountHolderName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [iban, setIban] = useState('');
+  const [currency, setCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
   const [ibanTouched, setIbanTouched] = useState(false);
   const [apiErrorMessage, setApiErrorMessage] = useState<string | undefined>();
 
@@ -46,6 +48,7 @@ export function AddIbanOptionModal({ onClose, onCreated }: AddIbanOptionModalPro
         accountHolderName: accountHolderName.trim(),
         accountNumber: accountNumber.trim() || undefined,
         iban: normalizeIban(iban),
+        currency,
       },
       {
         onSuccess: (option) => {
@@ -89,6 +92,16 @@ export function AddIbanOptionModal({ onClose, onCreated }: AddIbanOptionModalPro
           onChange={(event) => setIban(formatIbanInput(event.target.value))}
           onBlur={() => setIbanTouched(true)}
           error={ibanTouched ? ibanValidation.error : undefined}
+        />
+        <Select
+          label={tr.settings.crm.ibanOptions.currencyLabel}
+          value={currency}
+          onChange={(event) => setCurrency(event.target.value as 'TRY' | 'USD' | 'EUR')}
+          options={[
+            { value: 'TRY', label: 'TRY' },
+            { value: 'USD', label: 'USD' },
+            { value: 'EUR', label: 'EUR' },
+          ]}
         />
         <div className="flex gap-2">
           <Button type="submit" disabled={createMutation.isPending}>

@@ -1258,6 +1258,7 @@ export interface IbanOption {
   accountHolderName: string;
   accountNumber: string | null;
   iban: string;
+  currency: 'TRY' | 'USD' | 'EUR';
   createdAt: string;
 }
 
@@ -1266,6 +1267,7 @@ export interface IbanOptionInput {
   accountHolderName: string;
   accountNumber?: string;
   iban: string;
+  currency: 'TRY' | 'USD' | 'EUR';
 }
 
 export function listIbanOptions(): Promise<IbanOption[]> {

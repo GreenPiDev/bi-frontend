@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { IconActionButton } from '../../components/ui/icon-action-button';
+import { Select } from '../../components/ui/select';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextareaField } from '../../components/ui/textarea-field';
 import { TextField } from '../../components/ui/text-field';
@@ -697,13 +698,21 @@ interface IbanFormState {
   accountHolderName: string;
   accountNumber: string;
   iban: string;
+  currency: 'TRY' | 'USD' | 'EUR';
 }
+
+const IBAN_CURRENCY_OPTIONS = [
+  { value: 'TRY', label: 'TRY' },
+  { value: 'USD', label: 'USD' },
+  { value: 'EUR', label: 'EUR' },
+];
 
 const EMPTY_IBAN_FORM: IbanFormState = {
   bankName: '',
   accountHolderName: '',
   accountNumber: '',
   iban: '',
+  currency: 'TRY',
 };
 
 function IbanOptionsManager() {
@@ -737,6 +746,7 @@ function IbanOptionsManager() {
         accountHolderName: form.accountHolderName.trim(),
         accountNumber: form.accountNumber.trim() || undefined,
         iban: normalizeIban(form.iban),
+        currency: form.currency,
       },
       {
         onSuccess: () => {
@@ -756,6 +766,7 @@ function IbanOptionsManager() {
       accountHolderName: option.accountHolderName,
       accountNumber: option.accountNumber ?? '',
       iban: formatIbanInput(option.iban),
+      currency: option.currency,
     });
     setEditIbanTouched(false);
   }
@@ -784,6 +795,7 @@ function IbanOptionsManager() {
           accountHolderName: editForm.accountHolderName.trim(),
           accountNumber: editForm.accountNumber.trim() || undefined,
           iban: normalizeIban(editForm.iban),
+          currency: editForm.currency,
         },
       },
       {
@@ -817,6 +829,11 @@ function IbanOptionsManager() {
     },
     { key: 'iban', header: tr.settings.crm.ibanOptions.ibanColumn, render: (o) => o.iban },
     {
+      key: 'currency',
+      header: tr.settings.crm.ibanOptions.currencyColumn,
+      render: (o) => o.currency,
+    },
+    {
       key: 'actions',
       header: '',
       className: 'w-16',
@@ -843,7 +860,7 @@ function IbanOptionsManager() {
       title={tr.settings.crm.ibanOptions.title}
       subtitle={tr.settings.crm.ibanOptions.subtitle}
     >
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <TextField
           label={tr.settings.crm.ibanOptions.bankNameLabel}
           placeholder={tr.settings.crm.ibanOptions.bankNamePlaceholder}
@@ -874,6 +891,17 @@ function IbanOptionsManager() {
           onBlur={() => setIbanTouched(true)}
           error={ibanTouched ? ibanValidation.error : undefined}
         />
+        <Select
+          label={tr.settings.crm.ibanOptions.currencyLabel}
+          value={form.currency}
+          onChange={(event) =>
+            setForm((prev) => ({
+              ...prev,
+              currency: event.target.value as IbanFormState['currency'],
+            }))
+          }
+          options={IBAN_CURRENCY_OPTIONS}
+        />
       </div>
       <Button
         type="button"
@@ -897,7 +925,7 @@ function IbanOptionsManager() {
           isRowExpanded={(option) => editingId === option.id}
           rowClassName={(option) => (editingId === option.id ? 'bg-blue-50' : undefined)}
           renderExpandedRow={() => (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5 sm:items-end">
               <TextField
                 label={tr.settings.crm.ibanOptions.bankNameLabel}
                 value={editForm.bankName}
@@ -928,7 +956,18 @@ function IbanOptionsManager() {
                 onBlur={() => setEditIbanTouched(true)}
                 error={editIbanTouched ? editIbanValidation.error : undefined}
               />
-              <div className="col-span-2 flex gap-2 sm:col-span-4">
+              <Select
+                label={tr.settings.crm.ibanOptions.currencyLabel}
+                value={editForm.currency}
+                onChange={(event) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    currency: event.target.value as IbanFormState['currency'],
+                  }))
+                }
+                options={IBAN_CURRENCY_OPTIONS}
+              />
+              <div className="col-span-2 flex gap-2 sm:col-span-5">
                 <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
                   {tr.settings.crm.ibanOptions.saveButton}
                 </Button>

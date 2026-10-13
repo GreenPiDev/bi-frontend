@@ -940,6 +940,7 @@ export const tr = {
         accountNumberPlaceholder: 'Opsiyonel',
         ibanLabel: 'IBAN Numarası',
         ibanPlaceholder: 'TR__ ____ ____ ____ ____ ____ __',
+        currencyLabel: 'Para Birimi',
         addButton: 'Ekle',
         empty: 'Henüz banka hesabı tanımlanmadı. Teklif formunda bu alan boş görünür.',
         editButton: 'Düzenle',
@@ -953,6 +954,7 @@ export const tr = {
         accountHolderColumn: 'Alıcı Adı',
         accountNumberColumn: 'Hesap No',
         ibanColumn: 'IBAN',
+        currencyColumn: 'Para Birimi',
       },
       inactivityThreshold: {
         title: 'İletişim Kurulmama Bildirimi',
