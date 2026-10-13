@@ -3379,6 +3379,69 @@ export function deletePurchaseOrder(id: string): Promise<void> {
   return request(`/purchase-orders/${id}`, { method: 'DELETE' });
 }
 
+// Ad-hoc: Satis Siparisi (kullanici istegi, bkz. CLAUDE.md) - Quote APPROVED olunca
+// otomatik olusur, burada sadece okunur/durumu guncellenir (CREATE/DELETE yok).
+
+export type SalesOrderStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'READY_FOR_SHIPMENT'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export interface SalesOrder {
+  id: string;
+  orderNumber: string;
+  quoteId: string;
+  accountId: string;
+  account: Account;
+  contactId: string | null;
+  contact: Contact | null;
+  /** Kendi kalem tablosu YOK - satilan kalemler quote.items'tan salt-okunur
+   * gosterilir (bkz. backend SalesOrder model doc comment'i). */
+  quote: Quote | null;
+  status: SalesOrderStatus;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateSalesOrderInput {
+  status: SalesOrderStatus;
+}
+
+export function listSalesOrders(
+  params: {
+    page?: number;
+    pageSize?: number;
+    accountId?: string;
+    status?: SalesOrderStatus;
+    q?: string;
+  } = {},
+): Promise<PagedResult<SalesOrder>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/sales-orders${qs ? `?${qs}` : ''}`);
+}
+
+export function getSalesOrder(id: string): Promise<SalesOrder> {
+  return request(`/sales-orders/${id}`);
+}
+
+export function updateSalesOrderStatus(
+  id: string,
+  input: UpdateSalesOrderInput,
+): Promise<SalesOrder> {
+  return request(`/sales-orders/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
 export interface StockItemWarehouseBreakdown {
   warehouseId: string;
   warehouseName: string;

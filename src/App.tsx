@@ -30,6 +30,7 @@ import { InteractionFormPage } from './app/interaction-form-page';
 import { InteractionImportPage } from './app/interaction-import-page';
 import { InteractionsListPage } from './app/interactions-list-page';
 import { InventoryManagementPage } from './app/inventory-management-page';
+import { OrdersManagementPage } from './app/orders-management-page';
 import { LoginPage } from './app/login-page';
 import { NewCustomerPage } from './app/new-customer-page';
 import { OnboardingPage } from './app/onboarding-page';
@@ -59,7 +60,6 @@ import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
 import { PurchaseOrderCreatePage } from './app/purchase-order-create-page';
 import { PurchaseOrderDetailPage } from './app/purchase-order-detail-page';
 import { PurchaseOrderEditPage } from './app/purchase-order-edit-page';
-import { PurchaseOrderListPage } from './app/purchase-order-list-page';
 import { QuoteDetailPage } from './app/quote-detail-page';
 import { QuoteEditPage } from './app/quote-edit-page';
 import { QuoteFormPage } from './app/quote-form-page';
@@ -69,6 +69,7 @@ import { QuoteTemplateFormPage } from './app/quote-template-form-page';
 import { QuoteTemplateListPage } from './app/quote-template-list-page';
 import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
 import { ReportsPage } from './app/reports-page';
+import { SalesOrderDetailPage } from './app/sales-order-detail-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
 import { UserStatsPage } from './app/user-stats-page';
@@ -536,8 +537,16 @@ function App() {
         <Route
           path="/siparisler"
           element={
-            <TenantPageRoute pageKey="purchase-orders">
-              <PurchaseOrderListPage />
+            <ProtectedRoute>
+              <OrdersManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/satis-siparisleri/:id"
+          element={
+            <TenantPageRoute pageKey="sales-orders">
+              <SalesOrderDetailPage />
             </TenantPageRoute>
           }
         />

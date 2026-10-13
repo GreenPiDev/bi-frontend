@@ -95,7 +95,7 @@ export const tr = {
     productImports:
       'Farklı tedarikçilerin (marka) fiyat listesi dosyalarını bu ürün listesine aktarın. Dosyanız standart olmasa da (kolon sırası/sayısı farklı, başlık ilk satırda olmayabilir) her adımda ne yapılacağını siz seçersiniz; marka\'ya özgü sütunlar kaybolmaz, ürünün "özel alanları" olarak saklanır.',
     quotes:
-      'Müşterilerinize gönderdiğiniz tekliflerin listesi, durumlarına göre filtrelenebilir. Onaylanmış bir teklif otomatik olarak satış sonrası desteğe ve isterseniz satın alma siparişine dönüşür.',
+      'Müşterilerinize gönderdiğiniz tekliflerin listesi, durumlarına göre filtrelenebilir. Onaylanmış bir teklif otomatik olarak satış sonrası desteğe ve bir satış siparişine, isterseniz ayrıca satın alma siparişine dönüşür.',
     quoteImports:
       'Eski sisteminizden aldığınız teklif raporlarını (genelde kalem/ürün detayı olmayan, sadece toplam tutar içeren excel dosyaları) buraya aktarın. Aktarılan teklifler kalem detayı taşımaz, sadece toplam tutar olarak görünür.',
     quoteDetail:
@@ -109,6 +109,10 @@ export const tr = {
     projects:
       'Müşteri işleriniz için açılan projelerin listesi. Bir proje isteğe bağlı olarak bir teklife bağlanabilir.',
     projectDetail: 'Bu projenin bütçe/maliyet bilgilerini ve varsa bağlı teklifini görüntüleyin.',
+    salesOrders:
+      'Onaylanan tekliflerden otomatik oluşan satış siparişlerinin listesi. Siparişin durumunu (beklemede, işlemde, sevkiyata hazır, sevk edildi, teslim edildi, tamamlandı, iptal edildi) buradan takip edip güncelleyebilirsiniz.',
+    salesOrderDetail:
+      'Bu satış siparişinin durumunu güncelleyin; ilişkili teklifi ve varsa projeyi görüntüleyin.',
     purchaseOrders:
       'Onaylanmış tekliflerden oluşturulan satın alma siparişlerinin listesi. Bir siparişin kalemlerini buradan düzenleyebilirsiniz.',
     purchaseOrderCreate:
@@ -127,6 +131,8 @@ export const tr = {
       'Ürün kataloğunuzu, ürün listelerinizi (kataloglarınızı) ve stok durumunuzu tek yerden yönetin.',
     quoteManagement:
       'Tekliflerinizi ve teklif PDF çıktısında kullanılan şablonları tek yerden yönetin.',
+    ordersManagement:
+      'Onaylanan tekliflerden otomatik oluşan satış siparişlerini ve satın alma siparişlerinizi tek yerden yönetin.',
     reports:
       'Firmalar, kişiler, görüşmeler, projeler, teklifler, siparişler ve fırsatlarınızla ilgili raporları sekmeler halinde buradan görüntüleyin.',
     drawingSettings:
@@ -190,7 +196,7 @@ export const tr = {
       reports: 'Raporlar',
       postSaleSupport: 'Satış Sonrası Destek',
       projects: 'Projeler',
-      purchaseOrders: 'Satın Alma Siparişleri',
+      orders: 'Siparişler',
       inventory: 'Envanter Yönetimi',
       drawingSettings: 'Teknik Çizim',
       messages: 'Mesajlar',
@@ -282,6 +288,15 @@ export const tr = {
       quotes: 'Teklifler',
       reports: 'Raporlar',
       templates: 'Teklif Şablonları',
+    },
+  },
+  ordersManagement: {
+    title: 'Siparişler',
+    subtitle: 'Satış siparişleri ve satın alma siparişleri tek ekranda.',
+    noAccess: 'Bu sayfadaki sekmelerden hiçbirine erişim yetkiniz yok.',
+    tabs: {
+      salesOrders: 'Satış Siparişleri',
+      purchaseOrders: 'Satın Alma Siparişleri',
     },
   },
   reports: {
@@ -3053,6 +3068,46 @@ export const tr = {
         tooLarge: "Dosya boyutu 10 MB'ı aşamaz.",
         tooMany: 'En fazla 10 dosya eklenebilir.',
         uploadFailed: 'Dosya yüklenemedi.',
+      },
+    },
+    salesOrders: {
+      title: 'Satış Siparişleri',
+      subtitle: 'Onaylanan tekliflerden otomatik oluşan satış siparişlerini buradan takip edin.',
+      loading: 'Satış siparişleri yükleniyor...',
+      empty: 'Henüz satış siparişi yok.',
+      numberColumn: 'Sipariş No',
+      quoteColumn: 'Teklif',
+      accountColumn: 'Firma',
+      projectColumn: 'Proje',
+      statusColumn: 'Durum',
+      createdAtColumn: 'Oluşturulma Tarihi',
+      noProject: '—',
+      searchPlaceholder: 'Sipariş no, teklif no veya firma ara...',
+      copyOrderNumberButton: 'Sipariş Numarasını Kopyala',
+      orderNumberCopiedToast: 'Sipariş numarası panoya kopyalandı.',
+      statusFilterLabel: 'Durum',
+      allStatuses: 'Tümü',
+      statusUpdateSuccess: 'Durum güncellendi.',
+      statusUpdateError: 'Durum güncellenemedi.',
+      statusOptions: {
+        PENDING: 'Beklemede',
+        PROCESSING: 'İşlemde',
+        READY_FOR_SHIPMENT: 'Sevkiyata Hazır',
+        SHIPPED: 'Sevk Edildi',
+        DELIVERED: 'Teslim Edildi',
+        COMPLETED: 'Tamamlandı',
+        CANCELLED: 'İptal Edildi',
+      },
+      detail: {
+        back: 'Satış siparişlerine dön',
+        relatedQuoteLink: 'İlişkili teklifi gör',
+        relatedProjectLink: 'İlişkili projeyi gör',
+        itemsTitle: 'Teklif Kalemleri',
+        itemsEmpty: 'Bu teklif kalem detayı taşımıyor.',
+        productColumn: 'Ürün',
+        quantityColumn: 'Miktar',
+        unitPriceColumn: 'Birim Fiyat',
+        statusLabel: 'Durum',
       },
     },
     purchaseOrders: {

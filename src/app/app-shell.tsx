@@ -158,6 +158,7 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     quotes: useIsPageModuleAccessible('quotes'),
     'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
     projects: useIsPageModuleAccessible('projects'),
+    'sales-orders': useIsPageModuleAccessible('sales-orders'),
     'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
     stock: useIsPageModuleAccessible('stock'),
     warehouses: useIsPageModuleAccessible('warehouses'),
@@ -201,8 +202,8 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
     ...(canAccessPage('quotes')
       ? [{ label: tr.shell.nav.quotes, icon: FileText, path: '/teklifler' }]
       : []),
-    ...(canAccessPage('purchase-orders')
-      ? [{ label: tr.shell.nav.purchaseOrders, icon: Truck, path: '/siparisler' }]
+    ...(canAccessPage('purchase-orders') || canAccessPage('sales-orders')
+      ? [{ label: tr.shell.nav.orders, icon: Truck, path: '/siparisler' }]
       : []),
     ...(canAccessPage('post-sale-cases')
       ? [{ label: tr.shell.nav.postSaleSupport, icon: HeartHandshake, path: '/satis-sonrasi' }]

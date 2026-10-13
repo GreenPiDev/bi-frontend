@@ -76,7 +76,9 @@ function PurchaseOrderStatusSelect({ order }: { order: PurchaseOrder }) {
   );
 }
 
-export function PurchaseOrderListPage() {
+/** AppShell'siz icerik - /siparisler yonetim sayfasinda sekme olarak gomulur
+ * (bkz. inventory-management-page.tsx'teki *ListContent deseni). */
+export function PurchaseOrdersListContent() {
   const navigate = useNavigate();
   const toast = useToast();
   const [searchParams] = useSearchParams();
@@ -221,28 +223,20 @@ export function PurchaseOrderListPage() {
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
-    <AppShell>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{tr.crm.purchaseOrders.title}</h1>
-            <PageHelp text={tr.help.purchaseOrders} />
-          </div>
-          <p className="mt-1 text-sm text-app-muted">{tr.crm.purchaseOrders.subtitle}</p>
-        </div>
-        {canCreatePurchaseOrder && (
+    <div>
+      {canCreatePurchaseOrder && (
+        <div className="flex justify-end">
           <CircleIconButton
             icon={Plus}
             tooltip={tr.crm.purchaseOrders.newButton}
             variant="success"
             strokeWidth={3}
             onClick={() => navigate('/siparisler/yeni')}
-            className="mt-1"
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="relative mt-6 w-full">
+      <div className="relative mt-4 w-full">
         <Search
           size={16}
           className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
@@ -310,6 +304,21 @@ export function PurchaseOrderListPage() {
           onCancel={() => setDeletingOrder(undefined)}
         />
       )}
+    </div>
+  );
+}
+
+export function PurchaseOrderListPage() {
+  return (
+    <AppShell>
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold text-app-text">{tr.crm.purchaseOrders.title}</h1>
+        <PageHelp text={tr.help.purchaseOrders} />
+      </div>
+      <p className="mt-1 text-sm text-app-muted">{tr.crm.purchaseOrders.subtitle}</p>
+      <div className="mt-6">
+        <PurchaseOrdersListContent />
+      </div>
     </AppShell>
   );
 }
