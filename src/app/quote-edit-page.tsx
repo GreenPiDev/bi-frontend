@@ -1,9 +1,10 @@
-import { Search, X } from 'lucide-react';
+import { ArrowRight, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
+import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { FormError } from '../components/ui/form-error';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
@@ -11,6 +12,7 @@ import { Select } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import {
   QuoteExchangeRatesSection,
@@ -20,7 +22,7 @@ import { decodeIbanSelection } from '../features/crm/iban-selection';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
-import { useProductsQuery } from '../features/crm/use-products';
+import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
 import {
   useQuoteAssignableUsersQuery,
   useQuoteQuery,
@@ -165,6 +167,14 @@ export function QuoteEditPage() {
     { enabled: Boolean(productListId) },
   );
   const pickerProducts = productsQuery.data?.data ?? [];
+  const pickerAttributeKeysQuery = useProductAttributeKeysQuery();
+  const pickerAttributeKeys = [...(pickerAttributeKeysQuery.data ?? [])].sort();
+  const pickerAttributeColumns: TableColumn<Product>[] = pickerAttributeKeys.map((key) => ({
+    key: `attr:${key}`,
+    header: key,
+    className: 'text-app-muted',
+    render: (product) => product.attributes?.[key] ?? '—',
+  }));
 
   // Yeni urun ekleme paneli (picker tablosundaki satira tiklayinca acilir).
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
@@ -232,6 +242,122 @@ export function QuoteEditPage() {
     setAddingProductId(null);
     toast.success(tr.crm.quotes.form.itemAddSuccess);
   }
+
+  // Satırdaki ok ikonuna basınca, detay panelini açmadan ürünü varsayılan miktar/fiyat/KDV
+  // ile doğrudan teklife ekler (handleToggleAdd + handleAddItem'in kısayolu, bkz.
+  // quote-form-page.tsx'teki handleQuickAdd).
+  function handleQuickAdd(product: Product) {
+    if (!product.price) {
+      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
+      return;
+    }
+    setItems((prev) => [
+      ...(prev ?? []),
+      {
+        productId: product.id,
+        productName: product.name,
+        quantity: '1',
+        unitPrice: product.price ?? '',
+        currency: product.currency,
+        discountPct: '0',
+        vatPct: defaultVatPct,
+      },
+    ]);
+    if (addingProductId === product.id) setAddingProductId(null);
+    toast.success(tr.crm.quotes.form.itemAddSuccess);
+  }
+
+  const ALL_PICKER_COLUMNS: TableColumn<Product>[] = [
+    {
+      key: 'product',
+      header: tr.crm.quotes.form.pickerProductColumn,
+      required: true,
+      render: (product) => product.name,
+    },
+    {
+      key: 'sku',
+      header: tr.crm.products.skuColumn,
+      className: 'text-app-muted',
+      render: (product) => product.sku ?? '—',
+    },
+    {
+      key: 'unit',
+      header: tr.crm.quotes.form.pickerUnitColumn,
+      className: 'text-app-muted',
+      render: (product) => product.unit,
+    },
+    {
+      key: 'category',
+      header: tr.crm.products.categoryColumn,
+      className: 'text-app-muted',
+      render: (product) => product.category ?? '—',
+    },
+    {
+      key: 'brand',
+      header: tr.crm.products.brandColumn,
+      className: 'text-app-muted',
+      render: (product) => product.brand ?? '—',
+    },
+    {
+      key: 'maxDiscountPct',
+      header: tr.crm.products.maxDiscountColumn,
+      className: 'text-app-muted',
+      render: (product) => (product.maxDiscountPct ? `%${product.maxDiscountPct}` : '—'),
+    },
+    {
+      key: 'price',
+      header: tr.crm.quotes.form.pickerPriceColumn,
+      className: 'text-app-muted',
+      render: (product) =>
+        product.price !== null
+          ? `${plainNumber.format(Number(product.price))} ${product.currency}`
+          : '—',
+    },
+    {
+      key: 'avgCost',
+      header: tr.crm.products.avgCostColumn,
+      className: 'text-app-muted',
+      render: (product) => (product.avgCost != null ? product.avgCost : '—'),
+    },
+    {
+      key: 'minStockLevel',
+      header: tr.crm.products.minStockLevelColumn,
+      className: 'text-app-muted',
+      render: (product) => (product.minStockLevel != null ? product.minStockLevel : '—'),
+    },
+    {
+      key: 'description',
+      header: tr.crm.products.descriptionColumn,
+      className: 'text-app-muted',
+      render: (product) => product.description ?? '—',
+    },
+    ...pickerAttributeColumns,
+    {
+      key: 'quickAdd',
+      header: '',
+      required: true,
+      className: 'w-8',
+      render: (product) => (
+        <IconActionButton
+          icon={ArrowRight}
+          tooltip={tr.crm.quotes.form.quickAddTooltip}
+          onClick={() => handleQuickAdd(product)}
+        />
+      ),
+    },
+  ];
+
+  const {
+    isColumnVisible: isPickerColumnVisible,
+    optionalColumns: optionalPickerColumns,
+    visibleOptionalKeys: visiblePickerKeys,
+    setVisibleOptionalKeys: setVisiblePickerKeys,
+  } = useColumnVisibility(
+    'quote-product-picker',
+    ALL_PICKER_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
+    ['price'],
+  );
+  const pickerColumns = ALL_PICKER_COLUMNS.filter((c) => isPickerColumnVisible(c.key));
 
   // Ozet tablosundaki mevcut satirlara tiklayinca acilan duzenleme paneli - ayni
   // yeni-urun-ekleme panelinin deseni (bkz. quote-form-page.tsx).
@@ -407,36 +533,6 @@ export function QuoteEditPage() {
 
   const apiErrorMessage =
     updateMutation.error instanceof ApiError ? updateMutation.error.message : undefined;
-
-  const pickerColumns: TableColumn<Product>[] = [
-    {
-      key: 'product',
-      header: tr.crm.quotes.form.pickerProductColumn,
-      render: (product) => (
-        <>
-          {product.name}
-          {product.sku && (
-            <span className="ml-1.5 font-normal text-app-muted">({product.sku})</span>
-          )}
-        </>
-      ),
-    },
-    {
-      key: 'unit',
-      header: tr.crm.quotes.form.pickerUnitColumn,
-      className: 'w-24 text-app-muted',
-      render: (product) => product.unit,
-    },
-    {
-      key: 'price',
-      header: tr.crm.quotes.form.pickerPriceColumn,
-      className: 'w-32 text-app-muted',
-      render: (product) =>
-        product.price !== null
-          ? `${plainNumber.format(Number(product.price))} ${product.currency}`
-          : '—',
-    },
-  ];
 
   function renderAddPanel(product: Product) {
     return (
@@ -686,20 +782,27 @@ export function QuoteEditPage() {
 
               <p className="mt-3 text-xs text-app-muted">{tr.crm.quotes.form.pickerHint}</p>
 
-              <div className="relative mt-3">
-                <Search
-                  size={16}
-                  className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-                />
-                <input
-                  type="search"
-                  value={pickerQuery}
-                  onChange={(event) => {
-                    setPickerPage(1);
-                    setPickerQuery(event.target.value);
-                  }}
-                  placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
-                  className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <div className="relative flex-1">
+                  <Search
+                    size={16}
+                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+                  />
+                  <input
+                    type="search"
+                    value={pickerQuery}
+                    onChange={(event) => {
+                      setPickerPage(1);
+                      setPickerQuery(event.target.value);
+                    }}
+                    placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
+                    className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+                  />
+                </div>
+                <ColumnVisibilityPicker
+                  columns={optionalPickerColumns}
+                  value={visiblePickerKeys}
+                  onChange={setVisiblePickerKeys}
                 />
               </div>
 
