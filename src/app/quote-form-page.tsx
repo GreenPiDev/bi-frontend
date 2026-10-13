@@ -19,7 +19,12 @@ import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
-import { decodeIbanSelection, encodeIbanOptionSelection } from '../features/crm/iban-selection';
+import {
+  decodeIbanSelection,
+  encodeIbanGroupSelection,
+  encodeIbanOptionSelection,
+} from '../features/crm/iban-selection';
+import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
@@ -185,6 +190,17 @@ export function QuoteFormPage() {
       setValue('senderId', meQuery.data.id);
     }
   }, [meQuery.data, dirtyFields.senderId, setValue]);
+
+  // Varsayilan hesap grubu (bkz. IbanOptionGroup.isDefault) teklif IBAN
+  // secimine onceden secili gelir - kullanici elle degistirirse (dirty) bir
+  // sonraki fetch ile ezilmez, senderId ile ayni desen.
+  const ibanOptionGroupsQuery = useIbanOptionGroupsQuery();
+  useEffect(() => {
+    const defaultGroup = ibanOptionGroupsQuery.data?.find((group) => group.isDefault);
+    if (defaultGroup && !dirtyFields.ibanSelection) {
+      setValue('ibanSelection', encodeIbanGroupSelection(defaultGroup.id));
+    }
+  }, [ibanOptionGroupsQuery.data, dirtyFields.ibanSelection, setValue]);
 
   // Kosul metni alanlari (odeme/satis/teslimat/genel hukumler), ayarlardaki varsayilan
   // degerlerle doldurulur. tenantSettingsQuery baska bir sekmede ayar kaydedilince

@@ -1255,11 +1255,15 @@ export function deleteQuoteRejectionReasonOption(id: string): Promise<void> {
 export interface IbanOptionGroup {
   id: string;
   name: string;
+  /** /teklifler/yeni'de IBAN secimi varsayilan olarak bu gruba onceden secili
+   * gelir - tenant basina en fazla bir grup isDefault=true olabilir. */
+  isDefault: boolean;
   createdAt: string;
 }
 
 export interface IbanOptionGroupInput {
   name: string;
+  isDefault?: boolean;
 }
 
 export function listIbanOptionGroups(): Promise<IbanOptionGroup[]> {

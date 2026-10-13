@@ -977,6 +977,9 @@ export const tr = {
         deleteSuccess: 'Hesap grubu silindi.',
         nameColumn: 'Grup Adı',
         accountCountColumn: 'Hesap Sayısı',
+        defaultLabel: 'Varsayılan hesap grubu',
+        defaultColumn: 'Varsayılan',
+        defaultBadge: 'Varsayılan',
       },
       inactivityThreshold: {
         title: 'İletişim Kurulmama Bildirimi',

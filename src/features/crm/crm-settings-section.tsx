@@ -1,10 +1,12 @@
 import { Check, Pencil, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Select } from '../../components/ui/select';
+import { Switch } from '../../components/ui/switch';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextareaField } from '../../components/ui/textarea-field';
 import { TextField } from '../../components/ui/text-field';
@@ -735,8 +737,10 @@ function IbanOptionGroupsManager() {
   const deleteMutation = useDeleteIbanOptionGroupMutation();
 
   const [name, setName] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [editIsDefault, setEditIsDefault] = useState(false);
 
   function handleApiError(error: unknown) {
     toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
@@ -747,11 +751,12 @@ function IbanOptionGroupsManager() {
       return;
     }
     createMutation.mutate(
-      { name: name.trim() },
+      { name: name.trim(), isDefault },
       {
         onSuccess: () => {
           toast.success(tr.settings.crm.ibanOptionGroups.addSuccess);
           setName('');
+          setIsDefault(false);
         },
         onError: handleApiError,
       },
@@ -761,11 +766,13 @@ function IbanOptionGroupsManager() {
   function startEdit(group: IbanOptionGroup) {
     setEditingId(group.id);
     setEditName(group.name);
+    setEditIsDefault(group.isDefault);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditName('');
+    setEditIsDefault(false);
   }
 
   function handleSaveEdit() {
@@ -773,7 +780,7 @@ function IbanOptionGroupsManager() {
       return;
     }
     updateMutation.mutate(
-      { id: editingId, input: { name: editName.trim() } },
+      { id: editingId, input: { name: editName.trim(), isDefault: editIsDefault } },
       {
         onSuccess: () => {
           toast.success(tr.settings.crm.ibanOptionGroups.editSuccess);
@@ -803,6 +810,16 @@ function IbanOptionGroupsManager() {
       render: (g) => accountCountFor(g.id),
     },
     {
+      key: 'isDefault',
+      header: tr.settings.crm.ibanOptionGroups.defaultColumn,
+      render: (g) =>
+        g.isDefault ? (
+          <Badge variant="success">{tr.settings.crm.ibanOptionGroups.defaultBadge}</Badge>
+        ) : (
+          '—'
+        ),
+    },
+    {
       key: 'actions',
       header: '',
       className: 'w-16',
@@ -829,13 +846,19 @@ function IbanOptionGroupsManager() {
       title={tr.settings.crm.ibanOptionGroups.title}
       subtitle={tr.settings.crm.ibanOptionGroups.subtitle}
     >
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
         <TextField
           label={tr.settings.crm.ibanOptionGroups.nameLabel}
           placeholder={tr.settings.crm.ibanOptionGroups.namePlaceholder}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
+        <div className="flex items-center gap-2">
+          <Switch checked={isDefault} onChange={setIsDefault} />
+          <span className="text-sm font-semibold text-app-text">
+            {tr.settings.crm.ibanOptionGroups.defaultLabel}
+          </span>
+        </div>
       </div>
       <Button
         type="button"
@@ -865,7 +888,13 @@ function IbanOptionGroupsManager() {
                 value={editName}
                 onChange={(event) => setEditName(event.target.value)}
               />
-              <div className="col-span-2 flex gap-2">
+              <div className="flex items-center gap-2">
+                <Switch checked={editIsDefault} onChange={setEditIsDefault} />
+                <span className="text-sm font-semibold text-app-text">
+                  {tr.settings.crm.ibanOptionGroups.defaultLabel}
+                </span>
+              </div>
+              <div className="flex gap-2">
                 <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
                   {tr.settings.crm.ibanOptionGroups.saveButton}
                 </Button>
