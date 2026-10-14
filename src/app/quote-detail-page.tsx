@@ -52,9 +52,9 @@ import {
   exportQuotePdf,
   getQuotePrintData,
   type Drawing,
+  type IbanAccountSnapshot,
   type Quote,
   type QuoteItem,
-  type QuotePrintCompanyData,
   type QuotePrintSenderData,
   type QuoteRevisionSnapshot,
   type QuoteStatus,
@@ -172,7 +172,6 @@ export function QuoteContentBody({
   isPrintMode = false,
   onOpportunityClick,
   onProjectClick,
-  company,
   sender,
 }: {
   quote: Quote;
@@ -181,7 +180,6 @@ export function QuoteContentBody({
   onProjectClick?: (projectNumber: string) => void;
   /** Sadece yazdirma gorunumunde (isPrintMode) dolu gelir - bkz.
    * docs/VARSAYIMLAR.md "sirket bilgileri"/"gonderen" parite notu. */
-  company?: QuotePrintCompanyData;
   sender?: QuotePrintSenderData | null;
 }) {
   const totals = computeTotals(quote);
@@ -220,6 +218,35 @@ export function QuoteContentBody({
       header: tr.crm.quotes.statusTab.noteColumn,
       render: (entry) => (
         <TruncatedTextCell text={entry.note} onOpen={() => setRevisionNoteModalEntry(entry)} />
+      ),
+    },
+  ];
+
+  const bankColumns: TableColumn<IbanAccountSnapshot>[] = [
+    {
+      key: 'bankName',
+      header: tr.crm.quotes.detail.bankNameLabel,
+      render: (account) => account.bankName,
+    },
+    {
+      key: 'accountHolderName',
+      header: tr.crm.quotes.detail.accountHolderNameLabel,
+      render: (account) => account.accountHolderName,
+    },
+    {
+      key: 'accountNumber',
+      header: tr.crm.quotes.detail.accountNumberLabel,
+      className: 'whitespace-nowrap',
+      render: (account) => account.accountNumber ?? '—',
+    },
+    {
+      key: 'iban',
+      header: tr.crm.quotes.detail.ibanLabel,
+      className: 'whitespace-nowrap',
+      render: (account) => (
+        <span className="whitespace-nowrap">
+          {formatIbanInput(account.iban)} - {account.currency}
+        </span>
       ),
     },
   ];
@@ -485,66 +512,57 @@ export function QuoteContentBody({
 
       {quote.ibanAccounts && quote.ibanAccounts.length > 0 && (
         <div className="print-page-break mt-8">
-          <div className="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-sm">
-            <SectionHeader>{tr.crm.quotes.detail.bankDetailsTitle}</SectionHeader>
-            {quote.ibanAccounts.map((account, index) => (
-              <div
-                key={`${account.iban}-${index}`}
-                className={clsx(
-                  'gap-4',
-                  isPrintMode ? 'flex flex-col' : 'grid grid-cols-2 sm:grid-cols-5',
-                  index > 0 && 'border-t border-app-border pt-4',
-                )}
-              >
-                <MetaCell label={tr.crm.quotes.detail.bankNameLabel}>{account.bankName}</MetaCell>
-                <MetaCell label={tr.crm.quotes.detail.accountHolderNameLabel}>
-                  {account.accountHolderName}
-                </MetaCell>
-                {account.accountNumber && (
-                  <MetaCell label={tr.crm.quotes.detail.accountNumberLabel}>
-                    {account.accountNumber}
-                  </MetaCell>
-                )}
-                <MetaCell label={tr.crm.quotes.detail.ibanLabel}>
-                  <span className="break-all">{formatIbanInput(account.iban)}</span>
-                </MetaCell>
-                <MetaCell label={tr.crm.quotes.detail.currencyLabel}>{account.currency}</MetaCell>
-              </div>
-            ))}
+          <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            {tr.crm.quotes.detail.bankDetailsTitle}
+          </h3>
+          <div className="mt-2 [&>div]:border-0 [&_table]:w-auto [&_table]:text-xs [&_td]:!py-1.5 [&_td]:!px-4 [&_th]:!py-1.5 [&_th]:!px-4 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_tr]:border-b-0 [&_tbody_td]:!text-black">
+            <Table
+              columns={bankColumns}
+              data={quote.ibanAccounts}
+              keyField={(account, index) => `${account.iban}-${index}`}
+            />
           </div>
         </div>
       )}
 
       {(quote.paymentTerms || quote.salesTerms || quote.deliveryTerms || quote.generalTerms) && (
-        <div className="print-page-break mt-8 flex flex-col gap-4 border-t border-app-border pt-6">
+        <div className="print-page-break mt-8 flex flex-col gap-4">
           {quote.paymentTerms && (
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-              <SectionHeader>{tr.crm.quotes.detail.paymentTermsTitle}</SectionHeader>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+                {tr.crm.quotes.detail.paymentTermsTitle}
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
                 {quote.paymentTerms}
               </p>
             </div>
           )}
           {quote.salesTerms && (
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-              <SectionHeader>{tr.crm.quotes.detail.salesTermsTitle}</SectionHeader>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+                {tr.crm.quotes.detail.salesTermsTitle}
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
                 {quote.salesTerms}
               </p>
             </div>
           )}
           {quote.deliveryTerms && (
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-              <SectionHeader>{tr.crm.quotes.detail.deliveryTermsTitle}</SectionHeader>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+                {tr.crm.quotes.detail.deliveryTermsTitle}
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
                 {quote.deliveryTerms}
               </p>
             </div>
           )}
           {quote.generalTerms && (
-            <div className="rounded-xl bg-white p-5 shadow-sm">
-              <SectionHeader>{tr.crm.quotes.detail.generalTermsTitle}</SectionHeader>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-black">
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+                {tr.crm.quotes.detail.generalTermsTitle}
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
                 {quote.generalTerms}
               </p>
             </div>
@@ -564,50 +582,38 @@ export function QuoteContentBody({
         </div>
       )}
 
-      {isPrintMode && (company || sender) && (
-        <div className="print-page-break mt-8 grid grid-cols-2 gap-8 border-t border-app-border pt-6 text-sm">
-          {company && (
-            <div>
-              <SectionHeader>{tr.crm.quotes.detail.companyInfoTitle}</SectionHeader>
-              <p className="font-semibold text-black">{company.name}</p>
-              {company.address && <p className="text-app-muted">{company.address}</p>}
-              {(company.phone || company.email) && (
-                <p className="mt-1 text-app-muted">
-                  {[company.phone, company.email].filter(Boolean).join(' · ')}
-                </p>
-              )}
-            </div>
-          )}
-          {sender && (
-            <div>
-              <SectionHeader>{tr.crm.quotes.detail.senderInfoTitle}</SectionHeader>
-              <p className="font-semibold text-black">{sender.name}</p>
-              {sender.title && <p className="text-app-muted">{sender.title}</p>}
-              {(sender.phone || sender.email) && (
-                <p className="mt-1 text-app-muted">
-                  {[sender.phone, sender.email].filter(Boolean).join(' · ')}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {isPrintMode && (
-        <div className="mt-12 grid grid-cols-2 gap-8 text-sm">
+        <div className="mt-12 grid grid-cols-2 gap-x-8 text-sm">
           <div>
-            <SectionHeader>{tr.crm.quotes.detail.representativeTitle}</SectionHeader>
-            {sender && <p className="font-semibold text-black">{sender.name}</p>}
+            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              {tr.crm.quotes.detail.representativeTitle}
+            </h3>
+            {sender && <p className="mt-1.5 text-sm font-bold text-app-text">{sender.name}</p>}
+            {sender?.title && <p className="text-sm text-app-muted">{sender.title}</p>}
+            {sender?.phone && (
+              <p className="mt-1 flex gap-2 text-sm text-app-muted">
+                <span>{tr.crm.quoteTemplatePrint.phoneLabel} :</span>
+                <span>{sender.phone}</span>
+              </p>
+            )}
+            {sender?.email && (
+              <p className="flex gap-2 text-sm text-app-muted">
+                <span>{tr.crm.quoteTemplatePrint.emailLabel} :</span>
+                <span>{sender.email}</span>
+              </p>
+            )}
           </div>
           <div>
-            <SectionHeader>{tr.crm.quotes.detail.approvalTitle}</SectionHeader>
+            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              {tr.crm.quotes.detail.approvalTitle}
+            </h3>
             {quote.contact && (
-              <p className="font-semibold text-black">
+              <p className="mt-1.5 text-sm font-bold text-app-text">
                 {quote.contact.firstName} {quote.contact.lastName}
               </p>
             )}
-            <p className="mt-3 text-app-muted">{tr.crm.quotes.detail.signatureLabel}:</p>
-            <p className="mt-3 text-app-muted">{tr.crm.quotes.detail.approvalDateLabel}:</p>
+            <p className="mt-3 text-sm text-app-muted">{tr.crm.quotes.detail.signatureLabel}:</p>
+            <p className="mt-3 text-sm text-app-muted">{tr.crm.quotes.detail.approvalDateLabel}:</p>
           </div>
         </div>
       )}
@@ -1228,7 +1234,6 @@ export function QuoteDetailPage() {
               isPrintMode={isPrintMode}
               onOpportunityClick={(opportunityId) => navigate(`/firsatlar/${opportunityId}`)}
               onProjectClick={(projectNumber) => navigate(`/projeler/${projectNumber}`)}
-              company={printDataQuery.data?.company}
               sender={printDataQuery.data?.sender}
             />
           )}
