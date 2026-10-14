@@ -34,7 +34,6 @@ import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
 import { MessagingWidget } from '../features/crm/messaging-widget';
-import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
 import { useUnreadConversationsTotal } from '../features/crm/use-messages';
 import { NotificationBell } from '../features/notifications/notification-bell';
@@ -92,11 +91,6 @@ export function AppShell({
 }: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
-  // Header ortasinda arka planda buyuk "filigran" olarak gosterilen sirket logosu
-  // (bkz. /settings?tab=crm "Sirket Logosu") - print modda kullanilmiyor, o zaten
-  // kendi printLogoUrl'ini ayri render ediyor.
-  const tenantProfileQuery = useTenantProfileQuery(!print);
-  const watermarkLogoUrl = tenantProfileQuery.data?.logoUrl;
   const [sidebarOpen, setSidebarOpenState] = useState(persistedSidebarOpen);
   const setSidebarOpen = (value: boolean) => {
     persistedSidebarOpen = value;
@@ -471,19 +465,6 @@ export function AppShell({
             );
           })}
         </ul>
-        {watermarkLogoUrl && (
-          <div className="mt-auto flex shrink-0 items-center justify-center overflow-hidden border-t border-white/20 px-3 py-4">
-            <img
-              src={watermarkLogoUrl}
-              alt=""
-              aria-hidden="true"
-              className={clsx(
-                'object-contain opacity-80 transition-[height,width] duration-200',
-                sidebarOpen ? 'h-16 w-full' : 'h-8 w-8',
-              )}
-            />
-          </div>
-        )}
       </nav>
 
       {!sidebarOpen && hoveredNavItem && (
