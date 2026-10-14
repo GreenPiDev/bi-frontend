@@ -58,6 +58,18 @@ interface AppShellProps {
    * (bkz. /settings?tab=crm "Sirket Logosu") kullanilir. Verilmezse/null ise
    * PiLens logosu gosterilmeye devam eder (dashboard PDF export'u gibi). */
   printLogoUrl?: string | null;
+  /** print=true iken logonun hemen yaninda gosterilecek baslik (orn. teklif
+   * PDF'inde "Fiyat Teklifi") - verilmezse (dashboard/rapor PDF export'u gibi)
+   * sadece logo gosterilmeye devam eder. */
+  printTitle?: string;
+  /** print=true iken header'in sag tarafinda gosterilecek, saga hizali 1-2
+   * satirlik meta bilgi (orn. teklif tarihi + teklif numarasi). */
+  printMeta?: ReactNode;
+  /** print=true iken bu body-ici header'i tamamen gizler - teklif PDF'i artik
+   * ayni header'i Playwright'in displayHeaderFooter/headerTemplate mekanizmasiyla
+   * HER SAYFADA tekrar ediyor (bkz. quote-pdf.service.ts buildHeaderTemplate),
+   * bu yuzden tek seferlik body render'i gereksiz/cift gorunum yaratir. */
+  hidePrintHeader?: boolean;
 }
 
 // AppShell paylasilan/kalici bir layout degil - her sayfa kendi icinde <AppShell>
@@ -70,7 +82,14 @@ interface AppShellProps {
 // deger true olarak kalir.
 let persistedSidebarOpen = false;
 
-export function AppShell({ children, print = false, printLogoUrl }: AppShellProps) {
+export function AppShell({
+  children,
+  print = false,
+  printLogoUrl,
+  printTitle,
+  printMeta,
+  hidePrintHeader = false,
+}: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
   // Header ortasinda arka planda buyuk "filigran" olarak gosterilen sirket logosu
@@ -253,15 +272,40 @@ export function AppShell({ children, print = false, printLogoUrl }: AppShellProp
   if (print) {
     return (
       <div className="print-mode min-h-screen bg-white">
-        <header className="flex h-16 items-center border-b border-gray-200 bg-white px-5">
-          <img
-            src={printLogoUrl || '/pilens-logo.png'}
-            alt={tr.common.appName}
-            className="h-11 w-auto object-contain"
-          />
-        </header>
+        {!hidePrintHeader && (
+          <header
+            className={clsx(
+              'flex h-16 items-center justify-between bg-white px-5',
+              printTitle ? 'border-b-2' : 'border-b border-gray-200',
+            )}
+            style={printTitle ? { borderColor: '#8bc34a' } : undefined}
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src={printLogoUrl || '/pilens-logo.png'}
+                alt={tr.common.appName}
+                className="h-11 w-auto object-contain"
+              />
+              {printTitle && (
+                <span className="text-xl font-bold" style={{ color: '#8bc34a' }}>
+                  {printTitle}
+                </span>
+              )}
+            </div>
+            {printMeta && (
+              <div className="text-right text-sm font-bold text-app-text">{printMeta}</div>
+            )}
+          </header>
+        )}
         <main>
-          <div className="p-6 md:p-8">{children}</div>
+          <div
+            className={clsx(
+              'px-6 pb-6 md:px-8 md:pb-8',
+              hidePrintHeader ? 'pt-0' : printTitle ? 'pt-3' : 'pt-6 md:pt-8',
+            )}
+          >
+            {children}
+          </div>
         </main>
       </div>
     );

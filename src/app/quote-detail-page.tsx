@@ -265,29 +265,70 @@ export function QuoteContentBody({
 
   return (
     <>
+      {isPrintMode && (
+        <div className="grid grid-cols-2 gap-x-8 pt-1 text-sm">
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              {tr.crm.quoteTemplatePrint.accountInfoTitle}
+            </h3>
+            <p className="mt-1.5 text-sm font-bold text-app-text">{quote.account.name}</p>
+            {quote.account.address && (
+              <p className="text-sm text-app-muted">{quote.account.address}</p>
+            )}
+            {(quote.account.district || quote.account.city) && (
+              <p className="text-sm text-app-muted">
+                {[quote.account.district, quote.account.city].filter(Boolean).join(' / ')}
+              </p>
+            )}
+          </div>
+          <div className="text-right">
+            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              {tr.crm.quoteTemplatePrint.senderInfoTitle}
+            </h3>
+            {sender && <p className="mt-1.5 text-sm font-bold text-app-text">{sender.name}</p>}
+            {sender?.title && <p className="text-sm text-app-muted">{sender.title}</p>}
+            {sender?.phone && (
+              <p className="flex justify-end gap-2 text-sm text-app-muted">
+                <span>{tr.crm.quoteTemplatePrint.phoneLabel} :</span>
+                <span>{sender.phone}</span>
+              </p>
+            )}
+            {sender?.email && (
+              <p className="flex justify-end gap-2 text-sm text-app-muted">
+                <span>{tr.crm.quoteTemplatePrint.emailLabel} :</span>
+                <span>{sender.email}</span>
+              </p>
+            )}
+          </div>
+          <div className="col-span-2 mt-1 h-0.5" style={{ backgroundColor: '#8bc34a' }} />
+        </div>
+      )}
       <div
         className={clsx(
           'grid grid-cols-2 gap-4 sm:divide-x sm:divide-app-border',
-          isPrintMode
-            ? 'border-y border-app-border py-4'
-            : 'rounded-xl border border-app-border bg-white p-5',
-          !isPrintMode && quote.project ? 'sm:grid-cols-5' : 'sm:grid-cols-4',
+          isPrintMode ? 'border-b-2 py-4' : 'rounded-xl border border-app-border bg-white p-5',
+          isPrintMode ? 'sm:grid-cols-2' : quote.project ? 'sm:grid-cols-5' : 'sm:grid-cols-4',
         )}
+        style={isPrintMode ? { borderColor: '#8bc34a' } : undefined}
       >
-        <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
-          {dateFormatter.format(new Date(quote.quoteDate))}
-        </MetaCell>
+        {!isPrintMode && (
+          <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
+            {dateFormatter.format(new Date(quote.quoteDate))}
+          </MetaCell>
+        )}
         <MetaCell label={tr.crm.quotes.detail.leadTimeLabel}>
           {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
         </MetaCell>
         <MetaCell label={tr.crm.quotes.detail.paymentMethodLabel}>
           {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
         </MetaCell>
-        <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
-          {conversion && conversion.missingRateCurrencies.length === 0
-            ? formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)
-            : totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ')}
-        </MetaCell>
+        {!isPrintMode && (
+          <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
+            {conversion && conversion.missingRateCurrencies.length === 0
+              ? formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)
+              : totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ')}
+          </MetaCell>
+        )}
         {!isPrintMode && quote.project && (
           <MetaCell label={tr.crm.quotes.detail.relatedProjectLabel}>
             <Tooltip content={quote.project.name}>
@@ -344,8 +385,13 @@ export function QuoteContentBody({
       )}
 
       <div className="mt-8">
-        <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>
-        <div className="[&_tbody_td]:text-xs">
+        {!isPrintMode && <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>}
+        <div
+          className={clsx(
+            '[&_tbody_td]:text-xs',
+            isPrintMode && '[&_thead]:bg-black [&_td]:!py-1 [&_th]:!py-1',
+          )}
+        >
           <Table
             columns={itemColumns}
             data={quote.items}
@@ -938,7 +984,11 @@ export function QuoteDetailPage() {
 
   if (quoteQuery.isPending || (needsPrintData && printDataQuery.isPending)) {
     return (
-      <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
+      <AppShell
+        print={isPrintMode}
+        printLogoUrl={tenantProfileQuery.data?.logoUrl}
+        hidePrintHeader={isPrintMode && activeTab !== 'cost' && activeTab !== 'charts'}
+      >
         <p className="text-sm text-app-muted">{tr.common.loading}</p>
       </AppShell>
     );
@@ -1025,35 +1075,48 @@ export function QuoteDetailPage() {
   }
 
   return (
-    <AppShell print={isPrintMode} printLogoUrl={tenantProfileQuery.data?.logoUrl}>
+    <AppShell
+      print={isPrintMode}
+      printLogoUrl={tenantProfileQuery.data?.logoUrl}
+      printTitle={tr.crm.quoteTemplatePrint.coverTitle}
+      printMeta={
+        isPrintMode && (activeTab === 'cost' || activeTab === 'charts') ? (
+          <>
+            <p>{dateFormatter.format(new Date(quote.quoteDate))}</p>
+            <p># {quote.quoteNumber}</p>
+          </>
+        ) : undefined
+      }
+      hidePrintHeader={isPrintMode && activeTab !== 'cost' && activeTab !== 'charts'}
+    >
       {!isPrintMode && <BackLink to={'/teklifler'} label={tr.crm.quotes.detail.back} />}
 
       <div
         className={clsx('flex flex-wrap items-start justify-between gap-4', !isPrintMode && 'mt-3')}
       >
-        <div className="min-w-0">
-          {!isPrintMode && (
+        {!isPrintMode && (
+          <div className="min-w-0">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-app-muted uppercase">
               {tr.crm.quotes.detail.documentEyebrow}
             </span>
-          )}
-          <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
-            <h1 className="text-4xl leading-tight font-bold text-app-text">{quote.quoteNumber}</h1>
-            {!isPrintMode && <PageHelp text={tr.help.quoteDetail} />}
-            {!isPrintMode && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+              <h1 className="text-4xl leading-tight font-bold text-app-text">
+                {quote.quoteNumber}
+              </h1>
+              <PageHelp text={tr.help.quoteDetail} />
               <Badge variant={STATUS_BADGE_VARIANT[quote.status]}>
                 {tr.crm.quotes.statusOptions[quote.status]}
               </Badge>
+            </div>
+            {quote.title && (
+              <p className="mt-1.5 text-sm font-semibold text-app-text">{quote.title}</p>
             )}
+            <p className="mt-1 text-sm text-app-muted">
+              {quote.account.name}
+              {quote.contact && ` · ${quote.contact.firstName} ${quote.contact.lastName}`}
+            </p>
           </div>
-          {quote.title && (
-            <p className="mt-1.5 text-sm font-semibold text-app-text">{quote.title}</p>
-          )}
-          <p className="mt-1 text-sm text-app-muted">
-            {quote.account.name}
-            {quote.contact && ` · ${quote.contact.firstName} ${quote.contact.lastName}`}
-          </p>
-        </div>
+        )}
         {!isPrintMode && activeTab === 'overview' && (
           <div className="flex items-center gap-2 pt-1">
             <CircleIconButton
