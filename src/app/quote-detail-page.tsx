@@ -52,7 +52,6 @@ import {
   exportQuotePdf,
   getQuotePrintData,
   type Drawing,
-  type IbanAccountSnapshot,
   type Quote,
   type QuoteItem,
   type QuotePrintSenderData,
@@ -222,34 +221,30 @@ export function QuoteContentBody({
     },
   ];
 
-  const bankColumns: TableColumn<IbanAccountSnapshot>[] = [
-    {
-      key: 'bankName',
-      header: tr.crm.quotes.detail.bankNameLabel,
-      render: (account) => account.bankName,
-    },
-    {
-      key: 'accountHolderName',
-      header: tr.crm.quotes.detail.accountHolderNameLabel,
-      render: (account) => account.accountHolderName,
-    },
-    {
-      key: 'accountNumber',
-      header: tr.crm.quotes.detail.accountNumberLabel,
-      className: 'whitespace-nowrap',
-      render: (account) => account.accountNumber ?? '—',
-    },
-    {
-      key: 'iban',
-      header: tr.crm.quotes.detail.ibanLabel,
-      className: 'whitespace-nowrap',
-      render: (account) => (
-        <span className="whitespace-nowrap">
-          {formatIbanInput(account.iban)} - {account.currency}
-        </span>
-      ),
-    },
-  ];
+  /** Ayni gruba ait ardisik banka hesaplarinin basina grubun logosunu tek
+   * seferlik, o blok kadar yuksek (rowSpan) basmak icin - bkz. gruplama kurali
+   * asagidaki bankLogoSpans kullanimi. */
+  const bankLogoSpans = new Map<number, { rowSpan: number; logoUrl: string | null }>();
+  if (quote.ibanAccounts) {
+    let index = 0;
+    while (index < quote.ibanAccounts.length) {
+      const groupId = quote.ibanAccounts[index].groupId;
+      let rowSpan = 1;
+      if (groupId) {
+        while (
+          index + rowSpan < quote.ibanAccounts.length &&
+          quote.ibanAccounts[index + rowSpan].groupId === groupId
+        ) {
+          rowSpan += 1;
+        }
+      }
+      bankLogoSpans.set(index, { rowSpan, logoUrl: quote.ibanAccounts[index].groupLogoUrl });
+      index += rowSpan;
+    }
+  }
+  /** Hicbir hesap grubunun logosu yoksa, bos bir sutun/bosluk birakmamak icin
+   * logo sutununu tabloya hic eklemeyiz. */
+  const hasAnyBankLogo = [...bankLogoSpans.values()].some((span) => span.logoUrl);
 
   const itemColumns: TableColumn<QuoteItem>[] = [
     {
@@ -291,7 +286,12 @@ export function QuoteContentBody({
   ];
 
   return (
-    <>
+    <div
+      className={clsx(
+        isPrintMode &&
+          '[&_.text-app-muted]:!text-black [&_.text-app-danger]:!text-black [&_.border-app-border]:!border-[#8bc34a]',
+      )}
+    >
       {isPrintMode && (
         <div className="grid grid-cols-2 gap-x-8 pt-1 text-sm">
           <div>
@@ -332,7 +332,8 @@ export function QuoteContentBody({
       )}
       <div
         className={clsx(
-          'grid grid-cols-2 gap-4 sm:divide-x sm:divide-app-border',
+          'grid grid-cols-2 gap-4',
+          !isPrintMode && 'sm:divide-x sm:divide-app-border',
           isPrintMode ? 'border-b-2 py-4' : 'rounded-xl border border-app-border bg-white p-5',
           isPrintMode ? 'sm:grid-cols-2' : quote.project ? 'sm:grid-cols-5' : 'sm:grid-cols-4',
         )}
@@ -343,12 +344,35 @@ export function QuoteContentBody({
             {dateFormatter.format(new Date(quote.quoteDate))}
           </MetaCell>
         )}
-        <MetaCell label={tr.crm.quotes.detail.leadTimeLabel}>
-          {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
-        </MetaCell>
-        <MetaCell label={tr.crm.quotes.detail.paymentMethodLabel}>
-          {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
-        </MetaCell>
+        {isPrintMode ? (
+          <>
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+                {tr.crm.quotes.detail.leadTimeLabel}
+              </h3>
+              <p className="mt-1.5 text-sm font-medium text-app-text">
+                {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+                {tr.crm.quotes.detail.paymentMethodLabel}
+              </h3>
+              <p className="mt-1.5 text-sm font-medium text-app-text">
+                {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <MetaCell label={tr.crm.quotes.detail.leadTimeLabel}>
+              {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
+            </MetaCell>
+            <MetaCell label={tr.crm.quotes.detail.paymentMethodLabel}>
+              {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
+            </MetaCell>
+          </>
+        )}
         {!isPrintMode && (
           <MetaCell label={tr.crm.quotes.detail.grandTotalLabel}>
             {conversion && conversion.missingRateCurrencies.length === 0
@@ -416,7 +440,8 @@ export function QuoteContentBody({
         <div
           className={clsx(
             '[&_tbody_td]:text-xs',
-            isPrintMode && '[&_thead]:bg-black [&_td]:!py-1 [&_th]:!py-1',
+            isPrintMode &&
+              '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-white [&_tbody_tr:nth-child(even)]:!bg-[#e8f5e9]',
           )}
         >
           <Table
@@ -474,7 +499,7 @@ export function QuoteContentBody({
                     {formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)}
                   </span>
                 </div>
-                <p className="max-w-xs text-right text-[11px] text-app-muted">
+                <p className="text-right text-[11px] whitespace-nowrap text-app-muted">
                   {tr.crm.quotes.form.exchangeRateNote(
                     foreignCurrencyTotals.map(
                       (t) =>
@@ -515,13 +540,58 @@ export function QuoteContentBody({
           <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
             {tr.crm.quotes.detail.bankDetailsTitle}
           </h3>
-          <div className="mt-2 [&>div]:border-0 [&_table]:w-auto [&_table]:text-xs [&_td]:!py-1.5 [&_td]:!px-4 [&_th]:!py-1.5 [&_th]:!px-4 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_tr]:border-b-0 [&_tbody_td]:!text-black">
-            <Table
-              columns={bankColumns}
-              data={quote.ibanAccounts}
-              keyField={(account, index) => `${account.iban}-${index}`}
-            />
-          </div>
+          <table className="mt-2 w-auto text-xs">
+            <thead className="border-b border-app-border">
+              <tr>
+                {hasAnyBankLogo && <th className="px-4 py-1.5" />}
+                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                  {tr.crm.quotes.detail.bankNameLabel}
+                </th>
+                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                  {tr.crm.quotes.detail.accountHolderNameLabel}
+                </th>
+                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                  {tr.crm.quotes.detail.accountNumberLabel}
+                </th>
+                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                  {tr.crm.quotes.detail.ibanLabel}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {quote.ibanAccounts.map((account, index) => {
+                const span = bankLogoSpans.get(index);
+                return (
+                  <tr
+                    key={`${account.iban}-${index}`}
+                    className={index % 2 === 0 ? 'bg-white' : 'bg-[#e8f5e9]'}
+                  >
+                    {hasAnyBankLogo && span && (
+                      <td className="px-4 py-1.5 align-middle" rowSpan={span.rowSpan}>
+                        {span.logoUrl && (
+                          <img
+                            src={span.logoUrl}
+                            alt=""
+                            className="max-h-10 w-auto max-w-20 object-contain"
+                          />
+                        )}
+                      </td>
+                    )}
+                    <td className="px-4 py-1.5 whitespace-nowrap text-black">{account.bankName}</td>
+                    <td className="px-4 py-1.5 whitespace-nowrap text-black">
+                      {account.accountHolderName}
+                    </td>
+                    <td className="px-4 py-1.5 whitespace-nowrap text-black">
+                      {account.accountNumber ?? '—'}
+                    </td>
+                    <td className="px-4 py-1.5 whitespace-nowrap text-black">
+                      {formatIbanInput(account.iban)} - {account.currency}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -617,7 +687,7 @@ export function QuoteContentBody({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 

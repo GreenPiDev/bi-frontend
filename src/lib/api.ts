@@ -1258,7 +1258,10 @@ export interface IbanOptionGroup {
   /** /teklifler/yeni'de IBAN secimi varsayilan olarak bu gruba onceden secili
    * gelir - tenant basina en fazla bir grup isDefault=true olabilir. */
   isDefault: boolean;
+  logoKey: string | null;
+  logoUrl: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface IbanOptionGroupInput {
@@ -1289,6 +1292,16 @@ export function updateIbanOptionGroup(
 
 export function deleteIbanOptionGroup(id: string): Promise<void> {
   return request(`/iban-option-groups/${id}`, { method: 'DELETE' });
+}
+
+export function uploadIbanOptionGroupLogo(id: string, file: File): Promise<IbanOptionGroup> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request(`/iban-option-groups/${id}/logo`, { method: 'POST', body: formData });
+}
+
+export function removeIbanOptionGroupLogo(id: string): Promise<IbanOptionGroup> {
+  return request(`/iban-option-groups/${id}/logo`, { method: 'DELETE' });
 }
 
 export interface IbanOption {
@@ -2721,6 +2734,10 @@ export interface IbanAccountSnapshot {
   accountNumber: string | null;
   iban: string;
   currency: string;
+  /** Teklif PDF'inde ayni gruba ait ardisik kayitlarin basina grubun logosunu
+   * (varsa) bir kere basmak icin - bkz. quote-detail-page.tsx bank table. */
+  groupId: string | null;
+  groupLogoUrl: string | null;
 }
 
 export interface Quote {
@@ -2799,11 +2816,12 @@ export interface CreateQuoteInput {
   salesTerms?: string;
   deliveryTerms?: string;
   generalTerms?: string;
-  /** ibanOptionGroupId ile ayni anda verilemez. */
-  ibanOptionId?: string;
-  /** Secilirse gruptaki TUM hesaplar teklife snapshot'lanir. ibanOptionId ile
-   * ayni anda verilemez. */
-  ibanOptionGroupId?: string;
+  /** ibanOptionGroupIds ile birlikte verilebilir, ikisindeki TUM hesaplar
+   * birlestirilir. */
+  ibanOptionIds?: string[];
+  /** Secilen her gruptaki TUM hesaplar teklife snapshot'lanir. ibanOptionIds
+   * ile birlikte verilebilir. */
+  ibanOptionGroupIds?: string[];
   quoteCurrency: string;
   exchangeRates?: QuoteExchangeRates;
   /** Verilmezse tenant'in varsayilan sablonu otomatik atanir (varsa). */
@@ -2830,11 +2848,13 @@ export interface UpdateQuoteInput {
   salesTerms?: string | null;
   deliveryTerms?: string | null;
   generalTerms?: string | null;
-  /** ibanOptionGroupId ile ayni anda (ikisi de non-null) verilemez. */
-  ibanOptionId?: string | null;
-  /** Secilirse gruptaki TUM hesaplar teklife snapshot'lanir. ibanOptionId ile
-   * ayni anda verilemez. */
-  ibanOptionGroupId?: string | null;
+  /** Hic verilmezse mevcut IBAN snapshot'i korunur; verilirse (bos array dahil)
+   * ibanOptionGroupIds ile birlikte snapshot yeniden hesaplanir. */
+  ibanOptionIds?: string[];
+  /** Hic verilmezse mevcut IBAN snapshot'i korunur; verilirse (bos array dahil)
+   * ibanOptionIds ile birlikte snapshot yeniden hesaplanir - secilen her
+   * gruptaki TUM hesaplar dahil edilir. */
+  ibanOptionGroupIds?: string[];
   quoteCurrency?: string;
   exchangeRates?: QuoteExchangeRates;
   templateId?: string | null;

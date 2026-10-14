@@ -18,7 +18,7 @@ import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
-import { decodeIbanSelection } from '../features/crm/iban-selection';
+import { decodeIbanSelections } from '../features/crm/iban-selection';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -93,8 +93,9 @@ export function QuoteEditPage() {
   // snapshot'i olarak tasir (bkz. QuotesService.resolveIbanSnapshot) - bu
   // yuzden duzenlemede hangi tanimin secili oldugu bilinmez, kullanici
   // degistirmek isterse yeniden secer (encodeIbanOptionSelection/
-  // encodeIbanGroupSelection ile encode edilmis "option:<id>"/"group:<id>").
-  const [ibanSelection, setIbanSelection] = useState('');
+  // encodeIbanGroupSelection ile encode edilmis "option:<id>"/"group:<id>"
+  // degerlerinin dizisi - birden fazla grup/hesap secilebilir).
+  const [ibanSelections, setIbanSelections] = useState<string[]>([]);
   const [templateId, setTemplateId] = useState('');
   const [senderId, setSenderId] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('');
@@ -468,7 +469,10 @@ export function QuoteEditPage() {
         title: title || null,
         leadTime: leadTime || null,
         paymentMethod: paymentMethod || null,
-        ...decodeIbanSelection(ibanSelection),
+        // Kullanici hic secim yapmadiysa (bos dizi) hicbir alan gonderilmez -
+        // backend bunu "degistirilmedi" sayar ve mevcut snapshot'i korur
+        // (bkz. UpdateQuoteSchema.ibanOptionIds doc comment'i).
+        ...(ibanSelections.length > 0 ? decodeIbanSelections(ibanSelections) : {}),
         paymentTerms: paymentTerms || null,
         salesTerms: salesTerms || null,
         deliveryTerms: deliveryTerms || null,
@@ -698,32 +702,32 @@ export function QuoteEditPage() {
               quoteDate,
               leadTime,
               paymentMethod,
-              ibanSelection,
+              ibanSelections,
               quoteCurrency,
               templateId,
               senderId,
             }}
             onChange={(field, value) => {
               if (field === 'contactId') {
-                setContactId(value || undefined);
+                setContactId((value as string) || undefined);
               } else if (field === 'quoteDate') {
-                setQuoteDate(value);
+                setQuoteDate(value as string);
               } else if (field === 'leadTime') {
-                setLeadTime(value);
+                setLeadTime(value as string);
               } else if (field === 'paymentMethod') {
-                setPaymentMethod(value);
-              } else if (field === 'ibanSelection') {
-                setIbanSelection(value);
+                setPaymentMethod(value as string);
+              } else if (field === 'ibanSelections') {
+                setIbanSelections(value as string[]);
               } else if (field === 'quoteCurrency') {
-                setQuoteCurrency(value);
+                setQuoteCurrency(value as string);
                 // Kur input'lari currency koduyla anahtarlanir (hangi quoteCurrency'ye
                 // gore hesaplandigi tutulmaz) - para birimi degisince eski degerler
                 // yanlis referansa gore kalir, sifirlanip yeniden cekilmeli.
                 setExchangeRates({ rates: {} });
               } else if (field === 'templateId') {
-                setTemplateId(value);
+                setTemplateId(value as string);
               } else if (field === 'senderId') {
-                setSenderId(value);
+                setSenderId(value as string);
               }
             }}
             ibanCurrentInfo={

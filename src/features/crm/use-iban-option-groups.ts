@@ -3,7 +3,9 @@ import {
   createIbanOptionGroup,
   deleteIbanOptionGroup,
   listIbanOptionGroups,
+  removeIbanOptionGroupLogo,
   updateIbanOptionGroup,
+  uploadIbanOptionGroupLogo,
   type IbanOptionGroupInput,
 } from '../../lib/api';
 import { IBAN_OPTIONS_QUERY_KEY } from './use-iban-options';
@@ -46,6 +48,22 @@ export function useDeleteIbanOptionGroupMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteIbanOptionGroup(id),
+    onSuccess: () => invalidateIbanQueries(queryClient),
+  });
+}
+
+export function useUploadIbanOptionGroupLogoMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => uploadIbanOptionGroupLogo(id, file),
+    onSuccess: () => invalidateIbanQueries(queryClient),
+  });
+}
+
+export function useRemoveIbanOptionGroupLogoMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => removeIbanOptionGroupLogo(id),
     onSuccess: () => invalidateIbanQueries(queryClient),
   });
 }

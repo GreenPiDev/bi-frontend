@@ -20,7 +20,7 @@ import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
 import {
-  decodeIbanSelection,
+  decodeIbanSelections,
   encodeIbanGroupSelection,
   encodeIbanOptionSelection,
 } from '../features/crm/iban-selection';
@@ -197,10 +197,10 @@ export function QuoteFormPage() {
   const ibanOptionGroupsQuery = useIbanOptionGroupsQuery();
   useEffect(() => {
     const defaultGroup = ibanOptionGroupsQuery.data?.find((group) => group.isDefault);
-    if (defaultGroup && !dirtyFields.ibanSelection) {
-      setValue('ibanSelection', encodeIbanGroupSelection(defaultGroup.id));
+    if (defaultGroup && !dirtyFields.ibanSelections) {
+      setValue('ibanSelections', [encodeIbanGroupSelection(defaultGroup.id)]);
     }
-  }, [ibanOptionGroupsQuery.data, dirtyFields.ibanSelection, setValue]);
+  }, [ibanOptionGroupsQuery.data, dirtyFields.ibanSelections, setValue]);
 
   // Kosul metni alanlari (odeme/satis/teslimat/genel hukumler), ayarlardaki varsayilan
   // degerlerle doldurulur. tenantSettingsQuery baska bir sekmede ayar kaydedilince
@@ -474,7 +474,7 @@ export function QuoteFormPage() {
       salesTerms: values.salesTerms || undefined,
       deliveryTerms: values.deliveryTerms || undefined,
       generalTerms: values.generalTerms || undefined,
-      ...decodeIbanSelection(values.ibanSelection ?? ''),
+      ...decodeIbanSelections(values.ibanSelections ?? []),
       quoteCurrency: values.quoteCurrency,
       // Bos birakilirsa backend tenant'in varsayilan sablonunu otomatik atar
       // (bkz. QuotesService.resolveTemplateId) - bu yuzden burada undefined.
@@ -818,7 +818,7 @@ export function QuoteFormPage() {
               quoteDate: watch('quoteDate') ?? '',
               leadTime: watch('leadTime') ?? '',
               paymentMethod: watch('paymentMethod') ?? '',
-              ibanSelection: watch('ibanSelection') ?? '',
+              ibanSelections: watch('ibanSelections') ?? [],
               quoteCurrency,
               templateId: watch('templateId') ?? '',
               senderId: watch('senderId') ?? '',
@@ -829,7 +829,7 @@ export function QuoteFormPage() {
               quoteDate: errors.quoteDate?.message,
               leadTime: errors.leadTime?.message,
               paymentMethod: errors.paymentMethod?.message,
-              ibanSelection: errors.ibanSelection?.message,
+              ibanSelections: errors.ibanSelections?.message,
               quoteCurrency: errors.quoteCurrency?.message,
               templateId: errors.templateId?.message,
               senderId: errors.senderId?.message,
@@ -1135,9 +1135,11 @@ export function QuoteFormPage() {
         <AddIbanOptionModal
           onClose={() => setActiveOptionModal(null)}
           onCreated={(option) => {
-            setValue('ibanSelection', encodeIbanOptionSelection(option.id), {
-              shouldValidate: true,
-            });
+            setValue(
+              'ibanSelections',
+              [...(watch('ibanSelections') ?? []), encodeIbanOptionSelection(option.id)],
+              { shouldValidate: true, shouldDirty: true },
+            );
             setActiveOptionModal(null);
           }}
         />

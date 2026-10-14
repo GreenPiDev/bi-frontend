@@ -21,10 +21,11 @@ export interface QuoteMetaFieldsValues {
   quoteDate: string;
   leadTime: string;
   paymentMethod: string;
-  /** IbanSelect'in encode ettigi secim - "option:<id>" (tekil hesap) veya
-   * "group:<id>" (hesap grubu), bos string = secim yok. Cagiran bunu
-   * decodeIbanSelection ile ibanOptionId/ibanOptionGroupId'ye ayirir. */
-  ibanSelection: string;
+  /** IbanSelect'in encode ettigi secimlerin dizisi - her eleman "option:<id>"
+   * (tekil hesap) veya "group:<id>" (hesap grubu), bos dizi = secim yok.
+   * Cagiran bunu decodeIbanSelections ile ibanOptionIds/ibanOptionGroupIds'e
+   * ayirir. */
+  ibanSelections: string[];
   quoteCurrency: string;
   templateId: string;
   senderId: string;
@@ -35,7 +36,7 @@ export interface QuoteMetaFieldsErrors {
   quoteDate?: string;
   leadTime?: string;
   paymentMethod?: string;
-  ibanSelection?: string;
+  ibanSelections?: string;
   quoteCurrency?: string;
   templateId?: string;
   senderId?: string;
@@ -135,12 +136,12 @@ export function QuoteMetaFields({
       <div>
         <IbanSelect
           label={tr.crm.quotes.form.ibanLabel}
-          value={values.ibanSelection}
-          onChange={(value) => onChange('ibanSelection', value)}
-          error={errors?.ibanSelection}
+          value={values.ibanSelections}
+          onChange={(value) => onChange('ibanSelections', value)}
+          error={errors?.ibanSelections}
           onRequestAddNew={onRequestAddIban}
         />
-        {!values.ibanSelection && ibanCurrentInfo && ibanCurrentInfo.length > 0 && (
+        {values.ibanSelections.length === 0 && ibanCurrentInfo && ibanCurrentInfo.length > 0 && (
           <p className="mt-1.5 text-xs text-app-muted">
             {ibanCurrentInfo.map((info) => `${info.bankName} · ${info.ibanNumber}`).join(' / ')}
           </p>

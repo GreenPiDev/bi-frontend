@@ -409,8 +409,9 @@ export const quoteFormSchema = z
     deliveryTerms: z.string().max(4000).optional(),
     generalTerms: z.string().max(4000).optional(),
     /** encodeIbanOptionSelection/encodeIbanGroupSelection ile uretilmis
-     * "option:<id>" / "group:<id>" degeri (bkz. iban-select.tsx). */
-    ibanSelection: z.string().optional(),
+     * "option:<id>" / "group:<id>" degerlerinin dizisi - birden fazla
+     * grup/hesap secilebilir (bkz. iban-select.tsx). */
+    ibanSelections: z.array(z.string()).optional(),
     quoteCurrency: z.string().min(1, 'Teklif para birimi gerekli.'),
     templateId: z.string().optional(),
     senderId: z.string({ message: 'Gönderen gerekli.' }).min(1, 'Gönderen gerekli.'),

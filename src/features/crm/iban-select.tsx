@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
-import { Select } from '../../components/ui/select';
+import { MultiSelect } from '../../components/ui/multi-select';
 import { tr } from '../../i18n/tr';
 import { encodeIbanGroupSelection, encodeIbanOptionSelection } from './iban-selection';
 import { useIbanOptionGroupsQuery } from './use-iban-option-groups';
@@ -9,9 +9,11 @@ import { useIbanOptionsQuery } from './use-iban-options';
 interface IbanSelectProps {
   label: string;
   /** encodeIbanOptionSelection/encodeIbanGroupSelection ile uretilen
-   * "option:<id>" / "group:<id>" degeri, bos string = secim yok. */
-  value: string;
-  onChange: (value: string) => void;
+   * "option:<id>" / "group:<id>" degerlerinin dizisi, bos dizi = secim yok.
+   * Birden fazla grup/hesap secilebilir (kullanici talebi) - secilen HER
+   * grubun TUM hesaplari teklife eklenir. */
+  value: string[];
+  onChange: (value: string[]) => void;
   error?: string;
   /** Verilirse ve en az 1 banka hesabı tanımlıysa, select'in yanında ayarlara
    * gitmeden tek bir yeni banka hesabı eklemeye yarayan "+ Yeni ..." butonu
@@ -24,15 +26,15 @@ function maskIban(iban: string): string {
   return iban.length > 4 ? `••••${iban.slice(-4)}` : iban;
 }
 
-/** IBAN/banka hesabi (veya hesap grubu) dropdown'u - sadece /settings?tab=crm'de
- * tanimlanan listeden secilir, serbest metin girisi yok. Bir grup secilirse
- * teklife gruptaki TUM hesaplar birlikte kopyalanir (kullanici talebi - bkz.
- * IbanOptionGroup doc comment'i), gruplanmamis hesaplar tek basina secilebilir
- * kalir. Tenant henuz hic tanimlamamissa, dropdown yerine ayarlara (yeni
- * sekmede) yonlendiren bir mesaj/link gosterilir. IBAN/grup oradan eklenince
- * `useIbanOptionsRealtimeSync` bu sorgulari invalidate eder ve dropdown sayfa
- * yenilenmeden otomatik guncellenir (departman/odeme yontemi alanlariyla ayni
- * desen, bkz. department-select.tsx). */
+/** IBAN/banka hesabi (veya hesap grubu) coklu secim alani - sadece
+ * /settings?tab=crm'de tanimlanan listeden secilir, serbest metin girisi yok.
+ * Birden fazla grup ve/veya tekil hesap secilebilir (kullanici talebi); secilen
+ * HER grubun TUM hesaplari ve secilen tekil hesaplar birlikte teklife kopyalanir
+ * (bkz. IbanOptionGroup doc comment'i). Tenant henuz hic tanimlamamissa, secim
+ * alani yerine ayarlara (yeni sekmede) yonlendiren bir mesaj/link gosterilir.
+ * IBAN/grup oradan eklenince `useIbanOptionsRealtimeSync` bu sorgulari
+ * invalidate eder ve secim alani sayfa yenilenmeden otomatik guncellenir
+ * (departman/odeme yontemi alanlariyla ayni desen, bkz. department-select.tsx). */
 export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: IbanSelectProps) {
   const optionsQuery = useIbanOptionsQuery();
   const groupsQuery = useIbanOptionGroupsQuery();
@@ -76,14 +78,15 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
   }));
 
   return (
-    <Select
+    <MultiSelect
       label={label}
       placeholder={tr.crm.quotes.form.ibanPlaceholder}
       hint={tr.crm.quotes.form.ibanHint}
       error={error}
       value={value}
-      onChange={(event) => onChange(event.target.value)}
+      onChange={onChange}
       options={[...groupOptions, ...singleOptions]}
+      showChips
       trailingAction={
         onRequestAddNew && (
           <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>

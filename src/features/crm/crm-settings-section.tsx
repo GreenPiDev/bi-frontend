@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { CollapsibleSection } from '../../components/ui/collapsible-section';
 import { ConfirmModal } from '../../components/ui/confirm-modal';
 import { IconActionButton } from '../../components/ui/icon-action-button';
+import { ImageUploadField } from '../../components/ui/image-upload-field';
 import { Select } from '../../components/ui/select';
 import { Switch } from '../../components/ui/switch';
 import { Table, type TableColumn } from '../../components/ui/table';
@@ -35,7 +36,9 @@ import {
   useCreateIbanOptionGroupMutation,
   useDeleteIbanOptionGroupMutation,
   useIbanOptionGroupsQuery,
+  useRemoveIbanOptionGroupLogoMutation,
   useUpdateIbanOptionGroupMutation,
+  useUploadIbanOptionGroupLogoMutation,
 } from './use-iban-option-groups';
 import {
   useCreateIbanOptionMutation,
@@ -735,6 +738,8 @@ function IbanOptionGroupsManager() {
   const createMutation = useCreateIbanOptionGroupMutation();
   const updateMutation = useUpdateIbanOptionGroupMutation();
   const deleteMutation = useDeleteIbanOptionGroupMutation();
+  const uploadLogoMutation = useUploadIbanOptionGroupLogoMutation();
+  const removeLogoMutation = useRemoveIbanOptionGroupLogoMutation();
 
   const [name, setName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
@@ -803,6 +808,21 @@ function IbanOptionGroupsManager() {
   }
 
   const columns: TableColumn<IbanOptionGroup>[] = [
+    {
+      key: 'logo',
+      header: tr.settings.crm.ibanOptionGroups.logoColumn,
+      className: 'w-14',
+      render: (g) =>
+        g.logoUrl ? (
+          <img
+            src={g.logoUrl}
+            alt={g.name}
+            className="h-8 w-8 rounded border border-app-border bg-white object-contain"
+          />
+        ) : (
+          '—'
+        ),
+    },
     { key: 'name', header: tr.settings.crm.ibanOptionGroups.nameColumn, render: (g) => g.name },
     {
       key: 'accountCount',
@@ -860,6 +880,7 @@ function IbanOptionGroupsManager() {
           </span>
         </div>
       </div>
+      <p className="mt-2 text-xs text-app-muted">{tr.settings.crm.ibanOptionGroups.logoHint}</p>
       <Button
         type="button"
         className="mt-3"
@@ -881,27 +902,67 @@ function IbanOptionGroupsManager() {
           onRowClick={startEdit}
           isRowExpanded={(group) => editingId === group.id}
           rowClassName={(group) => (editingId === group.id ? 'bg-blue-50' : undefined)}
-          renderExpandedRow={() => (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
-              <TextField
-                label={tr.settings.crm.ibanOptionGroups.nameLabel}
-                value={editName}
-                onChange={(event) => setEditName(event.target.value)}
+          renderExpandedRow={(group) => (
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
+                <TextField
+                  label={tr.settings.crm.ibanOptionGroups.nameLabel}
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                />
+                <div className="flex items-center gap-2">
+                  <Switch checked={editIsDefault} onChange={setEditIsDefault} />
+                  <span className="text-sm font-semibold text-app-text">
+                    {tr.settings.crm.ibanOptionGroups.defaultLabel}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    disabled={updateMutation.isPending}
+                    onClick={handleSaveEdit}
+                  >
+                    {tr.settings.crm.ibanOptionGroups.saveButton}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={cancelEdit}>
+                    {tr.settings.crm.ibanOptionGroups.cancelButton}
+                  </Button>
+                </div>
+              </div>
+              <ImageUploadField
+                label={tr.settings.crm.ibanOptionGroups.logoLabel}
+                imageUrl={group.logoUrl}
+                uploadLabel={tr.settings.crm.ibanOptionGroups.uploadButton}
+                replaceLabel={tr.settings.crm.ibanOptionGroups.replaceButton}
+                removeLabel={tr.settings.crm.ibanOptionGroups.removeButton}
+                uploadingLabel={tr.settings.crm.ibanOptionGroups.uploading}
+                noImageLabel={tr.settings.crm.ibanOptionGroups.noImage}
+                unsupportedTypeMessage={tr.settings.crm.ibanOptionGroups.unsupportedType}
+                tooLargeMessage={tr.settings.crm.ibanOptionGroups.tooLarge}
+                removeConfirmTitle={tr.settings.crm.ibanOptionGroups.removeConfirmTitle}
+                removeConfirmMessage={tr.settings.crm.ibanOptionGroups.removeConfirmMessage}
+                isUploading={uploadLogoMutation.isPending}
+                isRemoving={removeLogoMutation.isPending}
+                fit="contain"
+                onUpload={(file) =>
+                  uploadLogoMutation.mutate(
+                    { id: group.id, file },
+                    {
+                      onSuccess: () =>
+                        toast.success(tr.settings.crm.ibanOptionGroups.logoUploadSuccess),
+                      onError: handleApiError,
+                    },
+                  )
+                }
+                onRemove={() =>
+                  removeLogoMutation.mutate(group.id, {
+                    onSuccess: () =>
+                      toast.success(tr.settings.crm.ibanOptionGroups.logoRemoveSuccess),
+                    onError: handleApiError,
+                  })
+                }
+                onError={(message) => toast.error(message)}
               />
-              <div className="flex items-center gap-2">
-                <Switch checked={editIsDefault} onChange={setEditIsDefault} />
-                <span className="text-sm font-semibold text-app-text">
-                  {tr.settings.crm.ibanOptionGroups.defaultLabel}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
-                  {tr.settings.crm.ibanOptionGroups.saveButton}
-                </Button>
-                <Button type="button" variant="secondary" onClick={cancelEdit}>
-                  {tr.settings.crm.ibanOptionGroups.cancelButton}
-                </Button>
-              </div>
             </div>
           )}
         />
@@ -1118,14 +1179,11 @@ function IbanOptionsManager() {
           options={groupOptions}
         />
       </div>
-      <Button
-        type="button"
-        className="mt-3"
-        disabled={createMutation.isPending}
-        onClick={handleAdd}
-      >
-        {tr.settings.crm.ibanOptions.addButton}
-      </Button>
+      <div className="mt-3 flex justify-end">
+        <Button type="button" disabled={createMutation.isPending} onClick={handleAdd}>
+          {tr.settings.crm.ibanOptions.addButton}
+        </Button>
+      </div>
 
       {optionsQuery.data && optionsQuery.data.length === 0 && (
         <p className="mt-3 text-sm text-app-muted">{tr.settings.crm.ibanOptions.empty}</p>
@@ -1191,7 +1249,7 @@ function IbanOptionsManager() {
                 }
                 options={groupOptions}
               />
-              <div className="col-span-2 flex gap-2 sm:col-span-6">
+              <div className="col-span-2 flex justify-end gap-2 sm:col-span-6">
                 <Button type="button" disabled={updateMutation.isPending} onClick={handleSaveEdit}>
                   {tr.settings.crm.ibanOptions.saveButton}
                 </Button>
