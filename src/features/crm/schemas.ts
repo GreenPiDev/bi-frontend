@@ -73,6 +73,15 @@ export const contactFormSchema = z.object({
 
 export type ContactFormValues = z.infer<typeof contactFormSchema>;
 
+/** Teklif formundaki "+ Yeni Kişi" ile ayni akis - firma zaten secili oldugu icin
+ * sadece ad/soyad sorulur (bkz. quote-new-contact-modal.tsx). */
+export const quickContactFormSchema = z.object({
+  firstName: z.string().min(1, 'Ad gerekli.').max(120),
+  lastName: z.string().min(1, 'Soyad gerekli.').max(120),
+});
+
+export type QuickContactFormValues = z.infer<typeof quickContactFormSchema>;
+
 export const calendarEventFormSchema = z.object({
   title: z.string().min(2, 'Başlık en az 2 karakter olmalı.').max(200),
   reminderType: z.string().max(200).optional(),

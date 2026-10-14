@@ -27,6 +27,8 @@ import {
 import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
+import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
+import { useAccountQuery } from '../features/crm/use-accounts';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
@@ -58,6 +60,7 @@ import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
 import {
   ApiError,
   type Account,
+  type Contact,
   type CreateQuoteInput,
   type OpportunityStage,
   type Product,
@@ -150,6 +153,7 @@ export function QuoteFormPage() {
   const [activeOptionModal, setActiveOptionModal] = useState<'paymentMethod' | 'iban' | null>(null);
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
+  const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
 
   const {
     register,
@@ -182,6 +186,10 @@ export function QuoteFormPage() {
     setExchangeRates({ rates: {} });
   }, [quoteCurrency]);
   const revisionSummaryQuery = useQuoteRevisionSummaryQuery(selectedAccountId);
+  // "+ Yeni Kişi" modalında "X şirketine eklenecek" notu için - AccountAutocomplete
+  // sadece id tutar, ismi göstermek için ayrıca çekilir (interaction-form-page.tsx'teki
+  // prefillAccountQuery ile aynı desen).
+  const selectedAccountQuery = useAccountQuery(selectedAccountId ?? '');
 
   // Gonderen varsayilan olarak istegi yapan kullanici (bkz. docs/VARSAYIMLAR.md) -
   // kullanici elle degistirirse (dirty) bir sonraki /auth/me yanitiyla ezilmez.
@@ -355,6 +363,14 @@ export function QuoteFormPage() {
   function handleAccountCreated(account: Account) {
     setValue('accountId', account.id, { shouldValidate: true });
     setIsNewAccountModalOpen(false);
+  }
+
+  // "+ Yeni Kişi" ile seçili firmaya bağlı yeni bir kişi oluşturulunca, doğrudan bu
+  // teklifin muhatap kişi alanına seçili olarak atanır - handleAccountCreated ile
+  // aynı desen.
+  function handleContactCreated(contact: Contact) {
+    setValue('contactId', contact.id, { shouldValidate: true });
+    setIsNewContactModalOpen(false);
   }
 
   // Teklif özeti tablosundaki mevcut satırlara tıklayınca açılan düzenleme paneli -
@@ -812,6 +828,17 @@ export function QuoteFormPage() {
               </div>
             }
             contactOptions={contactOptions}
+            contactTrailingAction={
+              <Button
+                type="button"
+                variant="navy"
+                className="shrink-0"
+                disabled={!selectedAccountId}
+                onClick={() => setIsNewContactModalOpen(true)}
+              >
+                {tr.crm.quotes.form.newContactButton}
+              </Button>
+            }
             senderOptions={senderOptions}
             values={{
               contactId: watch('contactId') ?? '',
@@ -1155,6 +1182,14 @@ export function QuoteFormPage() {
         <NewAccountModal
           onClose={() => setIsNewAccountModalOpen(false)}
           onCreated={handleAccountCreated}
+        />
+      )}
+      {isNewContactModalOpen && selectedAccountId && (
+        <QuoteNewContactModal
+          accountId={selectedAccountId}
+          accountName={selectedAccountQuery.data?.name ?? ''}
+          onClose={() => setIsNewContactModalOpen(false)}
+          onCreated={handleContactCreated}
         />
       )}
     </AppShell>

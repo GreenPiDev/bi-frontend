@@ -2847,6 +2847,8 @@ export const tr = {
         contactLabel: 'Muhatap Kişi (opsiyonel)',
         contactPlaceholder: 'Seçilmedi',
         contactHint: 'Opsiyonel. Sadece seçilen firmaya bağlı kişiler listelenir.',
+        newContactButton: '+ Yeni Kişi',
+        newContactAccountNotice: (accountName: string) => `${accountName} şirketine eklenecek.`,
         senderLabel: 'Teklifi Oluşturan',
         senderHint: 'Zorunlu. Teklif PDF’inde temsilci olarak görünecek kullanıcı.',
         quoteDateLabel: 'Teklif Tarihi',

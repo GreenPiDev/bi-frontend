@@ -47,6 +47,10 @@ interface QuoteMetaFieldsProps {
    * duzenle: salt-okunur metin) - cagiran bu hucreyi kendisi render eder. */
   accountSlot: ReactNode;
   contactOptions: { value: string; label: string }[];
+  /** `/teklifler/yeni`de firma seçilince gösterilen "+ Yeni Kişi" butonu - seçili
+   * firmaya bağlı yeni bir kişi oluşturup teklife atar (bkz. `QuoteNewContactModal`).
+   * `/teklifler/duzenle` bu callback'i geçmez, eski davranışında kalır. */
+  contactTrailingAction?: ReactNode;
   /** /quotes/assignable-users'tan - "Gonderen" secicisi (bkz. docs/VARSAYIMLAR.md). */
   senderOptions: { value: string; label: string }[];
   values: QuoteMetaFieldsValues;
@@ -74,6 +78,7 @@ interface QuoteMetaFieldsProps {
 export function QuoteMetaFields({
   accountSlot,
   contactOptions,
+  contactTrailingAction,
   senderOptions,
   values,
   onChange,
@@ -93,6 +98,7 @@ export function QuoteMetaFields({
         error={errors?.contactId}
         value={values.contactId}
         onChange={(event) => onChange('contactId', event.target.value)}
+        trailingAction={contactTrailingAction}
       />
       <Select
         label={tr.crm.quotes.form.senderLabel}
