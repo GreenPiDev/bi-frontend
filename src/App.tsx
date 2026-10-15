@@ -74,6 +74,7 @@ import { SalesOrderDetailPage } from './app/sales-order-detail-page';
 import { SettingsPage } from './app/settings-page';
 import { StockListPage } from './app/stock-list-page';
 import { UserStatsPage } from './app/user-stats-page';
+import { WarehouseDetailPage } from './app/warehouse-detail-page';
 import { WarehouseFormPage } from './app/warehouse-form-page';
 import { WarehousesListPage } from './app/warehouses-list-page';
 import { useMeQuery } from './features/auth/use-auth';
@@ -672,6 +673,14 @@ function App() {
           }
         />
         <Route
+          path="/depolar/:id"
+          element={
+            <TenantPageRoute pageKey="warehouses">
+              <WarehouseDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
           path="/urun-listeleri"
           element={
             <TenantPageRoute pageKey="product-lists">
@@ -688,7 +697,7 @@ function App() {
           }
         />
         <Route
-          path="/urun-listeleri/duzenle/:id"
+          path="/urun-listeleri/:id"
           element={
             <TenantPageRoute pageKey="product-lists">
               <ProductListFormPage />

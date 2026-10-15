@@ -127,6 +127,7 @@ export const tr = {
       'Ürünlerinizin stok miktarları burada. Minimum stok seviyesinin altına düşen ürünler kırmızı rozetle işaretlenir. Bir satırı açarak o ürünün hangi depoda kaç adet olduğunu görebilirsiniz.',
     warehouses:
       'Stok tuttuğunuz depoları (lokasyonları) buradan yönetin. İçinde stok kaydı olan bir depo silinemez.',
+    warehouseDetail: 'Bu depodaki ürünlerin miktarlarını buradan görüntüleyin.',
     stockHistory:
       'Stok miktarı her güncellendiğinde burada bir hareket kaydı oluşur: kim, hangi ürünün miktarını, hangi notla, ne kadar değiştirdi.',
     priceHistory:
@@ -1906,6 +1907,7 @@ export const tr = {
       title: 'Ürün Listeleri',
       subtitle: 'Ürünlerinizi ayrı kataloglarda gruplayın - örn. marka veya kategori bazlı.',
       newButton: 'Yeni Ürün Listesi',
+      searchPlaceholder: 'Ürün listesi ara...',
       loading: 'Ürün listeleri yükleniyor...',
       empty: 'Henüz ürün listesi yok.',
       nameColumn: 'Ad',
@@ -1939,6 +1941,7 @@ export const tr = {
       title: 'Depolar',
       subtitle: 'Stok tuttuğunuz depoları (lokasyonları) yönetin.',
       newButton: 'Yeni Depo',
+      searchPlaceholder: 'Depo adı ara...',
       loading: 'Depolar yükleniyor...',
       empty: 'Henüz depo yok.',
       nameColumn: 'Ad',
@@ -1950,6 +1953,17 @@ export const tr = {
       deleteConfirm: 'Bu depoyu silmek istediğinize emin misiniz?',
       deleteSuccess: 'Depo silindi.',
       defaultBadge: 'Varsayılan',
+      detail: {
+        back: 'Depolara dön',
+        searchPlaceholder: 'Ürün veya stok kodu ara...',
+        productColumn: 'Ürün',
+        skuColumn: 'Stok Kodu',
+        quantityColumn: 'Miktar',
+        unitColumn: 'Birim',
+        loading: 'Depo yükleniyor...',
+        stockLoading: 'Ürünler yükleniyor...',
+        stockEmpty: 'Bu depoda henüz stok hareketi yok.',
+      },
       form: {
         newTitle: 'Yeni Depo',
         editTitle: 'Depoyu Düzenle',
@@ -3386,6 +3400,7 @@ export const tr = {
       history: {
         title: 'Stok Geçmişi',
         subtitle: 'Stok miktarı değişikliklerinin tam kaydı.',
+        searchPlaceholder: 'Ürün, depo, kullanıcı veya not ara...',
         loading: 'Stok hareketleri yükleniyor...',
         empty: 'Henüz stok hareketi yok.',
         productColumn: 'Ürün',

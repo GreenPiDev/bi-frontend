@@ -83,6 +83,7 @@ export function AsyncAutocomplete({
   const containerRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -152,6 +153,7 @@ export function AsyncAutocomplete({
       <div className="flex items-center gap-2">
         <div className="relative flex-1" ref={fieldRef}>
           <input
+            ref={inputRef}
             type="text"
             value={value}
             placeholder={placeholder}
@@ -162,6 +164,15 @@ export function AsyncAutocomplete({
               setOpen(true);
             }}
             onFocus={() => setOpen(true)}
+            onMouseDown={() => {
+              // Input zaten odakliyken tiklamak her zaman `onFocus`'u tekrar tetiklemez
+              // (zaten odakli), bu yuzden liste aciksa disari tiklamaya gerek kalmadan
+              // input'un kendisine tiklayinca da kapanabilsin diye elle toggle ediyoruz
+              // (bkz. `Autocomplete`'teki ayni desen, kullanici bildirimi).
+              if (document.activeElement === inputRef.current) {
+                setOpen((prev) => !prev);
+              }
+            }}
             onKeyDown={handleKeyDown}
             className={clsx(
               'w-full rounded-lg border border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-text outline-none focus:border-app-primary',

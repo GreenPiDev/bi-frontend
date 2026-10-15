@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -16,6 +16,7 @@ import {
   useProductListsQuery,
 } from '../features/crm/use-product-lists';
 import { ApiError, type ProductListWithCount } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 export function ProductListsListContent() {
@@ -24,6 +25,8 @@ export function ProductListsListContent() {
   const backState = { from: `${location.pathname}${location.search}` };
   const toast = useToast();
   const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingProductList, setEditingProductList] = useState<ProductListWithCount | undefined>(
     undefined,
@@ -33,7 +36,7 @@ export function ProductListsListContent() {
   );
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const productListsQuery = useProductListsQuery({ page, pageSize });
+  const productListsQuery = useProductListsQuery({ page, pageSize, q: q || undefined });
   const deleteMutation = useDeleteProductListMutation();
 
   function handleConfirmDelete() {
@@ -99,14 +102,31 @@ export function ProductListsListContent() {
         </Button>
       </div>
 
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.productLists.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
       <Table
         columns={columns}
         data={productListsQuery.data?.data ?? []}
         keyField={(productList) => productList.id}
         onRowClick={(productList) =>
-          navigate(`/urun-listeleri/duzenle/${productList.id}`, { state: backState })
+          navigate(`/urun-listeleri/${productList.id}`, { state: backState })
         }
-        getRowHref={(productList) => `/urun-listeleri/duzenle/${productList.id}`}
+        getRowHref={(productList) => `/urun-listeleri/${productList.id}`}
         isLoading={productListsQuery.isPending}
         loadingMessage={tr.crm.productLists.loading}
         emptyMessage={tr.crm.productLists.empty}

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { AppShell } from './app-shell';
-import { Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useStockHoldingCostLogQuery } from '../features/crm/use-stock-items';
 import type { StockHoldingCostLog } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -12,7 +14,10 @@ const currencyFormatter = new Intl.NumberFormat('tr-TR', {
 });
 
 export function StockHoldingCostLogContent() {
-  const logQuery = useStockHoldingCostLogQuery();
+  const [page, setPage] = useState(1);
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  const logQuery = useStockHoldingCostLogQuery({ page, pageSize });
 
   const columns: TableColumn<StockHoldingCostLog>[] = [
     {
@@ -50,13 +55,24 @@ export function StockHoldingCostLogContent() {
       <div className="mt-4">
         <Table
           columns={columns}
-          data={logQuery.data ?? []}
+          data={logQuery.data?.data ?? []}
           keyField={(row) => row.id}
           isLoading={logQuery.isPending}
           loadingMessage={tr.crm.stock.holdingCostLog.loading}
           emptyMessage={tr.crm.stock.holdingCostLog.empty}
         />
       </div>
+
+      {logQuery.data && logQuery.data.data.length > 0 && (
+        <Pagination
+          page={logQuery.data.meta.page}
+          totalPages={logQuery.data.meta.totalPages}
+          total={logQuery.data.meta.total}
+          onPageChange={setPage}
+          onPrevious={() => setPage((p) => p - 1)}
+          onNext={() => setPage((p) => p + 1)}
+        />
+      )}
     </>
   );
 }

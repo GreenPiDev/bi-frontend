@@ -30,8 +30,16 @@ export function ProductListFormPage() {
   const backTo = (location.state as { from?: string } | null)?.from ?? '/urun-listeleri';
   // Bu sayfadan /urunler/:id veya /urunler/yeni'ye gidilirse, oradaki "geri dön" bu
   // formun kendi URL'ine dönmeli. productListId, /urunler/yeni'de "Ürün Listesi"
-  // dropdown'ının bu listeyle önceden dolu gelmesi için taşınıyor.
-  const productBackState = { from: `${location.pathname}${location.search}`, productListId: id };
+  // dropdown'ının bu listeyle önceden dolu gelmesi için taşınıyor. parentFrom, bu
+  // sayfanın kendi "nereden geldim" adresi (backTo) - ürün detayından buraya geri
+  // dönüldüğünde bu sayfanın kendi state'ini kaybetmemesi için zincirin bir sonraki
+  // halkasına taşınıyor (bkz. kullanıcı bildirimi: /urun-listeleri/:id → /urunler/:id →
+  // geri → /urun-listeleri/:id → geri, /envanter?tab=productLists'ten kopuyordu).
+  const productBackState = {
+    from: `${location.pathname}${location.search}`,
+    productListId: id,
+    parentFrom: backTo,
+  };
   const toast = useToast();
   const productListQuery = useProductListQuery(id ?? '');
   const createMutation = useCreateProductListMutation();

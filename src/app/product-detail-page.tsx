@@ -39,7 +39,12 @@ export function ProductDetailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
-  const backTo = (location.state as { from?: string } | null)?.from ?? '/urunler';
+  const locationState = location.state as { from?: string; parentFrom?: string } | null;
+  const backTo = locationState?.from ?? '/urunler';
+  // backTo sayfasının (ör. /urun-listeleri/:id) kendi "nereden geldim" state'i - BackLink'e
+  // geri verilmezse o sayfa kendi state'ini kaybedip zincirin başına (/envanter'e) dönemez.
+  const backState =
+    locationState?.parentFrom !== undefined ? { from: locationState.parentFrom } : undefined;
   const productQuery = useProductQuery(id);
   const deleteMutation = useDeleteProductMutation();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -62,7 +67,7 @@ export function ProductDetailPage() {
     deleteMutation.mutate(product.id, {
       onSuccess: () => {
         toast.success(tr.crm.products.deleteSuccess);
-        navigate(backTo);
+        navigate(backTo, backState ? { state: backState } : undefined);
       },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
@@ -75,7 +80,7 @@ export function ProductDetailPage() {
 
   return (
     <AppShell>
-      <BackLink to={backTo} label={tr.crm.products.detail.back} />
+      <BackLink to={backTo} label={tr.crm.products.detail.back} state={backState} />
 
       <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -109,7 +114,9 @@ export function ProductDetailPage() {
               icon={Pencil}
               tooltip={tr.crm.products.detail.editButton}
               onClick={() =>
-                navigate(`/urunler/duzenle/${product.id}`, { state: { from: backTo } })
+                navigate(`/urunler/duzenle/${product.id}`, {
+                  state: { from: backTo, parentFrom: locationState?.parentFrom },
+                })
               }
             />
             <CircleIconButton

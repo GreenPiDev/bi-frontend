@@ -1,4 +1,4 @@
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -13,6 +13,7 @@ import { useMeQuery } from '../features/auth/use-auth';
 import { useDeleteWarehouseMutation, useWarehousesQuery } from '../features/crm/use-warehouses';
 import { WarehouseEditModal } from './warehouse-edit-modal';
 import { ApiError, type Warehouse } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 export function WarehousesListContent() {
@@ -21,11 +22,13 @@ export function WarehousesListContent() {
   const backState = { from: `${location.pathname}${location.search}` };
   const toast = useToast();
   const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [editingWarehouse, setEditingWarehouse] = useState<Warehouse | undefined>(undefined);
   const [deletingWarehouse, setDeletingWarehouse] = useState<Warehouse | undefined>(undefined);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
-  const warehousesQuery = useWarehousesQuery({ page, pageSize });
+  const warehousesQuery = useWarehousesQuery({ page, pageSize, q: q || undefined });
   const deleteMutation = useDeleteWarehouseMutation();
 
   function handleConfirmDelete() {
@@ -97,11 +100,28 @@ export function WarehousesListContent() {
         </Button>
       </div>
 
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.warehouses.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
       <Table
         columns={columns}
         data={warehousesQuery.data?.data ?? []}
         keyField={(warehouse) => warehouse.id}
-        onRowClick={(warehouse) => setEditingWarehouse(warehouse)}
+        onRowClick={(warehouse) => navigate(`/depolar/${warehouse.id}`, { state: backState })}
         isLoading={warehousesQuery.isPending}
         loadingMessage={tr.crm.warehouses.loading}
         emptyMessage={tr.crm.warehouses.empty}

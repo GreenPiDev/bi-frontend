@@ -29,9 +29,18 @@ export function ProductFormPage() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const location = useLocation();
-  const locationState = location.state as { from?: string; productListId?: string } | null;
+  const locationState = location.state as {
+    from?: string;
+    productListId?: string;
+    parentFrom?: string;
+  } | null;
   const backTo = locationState?.from ?? '/urunler';
   const preselectedProductListId = locationState?.productListId;
+  // backTo sayfasının (ör. /urunler/:id) kendi "nereden geldim" state'i - kaydet/iptal
+  // sonrası oraya dönülürken bu olmadan o sayfa state'ini kaybedip zincirin başından
+  // kopar (bkz. product-detail-page.tsx'teki aynı desen).
+  const backState =
+    locationState?.parentFrom !== undefined ? { from: locationState.parentFrom } : undefined;
   const toast = useToast();
   const productQuery = useProductQuery(id ?? '');
   const createMutation = useCreateProductMutation();
@@ -133,7 +142,7 @@ export function ProductFormPage() {
     }
 
     toast.success(isEdit ? tr.crm.products.form.updateSuccess : tr.crm.products.form.createSuccess);
-    navigate(backTo);
+    navigate(backTo, backState ? { state: backState } : undefined);
   });
 
   const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
@@ -141,7 +150,7 @@ export function ProductFormPage() {
 
   return (
     <AppShell>
-      <BackLink to={backTo} label={tr.crm.products.title} />
+      <BackLink to={backTo} label={tr.crm.products.title} state={backState} />
 
       <div className="mt-6">
         <h1 className="text-lg font-bold text-app-text">
@@ -163,7 +172,11 @@ export function ProductFormPage() {
             <Button type="submit" disabled={isSaving}>
               {isSaving ? tr.crm.products.form.submitting : tr.crm.products.form.submit}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate(backTo)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => navigate(backTo, backState ? { state: backState } : undefined)}
+            >
               {tr.crm.products.form.cancel}
             </Button>
           </div>

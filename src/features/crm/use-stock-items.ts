@@ -46,6 +46,9 @@ export function useLowStockItemsQuery(enabled = true) {
 
 export function useStockHistoryQuery(
   params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
     productId?: string;
     warehouseId?: string;
     userId?: string;
@@ -58,10 +61,10 @@ export function useStockHistoryQuery(
   });
 }
 
-export function useStockHoldingCostLogQuery() {
+export function useStockHoldingCostLogQuery(params: { page?: number; pageSize?: number } = {}) {
   return useQuery({
-    queryKey: STOCK_HOLDING_COST_LOG_QUERY_KEY,
-    queryFn: () => listStockHoldingCostLogs(),
+    queryKey: [...STOCK_HOLDING_COST_LOG_QUERY_KEY, params],
+    queryFn: () => listStockHoldingCostLogs(params),
   });
 }
 

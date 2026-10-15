@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { AsyncAutocomplete } from '../../components/ui/async-autocomplete';
 import { Button } from '../../components/ui/button';
-import { Select } from '../../components/ui/select';
 import { tr } from '../../i18n/tr';
 import { useProductListsQuery } from './use-product-lists';
 
@@ -28,6 +29,21 @@ export function ProductListSelect({
 }: ProductListSelectProps) {
   const productListsQuery = useProductListsQuery();
   const options = productListsQuery.data?.data ?? [];
+  // null: kullanici henuz yazmiyor, kutuda secili listenin adi gorunur. Yazmaya
+  // baslayinca (ve secim netlesene kadar) kutuda yazilan metin gorunur - `ProductAutocomplete`
+  // ile ayni desen (bkz. features/crm/product-autocomplete.tsx).
+  const [typedQuery, setTypedQuery] = useState<string | null>(null);
+
+  // Deger bos iken native <select>'te `value=""`'a karsilik gelen bir <option> olmadigindan
+  // tarayici gorsel olarak ilk secenegi secili gosterir, ama RHF'nin tuttugu `value` hala
+  // bos kalir - kullanici dropdown'a dokunmadan submit edince "zorunlu alan" hatasi alir
+  // (bkz. kullanici bildirimi). Liste yuklenince bosken varsayilan/ilk listeyi RHF'ye de yaz.
+  useEffect(() => {
+    if (!value && options.length > 0) {
+      onChange(options[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, options.length]);
 
   if (productListsQuery.isSuccess && options.length === 0) {
     return (
@@ -53,18 +69,29 @@ export function ProductListSelect({
     );
   }
 
+  const selected = options.find((productList) => productList.id === value);
+  const displayValue = typedQuery ?? selected?.name ?? '';
+  const filteredOptions = (
+    typedQuery === null
+      ? options
+      : options.filter((productList) =>
+          productList.name.toLowerCase().includes(typedQuery.trim().toLowerCase()),
+        )
+  ).map((productList) => ({ id: productList.id, label: productList.name }));
+
   return (
-    <Select
+    <AsyncAutocomplete
       label={tr.crm.products.form.productListLabel}
       required
       hint={tr.crm.products.form.productListHint}
       error={error}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      options={options.map((productList) => ({
-        value: productList.id,
-        label: productList.name,
-      }))}
+      value={displayValue}
+      onInputChange={setTypedQuery}
+      options={filteredOptions}
+      onSelectOption={(option) => {
+        onChange(option.id);
+        setTypedQuery(null);
+      }}
       trailingAction={
         onRequestAddNew && (
           <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>

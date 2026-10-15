@@ -1,4 +1,4 @@
-import { ListFilter } from 'lucide-react';
+import { ListFilter, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -9,13 +9,15 @@ import { Modal } from '../components/ui/modal';
 import { MultiSelect } from '../components/ui/multi-select';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
-import { Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
 import { ProductAutocomplete } from '../features/crm/product-autocomplete';
 import { useUsersQuery } from '../features/roles/use-users';
 import { useWarehousesQuery } from '../features/crm/use-warehouses';
+import { useMeQuery } from '../features/auth/use-auth';
 import { useStockHistoryQuery } from '../features/crm/use-stock-items';
 import type { StockMovement, StockMovementType } from '../lib/api';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -35,6 +37,9 @@ function DeltaBadge({ delta }: { delta: number }) {
 
 export function StockHistoryContent() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
   const [productId, setProductId] = useState<string | undefined>(undefined);
   const [warehouseId, setWarehouseId] = useState('');
   const [userId, setUserId] = useState('');
@@ -42,7 +47,12 @@ export function StockHistoryContent() {
   const [noteModalRow, setNoteModalRow] = useState<StockMovement | null>(null);
   const usersQuery = useUsersQuery();
   const warehousesQuery = useWarehousesQuery({ pageSize: 100 });
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const historyQuery = useStockHistoryQuery({
+    page,
+    pageSize,
+    q: q || undefined,
     productId: productId || undefined,
     warehouseId: warehouseId || undefined,
     userId: userId || undefined,
@@ -52,6 +62,7 @@ export function StockHistoryContent() {
     Boolean(productId) || Boolean(warehouseId) || Boolean(userId) || types.length > 0;
 
   function resetFilters() {
+    setPage(1);
     setProductId(undefined);
     setWarehouseId('');
     setUserId('');
@@ -164,16 +175,44 @@ export function StockHistoryContent() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.stock.history.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
+
+      <div className="mt-4">
         <Table
           columns={columns}
-          data={historyQuery.data ?? []}
+          data={historyQuery.data?.data ?? []}
           keyField={(row) => row.id}
           isLoading={historyQuery.isPending}
           loadingMessage={tr.crm.stock.history.loading}
           emptyMessage={tr.crm.stock.history.empty}
         />
       </div>
+
+      {historyQuery.data && historyQuery.data.data.length > 0 && (
+        <Pagination
+          page={historyQuery.data.meta.page}
+          totalPages={historyQuery.data.meta.totalPages}
+          total={historyQuery.data.meta.total}
+          onPageChange={setPage}
+          onPrevious={() => setPage((p) => p - 1)}
+          onNext={() => setPage((p) => p + 1)}
+        />
+      )}
 
       {drawerOpen && (
         <Drawer
@@ -185,35 +224,53 @@ export function StockHistoryContent() {
               label={tr.crm.stock.history.filterDrawer.productLabel}
               placeholder={tr.crm.stock.history.filterDrawer.productPlaceholder}
               value={productId}
-              onChange={setProductId}
+              onChange={(value) => {
+                setPage(1);
+                setProductId(value);
+              }}
               clearable
             />
             <Select
               label={tr.crm.stock.history.filterDrawer.warehouseLabel}
               placeholder={tr.crm.stock.history.filterDrawer.warehousePlaceholder}
               value={warehouseId}
-              onChange={(event) => setWarehouseId(event.target.value)}
+              onChange={(event) => {
+                setPage(1);
+                setWarehouseId(event.target.value);
+              }}
               options={(warehousesQuery.data?.data ?? []).map((w) => ({
                 value: w.id,
                 label: w.name,
               }))}
               clearable
-              onClear={() => setWarehouseId('')}
+              onClear={() => {
+                setPage(1);
+                setWarehouseId('');
+              }}
             />
             <Select
               label={tr.crm.stock.history.filterDrawer.userLabel}
               placeholder={tr.crm.stock.history.filterDrawer.userPlaceholder}
               value={userId}
-              onChange={(event) => setUserId(event.target.value)}
+              onChange={(event) => {
+                setPage(1);
+                setUserId(event.target.value);
+              }}
               options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
               clearable
-              onClear={() => setUserId('')}
+              onClear={() => {
+                setPage(1);
+                setUserId('');
+              }}
             />
             <MultiSelect
               label={tr.crm.stock.history.filterDrawer.typeLabel}
               placeholder={tr.crm.stock.history.filterDrawer.typePlaceholder}
               value={types}
-              onChange={(value) => setTypes(value as StockMovementType[])}
+              onChange={(value) => {
+                setPage(1);
+                setTypes(value as StockMovementType[]);
+              }}
               options={(
                 Object.entries(tr.crm.stock.history.typeLabels) as [StockMovementType, string][]
               ).map(([value, label]) => ({ value, label }))}

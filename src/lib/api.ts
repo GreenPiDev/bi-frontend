@@ -2148,6 +2148,10 @@ export function listWarehouses(
   return request(`/warehouses${qs ? `?${qs}` : ''}`);
 }
 
+export function getWarehouseById(id: string): Promise<Warehouse> {
+  return request(`/warehouses/${id}`);
+}
+
 export function createWarehouse(input: WarehouseInput): Promise<Warehouse> {
   return request('/warehouses', { method: 'POST', body: JSON.stringify(input) });
 }
@@ -3651,6 +3655,28 @@ export function listLowStockItems(): Promise<StockItem[]> {
   return request('/stock-items/low-stock');
 }
 
+/** /depolar/:id detay sayfasi - bir depodaki urunler ve miktarlari. */
+export interface WarehouseStockRow {
+  productId: string;
+  productName: string;
+  sku: string | null;
+  unit: string;
+  quantity: number;
+  minStockLevel: number | null;
+}
+
+export function listWarehouseStockItems(
+  warehouseId: string,
+  params: { page?: number; pageSize?: number; q?: string } = {},
+): Promise<PagedResult<WarehouseStockRow>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/stock-items/by-warehouse/${warehouseId}${qs ? `?${qs}` : ''}`);
+}
+
 /** Stok girisi (alim/parti) - unitCost zorunlu, WAC (hareketli agirlikli ortalama
  * maliyet) hesabina katkisi var. Bkz. docs/PLAN_STOK_MALIYET.md Faz 2/3. */
 export function increaseStockItem(
@@ -3727,19 +3753,31 @@ export interface StockHoldingCostLog {
   createdAt: string;
 }
 
-export function listStockHoldingCostLogs(): Promise<StockHoldingCostLog[]> {
-  return request('/stock-items/holding-cost-log');
+export function listStockHoldingCostLogs(
+  params: { page?: number; pageSize?: number } = {},
+): Promise<PagedResult<StockHoldingCostLog>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  const qs = query.toString();
+  return request(`/stock-items/holding-cost-log${qs ? `?${qs}` : ''}`);
 }
 
 export function listStockHistory(
   params: {
+    page?: number;
+    pageSize?: number;
+    q?: string;
     productId?: string;
     warehouseId?: string;
     userId?: string;
     types?: StockMovementType[];
   } = {},
-): Promise<StockMovement[]> {
+): Promise<PagedResult<StockMovement>> {
   const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
   if (params.productId) query.set('productId', params.productId);
   if (params.warehouseId) query.set('warehouseId', params.warehouseId);
   if (params.userId) query.set('userId', params.userId);
