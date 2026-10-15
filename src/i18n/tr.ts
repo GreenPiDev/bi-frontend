@@ -30,6 +30,8 @@ export const tr = {
       hide: 'Şifreyi gizle',
     },
     pageHelp: 'Yardım',
+    pdfPreviewLoadingTitle: 'PDF hazırlanıyor...',
+    pdfPreviewLoadingMessage: 'PDF hazırlanıyor, lütfen bekleyin. Bu sekmeyi kapatmayın.',
     columnPicker: {
       label: 'Gösterilecek Kolonlar',
       placeholder: 'Kolon seçin',
