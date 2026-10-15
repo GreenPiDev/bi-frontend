@@ -21,6 +21,8 @@ export function usePurchaseOrdersQuery(
     projectId?: string;
     status?: PurchaseOrderStatus;
     q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ) {
   return useQuery({

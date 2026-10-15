@@ -109,7 +109,7 @@ export function ProductImportPage() {
   return (
     <AppShell>
       <BackLink
-        to={`/urun-listeleri/${productListId}/duzenle`}
+        to={`/urun-listeleri/duzenle/${productListId}`}
         label={tr.crm.productImports.back}
       />
 
@@ -306,7 +306,7 @@ export function ProductImportPage() {
             <Button
               type="button"
               className="mt-4"
-              onClick={() => navigate(`/urun-listeleri/${productListId}/duzenle`)}
+              onClick={() => navigate(`/urun-listeleri/duzenle/${productListId}`)}
             >
               {tr.crm.productImports.done}
             </Button>

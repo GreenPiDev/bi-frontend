@@ -5,11 +5,11 @@ import { useUpdateProductMutation } from './use-products';
 import { ApiError, type Product } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 
-/** /envanter?tab=products ve /urun-listeleri/:id/duzenle ürün tablolarındaki "Ürün Listesi"
+/** /envanter?tab=products ve /urun-listeleri/duzenle/:id ürün tablolarındaki "Ürün Listesi"
  * hücresi - `ProductUnitSelect` ile aynı desen: hücrenin kendisi tıklanabilir bir dropdown,
  * seçim değişince PATCH /products/:id ile anında kaydedilir. Form içindeki
  * `ProductListSelect` (zorunlu, ayrı value/onChange props'lu) ile karıştırılmamalı - o
- * formda kullanılıyor, bu satır-içi düzenleme için. `/urun-listeleri/:id/duzenle`'deki
+ * formda kullanılıyor, bu satır-içi düzenleme için. `/urun-listeleri/duzenle/:id`'deki
  * tablo zaten seçili listeye göre filtrelenmiş (productListId) - taşıma sonrası mutation'ın
  * standart PRODUCTS_QUERY_KEY invalidation'ı listeyi yeniden çekip taşınan ürünü otomatik
  * olarak tablodan düşürüyor, ayrı bir "kaybol" mantığı gerekmiyor. */

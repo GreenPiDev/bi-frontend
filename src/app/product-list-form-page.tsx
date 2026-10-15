@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Download, Plus, Search } from 'lucide-react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { FormError } from '../components/ui/form-error';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { TextField } from '../components/ui/text-field';
@@ -13,7 +14,6 @@ import { useToast } from '../components/ui/toast-context';
 import {
   useCreateProductListMutation,
   useProductListQuery,
-  useUpdateProductListMutation,
 } from '../features/crm/use-product-lists';
 import { ProductListInlineSelect } from '../features/crm/product-list-inline-select';
 import { useProductsQuery } from '../features/crm/use-products';
@@ -35,8 +35,6 @@ export function ProductListFormPage() {
   const toast = useToast();
   const productListQuery = useProductListQuery(id ?? '');
   const createMutation = useCreateProductListMutation();
-  const updateMutation = useUpdateProductListMutation(id ?? '');
-  const mutation = isEdit ? updateMutation : createMutation;
   const [productPage, setProductPage] = useState(1);
   const [productQInput, setProductQInput] = useState('');
   const productQ = useDebouncedValue(productQInput.trim());
@@ -92,17 +90,10 @@ export function ProductListFormPage() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<ProductListFormValues>({
     resolver: zodResolver(productListFormSchema),
   });
-
-  useEffect(() => {
-    if (productListQuery.data) {
-      reset({ name: productListQuery.data.name });
-    }
-  }, [productListQuery.data, reset]);
 
   if (isEdit && productListQuery.isPending) {
     return (
@@ -114,11 +105,9 @@ export function ProductListFormPage() {
 
   const onSubmit = handleSubmit((values) => {
     const input: ProductListInput = { name: values.name };
-    mutation.mutate(input, {
+    createMutation.mutate(input, {
       onSuccess: () => {
-        toast.success(
-          isEdit ? tr.crm.productLists.form.updateSuccess : tr.crm.productLists.form.createSuccess,
-        );
+        toast.success(tr.crm.productLists.form.createSuccess);
         navigate(backTo);
       },
       onError: (error) => {
@@ -127,61 +116,61 @@ export function ProductListFormPage() {
     });
   });
 
-  const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
+  const apiErrorMessage =
+    createMutation.error instanceof ApiError ? createMutation.error.message : undefined;
 
   return (
     <AppShell>
       <BackLink to={backTo} label={tr.crm.productLists.title} />
 
       <div className="mt-6">
-        <h1 className="text-lg font-bold text-app-text">
-          {isEdit ? tr.crm.productLists.form.editTitle : tr.crm.productLists.form.newTitle}
-        </h1>
+        {!isEdit && (
+          <>
+            <h1 className="text-lg font-bold text-app-text">{tr.crm.productLists.form.newTitle}</h1>
+            <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6" noValidate>
+              <FormError message={apiErrorMessage} />
 
-        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6" noValidate>
-          <FormError message={apiErrorMessage} />
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
+                <TextField
+                  label={tr.crm.productLists.form.nameLabel}
+                  error={errors.name?.message}
+                  {...register('name')}
+                />
+              </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
-            <TextField
-              label={tr.crm.productLists.form.nameLabel}
-              error={errors.name?.message}
-              {...register('name')}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending
-                ? tr.crm.productLists.form.submitting
-                : tr.crm.productLists.form.submit}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate(backTo)}>
-              {tr.crm.productLists.form.cancel}
-            </Button>
-          </div>
-        </form>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={createMutation.isPending}>
+                  {createMutation.isPending
+                    ? tr.crm.productLists.form.submitting
+                    : tr.crm.productLists.form.submit}
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => navigate(backTo)}>
+                  {tr.crm.productLists.form.cancel}
+                </Button>
+              </div>
+            </form>
+          </>
+        )}
 
         {isEdit && (
-          <div className="mt-6 border-t border-app-border pt-6">
+          <div>
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h2 className="text-base font-bold text-app-text">
-                {tr.crm.productLists.productsSection.title}
+                {tr.crm.productLists.productsSection.title(productListQuery.data?.name ?? '')}
               </h2>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
+              <div className="flex items-center gap-2">
+                <CircleIconButton
+                  icon={Download}
+                  tooltip={tr.crm.productLists.productsSection.importButton}
                   onClick={() => navigate(`/urun-listeleri/${id}/ice-aktar`)}
-                >
-                  {tr.crm.productLists.productsSection.importButton}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
+                />
+                <CircleIconButton
+                  icon={Plus}
+                  tooltip={tr.crm.productLists.productsSection.addButton}
+                  variant="success"
+                  strokeWidth={3}
                   onClick={() => navigate('/urunler/yeni', { state: productBackState })}
-                >
-                  {tr.crm.productLists.productsSection.addButton}
-                </Button>
+                />
               </div>
             </div>
             <div className="relative mt-3 w-full">

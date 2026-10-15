@@ -3439,6 +3439,8 @@ export function listPurchaseOrders(
     projectId?: string;
     status?: PurchaseOrderStatus;
     q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ): Promise<PagedResult<PurchaseOrder>> {
   const query = new URLSearchParams();
@@ -3448,6 +3450,8 @@ export function listPurchaseOrders(
   if (params.projectId) query.set('projectId', params.projectId);
   if (params.status) query.set('status', params.status);
   if (params.q) query.set('q', params.q);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
   const qs = query.toString();
   return request(`/purchase-orders${qs ? `?${qs}` : ''}`);
 }
@@ -3564,6 +3568,8 @@ export function listSalesOrders(
     accountId?: string;
     status?: SalesOrderStatus;
     q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ): Promise<PagedResult<SalesOrder>> {
   const query = new URLSearchParams();
@@ -3572,6 +3578,8 @@ export function listSalesOrders(
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   if (params.q) query.set('q', params.q);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
   const qs = query.toString();
   return request(`/sales-orders${qs ? `?${qs}` : ''}`);
 }

@@ -1,11 +1,14 @@
 import { clsx } from 'clsx';
-import { Copy, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Copy, ListFilter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { DateField } from '../components/ui/date-field';
+import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
@@ -86,6 +89,16 @@ export function PurchaseOrdersListContent() {
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const [status, setStatus] = useState<PurchaseOrderStatus | ''>('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
+  // Iki tarih filtresi ayni createdAt alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir - bkz. opportunities-list-page.tsx.
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter = Boolean(from) || Boolean(to);
   const quoteId = searchParams.get('quoteId') ?? undefined;
   const projectId = searchParams.get('projectId') ?? undefined;
   const meQuery = useMeQuery();
@@ -97,6 +110,8 @@ export function PurchaseOrdersListContent() {
     quoteId,
     projectId,
     status: status || undefined,
+    from,
+    to,
   });
   const statusCounts = usePurchaseOrderStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<PurchaseOrderStatus | '', number>> = {
@@ -119,6 +134,13 @@ export function PurchaseOrdersListContent() {
   async function handleCopyOrderNumber(orderNumber: string) {
     await navigator.clipboard.writeText(orderNumber);
     toast.success(tr.crm.purchaseOrders.orderNumberCopiedToast);
+  }
+
+  function resetFilters() {
+    setPage(1);
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
   }
 
   function handleConfirmDelete() {
@@ -224,8 +246,17 @@ export function PurchaseOrdersListContent() {
 
   return (
     <div>
-      {canCreatePurchaseOrder && (
-        <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <CircleIconButton
+          icon={ListFilter}
+          tooltip={tr.crm.purchaseOrders.filterButton}
+          onClick={() => setDrawerOpen(true)}
+        >
+          {hasActiveFilter && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+          )}
+        </CircleIconButton>
+        {canCreatePurchaseOrder && (
           <CircleIconButton
             icon={Plus}
             tooltip={tr.crm.purchaseOrders.newButton}
@@ -233,8 +264,8 @@ export function PurchaseOrdersListContent() {
             strokeWidth={3}
             onClick={() => navigate('/siparisler/yeni')}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="relative mt-4 w-full">
         <Search
@@ -292,6 +323,62 @@ export function PurchaseOrdersListContent() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer
+          title={tr.crm.purchaseOrders.filterDrawer.title}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <div className="flex flex-col gap-4">
+            <DateField
+              label={tr.crm.purchaseOrders.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setPage(1);
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setSinceInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.purchaseOrders.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeFromInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.purchaseOrders.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeToInput('');
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.purchaseOrders.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
 
       {deletingOrder && (

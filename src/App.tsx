@@ -688,7 +688,7 @@ function App() {
           }
         />
         <Route
-          path="/urun-listeleri/:id/duzenle"
+          path="/urun-listeleri/duzenle/:id"
           element={
             <TenantPageRoute pageKey="product-lists">
               <ProductListFormPage />

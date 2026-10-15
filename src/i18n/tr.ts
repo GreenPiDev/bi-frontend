@@ -1911,6 +1911,7 @@ export const tr = {
       nameColumn: 'Ad',
       productCountColumn: 'Ürün Sayısı',
       actionsColumn: 'Aksiyonlar',
+      editTooltip: 'Düzenle',
       deleteTooltip: 'Sil',
       deleteConfirmTitle: 'Ürün listesini sil',
       deleteConfirm: 'Bu ürün listesini silmek istediğinize emin misiniz?',
@@ -1926,7 +1927,7 @@ export const tr = {
         updateSuccess: 'Ürün listesi güncellendi.',
       },
       productsSection: {
-        title: 'Bu Listedeki Ürünler',
+        title: (listName: string) => `${listName} listesindeki ürünler`,
         empty: 'Bu listede henüz ürün yok.',
         searchPlaceholder: 'Ürün ara...',
         loading: 'Ürünler yükleniyor...',
@@ -3175,6 +3176,14 @@ export const tr = {
       allStatuses: 'Tümü',
       statusUpdateSuccess: 'Durum güncellendi.',
       statusUpdateError: 'Durum güncellenemedi.',
+      filterButton: 'Filtrele',
+      filterDrawer: {
+        title: 'Satış Siparişlerini Filtrele',
+        sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
+        rangeFromLabel: 'Başlangıç tarihi',
+        rangeToLabel: 'Bitiş tarihi',
+        reset: 'Sıfırla',
+      },
       statusOptions: {
         PENDING: 'Beklemede',
         PROCESSING: 'İşlemde',
@@ -3230,6 +3239,14 @@ export const tr = {
       allStatuses: 'Tümü',
       statusUpdateSuccess: 'Durum güncellendi.',
       statusUpdateError: 'Durum güncellenemedi.',
+      filterButton: 'Filtrele',
+      filterDrawer: {
+        title: 'Siparişleri Filtrele',
+        sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
+        rangeFromLabel: 'Başlangıç tarihi',
+        rangeToLabel: 'Bitiş tarihi',
+        reset: 'Sıfırla',
+      },
       statusOptions: {
         DRAFT: 'Taslak',
         CONFIRMED: 'Onaylandı',

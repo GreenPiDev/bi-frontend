@@ -18,6 +18,8 @@ export function useSalesOrdersQuery(
     accountId?: string;
     status?: SalesOrderStatus;
     q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ) {
   return useQuery({

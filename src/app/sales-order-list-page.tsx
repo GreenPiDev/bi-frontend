@@ -1,10 +1,13 @@
 import { clsx } from 'clsx';
-import { Copy, Plus, Search } from 'lucide-react';
+import { Copy, ListFilter, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { DateField } from '../components/ui/date-field';
+import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
@@ -97,6 +100,16 @@ export function SalesOrdersListContent() {
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
   const [status, setStatus] = useState<SalesOrderStatus | ''>('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
+  // Iki tarih filtresi ayni createdAt alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir - bkz. opportunities-list-page.tsx.
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter = Boolean(from) || Boolean(to);
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const salesOrdersQuery = useSalesOrdersQuery({
@@ -104,6 +117,8 @@ export function SalesOrdersListContent() {
     pageSize,
     q: q || undefined,
     status: status || undefined,
+    from,
+    to,
   });
   const statusCounts = useSalesOrderStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<SalesOrderStatus | '', number>> = {
@@ -115,6 +130,13 @@ export function SalesOrdersListContent() {
   async function handleCopyOrderNumber(orderNumber: string) {
     await navigator.clipboard.writeText(orderNumber);
     toast.success(tr.crm.salesOrders.orderNumberCopiedToast);
+  }
+
+  function resetFilters() {
+    setPage(1);
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
   }
 
   const ALL_COLUMNS: TableColumn<SalesOrder>[] = [
@@ -172,8 +194,17 @@ export function SalesOrdersListContent() {
 
   return (
     <div>
-      {canCreateSalesOrder && (
-        <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <CircleIconButton
+          icon={ListFilter}
+          tooltip={tr.crm.salesOrders.filterButton}
+          onClick={() => setDrawerOpen(true)}
+        >
+          {hasActiveFilter && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+          )}
+        </CircleIconButton>
+        {canCreateSalesOrder && (
           <CircleIconButton
             icon={Plus}
             tooltip={tr.crm.salesOrders.newButton}
@@ -181,8 +212,8 @@ export function SalesOrdersListContent() {
             strokeWidth={3}
             onClick={() => navigate('/satis-siparisleri/yeni')}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="relative mt-4 w-full">
         <Search
@@ -240,6 +271,59 @@ export function SalesOrdersListContent() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer title={tr.crm.salesOrders.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <DateField
+              label={tr.crm.salesOrders.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setPage(1);
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setSinceInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.salesOrders.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeFromInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.salesOrders.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeToInput('');
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.salesOrders.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
     </div>
   );

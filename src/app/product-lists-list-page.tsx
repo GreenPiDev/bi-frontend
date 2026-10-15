@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -10,6 +10,7 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import { NewProductListModal } from '../features/crm/new-product-list-modal';
+import { ProductListEditModal } from './product-list-edit-modal';
 import {
   useDeleteProductListMutation,
   useProductListsQuery,
@@ -24,6 +25,9 @@ export function ProductListsListContent() {
   const toast = useToast();
   const [page, setPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingProductList, setEditingProductList] = useState<ProductListWithCount | undefined>(
+    undefined,
+  );
   const [deletingProductList, setDeletingProductList] = useState<ProductListWithCount | undefined>(
     undefined,
   );
@@ -63,12 +67,19 @@ export function ProductListsListContent() {
       className: 'w-px',
       required: true,
       render: (pl) => (
-        <IconActionButton
-          icon={Trash2}
-          tooltip={tr.crm.productLists.deleteTooltip}
-          variant="danger"
-          onClick={() => setDeletingProductList(pl)}
-        />
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Pencil}
+            tooltip={tr.crm.productLists.editTooltip}
+            onClick={() => setEditingProductList(pl)}
+          />
+          <IconActionButton
+            icon={Trash2}
+            tooltip={tr.crm.productLists.deleteTooltip}
+            variant="danger"
+            onClick={() => setDeletingProductList(pl)}
+          />
+        </div>
       ),
     },
   ];
@@ -93,9 +104,9 @@ export function ProductListsListContent() {
         data={productListsQuery.data?.data ?? []}
         keyField={(productList) => productList.id}
         onRowClick={(productList) =>
-          navigate(`/urun-listeleri/${productList.id}/duzenle`, { state: backState })
+          navigate(`/urun-listeleri/duzenle/${productList.id}`, { state: backState })
         }
-        getRowHref={(productList) => `/urun-listeleri/${productList.id}/duzenle`}
+        getRowHref={(productList) => `/urun-listeleri/duzenle/${productList.id}`}
         isLoading={productListsQuery.isPending}
         loadingMessage={tr.crm.productLists.loading}
         emptyMessage={tr.crm.productLists.empty}
@@ -109,6 +120,13 @@ export function ProductListsListContent() {
           onPageChange={setPage}
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
+        />
+      )}
+
+      {editingProductList && (
+        <ProductListEditModal
+          productList={editingProductList}
+          onClose={() => setEditingProductList(undefined)}
         />
       )}
 
