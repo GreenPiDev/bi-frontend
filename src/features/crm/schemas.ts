@@ -401,6 +401,10 @@ export const quoteFormSchema = z
           productId: z.string().min(1, 'Ürün gerekli.'),
           quantity: z.string().min(1, 'Miktar gerekli.'),
           unitPrice: z.string().optional(),
+          /** Boş bırakılırsa ürünün kendi para birimi kullanılır (unitPrice ile
+           * aynı desen) - aynı ürün bir teklifte USD, başka bir teklifte TRY
+           * olarak girilebilsin diye. */
+          currency: z.string().optional(),
           discountPct: z.string().optional(),
           vatPct: z.string().optional(),
         }),

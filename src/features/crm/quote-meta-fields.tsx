@@ -8,8 +8,9 @@ import { PaymentMethodSelect } from './payment-method-select';
 import { QuoteTemplateSelect } from './quote-template-select';
 
 /** Opportunity/Interaction formlarındaki CURRENCY_OPTIONS ile aynı desen - kur çevrimi
- * için teklifin desteklediği para birimleri de bu kayıt defterinden gelir. */
-const QUOTE_CURRENCY_OPTIONS: { value: string; label: string }[] = (
+ * için teklifin desteklediği para birimleri de bu kayıt defterinden gelir. Satır bazlı
+ * para birimi override'ı (quote-form-page.tsx/quote-edit-page.tsx) da bunu kullanır. */
+export const QUOTE_CURRENCY_OPTIONS: { value: string; label: string }[] = (
   ['TRY', 'USD', 'EUR', 'GBP', 'CHF', 'JPY'] as const
 ).map((currency) => ({
   value: currency,

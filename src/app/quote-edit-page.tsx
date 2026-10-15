@@ -19,7 +19,7 @@ import {
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
 import { decodeIbanSelections } from '../features/crm/iban-selection';
-import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
+import { QUOTE_CURRENCY_OPTIONS, QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
@@ -33,7 +33,7 @@ import {
   DEFAULT_QUOTE_VAT_PCT,
   DEFAULT_QUOTE_VAT_PCT_KEY,
 } from '../features/crm/tenant-settings.constants';
-import { ApiError, type Product } from '../lib/api';
+import { ApiError, convertCurrencyAmount, type Product } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
@@ -183,6 +183,7 @@ export function QuoteEditPage() {
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const [addQuantity, setAddQuantity] = useState('1');
   const [addUnitPrice, setAddUnitPrice] = useState('');
+  const [addCurrency, setAddCurrency] = useState('TRY');
   const [addDiscountPct, setAddDiscountPct] = useState('0');
   const [addVatPct, setAddVatPct] = useState(defaultVatPct);
 
@@ -216,8 +217,26 @@ export function QuoteEditPage() {
     setAddingProductId(product.id);
     setAddQuantity('1');
     setAddUnitPrice(product.price ?? '');
+    setAddCurrency(product.currency);
     setAddDiscountPct('0');
     setAddVatPct(defaultVatPct);
+  }
+
+  // Satır para birimi değiştirilince, girilmiş birim fiyat anlık kurla yeni para
+  // birimine çevrilir (otomatik ön doldurma - kullanıcı isterse elle düzeltebilir,
+  // bkz. convertCurrencyAmount, quote-form-page.tsx'teki handleEntryCurrencyChange
+  // ile aynı desen).
+  async function handleAddCurrencyChange(newCurrency: string) {
+    const oldCurrency = addCurrency;
+    setAddCurrency(newCurrency);
+    const amount = Number(addUnitPrice);
+    if (oldCurrency === newCurrency || !addUnitPrice || Number.isNaN(amount) || amount <= 0) {
+      return;
+    }
+    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
+    if (converted !== null) {
+      setAddUnitPrice(converted.toFixed(2));
+    }
   }
 
   function handleAddItem(product: Product) {
@@ -237,7 +256,7 @@ export function QuoteEditPage() {
         productName: product.name,
         quantity: addQuantity,
         unitPrice: addUnitPrice,
-        currency: product.currency,
+        currency: addCurrency,
         discountPct: addDiscountPct || '0',
         vatPct: addVatPct || '0',
       },
@@ -367,6 +386,7 @@ export function QuoteEditPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuantity, setEditQuantity] = useState('1');
   const [editUnitPrice, setEditUnitPrice] = useState('');
+  const [editCurrency, setEditCurrency] = useState('TRY');
   const [editDiscountPct, setEditDiscountPct] = useState('0');
   const [editVatPct, setEditVatPct] = useState('0');
 
@@ -380,8 +400,23 @@ export function QuoteEditPage() {
     setEditingIndex(index);
     setEditQuantity(item.quantity);
     setEditUnitPrice(item.unitPrice);
+    setEditCurrency(item.currency);
     setEditDiscountPct(item.discountPct);
     setEditVatPct(item.vatPct);
+  }
+
+  // handleAddCurrencyChange ile ayni desen (bkz. convertCurrencyAmount).
+  async function handleEditCurrencyChange(newCurrency: string) {
+    const oldCurrency = editCurrency;
+    setEditCurrency(newCurrency);
+    const amount = Number(editUnitPrice);
+    if (oldCurrency === newCurrency || !editUnitPrice || Number.isNaN(amount) || amount <= 0) {
+      return;
+    }
+    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
+    if (converted !== null) {
+      setEditUnitPrice(converted.toFixed(2));
+    }
   }
 
   function handleSaveEditRow(index: number) {
@@ -403,6 +438,7 @@ export function QuoteEditPage() {
               ...it,
               quantity: editQuantity,
               unitPrice: editUnitPrice,
+              currency: editCurrency,
               discountPct: editDiscountPct || '0',
               vatPct: editVatPct || '0',
             }
@@ -463,6 +499,7 @@ export function QuoteEditPage() {
           productId: item.productId,
           quantity: Number(item.quantity),
           unitPrice: item.unitPrice ? Number(item.unitPrice) : undefined,
+          currency: item.currency || undefined,
           discountPct: item.discountPct ? Number(item.discountPct) : 0,
           vatPct: item.vatPct ? Number(item.vatPct) : 0,
         })),
@@ -543,7 +580,7 @@ export function QuoteEditPage() {
 
   function renderAddPanel(product: Product) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-6">
         <TextField
           type="text"
           inputMode="decimal"
@@ -554,9 +591,15 @@ export function QuoteEditPage() {
         <TextField
           type="text"
           inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel(product.currency)}
+          label={tr.crm.quotes.form.unitPriceLabel(addCurrency)}
           value={addUnitPrice}
           onChange={(event) => setAddUnitPrice(sanitizeDecimalInput(event.target.value))}
+        />
+        <Select
+          label={tr.crm.quotes.form.currencyLabel}
+          options={QUOTE_CURRENCY_OPTIONS}
+          value={addCurrency}
+          onChange={(event) => void handleAddCurrencyChange(event.target.value)}
         />
         <TextField
           type="text"
@@ -632,10 +675,8 @@ export function QuoteEditPage() {
   ];
 
   function renderEditPanel() {
-    const editingItemCurrency =
-      editingIndex !== null ? (items?.[editingIndex]?.currency ?? 'TRY') : 'TRY';
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-6">
         <TextField
           type="text"
           inputMode="decimal"
@@ -646,9 +687,15 @@ export function QuoteEditPage() {
         <TextField
           type="text"
           inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel(editingItemCurrency)}
+          label={tr.crm.quotes.form.unitPriceLabel(editCurrency)}
           value={editUnitPrice}
           onChange={(event) => setEditUnitPrice(sanitizeDecimalInput(event.target.value))}
+        />
+        <Select
+          label={tr.crm.quotes.form.currencyLabel}
+          options={QUOTE_CURRENCY_OPTIONS}
+          value={editCurrency}
+          onChange={(event) => void handleEditCurrencyChange(event.target.value)}
         />
         <TextField
           type="text"

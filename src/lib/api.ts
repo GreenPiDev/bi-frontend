@@ -2800,6 +2800,10 @@ export interface QuoteItemInput {
   productId: string;
   quantity: number;
   unitPrice?: number;
+  /** Verilmezse Product.currency'den alinir, verilirse manuel ezme sayilir -
+   * unitPrice ile ayni desen (ayni urun bir teklifte USD, baska bir teklifte
+   * TRY olarak girilebilsin diye). */
+  currency?: string;
   discountPct?: number;
   vatPct?: number;
 }
@@ -2928,6 +2932,26 @@ export interface FxRatesResult {
  * duzenleyebilir - bkz. Quote.exchangeRates). targets bossa istek atilmaz. */
 export function getQuoteFxRates(base: string, targets: string[]): Promise<FxRatesResult> {
   return request(`/quotes/fx-rates?base=${base}&targets=${targets.join(',')}`);
+}
+
+/** Satir bazli para birimi override'inda (quote-form-page.tsx/quote-edit-page.tsx)
+ * birim fiyati otomatik yeni kura cevirmek icin - getQuoteFxRates'in sonucundan
+ * "1 from = ? to" kurunu okuyup amount'u cevirir. Kur bulunamazsa (ag hatasi,
+ * desteklenmeyen para birimi vb.) null doner - caller alani degistirmeden birakir,
+ * kullanici elle duzenler (FxService zaten "best effort" otomatik on-doldurma). */
+export async function convertCurrencyAmount(
+  amount: number,
+  from: string,
+  to: string,
+): Promise<number | null> {
+  if (from === to) return amount;
+  try {
+    const result = await getQuoteFxRates(to, [from]);
+    const rate = result.rates[from];
+    return rate ? amount * rate : null;
+  } catch {
+    return null;
+  }
 }
 
 /** /teklifler/yeni'deki firma bazli uyari icin ("Bu firma daha once N kere revize

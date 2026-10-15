@@ -2928,6 +2928,9 @@ export const tr = {
         unitPriceLabel: (currency: string) =>
           `Birim Fiyat (${CURRENCY_SYMBOLS[currency] ?? currency})`,
         unitPriceHint: 'Boş bırakılırsa ürünün kayıtlı fiyatı kullanılır.',
+        currencyLabel: 'Para Birimi',
+        currencyHint:
+          'Ürünün kayıtlı para birimi önceden seçilir, bu teklif için değiştirebilirsiniz.',
         discountPctLabel: 'İskonto (%)',
         vatPctLabel: 'KDV (%)',
         vatPctSetDefaultLink: 'Varsayılan Değer Ata',

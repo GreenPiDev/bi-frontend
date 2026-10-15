@@ -35,7 +35,7 @@ import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
-import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
+import { QUOTE_CURRENCY_OPTIONS, QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -59,6 +59,7 @@ import {
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
 import {
   ApiError,
+  convertCurrencyAmount,
   type Account,
   type Contact,
   type CreateQuoteInput,
@@ -287,6 +288,7 @@ export function QuoteFormPage() {
   const [entryProductId, setEntryProductId] = useState<string | null>(null);
   const [entryQuantity, setEntryQuantity] = useState('1');
   const [entryUnitPrice, setEntryUnitPrice] = useState('');
+  const [entryCurrency, setEntryCurrency] = useState('TRY');
   const [entryDiscountPct, setEntryDiscountPct] = useState('0');
   const [entryVatPct, setEntryVatPct] = useState(defaultVatPct);
 
@@ -298,8 +300,25 @@ export function QuoteFormPage() {
     setEntryProductId(product.id);
     setEntryQuantity('1');
     setEntryUnitPrice(product.price ?? '');
+    setEntryCurrency(product.currency);
     setEntryDiscountPct('0');
     setEntryVatPct(defaultVatPct);
+  }
+
+  // Satır para birimi değiştirilince, girilmiş birim fiyat anlık kurla yeni para
+  // birimine çevrilir (otomatik ön doldurma - kullanıcı isterse elle düzeltebilir,
+  // bkz. convertCurrencyAmount).
+  async function handleEntryCurrencyChange(newCurrency: string) {
+    const oldCurrency = entryCurrency;
+    setEntryCurrency(newCurrency);
+    const amount = Number(entryUnitPrice);
+    if (oldCurrency === newCurrency || !entryUnitPrice || Number.isNaN(amount) || amount <= 0) {
+      return;
+    }
+    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
+    if (converted !== null) {
+      setEntryUnitPrice(converted.toFixed(2));
+    }
   }
 
   function handleAddEntry(product: Product) {
@@ -316,6 +335,7 @@ export function QuoteFormPage() {
       productId: product.id,
       quantity: entryQuantity,
       unitPrice: entryUnitPrice,
+      currency: entryCurrency,
       discountPct: entryDiscountPct || '0',
       vatPct: entryVatPct || '0',
     });
@@ -334,6 +354,7 @@ export function QuoteFormPage() {
       productId: product.id,
       quantity: '1',
       unitPrice: product.price,
+      currency: product.currency,
       discountPct: '0',
       vatPct: defaultVatPct,
     });
@@ -351,6 +372,7 @@ export function QuoteFormPage() {
       productId: product.id,
       quantity: '1',
       unitPrice: product.price ?? '',
+      currency: product.currency,
       discountPct: '0',
       vatPct: defaultVatPct,
     });
@@ -378,6 +400,7 @@ export function QuoteFormPage() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuantity, setEditQuantity] = useState('1');
   const [editUnitPrice, setEditUnitPrice] = useState('');
+  const [editCurrency, setEditCurrency] = useState('TRY');
   const [editDiscountPct, setEditDiscountPct] = useState('0');
   const [editVatPct, setEditVatPct] = useState('0');
 
@@ -391,8 +414,23 @@ export function QuoteFormPage() {
     setEditingIndex(index);
     setEditQuantity(item.quantity);
     setEditUnitPrice(item.unitPrice ?? '');
+    setEditCurrency(item.currency ?? productCurrencyById.get(item.productId) ?? 'TRY');
     setEditDiscountPct(item.discountPct ?? '0');
     setEditVatPct(item.vatPct ?? '0');
+  }
+
+  // handleEntryCurrencyChange ile ayni desen (bkz. convertCurrencyAmount).
+  async function handleEditCurrencyChange(newCurrency: string) {
+    const oldCurrency = editCurrency;
+    setEditCurrency(newCurrency);
+    const amount = Number(editUnitPrice);
+    if (oldCurrency === newCurrency || !editUnitPrice || Number.isNaN(amount) || amount <= 0) {
+      return;
+    }
+    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
+    if (converted !== null) {
+      setEditUnitPrice(converted.toFixed(2));
+    }
   }
 
   function handleSaveEditRow(index: number) {
@@ -411,6 +449,7 @@ export function QuoteFormPage() {
       productId: item.productId,
       quantity: editQuantity,
       unitPrice: editUnitPrice,
+      currency: editCurrency,
       discountPct: editDiscountPct || '0',
       vatPct: editVatPct || '0',
     });
@@ -438,7 +477,7 @@ export function QuoteFormPage() {
     const isDefaultPrice = manualPrice === undefined && productPrice !== undefined;
     const discountPct = Number(item.discountPct) || 0;
     const vatPct = Number(item.vatPct) || 0;
-    const currency = productCurrencyById.get(item.productId) ?? 'TRY';
+    const currency = item.currency || productCurrencyById.get(item.productId) || 'TRY';
     const { lineSubtotal, lineTotal } = computeLineTotal({
       quantity,
       unitPrice,
@@ -470,6 +509,7 @@ export function QuoteFormPage() {
         productId: item.productId,
         quantity: Number(item.quantity),
         unitPrice: item.unitPrice ? Number(item.unitPrice) : undefined,
+        currency: item.currency || undefined,
         discountPct: item.discountPct ? Number(item.discountPct) : 0,
         vatPct: item.vatPct ? Number(item.vatPct) : 0,
       })),
@@ -625,7 +665,7 @@ export function QuoteFormPage() {
 
   function renderEntryPanel(product: Product) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-6">
         <TextField
           type="text"
           inputMode="decimal"
@@ -636,10 +676,19 @@ export function QuoteFormPage() {
         <TextField
           type="text"
           inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel(product.currency)}
+          label={tr.crm.quotes.form.unitPriceLabel(entryCurrency)}
           value={entryUnitPrice}
           onChange={(event) => setEntryUnitPrice(sanitizeDecimalInput(event.target.value))}
         />
+        <div>
+          <Select
+            label={tr.crm.quotes.form.currencyLabel}
+            options={QUOTE_CURRENCY_OPTIONS}
+            value={entryCurrency}
+            onChange={(event) => void handleEntryCurrencyChange(event.target.value)}
+          />
+          <p className="mt-1.5 text-xs text-app-muted">{tr.crm.quotes.form.currencyHint}</p>
+        </div>
         <TextField
           type="text"
           inputMode="decimal"
@@ -730,12 +779,8 @@ export function QuoteFormPage() {
   ];
 
   function renderEditPanel() {
-    const editingItem = editingIndex !== null ? watchedItems?.[editingIndex] : undefined;
-    const editingItemCurrency = editingItem
-      ? (productCurrencyById.get(editingItem.productId) ?? 'TRY')
-      : 'TRY';
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-6">
         <TextField
           type="text"
           inputMode="decimal"
@@ -746,10 +791,19 @@ export function QuoteFormPage() {
         <TextField
           type="text"
           inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel(editingItemCurrency)}
+          label={tr.crm.quotes.form.unitPriceLabel(editCurrency)}
           value={editUnitPrice}
           onChange={(event) => setEditUnitPrice(sanitizeDecimalInput(event.target.value))}
         />
+        <div>
+          <Select
+            label={tr.crm.quotes.form.currencyLabel}
+            options={QUOTE_CURRENCY_OPTIONS}
+            value={editCurrency}
+            onChange={(event) => void handleEditCurrencyChange(event.target.value)}
+          />
+          <p className="mt-1.5 text-xs text-app-muted">{tr.crm.quotes.form.currencyHint}</p>
+        </div>
         <TextField
           type="text"
           inputMode="decimal"
