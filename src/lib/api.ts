@@ -2759,6 +2759,7 @@ export interface Quote {
   status: QuoteStatus;
   quoteDate: string;
   leadTime: string | null;
+  validityPeriod: string | null;
   paymentMethod: string | null;
   title: string | null;
   paymentTerms: string | null;
@@ -2810,6 +2811,7 @@ export interface CreateQuoteInput {
   opportunity?: { name: string; stage?: OpportunityStage; estimatedValue?: number };
   quoteDate: string;
   leadTime?: string;
+  validityPeriod?: string;
   paymentMethod?: string;
   title?: string;
   paymentTerms?: string;
@@ -2842,6 +2844,7 @@ export interface UpdateQuoteInput {
   contactId?: string | null;
   quoteDate?: string;
   leadTime?: string | null;
+  validityPeriod?: string | null;
   paymentMethod?: string | null;
   title?: string | null;
   paymentTerms?: string | null;

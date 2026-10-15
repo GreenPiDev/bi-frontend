@@ -20,6 +20,7 @@ export interface QuoteMetaFieldsValues {
   contactId: string;
   quoteDate: string;
   leadTime: string;
+  validityPeriod: string;
   paymentMethod: string;
   /** IbanSelect'in encode ettigi secimlerin dizisi - her eleman "option:<id>"
    * (tekil hesap) veya "group:<id>" (hesap grubu), bos dizi = secim yok.
@@ -35,6 +36,7 @@ export interface QuoteMetaFieldsErrors {
   contactId?: string;
   quoteDate?: string;
   leadTime?: string;
+  validityPeriod?: string;
   paymentMethod?: string;
   ibanSelections?: string;
   quoteCurrency?: string;
@@ -123,6 +125,14 @@ export function QuoteMetaFields({
         error={errors?.leadTime}
         value={values.leadTime}
         onChange={(event) => onChange('leadTime', event.target.value)}
+      />
+      <TextField
+        label={tr.crm.quotes.form.validityPeriodLabel}
+        placeholder={tr.crm.quotes.form.validityPeriodPlaceholder}
+        hint={tr.crm.quotes.form.validityPeriodHint}
+        error={errors?.validityPeriod}
+        value={values.validityPeriod}
+        onChange={(event) => onChange('validityPeriod', event.target.value)}
       />
       <PaymentMethodSelect
         label={tr.crm.quotes.form.paymentMethodLabel}

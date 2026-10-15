@@ -88,6 +88,7 @@ export function QuoteEditPage() {
   const [quoteDate, setQuoteDate] = useState('');
   const [title, setTitle] = useState('');
   const [leadTime, setLeadTime] = useState('');
+  const [validityPeriod, setValidityPeriod] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   // Quote, secilen IbanOption('lar)i FK olarak degil Quote.ibanAccounts
   // snapshot'i olarak tasir (bkz. QuotesService.resolveIbanSnapshot) - bu
@@ -126,6 +127,7 @@ export function QuoteEditPage() {
     setQuoteDate(quoteQuery.data.quoteDate.slice(0, 10));
     setTitle(quoteQuery.data.title ?? '');
     setLeadTime(quoteQuery.data.leadTime ?? '');
+    setValidityPeriod(quoteQuery.data.validityPeriod ?? '');
     setPaymentMethod(quoteQuery.data.paymentMethod ?? '');
     setPaymentTerms(quoteQuery.data.paymentTerms ?? '');
     setSalesTerms(quoteQuery.data.salesTerms ?? '');
@@ -468,6 +470,7 @@ export function QuoteEditPage() {
         quoteDate: quoteDate ? new Date(quoteDate).toISOString() : undefined,
         title: title || null,
         leadTime: leadTime || null,
+        validityPeriod: validityPeriod || null,
         paymentMethod: paymentMethod || null,
         // Kullanici hic secim yapmadiysa (bos dizi) hicbir alan gonderilmez -
         // backend bunu "degistirilmedi" sayar ve mevcut snapshot'i korur
@@ -701,6 +704,7 @@ export function QuoteEditPage() {
               contactId: contactId ?? '',
               quoteDate,
               leadTime,
+              validityPeriod,
               paymentMethod,
               ibanSelections,
               quoteCurrency,
@@ -714,6 +718,8 @@ export function QuoteEditPage() {
                 setQuoteDate(value as string);
               } else if (field === 'leadTime') {
                 setLeadTime(value as string);
+              } else if (field === 'validityPeriod') {
+                setValidityPeriod(value as string);
               } else if (field === 'paymentMethod') {
                 setPaymentMethod(value as string);
               } else if (field === 'ibanSelections') {

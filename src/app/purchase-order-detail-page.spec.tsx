@@ -35,6 +35,7 @@ const quote: api.Quote = {
   exchangeRates: null,
   quoteDate: '2026-09-07T00:00:00.000Z',
   leadTime: null,
+  validityPeriod: null,
   paymentMethod: null,
   title: null,
   paymentTerms: null,

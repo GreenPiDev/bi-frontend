@@ -26,6 +26,7 @@ export interface QuoteTemplatePrintDocumentData {
   /** Serbest metin, orn. "3 is gunu" - defaultta (quote-detail-page.tsx) zaten
    * vardi, parite icin buraya da eklendi (bkz. docs/VARSAYIMLAR.md). */
   leadTime: string | null;
+  validityPeriod: string | null;
   paymentMethod: string | null;
   account: {
     name: string;
@@ -46,7 +47,7 @@ export interface QuoteTemplatePrintDocumentData {
     currency: string;
     discountPct: string;
     vatPct: string;
-    product: { name: string };
+    product: { name: string; sku: string | null };
   }>;
   paymentTerms: string | null;
   salesTerms: string | null;
@@ -175,15 +176,27 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
         <div className="text-right text-sm">
           <p className="font-bold">{dateFormatter.format(new Date(quote.quoteDate))}</p>
           <p className="font-bold">#{quote.quoteNumber}</p>
-          {quote.leadTime && (
-            <p className="mt-1 text-xs text-app-muted">
-              {strings.leadTimeLabel}: {quote.leadTime}
-            </p>
-          )}
-          {quote.paymentMethod && (
-            <p className="text-xs text-app-muted">
-              {strings.paymentMethodLabel}: {quote.paymentMethod}
-            </p>
+          {(quote.validityPeriod || quote.paymentMethod || quote.leadTime) && (
+            <div className="mt-1 flex justify-between gap-4 text-xs text-app-muted">
+              {quote.validityPeriod && (
+                <span className="flex flex-col">
+                  <span>{strings.validityPeriodLabel}:</span>
+                  <span>{quote.validityPeriod}</span>
+                </span>
+              )}
+              {quote.paymentMethod && (
+                <span className="flex flex-col">
+                  <span>{strings.paymentMethodLabel}:</span>
+                  <span>{quote.paymentMethod}</span>
+                </span>
+              )}
+              {quote.leadTime && (
+                <span className="flex flex-col">
+                  <span>{strings.leadTimeLabel}:</span>
+                  <span>{quote.leadTime}</span>
+                </span>
+              )}
+            </div>
           )}
         </div>
       </header>
@@ -230,15 +243,13 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
         <table className="mt-8 w-full table-fixed border-collapse text-xs">
           <thead>
             <tr className="bg-gray-900 text-white">
+              <th className="w-20 p-3 text-left">{strings.itemsSkuColumn}</th>
               <th className="p-3 text-left">{strings.itemsProductColumn}</th>
               <th className="w-16 p-3 whitespace-nowrap text-right">
                 {strings.itemsQuantityColumn}
               </th>
               <th className="w-24 p-3 whitespace-nowrap text-right">
                 {strings.itemsUnitPriceColumn}
-              </th>
-              <th className="w-16 p-3 whitespace-nowrap text-right">
-                {strings.itemsDiscountColumn}
               </th>
               <th className="w-14 p-3 whitespace-nowrap text-right">{strings.itemsVatColumn}</th>
               <th className="w-24 p-3 whitespace-nowrap text-right">{strings.itemsTotalColumn}</th>
@@ -247,12 +258,12 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
           <tbody>
             {quote.items.map((item, index) => (
               <tr key={item.id} className={index % 2 === 1 ? 'bg-gray-50' : undefined}>
+                <td className="p-3 break-words">{item.product.sku ?? '—'}</td>
                 <td className="p-3 break-words">{item.product.name}</td>
                 <td className="p-3 whitespace-nowrap text-right">{item.quantity}</td>
                 <td className="p-3 whitespace-nowrap text-right">
                   {formatCurrencyAmount(Number(item.unitPrice), item.currency)}
                 </td>
-                <td className="p-3 whitespace-nowrap text-right">{`%${item.discountPct}`}</td>
                 <td className="p-3 whitespace-nowrap text-right">{`%${item.vatPct}`}</td>
                 <td className="p-3 whitespace-nowrap text-right">
                   {formatCurrencyAmount(lineTotal(item), item.currency)}

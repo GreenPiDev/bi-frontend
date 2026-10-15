@@ -179,6 +179,7 @@ function buildSampleQuote(
     quoteCurrency: 'TRY',
     exchangeRates: null,
     leadTime: strings.sampleLeadTime,
+    validityPeriod: strings.sampleValidityPeriod,
     paymentMethod: strings.samplePaymentMethod,
     account: {
       name: strings.sampleAccountName,
@@ -199,7 +200,7 @@ function buildSampleQuote(
         currency: 'TRY',
         discountPct: '0',
         vatPct: '20',
-        product: { name: strings.sampleItem1Name },
+        product: { name: strings.sampleItem1Name, sku: 'SKU-001' },
       },
       {
         id: 'preview-item-2',
@@ -208,7 +209,7 @@ function buildSampleQuote(
         currency: 'TRY',
         discountPct: '10',
         vatPct: '20',
-        product: { name: strings.sampleItem2Name },
+        product: { name: strings.sampleItem2Name, sku: 'SKU-002' },
       },
     ],
     paymentTerms: strings.samplePaymentTerms,

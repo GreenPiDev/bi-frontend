@@ -411,6 +411,7 @@ export const quoteFormSchema = z
     opportunityStage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
     opportunityValue: z.string().optional(),
     leadTime: z.string().max(200).optional(),
+    validityPeriod: z.string().max(200).optional(),
     paymentMethod: z.string().max(200).optional(),
     title: z.string().max(200).optional(),
     paymentTerms: z.string().max(4000).optional(),
