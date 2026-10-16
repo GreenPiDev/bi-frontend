@@ -18,17 +18,24 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   /** Input'un solunda sabit, duzenlenemez bir isaret gosterir (ornek: azaltma
    * miktari girilirken "-" isareti) - sadece gorsel, gercek deger hala pozitif girilir. */
   prefix?: string;
+  /** Etiketi gorsel olarak gizler (erisilebilirlik icin DOM'da `sr-only` ile kalir) -
+   * sutun basligi zaten alan adini tasiyan tablo hucrelerinde (orn. quote-form-page.tsx
+   * kalem satirlari) etiketin tekrarini onlemek icin opt-in. */
+  hideLabel?: boolean;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField(
-  { label, error, required, hint, id, className, clearable, onClear, prefix, ...props },
+  { label, error, required, hint, id, className, clearable, onClear, prefix, hideLabel, ...props },
   ref,
 ) {
   const inputId = id ?? props.name;
   const showClear = clearable && Boolean(onClear) && Boolean(props.value);
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="text-sm font-semibold text-app-muted">
+      <label
+        htmlFor={inputId}
+        className={hideLabel ? 'sr-only' : 'text-sm font-semibold text-app-muted'}
+      >
         {label}
         {required && (
           <span className="ml-0.5 text-app-danger" aria-hidden="true">

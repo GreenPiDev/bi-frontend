@@ -53,6 +53,9 @@ interface AsyncAutocompleteProps {
   /** `onMenuScrollEnd` sonrasi ek sayfa yuklenirken listenin altinda kucuk bir
    * "daha fazla yukleniyor" satiri gosterir. */
   isLoadingMore?: boolean;
+  /** Etiketi gorsel olarak gizler (erisilebilirlik icin DOM'da `sr-only` ile kalir) -
+   * TextField'daki ayni desen, bkz. o dosyadaki doc comment. */
+  hideLabel?: boolean;
 }
 
 /**
@@ -86,6 +89,7 @@ export function AsyncAutocomplete({
   isLoadingOptions,
   onMenuScrollEnd,
   isLoadingMore,
+  hideLabel,
 }: AsyncAutocompleteProps) {
   const showClear = clearable && Boolean(onClear) && Boolean(value);
   const [open, setOpen] = useState(false);
@@ -155,7 +159,7 @@ export function AsyncAutocomplete({
 
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
-      <label className="text-sm font-semibold text-app-muted">
+      <label className={hideLabel ? 'sr-only' : 'text-sm font-semibold text-app-muted'}>
         {label}
         {required && (
           <span className="ml-0.5 text-app-danger" aria-hidden="true">

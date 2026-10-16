@@ -16,6 +16,7 @@ interface ProductAutocompleteProps {
    * kalemi satirlarinda "once urun listesi, sonra urun" akisi icin). */
   productListId?: string;
   disabled?: boolean;
+  hideLabel?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -39,6 +40,7 @@ export function ProductAutocomplete({
   clearable,
   productListId,
   disabled,
+  hideLabel,
 }: ProductAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
@@ -81,6 +83,7 @@ export function ProductAutocomplete({
       hint={hint}
       clearable={clearable}
       disabled={disabled}
+      hideLabel={hideLabel}
       onClear={
         clearable
           ? () => {

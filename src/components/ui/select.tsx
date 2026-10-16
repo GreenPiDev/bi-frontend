@@ -28,6 +28,9 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
    * Birim" butonu) - `Autocomplete`'in `trailingAction`'iyla ayni desen, buton
    * label/hint'i degil sadece select kutusunu hizalar. */
   trailingAction?: ReactNode;
+  /** Etiketi gorsel olarak gizler (erisilebilirlik icin DOM'da `sr-only` ile kalir) -
+   * TextField'daki ayni desen, bkz. o dosyadaki doc comment. */
+  hideLabel?: boolean;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
@@ -43,6 +46,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     clearable,
     onClear,
     trailingAction,
+    hideLabel,
     ...props
   },
   ref,
@@ -51,7 +55,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const showClear = clearable && Boolean(onClear) && Boolean(props.value);
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={selectId} className="text-sm font-semibold text-app-muted">
+      <label
+        htmlFor={selectId}
+        className={hideLabel ? 'sr-only' : 'text-sm font-semibold text-app-muted'}
+      >
         {label}
         {required && (
           <span className="ml-0.5 text-app-danger" aria-hidden="true">

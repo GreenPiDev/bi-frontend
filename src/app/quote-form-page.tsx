@@ -1,16 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight, Search, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { X } from 'lucide-react';
+import { useEffect, useState, type ChangeEvent } from 'react';
+import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
-import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { FormError } from '../components/ui/form-error';
 import { IconActionButton } from '../components/ui/icon-action-button';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { SettingsNavigateLink } from '../components/ui/settings-navigate-link';
 import { Switch } from '../components/ui/switch';
@@ -31,9 +29,9 @@ import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups
 import { useIbanOptionsQuery } from '../features/crm/use-iban-options';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
+import { ProductAutocomplete } from '../features/crm/product-autocomplete';
 import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
 import { useAccountQuery } from '../features/crm/use-accounts';
-import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   QuoteExchangeRatesSection,
@@ -44,7 +42,6 @@ import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
-import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
 import {
   useCreateQuoteMutation,
   useQuoteAssignableUsersQuery,
@@ -60,12 +57,12 @@ import {
   DEFAULT_QUOTE_SALES_TERMS_KEY,
   DEFAULT_QUOTE_VAT_PCT,
   DEFAULT_QUOTE_VAT_PCT_KEY,
-  QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
 } from '../features/crm/tenant-settings.constants';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
 import {
   ApiError,
   convertCurrencyAmount,
+  getProduct,
   type Account,
   type Contact,
   type CreateQuoteInput,
@@ -73,19 +70,12 @@ import {
   type Product,
   type UpdateQuoteInput,
 } from '../lib/api';
-import { useDebouncedValue } from '../lib/use-debounced-value';
 import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
-
-const plainNumber = new Intl.NumberFormat('tr-TR', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-const PICKER_PAGE_SIZE = 10;
 
 /** Sayısal metin alanları icin: type="number" spinner oklarini kaldirmak amaciyla
  * type="text" kullanilir, bu yuzden rakam/nokta disindaki karakterler onChange'de
@@ -94,21 +84,17 @@ function sanitizeDecimalInput(value: string): string {
   return value.replace(/[^0-9.]/g, '');
 }
 
-/** KDV alanının altında, tenant'ın varsayılan KDV oranı ayarına (yeni sekmede,
- * ilgili bölüme kaydırarak) götüren kısa bağlantı. */
-function VatPctDefaultLink() {
-  return (
-    <p className="text-xs text-app-muted">
-      <Link
-        to={`/settings?tab=crm#${QUOTE_VAT_PCT_SETTING_ANCHOR_ID}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-semibold text-app-brand hover:underline"
-      >
-        {tr.crm.quotes.form.vatPctSetDefaultLink}
-      </Link>
-    </p>
-  );
+/** Satir tablosundaki sayisal hucreler icin register() sarmalayicisi - sales-order
+ * -create-page.tsx'teki ayni desen, degerin her tus vurusunda sanitizeDecimalInput
+ * ile filtrelenmesini saglar. */
+function decimalOnly(registration: UseFormRegisterReturn) {
+  return {
+    ...registration,
+    onChange: (event: ChangeEvent<HTMLInputElement>) => {
+      event.target.value = sanitizeDecimalInput(event.target.value);
+      return registration.onChange(event);
+    },
+  };
 }
 
 /** Koşul metni alanlarının altında, tenant'ın varsayılan koşul metinleri ayarına
@@ -166,8 +152,11 @@ export function QuoteFormPage() {
   // teklif formunun <form>'una ic ice girer, "Kaydet" native submit'e dusup sayfayi
   // yeniler ve eklenen deger hic kaydedilmez (bkz. product-form-page.tsx).
   const [activeOptionModal, setActiveOptionModal] = useState<
-    'paymentMethod' | 'iban' | 'brandEntry' | 'brandEdit' | null
+    'paymentMethod' | 'iban' | 'brand' | null
   >(null);
+  // "+ Yeni Marka" hangi kalem satirindan tetiklendi - modal'dan donen yeni marka
+  // etiketi o satirin brand alanina yazilir (bkz. AddOptionModal onCreated).
+  const [brandTargetIndex, setBrandTargetIndex] = useState<number | null>(null);
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
@@ -193,7 +182,7 @@ export function QuoteFormPage() {
       quoteCurrency: 'TRY',
     },
   });
-  const { fields, append, remove, update } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const hasOpportunity = watch('hasOpportunity');
   const selectedAccountId = watch('accountId');
   const selectedProductListId = watch('productListId');
@@ -212,13 +201,9 @@ export function QuoteFormPage() {
   // prefillAccountQuery ile aynı desen).
   const selectedAccountQuery = useAccountQuery(selectedAccountId ?? '');
 
-  // Sağdaki özet, arama/sayfalama boyunca görünürden çıkan ürünleri de doğru
-  // gösterebilsin diye görülen her ürün burada biriktirilir (id -> Product).
-  const [productCatalog, setProductCatalog] = useState<Record<string, Product>>({});
-
   // Duzenleme modunda, teklif verisi gelince formu (react-hook-form'un reset()'i ile,
-  // proje konvansiyonu - bkz. project-form-page.tsx) ve form disi state'leri (kur,
-  // urun katalogu) bir kerelige doldurur.
+  // proje konvansiyonu - bkz. project-form-page.tsx) ve form disi state'leri (kur) bir
+  // kerelige doldurur.
   const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
   useEffect(() => {
     if (!isEdit || !quoteQuery.data || quoteQuery.data.id === initializedForQuoteId) return;
@@ -251,12 +236,6 @@ export function QuoteFormPage() {
       quoteCurrency: quote.quoteCurrency,
       hasOpportunity: false,
     });
-    // Mevcut kalemlerin urunleri, secili urun listesinin ilk sayfasinda gorunmeyebilir -
-    // katalogu baslangicta bunlarla doldurur (bkz. productNameById/productPriceById altinda).
-    setProductCatalog((prev) => ({
-      ...prev,
-      ...Object.fromEntries(quote.items.map((item) => [item.productId, item.product])),
-    }));
     const savedRates = quote.exchangeRates;
     setExchangeRates({
       rates: Object.fromEntries(
@@ -336,138 +315,44 @@ export function QuoteFormPage() {
     dirtyFields.generalTerms,
   ]);
 
-  // Ürün seçici: soldan arama + sayfalama ile backend'den paginated çekilir, tüm liste
-  // frontende çekilip filtrelenmez. Seçilen ürün listesine göre filtrelenir.
-  const [pickerPage, setPickerPage] = useState(1);
-  const [pickerQuery, setPickerQuery] = useState('');
-  const debouncedPickerQuery = useDebouncedValue(pickerQuery.trim());
-  const productsQuery = useProductsQuery(
-    {
-      page: pickerPage,
-      pageSize: PICKER_PAGE_SIZE,
-      q: debouncedPickerQuery || undefined,
-      productListId: selectedProductListId || undefined,
-    },
-    { enabled: Boolean(selectedProductListId) },
-  );
-  const pickerProducts = productsQuery.data?.data ?? [];
-  const pickerAttributeKeysQuery = useProductAttributeKeysQuery();
-
-  useEffect(() => {
-    const data = productsQuery.data?.data;
-    if (!data || data.length === 0) return;
-    setProductCatalog((prev) => {
-      let changed = false;
-      const next = { ...prev };
-      for (const product of data) {
-        if (next[product.id] !== product) {
-          next[product.id] = product;
-          changed = true;
-        }
+  // Ürün satırına yeni bir ürün seçilince, fiyat/para birimi/marka varsayılanlarını o
+  // satıra uygular - handleQuickAdd'in yerini alan, satır-içi autocomplete ile uyumlu
+  // versiyon (bkz. itemColumns 'product' kolonu).
+  async function handleRowProductChange(index: number, productId: string) {
+    try {
+      const product = await getProduct(productId);
+      setValue(`items.${index}.unitPrice`, product.price ?? '');
+      setValue(`items.${index}.currency`, product.currency);
+      setValue(`items.${index}.brand`, product.brand ?? '');
+      if (!watch(`items.${index}.vatPct`)) {
+        setValue(`items.${index}.vatPct`, defaultVatPct);
       }
-      return changed ? next : prev;
-    });
-  }, [productsQuery.data]);
-  const productNameById = new Map(
-    Object.values(productCatalog).map((product) => [product.id, product.name]),
-  );
-  const productPriceById = new Map(
-    Object.values(productCatalog)
-      .filter((product) => product.price !== null)
-      .map((product) => [product.id, Number(product.price)]),
-  );
-  const productCurrencyById = new Map(
-    Object.values(productCatalog).map((product) => [product.id, product.currency]),
-  );
-
-  // Ürün satırına tıklayınca altında açılan miktar/iskonto/KDV giriş paneli.
-  const [entryProductId, setEntryProductId] = useState<string | null>(null);
-  const [entryQuantity, setEntryQuantity] = useState('1');
-  const [entryUnitPrice, setEntryUnitPrice] = useState('');
-  const [entryCurrency, setEntryCurrency] = useState('TRY');
-  const [entryDiscountPct, setEntryDiscountPct] = useState('0');
-  const [entryVatPct, setEntryVatPct] = useState(defaultVatPct);
-  const [entryBrand, setEntryBrand] = useState('');
-
-  function handleToggleEntry(product: Product) {
-    if (entryProductId === product.id) {
-      setEntryProductId(null);
-      return;
+    } catch {
+      // Urun detaylari cekilemezse kullanici fiyat/marka alanlarini elle doldurur.
     }
-    setEntryProductId(product.id);
-    setEntryQuantity('1');
-    setEntryUnitPrice(product.price ?? '');
-    setEntryCurrency(product.currency);
-    setEntryDiscountPct('0');
-    setEntryVatPct(defaultVatPct);
-    setEntryBrand(product.brand ?? '');
   }
 
   // Satır para birimi değiştirilince, girilmiş birim fiyat anlık kurla yeni para
   // birimine çevrilir (otomatik ön doldurma - kullanıcı isterse elle düzeltebilir,
   // bkz. convertCurrencyAmount).
-  async function handleEntryCurrencyChange(newCurrency: string) {
-    const oldCurrency = entryCurrency;
-    setEntryCurrency(newCurrency);
-    const amount = Number(entryUnitPrice);
-    if (oldCurrency === newCurrency || !entryUnitPrice || Number.isNaN(amount) || amount <= 0) {
+  async function handleRowCurrencyChange(index: number, newCurrency: string) {
+    const oldCurrency = watch(`items.${index}.currency`) || 'TRY';
+    setValue(`items.${index}.currency`, newCurrency);
+    const currentPrice = watch(`items.${index}.unitPrice`);
+    const amount = Number(currentPrice);
+    if (oldCurrency === newCurrency || !currentPrice || Number.isNaN(amount) || amount <= 0) {
       return;
     }
     const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
     if (converted !== null) {
-      setEntryUnitPrice(converted.toFixed(2));
+      setValue(`items.${index}.unitPrice`, converted.toFixed(2));
     }
-  }
-
-  function handleAddEntry(product: Product) {
-    const quantity = Number(entryQuantity);
-    if (!entryQuantity || Number.isNaN(quantity) || quantity <= 0) {
-      toast.error(tr.crm.quotes.form.itemInvalidQuantity);
-      return;
-    }
-    if (!entryUnitPrice && !product.price) {
-      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
-      return;
-    }
-    append({
-      productId: product.id,
-      quantity: entryQuantity,
-      unitPrice: entryUnitPrice,
-      currency: entryCurrency,
-      discountPct: entryDiscountPct || '0',
-      vatPct: entryVatPct || '0',
-      brand: entryBrand,
-    });
-    setEntryProductId(null);
-    toast.success(tr.crm.quotes.form.itemAddSuccess);
-  }
-
-  // Satırdaki ok ikonuna basınca, detay panelini açmadan ürünü varsayılan miktar/fiyat/KDV
-  // ile doğrudan teklife ekler (handleToggleEntry + handleAddEntry'nin kısayolu).
-  function handleQuickAdd(product: Product) {
-    if (!product.price) {
-      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
-      return;
-    }
-    append({
-      productId: product.id,
-      quantity: '1',
-      unitPrice: product.price,
-      currency: product.currency,
-      discountPct: '0',
-      vatPct: defaultVatPct,
-      brand: product.brand ?? '',
-    });
-    if (entryProductId === product.id) setEntryProductId(null);
-    toast.success(tr.crm.quotes.form.itemAddSuccess);
   }
 
   // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçtiği
   // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
-  // varsayılan miktar/fiyatla doğrudan satır olarak eklenir - ayrıca "Teklife Ekle"
-  // panelinin açılmasına gerek yok.
+  // varsayılan miktar/fiyatla doğrudan satır olarak eklenir.
   function handleProductCreated(product: Product) {
-    setProductCatalog((prev) => ({ ...prev, [product.id]: product }));
     append({
       productId: product.id,
       quantity: '1',
@@ -497,71 +382,6 @@ export function QuoteFormPage() {
     setIsNewContactModalOpen(false);
   }
 
-  // Teklif özeti tablosundaki mevcut satırlara tıklayınca açılan düzenleme paneli -
-  // ürün ekleme panelindeki aynı miktar/fiyat/iskonto/KDV deseni.
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editQuantity, setEditQuantity] = useState('1');
-  const [editUnitPrice, setEditUnitPrice] = useState('');
-  const [editCurrency, setEditCurrency] = useState('TRY');
-  const [editDiscountPct, setEditDiscountPct] = useState('0');
-  const [editVatPct, setEditVatPct] = useState('0');
-  const [editBrand, setEditBrand] = useState('');
-
-  function handleToggleEditRow(index: number) {
-    if (editingIndex === index) {
-      setEditingIndex(null);
-      return;
-    }
-    const item = watchedItems?.[index];
-    if (!item) return;
-    setEditingIndex(index);
-    setEditQuantity(item.quantity);
-    setEditUnitPrice(item.unitPrice ?? '');
-    setEditCurrency(item.currency ?? productCurrencyById.get(item.productId) ?? 'TRY');
-    setEditDiscountPct(item.discountPct ?? '0');
-    setEditVatPct(item.vatPct ?? '0');
-    setEditBrand(item.brand ?? '');
-  }
-
-  // handleEntryCurrencyChange ile ayni desen (bkz. convertCurrencyAmount).
-  async function handleEditCurrencyChange(newCurrency: string) {
-    const oldCurrency = editCurrency;
-    setEditCurrency(newCurrency);
-    const amount = Number(editUnitPrice);
-    if (oldCurrency === newCurrency || !editUnitPrice || Number.isNaN(amount) || amount <= 0) {
-      return;
-    }
-    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
-    if (converted !== null) {
-      setEditUnitPrice(converted.toFixed(2));
-    }
-  }
-
-  function handleSaveEditRow(index: number) {
-    const item = watchedItems?.[index];
-    if (!item) return;
-    const quantity = Number(editQuantity);
-    if (!editQuantity || Number.isNaN(quantity) || quantity <= 0) {
-      toast.error(tr.crm.quotes.form.itemInvalidQuantity);
-      return;
-    }
-    if (!editUnitPrice && !productPriceById.get(item.productId)) {
-      toast.error(tr.crm.quotes.form.itemInvalidUnitPrice);
-      return;
-    }
-    update(index, {
-      productId: item.productId,
-      quantity: editQuantity,
-      unitPrice: editUnitPrice,
-      currency: editCurrency,
-      discountPct: editDiscountPct || '0',
-      vatPct: editVatPct || '0',
-      brand: editBrand,
-    });
-    setEditingIndex(null);
-    toast.success(tr.crm.quotes.form.itemUpdateSuccess);
-  }
-
   const contactOptions = (contactsQuery.data?.data ?? [])
     .filter((contact) => !selectedAccountId || contact.accountId === selectedAccountId)
     .map((contact) => ({
@@ -576,13 +396,10 @@ export function QuoteFormPage() {
 
   const summaryRows = (watchedItems ?? []).map((item, index) => {
     const quantity = Number(item.quantity) || 0;
-    const manualPrice = item.unitPrice ? Number(item.unitPrice) : undefined;
-    const productPrice = productPriceById.get(item.productId);
-    const unitPrice = manualPrice ?? productPrice ?? 0;
-    const isDefaultPrice = manualPrice === undefined && productPrice !== undefined;
+    const unitPrice = Number(item.unitPrice) || 0;
     const discountPct = Number(item.discountPct) || 0;
     const vatPct = Number(item.vatPct) || 0;
-    const currency = item.currency || productCurrencyById.get(item.productId) || 'TRY';
+    const currency = item.currency || 'TRY';
     const { lineSubtotal, lineTotal } = computeLineTotal({
       quantity,
       unitPrice,
@@ -591,18 +408,15 @@ export function QuoteFormPage() {
     });
     return {
       index,
-      productName: productNameById.get(item.productId),
       quantity,
       unitPrice,
       currency,
-      isDefaultPrice,
       discountPct,
       vatPct,
       lineSubtotal,
       lineTotal,
     };
   });
-  type SummaryRow = (typeof summaryRows)[number];
   const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
 
   const onSubmit = handleSubmit((values) => {
@@ -731,289 +545,173 @@ export function QuoteFormPage() {
 
   const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
 
-  const pickerAttributeKeys = [...(pickerAttributeKeysQuery.data ?? [])].sort();
-  const pickerAttributeColumns: TableColumn<Product>[] = pickerAttributeKeys.map((key) => ({
-    key: `attr:${key}`,
-    header: key,
-    className: 'text-app-muted',
-    render: (product) => product.attributes?.[key] ?? '—',
-  }));
-
-  const ALL_PICKER_COLUMNS: TableColumn<Product>[] = [
-    {
-      key: 'product',
-      header: tr.crm.quotes.form.pickerProductColumn,
-      required: true,
-      render: (product) => product.name,
-    },
-    {
-      key: 'sku',
-      header: tr.crm.products.skuColumn,
-      className: 'text-app-muted',
-      render: (product) => product.sku ?? '—',
-    },
-    {
-      key: 'unit',
-      header: tr.crm.quotes.form.pickerUnitColumn,
-      className: 'text-app-muted',
-      render: (product) => product.unit,
-    },
-    {
-      key: 'category',
-      header: tr.crm.products.categoryColumn,
-      className: 'text-app-muted',
-      render: (product) => product.category ?? '—',
-    },
-    {
-      key: 'brand',
-      header: tr.crm.products.brandColumn,
-      className: 'text-app-muted',
-      render: (product) => product.brand ?? '—',
-    },
-    {
-      key: 'maxDiscountPct',
-      header: tr.crm.products.maxDiscountColumn,
-      className: 'text-app-muted',
-      render: (product) => (product.maxDiscountPct ? `%${product.maxDiscountPct}` : '—'),
-    },
-    {
-      key: 'price',
-      header: tr.crm.quotes.form.pickerPriceColumn,
-      className: 'text-app-muted',
-      render: (product) =>
-        product.price !== null
-          ? `${plainNumber.format(Number(product.price))} ${product.currency}`
-          : '—',
-    },
-    {
-      key: 'avgCost',
-      header: tr.crm.products.avgCostColumn,
-      className: 'text-app-muted',
-      render: (product) => (product.avgCost != null ? product.avgCost : '—'),
-    },
-    {
-      key: 'minStockLevel',
-      header: tr.crm.products.minStockLevelColumn,
-      className: 'text-app-muted',
-      render: (product) => (product.minStockLevel != null ? product.minStockLevel : '—'),
-    },
-    {
-      key: 'description',
-      header: tr.crm.products.descriptionColumn,
-      className: 'text-app-muted',
-      render: (product) => product.description ?? '—',
-    },
-    ...pickerAttributeColumns,
-    {
-      key: 'quickAdd',
-      header: '',
-      required: true,
-      className: 'w-8',
-      render: (product) => (
-        <IconActionButton
-          icon={ArrowRight}
-          tooltip={tr.crm.quotes.form.quickAddTooltip}
-          onClick={() => handleQuickAdd(product)}
-        />
-      ),
-    },
-  ];
-
-  const {
-    isColumnVisible: isPickerColumnVisible,
-    optionalColumns: optionalPickerColumns,
-    visibleOptionalKeys: visiblePickerKeys,
-    setVisibleOptionalKeys: setVisiblePickerKeys,
-  } = useColumnVisibility(
-    'quote-product-picker',
-    ALL_PICKER_COLUMNS.map((c) => ({ key: c.key, label: c.header, required: c.required })),
-    ['price'],
-  );
-  const pickerColumns = ALL_PICKER_COLUMNS.filter((c) => isPickerColumnVisible(c.key));
-
-  function renderEntryPanel(product: Product) {
-    return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-7">
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.quantityLabel}
-          value={entryQuantity}
-          onChange={(event) => setEntryQuantity(sanitizeDecimalInput(event.target.value))}
-        />
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel(entryCurrency)}
-          value={entryUnitPrice}
-          onChange={(event) => setEntryUnitPrice(sanitizeDecimalInput(event.target.value))}
-        />
-        <div>
-          <Select
-            label={tr.crm.quotes.form.currencyLabel}
-            options={QUOTE_CURRENCY_OPTIONS}
-            value={entryCurrency}
-            onChange={(event) => void handleEntryCurrencyChange(event.target.value)}
-          />
-          <p className="mt-1.5 text-xs text-app-muted">{tr.crm.quotes.form.currencyHint}</p>
-        </div>
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.discountPctLabel}
-          value={entryDiscountPct}
-          onChange={(event) => setEntryDiscountPct(sanitizeDecimalInput(event.target.value))}
-        />
-        <div>
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.quotes.form.vatPctLabel}
-            value={entryVatPct}
-            onChange={(event) => setEntryVatPct(sanitizeDecimalInput(event.target.value))}
-          />
-          <VatPctDefaultLink />
-        </div>
-        <BrandSelect
-          value={entryBrand}
-          onChange={setEntryBrand}
-          onRequestAddNew={() => setActiveOptionModal('brandEntry')}
-        />
-        <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-4 lg:col-span-1">
-          <span aria-hidden="true" className="text-sm font-semibold text-transparent select-none">
-            &nbsp;
-          </span>
-          <Button type="button" className="w-full" onClick={() => handleAddEntry(product)}>
-            {tr.crm.quotes.form.addToQuote}
-          </Button>
-        </div>
-      </div>
-    );
+  interface ItemRow {
+    id: string;
+    index: number;
   }
+  const itemRows: ItemRow[] = fields.map((field, index) => ({ id: field.id, index }));
 
-  const summaryColumns: TableColumn<SummaryRow>[] = [
+  const itemColumns: TableColumn<ItemRow>[] = [
     {
       key: 'product',
-      header: tr.crm.quotes.form.pickerProductColumn,
-      className: 'align-top',
+      header: tr.crm.quotes.form.productLabel,
+      className: 'align-top w-[18%]',
       render: (row) => (
-        <>
-          <div className="font-semibold text-app-text">
-            {row.productName ?? tr.crm.quotes.form.summaryIncompleteRow}
-          </div>
-          {row.isDefaultPrice && (
-            <Badge variant="neutral" className="mt-0.5">
-              {tr.crm.quotes.form.summaryPriceFromList}
-            </Badge>
+        <Controller
+          control={control}
+          name={`items.${row.index}.productId` as const}
+          render={({ field }) => (
+            <ProductAutocomplete
+              label={tr.crm.quotes.form.productLabel}
+              hideLabel
+              placeholder={
+                selectedProductListId
+                  ? tr.crm.quotes.form.pickerSearchPlaceholder
+                  : tr.crm.quotes.form.pickerSelectProductListFirst
+              }
+              value={field.value}
+              onChange={(productId) => {
+                field.onChange(productId ?? '');
+                if (productId) void handleRowProductChange(row.index, productId);
+              }}
+              productListId={selectedProductListId || undefined}
+              disabled={!selectedProductListId}
+              error={errors.items?.[row.index]?.productId?.message}
+              clearable
+            />
           )}
-        </>
+        />
       ),
     },
     {
       key: 'quantity',
       header: tr.crm.quotes.form.quantityLabel,
-      className: 'w-16 align-top text-app-muted',
-      render: (row) => row.quantity,
+      className: 'align-top w-[7%]',
+      render: (row) => (
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.quantityLabel}
+          hideLabel
+          error={errors.items?.[row.index]?.quantity?.message}
+          {...decimalOnly(register(`items.${row.index}.quantity` as const))}
+        />
+      ),
+    },
+    {
+      key: 'unitPrice',
+      header: tr.crm.quotes.form.unitPriceLabel('TRY'),
+      className: 'align-top w-[12%]',
+      render: (row) => {
+        const currency = watchedItems?.[row.index]?.currency || 'TRY';
+        return (
+          <TextField
+            type="text"
+            inputMode="decimal"
+            label={tr.crm.quotes.form.unitPriceLabel(currency)}
+            hideLabel
+            error={errors.items?.[row.index]?.unitPrice?.message}
+            {...decimalOnly(register(`items.${row.index}.unitPrice` as const))}
+          />
+        );
+      },
+    },
+    {
+      key: 'currency',
+      header: tr.crm.quotes.form.currencyLabel,
+      className: 'align-top w-[9%]',
+      render: (row) => (
+        <Controller
+          control={control}
+          name={`items.${row.index}.currency` as const}
+          render={({ field }) => (
+            <Select
+              label={tr.crm.quotes.form.currencyLabel}
+              hideLabel
+              options={QUOTE_CURRENCY_OPTIONS}
+              value={field.value || 'TRY'}
+              onChange={(event) => void handleRowCurrencyChange(row.index, event.target.value)}
+            />
+          )}
+        />
+      ),
     },
     {
       key: 'discountPct',
-      header: tr.crm.quotes.detail.discountColumn,
-      className: 'w-16 align-top font-semibold whitespace-nowrap text-app-success',
-      render: (row) => (row.discountPct > 0 ? `-%${row.discountPct}` : ''),
+      header: tr.crm.quotes.form.discountPctLabel,
+      className: 'align-top w-[7%]',
+      render: (row) => (
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.discountPctLabel}
+          hideLabel
+          error={errors.items?.[row.index]?.discountPct?.message}
+          {...decimalOnly(register(`items.${row.index}.discountPct` as const))}
+        />
+      ),
     },
     {
       key: 'vatPct',
-      header: tr.crm.quotes.detail.vatColumn,
-      className: 'w-16 align-top font-semibold whitespace-nowrap text-app-danger',
-      render: (row) => (row.vatPct > 0 ? `+%${row.vatPct}` : ''),
+      header: tr.crm.quotes.form.vatPctLabel,
+      className: 'align-top w-[7%]',
+      render: (row) => (
+        <TextField
+          type="text"
+          inputMode="decimal"
+          label={tr.crm.quotes.form.vatPctLabel}
+          hideLabel
+          error={errors.items?.[row.index]?.vatPct?.message}
+          {...decimalOnly(register(`items.${row.index}.vatPct` as const))}
+        />
+      ),
+    },
+    {
+      key: 'brand',
+      header: tr.crm.products.brandColumn,
+      className: 'align-top w-[21%]',
+      render: (row) => (
+        <Controller
+          control={control}
+          name={`items.${row.index}.brand` as const}
+          render={({ field }) => (
+            <BrandSelect
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              hideLabel
+              compactAddButton
+              onRequestAddNew={() => {
+                setBrandTargetIndex(row.index);
+                setActiveOptionModal('brand');
+              }}
+            />
+          )}
+        />
+      ),
     },
     {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'w-24 align-top font-semibold whitespace-nowrap text-app-text',
-      render: (row) => formatCurrencyAmount(row.lineTotal, row.currency),
+      className: 'align-top w-[15%] whitespace-nowrap font-semibold text-app-text',
+      render: (row) => {
+        const summaryRow = summaryRows[row.index];
+        return summaryRow ? formatCurrencyAmount(summaryRow.lineTotal, summaryRow.currency) : '—';
+      },
     },
     {
       key: 'actions',
       header: '',
-      className: 'w-8 align-top',
+      className: 'align-middle w-[4%]',
       render: (row) => (
         <IconActionButton
           icon={X}
           tooltip={tr.crm.quotes.form.removeItem}
           variant="danger"
-          onClick={() => {
-            remove(row.index);
-            if (editingIndex === row.index) setEditingIndex(null);
-          }}
+          onClick={() => remove(row.index)}
         />
       ),
     },
   ];
-
-  function renderEditPanel() {
-    return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-7">
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.quantityLabel}
-          value={editQuantity}
-          onChange={(event) => setEditQuantity(sanitizeDecimalInput(event.target.value))}
-        />
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.unitPriceLabel(editCurrency)}
-          value={editUnitPrice}
-          onChange={(event) => setEditUnitPrice(sanitizeDecimalInput(event.target.value))}
-        />
-        <div>
-          <Select
-            label={tr.crm.quotes.form.currencyLabel}
-            options={QUOTE_CURRENCY_OPTIONS}
-            value={editCurrency}
-            onChange={(event) => void handleEditCurrencyChange(event.target.value)}
-          />
-          <p className="mt-1.5 text-xs text-app-muted">{tr.crm.quotes.form.currencyHint}</p>
-        </div>
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.discountPctLabel}
-          value={editDiscountPct}
-          onChange={(event) => setEditDiscountPct(sanitizeDecimalInput(event.target.value))}
-        />
-        <div>
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.quotes.form.vatPctLabel}
-            value={editVatPct}
-            onChange={(event) => setEditVatPct(sanitizeDecimalInput(event.target.value))}
-          />
-          <VatPctDefaultLink />
-        </div>
-        <BrandSelect
-          value={editBrand}
-          onChange={setEditBrand}
-          onRequestAddNew={() => setActiveOptionModal('brandEdit')}
-        />
-        <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-4 lg:col-span-1">
-          <span aria-hidden="true" className="text-sm font-semibold text-transparent select-none">
-            &nbsp;
-          </span>
-          <Button
-            type="button"
-            className="w-full"
-            onClick={() => handleSaveEditRow(editingIndex as number)}
-          >
-            {tr.crm.quotes.edit.saveRow}
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   if (isEdit && quoteQuery.isPending) {
     return (
@@ -1177,179 +875,100 @@ export function QuoteFormPage() {
             {...register('title')}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="rounded-lg border border-app-border bg-app-surface p-4">
-              <span className="text-sm font-semibold text-app-text">
-                {tr.crm.quotes.form.itemsSectionTitle}
+          <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-app-text">{tr.crm.quotes.form.summaryTitle}</h2>
+              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
+                {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
               </span>
-              <FormError message={errors.items?.message} />
-
-              <div className="mt-3">
-                <Select
-                  label={
-                    isEdit
-                      ? tr.crm.quotes.edit.productListLabel
-                      : tr.crm.quotes.form.productListLabel
-                  }
-                  required
-                  placeholder={tr.crm.quotes.form.productListPlaceholder}
-                  hint={tr.crm.quotes.form.productListHint}
-                  error={errors.productListId?.message}
-                  options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                    value: productList.id,
-                    label: productList.name,
-                  }))}
-                  trailingAction={
-                    <Button
-                      type="button"
-                      variant="navy"
-                      className="shrink-0"
-                      onClick={() => setIsNewProductModalOpen(true)}
-                    >
-                      {tr.crm.quotes.form.newProductButton}
-                    </Button>
-                  }
-                  {...register('productListId', {
-                    onChange: () => {
-                      setPickerPage(1);
-                      setPickerQuery('');
-                      setEntryProductId(null);
-                      setEditingIndex(null);
-                    },
-                  })}
-                />
-              </div>
-
-              {!selectedProductListId ? (
-                <p className="mt-3 rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
-                  {tr.crm.quotes.form.pickerSelectProductListFirst}
-                </p>
-              ) : (
-                <>
-                  <div className="mt-3 flex flex-wrap items-end gap-3">
-                    <div className="relative flex-1">
-                      <Search
-                        size={16}
-                        className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-                      />
-                      <input
-                        type="search"
-                        value={pickerQuery}
-                        onChange={(event) => {
-                          setPickerPage(1);
-                          setPickerQuery(event.target.value);
-                        }}
-                        placeholder={tr.crm.quotes.form.pickerSearchPlaceholder}
-                        className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
-                      />
-                    </div>
-                    <ColumnVisibilityPicker
-                      columns={optionalPickerColumns}
-                      value={visiblePickerKeys}
-                      onChange={setVisiblePickerKeys}
-                    />
-                  </div>
-
-                  <p className="mt-2 text-sm text-app-muted">
-                    {tr.crm.quotes.form.summaryEditHint}
-                  </p>
-
-                  <Table
-                    columns={pickerColumns}
-                    data={pickerProducts}
-                    keyField={(product) => product.id}
-                    onRowClick={handleToggleEntry}
-                    isRowExpanded={(product) => entryProductId === product.id}
-                    renderExpandedRow={(product) => renderEntryPanel(product)}
-                    rowClassName={(product) =>
-                      entryProductId === product.id ? 'bg-blue-50' : undefined
-                    }
-                  />
-
-                  {productsQuery.isPending && (
-                    <p className="mt-3 text-center text-sm text-app-muted">
-                      {tr.crm.quotes.form.pickerLoading}
-                    </p>
-                  )}
-                  {!productsQuery.isPending && pickerProducts.length === 0 && (
-                    <p className="mt-3 text-center text-sm text-app-muted">
-                      {tr.crm.quotes.form.pickerEmpty}
-                    </p>
-                  )}
-
-                  {productsQuery.data && pickerProducts.length > 0 && (
-                    <Pagination
-                      page={productsQuery.data.meta.page}
-                      totalPages={productsQuery.data.meta.totalPages}
-                      total={productsQuery.data.meta.total}
-                      onPageChange={setPickerPage}
-                      onPrevious={() => setPickerPage((p) => p - 1)}
-                      onNext={() => setPickerPage((p) => p + 1)}
-                    />
-                  )}
-                </>
-              )}
             </div>
 
-            <aside className="lg:sticky lg:top-6 lg:self-start">
-              <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-app-text">
-                    {tr.crm.quotes.form.summaryTitle}
-                  </h2>
-                  <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
-                    {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
-                  </span>
+            <Select
+              label={
+                isEdit ? tr.crm.quotes.edit.productListLabel : tr.crm.quotes.form.productListLabel
+              }
+              required
+              placeholder={tr.crm.quotes.form.productListPlaceholder}
+              hint={tr.crm.quotes.form.productListHint}
+              error={errors.productListId?.message}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+              trailingAction={
+                <Button
+                  type="button"
+                  variant="navy"
+                  className="shrink-0"
+                  onClick={() => setIsNewProductModalOpen(true)}
+                >
+                  {tr.crm.quotes.form.newProductButton}
+                </Button>
+              }
+              {...register('productListId')}
+            />
+
+            <FormError message={errors.items?.message} />
+
+            <div>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!selectedProductListId}
+                onClick={() =>
+                  append({
+                    productId: '',
+                    quantity: '1',
+                    unitPrice: '',
+                    currency: quoteCurrency || 'TRY',
+                    discountPct: '0',
+                    vatPct: defaultVatPct,
+                    brand: '',
+                  })
+                }
+              >
+                {tr.crm.quotes.form.addLineButton}
+              </Button>
+            </div>
+
+            {!selectedProductListId ? (
+              <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
+                {tr.crm.quotes.form.pickerSelectProductListFirst}
+              </p>
+            ) : summaryRows.length === 0 ? (
+              <p className="text-sm text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
+            ) : (
+              <Table columns={itemColumns} data={itemRows} keyField={(row) => row.id} fixedLayout />
+            )}
+
+            <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">
+              {summaryTotalsByCurrency.map((totals) => (
+                <div key={totals.currency} className="flex min-w-40 flex-1 flex-col gap-1.5">
+                  {summaryTotalsByCurrency.length > 1 && (
+                    <span className="text-xs font-semibold text-app-muted">{totals.currency}</span>
+                  )}
+                  <div className="flex justify-between text-app-muted">
+                    <span>{tr.crm.quotes.detail.subtotalLabel}</span>
+                    <span>{formatCurrencyAmount(totals.subtotal, totals.currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-app-muted">
+                    <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
+                    <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-app-text">
+                    <span>{tr.crm.quotes.detail.totalLabel}</span>
+                    <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <p className="text-sm text-app-muted">{tr.crm.quotes.form.summaryEditHint}</p>
-
-                {summaryRows.length === 0 ? (
-                  <p className="text-xs text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
-                ) : (
-                  <Table
-                    columns={summaryColumns}
-                    data={summaryRows}
-                    keyField={(row) => fields[row.index]?.id ?? String(row.index)}
-                    onRowClick={(row) => handleToggleEditRow(row.index)}
-                    isRowExpanded={(row) => editingIndex === row.index}
-                    renderExpandedRow={() => renderEditPanel()}
-                    rowClassName={(row) => (editingIndex === row.index ? 'bg-blue-50' : undefined)}
-                  />
-                )}
-
-                <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">
-                  {summaryTotalsByCurrency.map((totals) => (
-                    <div key={totals.currency} className="flex min-w-40 flex-1 flex-col gap-1.5">
-                      {summaryTotalsByCurrency.length > 1 && (
-                        <span className="text-xs font-semibold text-app-muted">
-                          {totals.currency}
-                        </span>
-                      )}
-                      <div className="flex justify-between text-app-muted">
-                        <span>{tr.crm.quotes.detail.subtotalLabel}</span>
-                        <span>{formatCurrencyAmount(totals.subtotal, totals.currency)}</span>
-                      </div>
-                      <div className="flex justify-between text-app-muted">
-                        <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
-                        <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
-                      </div>
-                      <div className="flex justify-between text-base font-bold text-app-text">
-                        <span>{tr.crm.quotes.detail.totalLabel}</span>
-                        <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <QuoteExchangeRatesSection
-                  quoteCurrency={quoteCurrency}
-                  totalsByCurrency={summaryTotalsByCurrency}
-                  value={exchangeRates}
-                  onChange={setExchangeRates}
-                />
-              </div>
-            </aside>
+            <QuoteExchangeRatesSection
+              quoteCurrency={quoteCurrency}
+              totalsByCurrency={summaryTotalsByCurrency}
+              value={exchangeRates}
+              onChange={setExchangeRates}
+            />
           </div>
 
           <div className="flex flex-col gap-4">
@@ -1517,21 +1136,23 @@ export function QuoteFormPage() {
           }}
         />
       )}
-      {(activeOptionModal === 'brandEntry' || activeOptionModal === 'brandEdit') && (
+      {activeOptionModal === 'brand' && (
         <AddOptionModal
           title={tr.crm.products.form.brandNewModalTitle}
           fieldLabel={tr.crm.products.form.brandNewFieldLabel}
           placeholder={tr.crm.products.form.brandNewPlaceholder}
           successMessage={tr.crm.products.form.brandNewSuccess}
           createMutation={createBrandOptionMutation}
-          onClose={() => setActiveOptionModal(null)}
+          onClose={() => {
+            setActiveOptionModal(null);
+            setBrandTargetIndex(null);
+          }}
           onCreated={(label) => {
-            if (activeOptionModal === 'brandEntry') {
-              setEntryBrand(label);
-            } else {
-              setEditBrand(label);
+            if (brandTargetIndex !== null) {
+              setValue(`items.${brandTargetIndex}.brand`, label);
             }
             setActiveOptionModal(null);
+            setBrandTargetIndex(null);
           }}
         />
       )}

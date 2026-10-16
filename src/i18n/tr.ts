@@ -3008,6 +3008,7 @@ export const tr = {
         summaryEmpty: 'Henüz ürün eklenmedi. Soldan ürün satırı ekleyin.',
         summaryIncompleteRow: 'Ürün seçilmedi',
         summaryPriceFromList: 'ürün fiyatından',
+        addLineButton: '+ Satır Ekle',
       },
       edit: {
         title: 'Teklifi Düzenle',
