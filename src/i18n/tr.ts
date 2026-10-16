@@ -3009,6 +3009,8 @@ export const tr = {
         summaryIncompleteRow: 'Ürün seçilmedi',
         summaryPriceFromList: 'ürün fiyatından',
         addLineButton: '+ Satır Ekle',
+        moveItemUp: 'Yukarı taşı',
+        moveItemDown: 'Aşağı taşı',
       },
       edit: {
         title: 'Teklifi Düzenle',

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X } from 'lucide-react';
+import { ArrowDown, ArrowUp, X } from 'lucide-react';
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -182,7 +182,7 @@ export function QuoteFormPage() {
       quoteCurrency: 'TRY',
     },
   });
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const { fields, append, remove, move } = useFieldArray({ control, name: 'items' });
   const hasOpportunity = watch('hasOpportunity');
   const selectedAccountId = watch('accountId');
   const selectedProductListId = watch('productListId');
@@ -669,7 +669,7 @@ export function QuoteFormPage() {
     {
       key: 'brand',
       header: tr.crm.products.brandColumn,
-      className: 'align-top w-[21%]',
+      className: 'align-top w-[19%]',
       render: (row) => (
         <Controller
           control={control}
@@ -692,7 +692,7 @@ export function QuoteFormPage() {
     {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'align-top w-[15%] whitespace-nowrap font-semibold text-app-text',
+      className: 'align-top w-[13%] whitespace-nowrap font-semibold text-app-text',
       render: (row) => {
         const summaryRow = summaryRows[row.index];
         return summaryRow ? formatCurrencyAmount(summaryRow.lineTotal, summaryRow.currency) : '—';
@@ -701,14 +701,30 @@ export function QuoteFormPage() {
     {
       key: 'actions',
       header: '',
-      className: 'align-middle w-[4%]',
+      className: 'align-middle w-[8%]',
       render: (row) => (
-        <IconActionButton
-          icon={X}
-          tooltip={tr.crm.quotes.form.removeItem}
-          variant="danger"
-          onClick={() => remove(row.index)}
-        />
+        <div className="flex items-center justify-end gap-0.5">
+          <IconActionButton
+            icon={ArrowUp}
+            tooltip={tr.crm.quotes.form.moveItemUp}
+            iconSize={16}
+            disabled={row.index === 0}
+            onClick={() => move(row.index, row.index - 1)}
+          />
+          <IconActionButton
+            icon={ArrowDown}
+            tooltip={tr.crm.quotes.form.moveItemDown}
+            iconSize={16}
+            disabled={row.index === itemRows.length - 1}
+            onClick={() => move(row.index, row.index + 1)}
+          />
+          <IconActionButton
+            icon={X}
+            tooltip={tr.crm.quotes.form.removeItem}
+            variant="danger"
+            onClick={() => remove(row.index)}
+          />
+        </div>
       ),
     },
   ];
