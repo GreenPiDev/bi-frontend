@@ -219,6 +219,7 @@ export function SalesOrderCreatePage() {
               error={errors.accountId?.message}
               value={field.value}
               onChange={field.onChange}
+              loadAllWhenEmpty
             />
           )}
         />

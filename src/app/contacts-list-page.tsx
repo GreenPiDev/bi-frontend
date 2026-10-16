@@ -347,6 +347,7 @@ export function ContactsListPage() {
                 setAccountId(nextAccountId ?? '');
               }}
               clearable
+              loadAllWhenEmpty
             />
             <Select
               label={tr.crm.contacts.filterDrawer.statusLabel}

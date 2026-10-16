@@ -212,6 +212,7 @@ export function ProjectFormPage() {
                 error={errors.accountId?.message}
                 value={field.value}
                 onChange={field.onChange}
+                loadAllWhenEmpty
               />
             )}
           />

@@ -262,6 +262,7 @@ export function PurchaseOrderCreatePage() {
                   setValue('quoteId', '');
                 }}
                 clearable
+                loadAllWhenEmpty
               />
             )}
           />

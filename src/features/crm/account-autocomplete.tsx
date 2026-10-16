@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { AsyncAutocomplete } from '../../components/ui/async-autocomplete';
-import { useAccountQuery, useAccountsQuery } from './use-accounts';
+import { useAccountQuery, useAccountsBrowseQuery, useAccountsQuery } from './use-accounts';
 import { useDebouncedValue } from '../../lib/use-debounced-value';
 
 interface AccountAutocompleteProps {
@@ -15,7 +15,14 @@ interface AccountAutocompleteProps {
   clearable?: boolean;
   /** Kutunun yanina, ayni satira yerlestirilecek bir aksiyon (or. "+ Yeni Firma"). */
   trailingAction?: ReactNode;
+  /** true ise, arama metni bosken kutu acilir acilmaz (odaklaninca) kayitli tum
+   * firmalar sayfa sayfa (infinite scroll) yuklenir - "bir seyler yazin" bos durumu
+   * yerine. Opt-in: varsayilan `false`, mevcut tum kullanim yerlerinin davranisini
+   * degistirmez (bkz. kullanici talebi, /kisiler/yeni Firma alani). */
+  loadAllWhenEmpty?: boolean;
 }
+
+const BROWSE_PAGE_SIZE = 20;
 
 const PAGE_SIZE = 20;
 
@@ -38,6 +45,7 @@ export function AccountAutocomplete({
   hint,
   clearable,
   trailingAction,
+  loadAllWhenEmpty,
 }: AccountAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
@@ -45,6 +53,8 @@ export function AccountAutocomplete({
     { q: debouncedQuery || undefined, pageSize: PAGE_SIZE },
     { enabled: Boolean(debouncedQuery) },
   );
+  const browsingAll = Boolean(loadAllWhenEmpty) && !debouncedQuery;
+  const browseQuery = useAccountsBrowseQuery(browsingAll, BROWSE_PAGE_SIZE);
   const selectedAccountQuery = useAccountQuery(value ?? '');
 
   const displayValue = typedQuery ?? selectedAccountQuery.data?.name ?? '';
@@ -53,7 +63,11 @@ export function AccountAutocomplete({
         id: account.id,
         label: account.name,
       }))
-    : [];
+    : browsingAll
+      ? (browseQuery.data?.pages ?? [])
+          .flatMap((page) => page.data)
+          .map((account) => ({ id: account.id, label: account.name }))
+      : [];
 
   return (
     <AsyncAutocomplete
@@ -76,6 +90,13 @@ export function AccountAutocomplete({
       hint={hint}
       clearable={clearable}
       trailingAction={trailingAction}
+      isLoadingOptions={browsingAll && browseQuery.isLoading}
+      onMenuScrollEnd={
+        browsingAll && browseQuery.hasNextPage && !browseQuery.isFetchingNextPage
+          ? () => void browseQuery.fetchNextPage()
+          : undefined
+      }
+      isLoadingMore={browsingAll && browseQuery.isFetchingNextPage}
       onClear={
         clearable
           ? () => {

@@ -1,4 +1,10 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   createAccount,
   deleteAccount,
@@ -64,6 +70,21 @@ export function useAccountsQuery(
     queryKey: [...ACCOUNTS_QUERY_KEY, params],
     queryFn: () => listAccounts(params),
     enabled: options.enabled ?? true,
+  });
+}
+
+/** `AccountAutocomplete`'in `loadAllWhenEmpty` modu icin: arama metni yokken firma
+ * listesini sayfa sayfa (infinite scroll) tarar - tek seferde `pageSize` siniri
+ * (bkz. core/dto/list-query.dto.ts, max 100) asilmaz, bunun yerine kullanici menude
+ * asagi kaydirinca `fetchNextPage` ile bir sonraki sayfa cekilir. */
+export function useAccountsBrowseQuery(enabled: boolean, pageSize: number) {
+  return useInfiniteQuery({
+    queryKey: [...ACCOUNTS_QUERY_KEY, 'browse-all', pageSize],
+    queryFn: ({ pageParam }) => listAccounts({ page: pageParam, pageSize }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined,
+    enabled,
   });
 }
 

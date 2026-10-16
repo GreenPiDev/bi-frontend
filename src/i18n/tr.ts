@@ -49,6 +49,8 @@ export const tr = {
     multiSelectNoResults: 'Eşleşen sonuç bulunamadı.',
     asyncAutocompleteTypeToSearch: 'Arama sonuçlarını görmek için bir şeyler yazın...',
     asyncAutocompleteNoResults: 'Eşleşen sonuç bulunamadı.',
+    asyncAutocompleteLoading: 'Yükleniyor...',
+    asyncAutocompleteLoadingMore: 'Daha fazla yükleniyor...',
     exportFormatModal: {
       pdf: 'PDF',
       excel: 'Excel',

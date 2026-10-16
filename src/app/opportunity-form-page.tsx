@@ -186,6 +186,7 @@ export function OpportunityFormPage() {
                   error={errors.accountId?.message}
                   value={field.value}
                   onChange={field.onChange}
+                  loadAllWhenEmpty
                 />
               )}
             />

@@ -43,6 +43,16 @@ interface AsyncAutocompleteProps {
    * butonu) - `Select`'in `trailingAction`'iyla ayni desen, buton label/hint'i degil
    * sadece kutuyu hizalar. */
   trailingAction?: ReactNode;
+  /** `options` bos ama veri cekiliyor (ilk sayfa) - "bir seyler yazin"/"sonuc yok"
+   * yerine genel bir yukleniyor mesaji gosterir. Opt-in, verilmezse eski davranis. */
+  isLoadingOptions?: boolean;
+  /** Menu listesinin sonuna (infinite scroll esigi) gelince cagrilir - cagiran
+   * sayfalama/useInfiniteQuery mantigini kendi yonetir, bu bilesen sadece scroll
+   * pozisyonunu izler. Verilmezse menude scroll dinlenmez (eski davranis). */
+  onMenuScrollEnd?: () => void;
+  /** `onMenuScrollEnd` sonrasi ek sayfa yuklenirken listenin altinda kucuk bir
+   * "daha fazla yukleniyor" satiri gosterir. */
+  isLoadingMore?: boolean;
 }
 
 /**
@@ -73,6 +83,9 @@ export function AsyncAutocomplete({
   onClear,
   disabled,
   trailingAction,
+  isLoadingOptions,
+  onMenuScrollEnd,
+  isLoadingMore,
 }: AsyncAutocompleteProps) {
   const showClear = clearable && Boolean(onClear) && Boolean(value);
   const [open, setOpen] = useState(false);
@@ -202,28 +215,49 @@ export function AsyncAutocomplete({
                   left: menuRect.left,
                   width: menuRect.width,
                 }}
+                onScroll={
+                  onMenuScrollEnd
+                    ? (event) => {
+                        const target = event.currentTarget;
+                        const distanceToBottom =
+                          target.scrollHeight - target.scrollTop - target.clientHeight;
+                        if (distanceToBottom < 48) {
+                          onMenuScrollEnd();
+                        }
+                      }
+                    : undefined
+                }
                 className="z-[9999] mt-1 max-h-56 overflow-auto rounded-lg border border-app-border bg-app-surface p-1 shadow-lg"
               >
                 {options.length > 0 ? (
-                  options.map((option, index) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => selectOption(option)}
-                      className={clsx(
-                        'block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
-                        index === highlighted && 'bg-app-bg',
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))
+                  <>
+                    {options.map((option, index) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => selectOption(option)}
+                        className={clsx(
+                          'block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
+                          index === highlighted && 'bg-app-bg',
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                    {isLoadingMore && (
+                      <p className="px-2.5 py-2 text-xs text-app-muted">
+                        {tr.common.asyncAutocompleteLoadingMore}
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="px-2.5 py-2 text-sm text-app-muted">
-                    {value.trim()
-                      ? tr.common.asyncAutocompleteNoResults
-                      : tr.common.asyncAutocompleteTypeToSearch}
+                    {isLoadingOptions
+                      ? tr.common.asyncAutocompleteLoading
+                      : value.trim()
+                        ? tr.common.asyncAutocompleteNoResults
+                        : tr.common.asyncAutocompleteTypeToSearch}
                   </p>
                 )}
               </div>,

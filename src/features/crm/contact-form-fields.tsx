@@ -71,6 +71,7 @@ export function ContactFormFields({
             value={field.value}
             onChange={field.onChange}
             error={errors.accountId?.message}
+            loadAllWhenEmpty
           />
         )}
       />

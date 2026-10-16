@@ -857,6 +857,7 @@ export function QuoteFormPage() {
                       error={errors.accountId?.message}
                       value={field.value}
                       onChange={field.onChange}
+                      loadAllWhenEmpty
                       trailingAction={
                         <Button
                           type="button"

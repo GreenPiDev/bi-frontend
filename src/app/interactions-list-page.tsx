@@ -351,6 +351,7 @@ export function InteractionsListPage() {
                 setAccountId(nextAccountId ?? '');
               }}
               clearable
+              loadAllWhenEmpty
             />
             <ContactAutocomplete
               key={`contact-${filterResetKey}`}
