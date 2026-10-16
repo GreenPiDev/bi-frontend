@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
-import { Select } from '../components/ui/select';
 import { TextareaField } from '../components/ui/textarea-field';
-import { useQuoteRejectionReasonOptionsQuery } from '../features/crm/use-quote-rejection-reason-options';
+import { QuoteRejectReasonSelect } from '../features/crm/quote-reject-reason-select';
 import { rejectQuoteFormSchema, type RejectQuoteFormValues } from '../features/crm/schemas';
 import { tr } from '../i18n/tr';
 
@@ -19,12 +18,10 @@ interface RejectQuoteModalProps {
  * istege bagli bir ek aciklama ekleyebilir - ApproveQuoteModal'daki depo secimi
  * ile ayni "once onay, sonra form" deseni. */
 export function RejectQuoteModal({ isPending, onConfirm, onCancel }: RejectQuoteModalProps) {
-  const reasonsQuery = useQuoteRejectionReasonOptionsQuery();
-  const reasons = reasonsQuery.data ?? [];
-
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RejectQuoteFormValues>({
     resolver: zodResolver(rejectQuoteFormSchema),
@@ -56,13 +53,16 @@ export function RejectQuoteModal({ isPending, onConfirm, onCancel }: RejectQuote
         className="flex flex-col gap-4"
       >
         <p className="text-sm text-app-muted">{tr.crm.quotes.detail.rejectModalMessage}</p>
-        <Select
-          label={tr.crm.quotes.detail.rejectReasonLabel}
-          placeholder={tr.crm.quotes.detail.rejectReasonPlaceholder}
-          required
-          error={errors.reason?.message}
-          options={reasons.map((r) => ({ value: r.label, label: r.label }))}
-          {...register('reason')}
+        <Controller
+          name="reason"
+          control={control}
+          render={({ field }) => (
+            <QuoteRejectReasonSelect
+              value={field.value ?? ''}
+              onChange={field.onChange}
+              error={errors.reason?.message}
+            />
+          )}
         />
         <TextareaField
           label={tr.crm.quotes.detail.rejectNoteLabel}

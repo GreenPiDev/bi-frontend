@@ -2735,6 +2735,11 @@ export const tr = {
         rejectModalMessage: 'Reddetme sebebini seçin, isterseniz ek bir açıklama girin.',
         rejectReasonLabel: 'Red Sebebi',
         rejectReasonPlaceholder: 'Sebep seçin',
+        quickAddRejectReason: {
+          title: 'Yeni Red Sebebi',
+          label: 'Red sebebi adı',
+          submit: 'Ekle',
+        },
         rejectNoteLabel: 'Not (opsiyonel)',
         rejectNotePlaceholder: 'Ek açıklama girin...',
         rejectConfirmButton: 'Reddet',
