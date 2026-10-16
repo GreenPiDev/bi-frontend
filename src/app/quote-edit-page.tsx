@@ -18,7 +18,11 @@ import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
-import { decodeIbanSelections } from '../features/crm/iban-selection';
+import {
+  decodeIbanSelections,
+  deriveIbanSelectionsFromSnapshot,
+} from '../features/crm/iban-selection';
+import { useIbanOptionsQuery } from '../features/crm/use-iban-options';
 import { QUOTE_CURRENCY_OPTIONS, QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -66,6 +70,7 @@ export function QuoteEditPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const quoteQuery = useQuoteQuery(id);
+  const ibanOptionsQuery = useIbanOptionsQuery();
   const updateMutation = useUpdateQuoteMutation(id);
   const productListsQuery = useProductListsQuery();
   const contactsQuery = useContactsQuery();
@@ -108,6 +113,10 @@ export function QuoteEditPage() {
   const [revisionNote, setRevisionNote] = useState('');
   const [revisionNoteTouched, setRevisionNoteTouched] = useState(false);
   const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
+  // ibanSelections, quote + guncel IBAN hesap listesi ikisi de gelince ayrica
+  // kurulur (quote genelde iban listesinden once gelir) - bkz.
+  // deriveIbanSelectionsFromSnapshot doc comment'i.
+  const [ibanInitializedForQuoteId, setIbanInitializedForQuoteId] = useState<string | null>(null);
 
   if (quoteQuery.data && quoteQuery.data.id !== initializedForQuoteId) {
     setInitializedForQuoteId(quoteQuery.data.id);
@@ -143,6 +152,17 @@ export function QuoteEditPage() {
       ),
       asOf: savedRates?.asOf,
     });
+  }
+
+  if (
+    quoteQuery.data &&
+    ibanOptionsQuery.data &&
+    ibanInitializedForQuoteId !== quoteQuery.data.id
+  ) {
+    setIbanInitializedForQuoteId(quoteQuery.data.id);
+    setIbanSelections(
+      deriveIbanSelectionsFromSnapshot(quoteQuery.data.ibanAccounts ?? [], ibanOptionsQuery.data),
+    );
   }
 
   const contactOptions = (contactsQuery.data?.data ?? [])
