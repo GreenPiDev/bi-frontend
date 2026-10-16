@@ -74,8 +74,22 @@ export function computeLineTotal(
   return { lineSubtotal, lineTotal };
 }
 
+/** Birden fazla para birimi bir arada gosterilirken kullanilacak standart sira - bu
+ * listede olmayan (az rastlanan) para birimleri alfabetik olarak sona eklenir. */
+const CURRENCY_DISPLAY_ORDER = ['USD', 'EUR', 'TRY'];
+
+function compareCurrenciesForDisplay(a: string, b: string): number {
+  const indexA = CURRENCY_DISPLAY_ORDER.indexOf(a);
+  const indexB = CURRENCY_DISPLAY_ORDER.indexOf(b);
+  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+  if (indexA !== -1) return -1;
+  if (indexB !== -1) return 1;
+  return a.localeCompare(b);
+}
+
 /** Satırları currency'ye göre gruplayıp her grup için ara toplam/KDV/genel toplam
- * döner - sıra, satırlarda ilk görülen para birimi sırasıyla korunur. */
+ * döner - sıra, satırlarda görülen para birimlerinden bağımsız, sabit standart bir
+ * sıradır (USD, EUR, TRY, sonra alfabetik) - bkz. CURRENCY_DISPLAY_ORDER. */
 export function groupQuoteItemTotals(items: QuoteLineForTotals[]): QuoteCurrencyTotals[] {
   const byCurrency = new Map<string, QuoteCurrencyTotals>();
   for (const item of items) {
@@ -92,7 +106,9 @@ export function groupQuoteItemTotals(items: QuoteLineForTotals[]): QuoteCurrency
     existing.vatTotal = existing.grandTotal - existing.subtotal;
     byCurrency.set(currency, existing);
   }
-  return [...byCurrency.values()];
+  return [...byCurrency.values()].sort((a, b) =>
+    compareCurrenciesForDisplay(a.currency, b.currency),
+  );
 }
 
 /** Para birimi bazlı alt toplamları, `rates` (her currency icin "1 currency = ?
