@@ -2706,6 +2706,7 @@ export const tr = {
         'Teklifi "Revize" durumuna almak istediğinize emin misiniz? Onaylarsanız teklifi düzenleme sayfasına yönlendirileceksiniz.',
       statusOptions: {
         DRAFT: 'Taslak',
+        SENT: 'Gönderildi',
         PENDING_APPROVAL: 'Onay Bekliyor',
         APPROVED: 'Onaylandı',
         REJECTED: 'Reddedildi',

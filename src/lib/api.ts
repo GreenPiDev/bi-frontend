@@ -2679,6 +2679,9 @@ export function bulkDeleteProducts(productIds: string[]): Promise<{ deletedCount
 
 export type QuoteStatus =
   | 'DRAFT'
+  /** Ad-hoc: teklif musteriye gonderildi (bkz. CLAUDE.md) - durum dropdown'undan elle
+   * setlenir, APPROVED/REJECTED'in aksine duzenlenebilir/revize edilebilir kalir. */
+  | 'SENT'
   | 'PENDING_APPROVAL'
   | 'APPROVED'
   | 'REJECTED'

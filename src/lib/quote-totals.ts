@@ -12,7 +12,7 @@ import type { QuoteStatus } from './api';
 import { tr } from '../i18n/tr';
 
 export const QUOTE_STATUS_OPTIONS: { value: QuoteStatus; label: string }[] = (
-  ['UNSPECIFIED', 'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'REVIZE'] as const
+  ['UNSPECIFIED', 'DRAFT', 'SENT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'REVIZE'] as const
 ).map((status) => ({ value: status, label: tr.crm.quotes.statusOptions[status] }));
 
 export interface QuoteLineForTotals {

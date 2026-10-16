@@ -22,9 +22,10 @@ const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFi
 
 const QUOTE_STATUS_BADGE_VARIANT: Record<
   string,
-  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange' | 'info'
 > = {
   DRAFT: 'neutral',
+  SENT: 'info',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',

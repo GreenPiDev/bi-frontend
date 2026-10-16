@@ -36,6 +36,7 @@ function formatCurrency(value: string | null): string {
 
 const QUOTE_STATUS_TEXT_CLASS: Record<string, string> = {
   DRAFT: 'text-app-muted',
+  SENT: 'text-app-primary',
   PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
   APPROVED: 'text-app-success',
   REJECTED: 'text-app-danger',

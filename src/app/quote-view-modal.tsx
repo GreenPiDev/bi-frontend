@@ -8,10 +8,11 @@ import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<
   QuoteStatus,
-  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange' | 'info'
 > = {
   UNSPECIFIED: 'neutral',
   DRAFT: 'neutral',
+  SENT: 'info',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',

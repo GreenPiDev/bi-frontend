@@ -74,10 +74,11 @@ import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<
   QuoteStatus,
-  'success' | 'warning' | 'danger' | 'neutral' | 'orange'
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange' | 'info'
 > = {
   UNSPECIFIED: 'neutral',
   DRAFT: 'neutral',
+  SENT: 'info',
   PENDING_APPROVAL: 'warning',
   APPROVED: 'success',
   REJECTED: 'danger',
@@ -87,6 +88,7 @@ const STATUS_BADGE_VARIANT: Record<
 const STATUS_TEXT_CLASSES: Record<QuoteStatus, string> = {
   UNSPECIFIED: 'text-app-muted',
   DRAFT: 'text-app-muted',
+  SENT: 'text-app-primary',
   PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
   APPROVED: 'text-app-success',
   REJECTED: 'text-app-danger',
@@ -1274,6 +1276,7 @@ export function QuoteDetailPage() {
               onClick={() => setIsMessageModalOpen(true)}
             />
             {(quote.status === 'DRAFT' ||
+              quote.status === 'SENT' ||
               quote.status === 'PENDING_APPROVAL' ||
               quote.status === 'REVIZE' ||
               quote.status === 'UNSPECIFIED') && (
@@ -1291,7 +1294,9 @@ export function QuoteDetailPage() {
                 />
               </>
             )}
-            {(quote.status === 'DRAFT' || quote.status === 'PENDING_APPROVAL') && (
+            {(quote.status === 'DRAFT' ||
+              quote.status === 'SENT' ||
+              quote.status === 'PENDING_APPROVAL') && (
               <CircleIconButton
                 icon={RotateCcw}
                 tooltip={tr.crm.quotes.detail.reviseButton}
@@ -1307,6 +1312,7 @@ export function QuoteDetailPage() {
               />
             )}
             {(quote.status === 'DRAFT' ||
+              quote.status === 'SENT' ||
               quote.status === 'PENDING_APPROVAL' ||
               quote.status === 'APPROVED' ||
               quote.status === 'UNSPECIFIED') && (

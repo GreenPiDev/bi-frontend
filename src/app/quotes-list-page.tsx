@@ -53,6 +53,7 @@ const STATUS_OPTIONS = QUOTE_STATUS_OPTIONS;
 const STATUS_TEXT_CLASS: Record<QuoteStatus, string> = {
   UNSPECIFIED: 'text-app-muted',
   DRAFT: 'text-app-muted',
+  SENT: 'text-app-primary',
   PENDING_APPROVAL: 'text-amber-600 dark:text-amber-400',
   APPROVED: 'text-app-success',
   REJECTED: 'text-app-danger',
@@ -350,6 +351,7 @@ export function QuotesListContent() {
             onClick={() => setMessageQuote(q)}
           />
           {(q.status === 'DRAFT' ||
+            q.status === 'SENT' ||
             q.status === 'PENDING_APPROVAL' ||
             q.status === 'REVIZE' ||
             q.status === 'UNSPECIFIED') && (

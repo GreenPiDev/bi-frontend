@@ -581,7 +581,10 @@ export function QuoteEditPage() {
   const quote = quoteQuery.data;
   const isRevisionMode = quote.status === 'REVIZE';
   const isEditable =
-    quote.status === 'DRAFT' || quote.status === 'PENDING_APPROVAL' || quote.status === 'REVIZE';
+    quote.status === 'DRAFT' ||
+    quote.status === 'SENT' ||
+    quote.status === 'PENDING_APPROVAL' ||
+    quote.status === 'REVIZE';
 
   if (!isEditable) {
     return (
