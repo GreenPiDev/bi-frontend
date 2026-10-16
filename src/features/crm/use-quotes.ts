@@ -54,7 +54,7 @@ export function useQuotesQuery(
  * secenek icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total kullanilir). */
 export function useQuoteStatusCounts(
   statuses: readonly QuoteStatus[],
-  range: { from?: string; to?: string } = {},
+  range: { from?: string; to?: string; createdById?: string } = {},
 ) {
   const results = useQueries({
     queries: [
@@ -80,7 +80,9 @@ export function useQuoteStatusCounts(
 }
 
 /** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
-export function useQuoteRejectionReasonsSummaryQuery(range: { from?: string; to?: string } = {}) {
+export function useQuoteRejectionReasonsSummaryQuery(
+  range: { from?: string; to?: string; createdById?: string } = {},
+) {
   return useQuery({
     queryKey: [...QUOTES_QUERY_KEY, 'rejection-reasons-summary', range],
     queryFn: () => getQuoteRejectionReasonsSummary(range),

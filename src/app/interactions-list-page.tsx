@@ -1,6 +1,6 @@
 import { Download, ListFilter, Mail, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { Button } from '../components/ui/button';
@@ -30,14 +30,25 @@ import {
   useInteractionsQuery,
   useInteractionTypeCounts,
 } from '../features/crm/use-interactions';
-import { ApiError, type Interaction, type InteractionType } from '../lib/api';
+import {
+  ApiError,
+  type Interaction,
+  type InteractionStatus,
+  type InteractionType,
+} from '../lib/api';
 import { openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
+const STATUS_SELECT_OPTIONS: { value: InteractionStatus; label: string }[] = [
+  { value: 'OPEN', label: tr.crm.interactions.statusOptions.OPEN },
+  { value: 'CLOSED', label: tr.crm.interactions.statusOptions.CLOSED },
+];
+
 export function InteractionsListPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
@@ -53,7 +64,25 @@ export function InteractionsListPage() {
   const [filterResetKey, setFilterResetKey] = useState(0);
   const [accountId, setAccountId] = useState('');
   const [contactId, setContactId] = useState('');
-  const [createdById, setCreatedById] = useState('');
+  // /settings/kullanicilar/:slug "Oluşturduğu Görüşmeler" grafiginden "?status=...&
+  // createdById=..." ile gelindiginde baslangic filtresini uygulamak icin okunur -
+  // URL'de kalip kafa karistirmasin diye tuketildikten sonra temizlenir (bkz.
+  // quotes-list-page.tsx'teki ayni desen).
+  const [status, setStatus] = useState<InteractionStatus | ''>(() => {
+    const fromUrl = searchParams.get('status');
+    return STATUS_SELECT_OPTIONS.some((option) => option.value === fromUrl)
+      ? (fromUrl as InteractionStatus)
+      : '';
+  });
+  const [createdById, setCreatedById] = useState(() => searchParams.get('createdById') ?? '');
+  useEffect(() => {
+    if (!searchParams.has('status') && !searchParams.has('createdById')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('status');
+    next.delete('createdById');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [type, setType] = useState<InteractionType | ''>('');
   const [sinceInput, setSinceInput] = useState('');
   const [rangeFromInput, setRangeFromInput] = useState('');
@@ -67,6 +96,7 @@ export function InteractionsListPage() {
     Boolean(accountId) ||
     Boolean(contactId) ||
     Boolean(createdById) ||
+    Boolean(status) ||
     Boolean(from) ||
     Boolean(to);
   const meQuery = useMeQuery();
@@ -82,6 +112,7 @@ export function InteractionsListPage() {
     accountId: accountId || undefined,
     contactId: contactId || undefined,
     createdById: createdById || undefined,
+    status: status || undefined,
     type: type || undefined,
     from,
     to,
@@ -100,6 +131,7 @@ export function InteractionsListPage() {
     setAccountId('');
     setContactId('');
     setCreatedById('');
+    setStatus('');
     setType('');
     setSinceInput('');
     setRangeFromInput('');
@@ -330,6 +362,21 @@ export function InteractionsListPage() {
                 setContactId(nextContactId ?? '');
               }}
               clearable
+            />
+            <Select
+              label={tr.crm.interactions.filterDrawer.statusLabel}
+              placeholder={tr.crm.interactions.filterDrawer.statusPlaceholder}
+              value={status}
+              onChange={(event) => {
+                setPage(1);
+                setStatus(event.target.value as InteractionStatus | '');
+              }}
+              options={STATUS_SELECT_OPTIONS}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setStatus('');
+              }}
             />
             <Select
               label={tr.crm.interactions.filterDrawer.createdByLabel}

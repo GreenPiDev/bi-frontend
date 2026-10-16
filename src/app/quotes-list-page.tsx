@@ -134,17 +134,19 @@ export function QuotesListContent() {
       ? (fromUrl as QuoteStatus)
       : '';
   });
-  // Rapor sekmesindeki KPI kartlarindan "?status=..." ile gelindiginde baslangic
-  // filtresini uygulamak icin yukarida okunuyor - URL'de kalip kafa karistirmasin diye
-  // tuketildikten sonra temizlenir (tab parametresi dokunulmadan kalir).
+  // Rapor sekmesindeki KPI kartlarindan "?status=..." (ve /settings/kullanicilar/:slug
+  // "Oluşturduğu Teklifler" grafiginden "?status=...&createdById=...") ile gelindiginde
+  // baslangic filtresini uygulamak icin yukarida okunuyor - URL'de kalip kafa
+  // karistirmasin diye tuketildikten sonra temizlenir (tab parametresi dokunulmadan kalir).
   useEffect(() => {
-    if (!searchParams.has('status')) return;
+    if (!searchParams.has('status') && !searchParams.has('createdById')) return;
     const next = new URLSearchParams(searchParams);
     next.delete('status');
+    next.delete('createdById');
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [createdById, setCreatedById] = useState('');
+  const [createdById, setCreatedById] = useState(() => searchParams.get('createdById') ?? '');
   const [sinceInput, setSinceInput] = useState('');
   const [rangeFromInput, setRangeFromInput] = useState('');
   const [rangeToInput, setRangeToInput] = useState('');

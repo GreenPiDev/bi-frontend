@@ -65,6 +65,36 @@ export function useInteractionTypeCounts(types: readonly InteractionType[]) {
   return { all: allResult?.data?.meta.total, counts };
 }
 
+/** /settings/kullanicilar/:slug "Oluşturduğu Görüşmeler" pasta grafigi - ayni
+ * useInteractionTypeCounts deseni ama durum (OPEN/CLOSED) bazinda ve istege bagli
+ * tek bir kullaniciya (`createdById`) daraltilmis. */
+export function useInteractionStatusCounts(
+  statuses: readonly InteractionStatus[],
+  params: { createdById?: string } = {},
+) {
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: [...INTERACTIONS_QUERY_KEY, 'status-count', 'all', params],
+        queryFn: () => listInteractions({ pageSize: 1, ...params }),
+      },
+      ...statuses.map((status) => ({
+        queryKey: [...INTERACTIONS_QUERY_KEY, 'status-count', status, params],
+        queryFn: () => listInteractions({ pageSize: 1, status, ...params }),
+      })),
+    ],
+  });
+
+  const [allResult, ...statusResults] = results;
+  const counts: Partial<Record<InteractionStatus, number>> = {};
+  statuses.forEach((status, index) => {
+    const total = statusResults[index]?.data?.meta.total;
+    if (total !== undefined) counts[status] = total;
+  });
+
+  return { all: allResult?.data?.meta.total, counts };
+}
+
 /** /raporlar "Görüşmeler" tab'indaki KPI kartlari - toplam + durum bazli (bkz.
  * useInteractionTypeCounts'taki ayni desen) + bu hafta/bu ay eklenen (haftanin/ayin
  * ilk gunu `from` filtresine verilir). Hafta Pazartesi baslar (bkz. calendar-page.tsx

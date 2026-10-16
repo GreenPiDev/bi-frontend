@@ -2,11 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createUser,
   getUserStats,
+  getUserStatsEntityRows,
   listUsers,
   resetUserPassword,
   updateUserActive,
   updateUserRole,
   type CreateUserInput,
+  type UserStatsEntityKind,
 } from '../../lib/api';
 
 const USERS_QUERY_KEY = ['users'];
@@ -37,6 +39,14 @@ export function useUserStatsQuery(userId: string) {
     queryKey: ['user-stats', userId],
     queryFn: () => getUserStats(userId),
     enabled: !!userId,
+  });
+}
+
+export function useUserStatsEntityQuery(userId: string, entity: UserStatsEntityKind | null) {
+  return useQuery({
+    queryKey: ['user-stats', userId, entity],
+    queryFn: () => getUserStatsEntityRows(userId, entity as UserStatsEntityKind),
+    enabled: !!userId && !!entity,
   });
 }
 

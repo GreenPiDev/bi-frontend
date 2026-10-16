@@ -1643,12 +1643,116 @@ export interface UserStats {
     quotes: number;
     projects: number;
     purchaseOrders: number;
+    salesOrders: number;
   };
   responsibleProjects: { id: string; projectNumber: string; name: string }[];
 }
 
 export function getUserStats(userId: string): Promise<UserStats> {
   return request(`/users/${userId}/stats`);
+}
+
+export type UserStatsEntityKind =
+  | 'accounts'
+  | 'contacts'
+  | 'interactions'
+  | 'opportunities'
+  | 'quotes'
+  | 'projects'
+  | 'purchaseOrders'
+  | 'salesOrders';
+
+export interface UserStatsAccountRow {
+  id: string;
+  name: string;
+  sector: string[];
+  phone: string | null;
+  email: string | null;
+  createdAt: string;
+}
+
+export interface UserStatsContactRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  email: string | null;
+  createdAt: string;
+  account: { name: string } | null;
+}
+
+export interface UserStatsInteractionRow {
+  id: string;
+  occurredAt: string;
+  type: string;
+  status: string;
+  account: { name: string } | null;
+  contact: { firstName: string; lastName: string } | null;
+}
+
+export interface UserStatsOpportunityRow {
+  id: string;
+  name: string;
+  stage: string;
+  estimatedValue: string | null;
+  estimatedValueCurrency: string;
+  occurredAt: string;
+}
+
+export interface UserStatsQuoteRow {
+  id: string;
+  quoteNumber: string;
+  quoteDate: string;
+  status: string;
+  account: { name: string };
+}
+
+export interface UserStatsProjectRow {
+  id: string;
+  projectNumber: string;
+  name: string;
+  estimatedBudget: string;
+  account: { name: string };
+}
+
+export interface UserStatsPurchaseOrderRow {
+  id: string;
+  orderNumber: string;
+  status: string;
+  createdAt: string;
+  quote: { quoteNumber: string } | null;
+}
+
+export interface UserStatsSalesOrderRow {
+  id: string;
+  orderNumber: string;
+  status: string;
+  createdAt: string;
+  account: { name: string };
+  quote: { quoteNumber: string } | null;
+}
+
+export type UserStatsEntityRow<K extends UserStatsEntityKind> = K extends 'accounts'
+  ? UserStatsAccountRow
+  : K extends 'contacts'
+    ? UserStatsContactRow
+    : K extends 'interactions'
+      ? UserStatsInteractionRow
+      : K extends 'opportunities'
+        ? UserStatsOpportunityRow
+        : K extends 'quotes'
+          ? UserStatsQuoteRow
+          : K extends 'projects'
+            ? UserStatsProjectRow
+            : K extends 'purchaseOrders'
+              ? UserStatsPurchaseOrderRow
+              : UserStatsSalesOrderRow;
+
+export function getUserStatsEntityRows<K extends UserStatsEntityKind>(
+  userId: string,
+  entity: K,
+): Promise<UserStatsEntityRow<K>[]> {
+  return request(`/users/${userId}/stats/${entity}`);
 }
 
 // --- Roller / Sayfa Yonetimi (dinamik RBAC) ---------------------------------
@@ -2974,11 +3078,12 @@ export interface QuoteRejectionReasonSummaryRow {
 
 /** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
 export function getQuoteRejectionReasonsSummary(
-  params: { from?: string; to?: string } = {},
+  params: { from?: string; to?: string; createdById?: string } = {},
 ): Promise<QuoteRejectionReasonSummaryRow[]> {
   const query = new URLSearchParams();
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
+  if (params.createdById) query.set('createdById', params.createdById);
   const qs = query.toString();
   return request(`/quotes/rejection-reasons-summary${qs ? `?${qs}` : ''}`);
 }
