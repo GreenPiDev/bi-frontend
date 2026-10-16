@@ -39,7 +39,10 @@ const STATUS_TEXT_CLASS: Record<PurchaseOrderStatus, string> = {
 };
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('tr-TR').format(new Date(value));
+  return new Intl.DateTimeFormat('tr-TR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(new Date(value));
 }
 
 /** /teklifler'deki QuoteStatusSelect ile ayni desen: durum dogrudan tablo icinde,

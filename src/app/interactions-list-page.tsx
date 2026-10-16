@@ -158,7 +158,10 @@ export function InteractionsListPage() {
       header: tr.crm.interactions.dateColumn,
       className: 'text-app-muted',
       required: true,
-      render: (i) => new Date(i.occurredAt).toLocaleDateString('tr-TR'),
+      render: (i) =>
+        new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short', timeStyle: 'short' }).format(
+          new Date(i.occurredAt),
+        ),
     },
     {
       key: 'account',
