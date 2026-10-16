@@ -4,7 +4,7 @@
  * (subtotal/vatTotal/grandTotal). Kullanıcının seçtiği "teklif para birimi"
  * (Quote.quoteCurrency) ve girdiği kur (Quote.exchangeRates) ile bu alt toplamlar TEK
  * bir genel toplama da çevrilebilir - bkz. convertTotalsToQuoteCurrency. quote-form-page/
- * quote-edit-page/quote-detail-page/quotes-list-page'deki aynı hesaplama burada tek
+ * quote-form-page/quote-detail-page/quotes-list-page'deki aynı hesaplama burada tek
  * yerde toplanır.
  */
 

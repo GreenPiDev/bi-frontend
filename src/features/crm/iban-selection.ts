@@ -1,5 +1,5 @@
 /** IbanSelect'in encode ettigi "option:<id>" / "group:<id>" degerlerini uretir/
- * ayirir - teklif formu (quote-form-page.tsx/quote-edit-page.tsx) submit
+ * ayirir - teklif formu (quote-form-page.tsx) submit
  * aninda bunu kullanarak secilen degerleri ibanOptionIds/ibanOptionGroupIds
  * dizilerine ayirir (kullanici talebi: birden fazla hesap/grup ayni teklife
  * eklenebilmeli, bkz. IbanOptionGroup doc comment'i). */

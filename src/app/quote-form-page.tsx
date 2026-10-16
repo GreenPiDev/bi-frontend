@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
@@ -23,10 +23,12 @@ import { AddOptionModal } from '../features/crm/add-option-modal';
 import { BrandSelect } from '../features/crm/brand-select';
 import {
   decodeIbanSelections,
+  deriveIbanSelectionsFromSnapshot,
   encodeIbanGroupSelection,
   encodeIbanOptionSelection,
 } from '../features/crm/iban-selection';
 import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups';
+import { useIbanOptionsQuery } from '../features/crm/use-iban-options';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
@@ -46,7 +48,9 @@ import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/
 import {
   useCreateQuoteMutation,
   useQuoteAssignableUsersQuery,
+  useQuoteQuery,
   useQuoteRevisionSummaryQuery,
+  useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
 import {
@@ -67,6 +71,7 @@ import {
   type CreateQuoteInput,
   type OpportunityStage,
   type Product,
+  type UpdateQuoteInput,
 } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
@@ -127,7 +132,13 @@ function todayDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
+/** /teklifler/yeni ve /teklifler/duzenle/:id - proje konvansiyonu (bkz. account-form-page.tsx,
+ * project-form-page.tsx, opportunity-form-page.tsx): olusturma/duzenleme icin TEK sayfa,
+ * useParams'tan id varligina gore isEdit hesaplanir, farkliliklar isEdit dallanmasiyla
+ * yonetilir - ayri bir "paylasilan alt bilesen" cikarilmaz. */
 export function QuoteFormPage() {
+  const { id } = useParams();
+  const isEdit = Boolean(id);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
@@ -141,10 +152,15 @@ export function QuoteFormPage() {
     (setting) => setting.key === DEFAULT_QUOTE_VAT_PCT_KEY,
   );
   const defaultVatPct = String(defaultVatPctSetting?.value ?? DEFAULT_QUOTE_VAT_PCT);
+
+  const quoteQuery = useQuoteQuery(id ?? '');
+  const ibanOptionsQuery = useIbanOptionsQuery();
   const createMutation = useCreateQuoteMutation();
+  const updateMutation = useUpdateQuoteMutation(id ?? '');
+  const mutation = isEdit ? updateMutation : createMutation;
   const createPaymentMethodOptionMutation = useCreatePaymentMethodOptionMutation();
   const createBrandOptionMutation = useCreateBrandOptionMutation();
-  // Odeme Yontemi/IBAN icin "+ Yeni ..." modallari, urun formundaki
+  // Odeme Yontemi/IBAN/Marka icin "+ Yeni ..." modallari, urun formundaki
   // Birim/Kategori/Marka desenindeki gibi bilincli olarak <form>'un DISINDA render
   // edilir - Select'lerin kendi icinde render edilselerdi modal'in <form>'u disardaki
   // teklif formunun <form>'una ic ice girer, "Kaydet" native submit'e dusup sayfayi
@@ -155,6 +171,9 @@ export function QuoteFormPage() {
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
+  // Sadece duzenleme + REVIZE durumunda kullanilir (bkz. asagidaki isRevisionMode).
+  const [revisionNote, setRevisionNote] = useState('');
+  const [revisionNoteTouched, setRevisionNoteTouched] = useState(false);
 
   const {
     register,
@@ -162,6 +181,7 @@ export function QuoteFormPage() {
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors, dirtyFields },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
@@ -192,31 +212,109 @@ export function QuoteFormPage() {
   // prefillAccountQuery ile aynı desen).
   const selectedAccountQuery = useAccountQuery(selectedAccountId ?? '');
 
-  // Gonderen varsayilan olarak istegi yapan kullanici (bkz. docs/VARSAYIMLAR.md) -
-  // kullanici elle degistirirse (dirty) bir sonraki /auth/me yanitiyla ezilmez.
+  // Sağdaki özet, arama/sayfalama boyunca görünürden çıkan ürünleri de doğru
+  // gösterebilsin diye görülen her ürün burada biriktirilir (id -> Product).
+  const [productCatalog, setProductCatalog] = useState<Record<string, Product>>({});
+
+  // Duzenleme modunda, teklif verisi gelince formu (react-hook-form'un reset()'i ile,
+  // proje konvansiyonu - bkz. project-form-page.tsx) ve form disi state'leri (kur,
+  // urun katalogu) bir kerelige doldurur.
+  const [initializedForQuoteId, setInitializedForQuoteId] = useState<string | null>(null);
   useEffect(() => {
-    if (meQuery.data && !dirtyFields.senderId) {
+    if (!isEdit || !quoteQuery.data || quoteQuery.data.id === initializedForQuoteId) return;
+    const quote = quoteQuery.data;
+    setInitializedForQuoteId(quote.id);
+    reset({
+      accountId: quote.accountId,
+      contactId: quote.contactId ?? undefined,
+      quoteDate: quote.quoteDate.slice(0, 10),
+      productListId: quote.items[0]?.product.productListId,
+      items: quote.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        currency: item.currency,
+        discountPct: item.discountPct,
+        vatPct: item.vatPct,
+        brand: item.brand ?? '',
+      })),
+      title: quote.title ?? undefined,
+      leadTime: quote.leadTime ?? undefined,
+      validityPeriod: quote.validityPeriod ?? undefined,
+      paymentMethod: quote.paymentMethod ?? undefined,
+      paymentTerms: quote.paymentTerms ?? undefined,
+      salesTerms: quote.salesTerms ?? undefined,
+      deliveryTerms: quote.deliveryTerms ?? undefined,
+      generalTerms: quote.generalTerms ?? undefined,
+      templateId: quote.templateId ?? undefined,
+      senderId: quote.senderId ?? undefined,
+      quoteCurrency: quote.quoteCurrency,
+      hasOpportunity: false,
+    });
+    // Mevcut kalemlerin urunleri, secili urun listesinin ilk sayfasinda gorunmeyebilir -
+    // katalogu baslangicta bunlarla doldurur (bkz. productNameById/productPriceById altinda).
+    setProductCatalog((prev) => ({
+      ...prev,
+      ...Object.fromEntries(quote.items.map((item) => [item.productId, item.product])),
+    }));
+    const savedRates = quote.exchangeRates;
+    setExchangeRates({
+      rates: Object.fromEntries(
+        Object.entries(savedRates?.rates ?? {}).map(([currency, rate]) => [currency, String(rate)]),
+      ),
+      asOf: savedRates?.asOf,
+    });
+  }, [isEdit, quoteQuery.data, initializedForQuoteId, reset]);
+
+  // ibanSelections, duzenleme modunda quote + guncel IBAN hesap listesi ikisi de gelince
+  // ayrica kurulur (quote genelde iban listesinden once gelir) - bkz.
+  // deriveIbanSelectionsFromSnapshot doc comment'i.
+  const [ibanInitializedForQuoteId, setIbanInitializedForQuoteId] = useState<string | null>(null);
+  useEffect(() => {
+    if (
+      !isEdit ||
+      !quoteQuery.data ||
+      !ibanOptionsQuery.data ||
+      ibanInitializedForQuoteId === quoteQuery.data.id
+    ) {
+      return;
+    }
+    setIbanInitializedForQuoteId(quoteQuery.data.id);
+    setValue(
+      'ibanSelections',
+      deriveIbanSelectionsFromSnapshot(quoteQuery.data.ibanAccounts ?? [], ibanOptionsQuery.data),
+    );
+  }, [isEdit, quoteQuery.data, ibanOptionsQuery.data, ibanInitializedForQuoteId, setValue]);
+
+  // Gonderen varsayilan olarak istegi yapan kullanici (bkz. docs/VARSAYIMLAR.md) - SADECE
+  // olusturma modunda; duzenlemede senderId zaten quote'tan geliyor (yukaridaki reset).
+  // Kullanici elle degistirirse (dirty) bir sonraki /auth/me yanitiyla ezilmez.
+  useEffect(() => {
+    if (!isEdit && meQuery.data && !dirtyFields.senderId) {
       setValue('senderId', meQuery.data.id);
     }
-  }, [meQuery.data, dirtyFields.senderId, setValue]);
+  }, [isEdit, meQuery.data, dirtyFields.senderId, setValue]);
 
-  // Varsayilan hesap grubu (bkz. IbanOptionGroup.isDefault) teklif IBAN
-  // secimine onceden secili gelir - kullanici elle degistirirse (dirty) bir
-  // sonraki fetch ile ezilmez, senderId ile ayni desen.
+  // Varsayilan hesap grubu (bkz. IbanOptionGroup.isDefault) - SADECE olusturma modunda;
+  // duzenlemede yukaridaki iban snapshot eslestirmesi kullanilir. Kullanici elle
+  // degistirirse (dirty) bir sonraki fetch ile ezilmez, senderId ile ayni desen.
   const ibanOptionGroupsQuery = useIbanOptionGroupsQuery();
   useEffect(() => {
+    if (isEdit) return;
     const defaultGroup = ibanOptionGroupsQuery.data?.find((group) => group.isDefault);
     if (defaultGroup && !dirtyFields.ibanSelections) {
       setValue('ibanSelections', [encodeIbanGroupSelection(defaultGroup.id)]);
     }
-  }, [ibanOptionGroupsQuery.data, dirtyFields.ibanSelections, setValue]);
+  }, [isEdit, ibanOptionGroupsQuery.data, dirtyFields.ibanSelections, setValue]);
 
   // Kosul metni alanlari (odeme/satis/teslimat/genel hukumler), ayarlardaki varsayilan
-  // degerlerle doldurulur. tenantSettingsQuery baska bir sekmede ayar kaydedilince
-  // realtime ile yeniden fetch olur (bkz. useTenantSettingsRealtimeSync) ve bu ekran da
-  // guncellenir - ama kullanicinin zaten elle degistirdigi (dirty) alanlar ezilmez.
+  // degerlerle doldurulur - SADECE olusturma modunda; duzenlemede degerler zaten
+  // quote'tan geliyor (yukaridaki reset). tenantSettingsQuery baska bir sekmede ayar
+  // kaydedilince realtime ile yeniden fetch olur (bkz. useTenantSettingsRealtimeSync) ve
+  // bu ekran da guncellenir - ama kullanicinin zaten elle degistirdigi (dirty) alanlar
+  // ezilmez.
   useEffect(() => {
-    if (!tenantSettingsQuery.data) return;
+    if (isEdit || !tenantSettingsQuery.data) return;
     const findSetting = (key: string) =>
       tenantSettingsQuery.data?.find((setting) => setting.key === key)?.value;
     const paymentTerms = findSetting(DEFAULT_QUOTE_PAYMENT_TERMS_KEY);
@@ -229,6 +327,7 @@ export function QuoteFormPage() {
       setValue('deliveryTerms', String(deliveryTerms));
     if (generalTerms && !dirtyFields.generalTerms) setValue('generalTerms', String(generalTerms));
   }, [
+    isEdit,
     tenantSettingsQuery.data,
     setValue,
     dirtyFields.paymentTerms,
@@ -254,9 +353,6 @@ export function QuoteFormPage() {
   const pickerProducts = productsQuery.data?.data ?? [];
   const pickerAttributeKeysQuery = useProductAttributeKeysQuery();
 
-  // Sağdaki özet, arama/sayfalama boyunca görünürden çıkan ürünleri de doğru
-  // gösterebilsin diye görülen her ürün burada biriktirilir (id -> Product).
-  const [productCatalog, setProductCatalog] = useState<Record<string, Product>>({});
   useEffect(() => {
     const data = productsQuery.data?.data;
     if (!data || data.length === 0) return;
@@ -386,7 +482,8 @@ export function QuoteFormPage() {
 
   // "+ Yeni Firma" ile sistemde hiç kayıtlı olmayan bir firma oluşturulunca, doğrudan
   // bu teklifin firma alanına seçili olarak atanır (NewProductModal'daki
-  // handleProductCreated ile aynı desen).
+  // handleProductCreated ile aynı desen). Sadece olusturma modunda ulasilabilir (firma
+  // duzenlemede degistirilemez, bkz. accountSlot).
   function handleAccountCreated(account: Account) {
     setValue('accountId', account.id, { shouldValidate: true });
     setIsNewAccountModalOpen(false);
@@ -401,7 +498,7 @@ export function QuoteFormPage() {
   }
 
   // Teklif özeti tablosundaki mevcut satırlara tıklayınca açılan düzenleme paneli -
-  // ürün ekleme panelindeki aynı miktar/fiyat/iskonto/KDV deseni (bkz. quote-edit-page.tsx).
+  // ürün ekleme panelindeki aynı miktar/fiyat/iskonto/KDV deseni.
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editQuantity, setEditQuantity] = useState('1');
   const [editUnitPrice, setEditUnitPrice] = useState('');
@@ -509,6 +606,69 @@ export function QuoteFormPage() {
   const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
 
   const onSubmit = handleSubmit((values) => {
+    if (isEdit) {
+      const isRevisionMode = quoteQuery.data?.status === 'REVIZE';
+      if (isRevisionMode && !revisionNote.trim()) {
+        setRevisionNoteTouched(true);
+        toast.error(tr.crm.quotes.edit.revisionNoteRequired);
+        return;
+      }
+      const updateInput: UpdateQuoteInput = {
+        ...(isRevisionMode ? { revisionNote: revisionNote.trim() } : {}),
+        items: values.items.map((item) => ({
+          productId: item.productId,
+          quantity: Number(item.quantity),
+          unitPrice: item.unitPrice ? Number(item.unitPrice) : undefined,
+          currency: item.currency || undefined,
+          discountPct: item.discountPct ? Number(item.discountPct) : 0,
+          vatPct: item.vatPct ? Number(item.vatPct) : 0,
+          brand: item.brand ?? undefined,
+        })),
+        contactId: values.contactId || null,
+        quoteDate: values.quoteDate ? new Date(values.quoteDate).toISOString() : undefined,
+        title: values.title || null,
+        leadTime: values.leadTime || null,
+        validityPeriod: values.validityPeriod || null,
+        paymentMethod: values.paymentMethod || null,
+        // Kullanici hic secim yapmadiysa (bos dizi) hicbir alan gonderilmez - backend
+        // bunu "degistirilmedi" sayar ve mevcut snapshot'i korur (bkz.
+        // UpdateQuoteSchema.ibanOptionIds doc comment'i).
+        ...((values.ibanSelections ?? []).length > 0
+          ? decodeIbanSelections(values.ibanSelections ?? [])
+          : {}),
+        paymentTerms: values.paymentTerms || null,
+        salesTerms: values.salesTerms || null,
+        deliveryTerms: values.deliveryTerms || null,
+        generalTerms: values.generalTerms || null,
+        // Duzenlemede undefined "dokunma" anlamina gelir (bkz. UpdateQuoteSchema) - bu
+        // yuzden burada daima acik deger gonderilir.
+        templateId: values.templateId || null,
+        senderId: values.senderId || undefined,
+        quoteCurrency: values.quoteCurrency,
+        exchangeRates:
+          Object.keys(exchangeRates.rates).length > 0
+            ? {
+                asOf: exchangeRates.asOf,
+                rates: Object.fromEntries(
+                  Object.entries(exchangeRates.rates)
+                    .filter(([, rate]) => rate)
+                    .map(([currency, rate]) => [currency, Number(rate)]),
+                ),
+              }
+            : undefined,
+      };
+      updateMutation.mutate(updateInput, {
+        onSuccess: (updated) => {
+          toast.success(tr.crm.quotes.edit.updateSuccess);
+          navigate(`/teklifler/${updated.id}`);
+        },
+        onError: (error) => {
+          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+        },
+      });
+      return;
+    }
+
     const input: CreateQuoteInput = {
       accountId: values.accountId,
       contactId: values.contactId || undefined,
@@ -569,8 +729,7 @@ export function QuoteFormPage() {
     });
   });
 
-  const apiErrorMessage =
-    createMutation.error instanceof ApiError ? createMutation.error.message : undefined;
+  const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
 
   const pickerAttributeKeys = [...(pickerAttributeKeysQuery.data ?? [])].sort();
   const pickerAttributeColumns: TableColumn<Product>[] = pickerAttributeKeys.map((key) => ({
@@ -856,63 +1015,119 @@ export function QuoteFormPage() {
     );
   }
 
+  if (isEdit && quoteQuery.isPending) {
+    return (
+      <AppShell>
+        <p className="mt-6 text-sm text-app-muted">{tr.common.loading}</p>
+      </AppShell>
+    );
+  }
+  if (isEdit && !quoteQuery.data) {
+    return null;
+  }
+
+  const quote = quoteQuery.data;
+  const isRevisionMode = quote?.status === 'REVIZE';
+  if (quote) {
+    const isEditableStatus =
+      quote.status === 'DRAFT' ||
+      quote.status === 'SENT' ||
+      quote.status === 'PENDING_APPROVAL' ||
+      quote.status === 'REVIZE';
+    if (!isEditableStatus) {
+      return (
+        <AppShell>
+          <BackLink to={`/teklifler/${quote.id}`} label={tr.crm.quotes.edit.back} />
+          <div className="mt-6 rounded-lg border border-app-border bg-app-surface p-6 text-center">
+            <h1 className="text-lg font-bold text-app-text">
+              {tr.crm.quotes.edit.notEditableTitle}
+            </h1>
+            <p className="mt-2 text-sm text-app-muted">{tr.crm.quotes.edit.notEditableMessage}</p>
+          </div>
+        </AppShell>
+      );
+    }
+  }
+
   return (
     <AppShell>
-      <BackLink to={'/teklifler'} label={tr.crm.quotes.title} />
+      <BackLink
+        to={quote ? `/teklifler/${quote.id}` : '/teklifler'}
+        label={isEdit ? tr.crm.quotes.edit.back : tr.crm.quotes.title}
+      />
 
       <div className="mt-6">
-        <h1 className="text-lg font-bold text-app-text">{tr.crm.quotes.form.newTitle}</h1>
+        <h1 className="text-lg font-bold text-app-text">
+          {quote ? (
+            <>
+              {tr.crm.quotes.edit.title} — {quote.quoteNumber}
+            </>
+          ) : (
+            tr.crm.quotes.form.newTitle
+          )}
+        </h1>
 
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-6">
           <FormError message={apiErrorMessage} />
 
           <QuoteMetaFields
             accountSlot={
-              <div>
-                <Controller
-                  name="accountId"
-                  control={control}
-                  render={({ field }) => (
-                    <AccountAutocomplete
-                      label={tr.crm.quotes.form.accountLabel}
-                      required
-                      placeholder={tr.crm.quotes.form.accountPlaceholder}
-                      hint={tr.crm.quotes.form.accountHint}
-                      error={errors.accountId?.message}
-                      value={field.value}
-                      onChange={field.onChange}
-                      loadAllWhenEmpty
-                      trailingAction={
-                        <Button
-                          type="button"
-                          variant="navy"
-                          className="shrink-0"
-                          onClick={() => setIsNewAccountModalOpen(true)}
-                        >
-                          {tr.crm.quotes.form.newAccountButton}
-                        </Button>
-                      }
-                    />
-                  )}
-                />
-                {selectedAccountId && (revisionSummaryQuery.data?.count ?? 0) > 0 && (
-                  <p className="mt-1.5 text-xs font-semibold text-app-danger">
-                    {tr.crm.quotes.form.accountRevisionWarning(revisionSummaryQuery.data!.count)}
+              quote ? (
+                <div>
+                  <p className="text-xs font-semibold text-app-muted">
+                    {tr.crm.quotes.edit.accountLabel}
                   </p>
-                )}
-              </div>
+                  <p className="mt-1 text-sm font-semibold text-app-text">{quote.account.name}</p>
+                </div>
+              ) : (
+                <div>
+                  <Controller
+                    name="accountId"
+                    control={control}
+                    render={({ field }) => (
+                      <AccountAutocomplete
+                        label={tr.crm.quotes.form.accountLabel}
+                        required
+                        placeholder={tr.crm.quotes.form.accountPlaceholder}
+                        hint={tr.crm.quotes.form.accountHint}
+                        error={errors.accountId?.message}
+                        value={field.value}
+                        onChange={field.onChange}
+                        loadAllWhenEmpty
+                        trailingAction={
+                          <Button
+                            type="button"
+                            variant="navy"
+                            className="shrink-0"
+                            onClick={() => setIsNewAccountModalOpen(true)}
+                          >
+                            {tr.crm.quotes.form.newAccountButton}
+                          </Button>
+                        }
+                      />
+                    )}
+                  />
+                  {selectedAccountId && (revisionSummaryQuery.data?.count ?? 0) > 0 && (
+                    <p className="mt-1.5 text-xs font-semibold text-app-danger">
+                      {tr.crm.quotes.form.accountRevisionWarning(revisionSummaryQuery.data!.count)}
+                    </p>
+                  )}
+                </div>
+              )
             }
             contactOptions={contactOptions}
             contactTrailingAction={
-              <Button
-                type="button"
-                variant="navy"
-                className="shrink-0"
-                disabled={!selectedAccountId}
-                onClick={() => setIsNewContactModalOpen(true)}
-              >
-                {tr.crm.quotes.form.newContactButton}
-              </Button>
+              !isEdit ? (
+                <Button
+                  type="button"
+                  variant="navy"
+                  className="shrink-0"
+                  disabled={!selectedAccountId}
+                  onClick={() => setIsNewContactModalOpen(true)}
+                >
+                  {tr.crm.quotes.form.newContactButton}
+                </Button>
+              ) : undefined
             }
             senderOptions={senderOptions}
             values={{
@@ -938,12 +1153,24 @@ export function QuoteFormPage() {
               templateId: errors.templateId?.message,
               senderId: errors.senderId?.message,
             }}
-            onRequestAddPaymentMethod={() => setActiveOptionModal('paymentMethod')}
-            onRequestAddIban={() => setActiveOptionModal('iban')}
+            onRequestAddPaymentMethod={
+              !isEdit ? () => setActiveOptionModal('paymentMethod') : undefined
+            }
+            onRequestAddIban={!isEdit ? () => setActiveOptionModal('iban') : undefined}
+            ibanCurrentInfo={
+              quote
+                ? quote.ibanAccounts && quote.ibanAccounts.length > 0
+                  ? quote.ibanAccounts.map((account) => ({
+                      bankName: account.bankName,
+                      ibanNumber: account.iban,
+                    }))
+                  : null
+                : undefined
+            }
           />
 
           <TextField
-            label={tr.crm.quotes.form.titleLabel}
+            label={isEdit ? tr.crm.quotes.edit.titleLabel : tr.crm.quotes.form.titleLabel}
             placeholder={tr.crm.quotes.form.titlePlaceholder}
             hint={tr.crm.quotes.form.titleHint}
             error={errors.title?.message}
@@ -959,7 +1186,11 @@ export function QuoteFormPage() {
 
               <div className="mt-3">
                 <Select
-                  label={tr.crm.quotes.form.productListLabel}
+                  label={
+                    isEdit
+                      ? tr.crm.quotes.edit.productListLabel
+                      : tr.crm.quotes.form.productListLabel
+                  }
                   required
                   placeholder={tr.crm.quotes.form.productListPlaceholder}
                   hint={tr.crm.quotes.form.productListHint}
@@ -1124,7 +1355,11 @@ export function QuoteFormPage() {
           <div className="flex flex-col gap-4">
             <div>
               <TextareaField
-                label={tr.crm.quotes.form.paymentTermsLabel}
+                label={
+                  isEdit
+                    ? tr.crm.quotes.edit.paymentTermsLabel
+                    : tr.crm.quotes.form.paymentTermsLabel
+                }
                 placeholder={tr.crm.quotes.form.paymentTermsPlaceholder}
                 hint={tr.crm.quotes.form.paymentTermsHint}
                 error={errors.paymentTerms?.message}
@@ -1134,7 +1369,9 @@ export function QuoteFormPage() {
             </div>
             <div>
               <TextareaField
-                label={tr.crm.quotes.form.salesTermsLabel}
+                label={
+                  isEdit ? tr.crm.quotes.edit.salesTermsLabel : tr.crm.quotes.form.salesTermsLabel
+                }
                 placeholder={tr.crm.quotes.form.salesTermsPlaceholder}
                 hint={tr.crm.quotes.form.salesTermsHint}
                 error={errors.salesTerms?.message}
@@ -1144,7 +1381,11 @@ export function QuoteFormPage() {
             </div>
             <div>
               <TextareaField
-                label={tr.crm.quotes.form.deliveryTermsLabel}
+                label={
+                  isEdit
+                    ? tr.crm.quotes.edit.deliveryTermsLabel
+                    : tr.crm.quotes.form.deliveryTermsLabel
+                }
                 placeholder={tr.crm.quotes.form.deliveryTermsPlaceholder}
                 hint={tr.crm.quotes.form.deliveryTermsHint}
                 error={errors.deliveryTerms?.message}
@@ -1154,7 +1395,11 @@ export function QuoteFormPage() {
             </div>
             <div>
               <TextareaField
-                label={tr.crm.quotes.form.generalTermsLabel}
+                label={
+                  isEdit
+                    ? tr.crm.quotes.edit.generalTermsLabel
+                    : tr.crm.quotes.form.generalTermsLabel
+                }
                 placeholder={tr.crm.quotes.form.generalTermsPlaceholder}
                 hint={tr.crm.quotes.form.generalTermsHint}
                 error={errors.generalTerms?.message}
@@ -1164,58 +1409,82 @@ export function QuoteFormPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-app-border bg-app-surface p-4">
-            <Controller
-              name="hasOpportunity"
-              control={control}
-              render={({ field }) => (
-                <div className="flex items-center gap-2">
-                  <Switch checked={field.value ?? false} onChange={field.onChange} />
-                  <span className="text-sm font-semibold text-app-text">
-                    {tr.crm.quotes.form.opportunityCheckboxLabel}
-                  </span>
+          {!isEdit && (
+            <div className="rounded-lg border border-app-border bg-app-surface p-4">
+              <Controller
+                name="hasOpportunity"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center gap-2">
+                    <Switch checked={field.value ?? false} onChange={field.onChange} />
+                    <span className="text-sm font-semibold text-app-text">
+                      {tr.crm.quotes.form.opportunityCheckboxLabel}
+                    </span>
+                  </div>
+                )}
+              />
+              {hasOpportunity && (
+                <div className="mt-4 flex flex-col gap-4">
+                  <TextField
+                    label={tr.crm.quotes.form.opportunityNameLabel}
+                    required
+                    hint={tr.crm.quotes.form.opportunityNameHint}
+                    error={errors.opportunityName?.message}
+                    {...register('opportunityName')}
+                  />
+                  <Select
+                    label={tr.crm.quotes.form.opportunityStageLabel}
+                    hint={tr.crm.quotes.form.opportunityStageHint}
+                    options={STAGE_OPTIONS}
+                    error={errors.opportunityStage?.message}
+                    {...register('opportunityStage')}
+                  />
+                  <TextField
+                    type="number"
+                    step="0.01"
+                    label={tr.crm.quotes.form.opportunityValueLabel}
+                    hint={tr.crm.quotes.form.opportunityValueHint}
+                    error={errors.opportunityValue?.message}
+                    {...register('opportunityValue')}
+                  />
                 </div>
               )}
+            </div>
+          )}
+
+          {isRevisionMode && (
+            <TextareaField
+              label={tr.crm.quotes.edit.revisionNoteLabel}
+              required
+              placeholder={tr.crm.quotes.edit.revisionNotePlaceholder}
+              hint={tr.crm.quotes.edit.revisionNoteHint}
+              value={revisionNote}
+              onChange={(event) => setRevisionNote(event.target.value)}
+              error={
+                revisionNoteTouched && !revisionNote.trim()
+                  ? tr.crm.quotes.edit.revisionNoteRequired
+                  : undefined
+              }
             />
-            {hasOpportunity && (
-              <div className="mt-4 flex flex-col gap-4">
-                <TextField
-                  label={tr.crm.quotes.form.opportunityNameLabel}
-                  required
-                  hint={tr.crm.quotes.form.opportunityNameHint}
-                  error={errors.opportunityName?.message}
-                  {...register('opportunityName')}
-                />
-                <Select
-                  label={tr.crm.quotes.form.opportunityStageLabel}
-                  hint={tr.crm.quotes.form.opportunityStageHint}
-                  options={STAGE_OPTIONS}
-                  error={errors.opportunityStage?.message}
-                  {...register('opportunityStage')}
-                />
-                <TextField
-                  type="number"
-                  step="0.01"
-                  label={tr.crm.quotes.form.opportunityValueLabel}
-                  hint={tr.crm.quotes.form.opportunityValueHint}
-                  error={errors.opportunityValue?.message}
-                  {...register('opportunityValue')}
-                />
-              </div>
-            )}
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
-            <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-              {createMutation.isPending ? tr.crm.quotes.form.submitting : tr.crm.quotes.form.submit}
+            <Button type="submit" className="w-full" disabled={mutation.isPending}>
+              {mutation.isPending
+                ? isEdit
+                  ? tr.crm.quotes.edit.submitting
+                  : tr.crm.quotes.form.submitting
+                : isEdit
+                  ? tr.crm.quotes.edit.submit
+                  : tr.crm.quotes.form.submit}
             </Button>
             <Button
               type="button"
               variant="danger"
               className="w-full border border-white"
-              onClick={() => navigate('/teklifler')}
+              onClick={() => navigate(quote ? `/teklifler/${quote.id}` : '/teklifler')}
             >
-              {tr.crm.quotes.form.cancel}
+              {isEdit ? tr.crm.quotes.edit.cancel : tr.crm.quotes.form.cancel}
             </Button>
           </div>
         </form>

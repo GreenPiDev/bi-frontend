@@ -39,8 +39,8 @@ interface QuoteExchangeRatesProps {
  * Kalemler quoteCurrency disinda para birimleri iceriyorsa: her yabanci para birimi
  * icin (once FxService'ten otomatik cekilen, sonra kullanici tarafindan duzenlenebilen)
  * kur input'u + bu kurlarla hesaplanmis TEK bir genel toplam + kullanilan kurlari
- * ozetleyen bir not gosterir. quote-form-page.tsx ve quote-edit-page.tsx arasinda
- * paylasilir.
+ * ozetleyen bir not gosterir. quote-form-page.tsx'in olusturma/duzenleme modlarinin
+ * ikisinde de kullanilir.
  */
 export function QuoteExchangeRatesSection({
   quoteCurrency,

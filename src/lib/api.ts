@@ -3052,7 +3052,7 @@ export function getQuoteFxRates(base: string, targets: string[]): Promise<FxRate
   return request(`/quotes/fx-rates?base=${base}&targets=${targets.join(',')}`);
 }
 
-/** Satir bazli para birimi override'inda (quote-form-page.tsx/quote-edit-page.tsx)
+/** Satir bazli para birimi override'inda (quote-form-page.tsx)
  * birim fiyati otomatik yeni kura cevirmek icin - getQuoteFxRates'in sonucundan
  * "1 from = ? to" kurunu okuyup amount'u cevirir. Kur bulunamazsa (ag hatasi,
  * desteklenmeyen para birimi vb.) null doner - caller alani degistirmeden birakir,
