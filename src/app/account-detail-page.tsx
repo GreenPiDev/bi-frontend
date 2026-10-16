@@ -5,6 +5,7 @@ import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ChartCard } from '../components/ui/chart-card';
 import { HorizontalTabPanel } from '../components/ui/horizontal-tab-panel';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
@@ -13,10 +14,39 @@ import { useAccountQuery } from '../features/crm/use-accounts';
 import { useInteractionsQuery } from '../features/crm/use-interactions';
 import { useOpportunitiesQuery } from '../features/crm/use-opportunities';
 import { useProjectsQuery } from '../features/crm/use-projects';
-import { useQuotesQuery } from '../features/crm/use-quotes';
-import { formatCurrencyAmount, getQuoteCurrencyTotals } from '../lib/quote-totals';
-import type { Contact, Interaction, Opportunity, Project, Quote } from '../lib/api';
+import { useQuoteStatusCounts, useQuotesQuery } from '../features/crm/use-quotes';
+import { useSalesOrderStatusCounts, useSalesOrdersQuery } from '../features/crm/use-sales-orders';
+import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
+import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
+import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
+import {
+  formatCurrencyAmount,
+  getQuoteCurrencyTotals,
+  QUOTE_STATUS_OPTIONS,
+} from '../lib/quote-totals';
+import type {
+  Contact,
+  Interaction,
+  Opportunity,
+  Project,
+  Quote,
+  QuoteStatus,
+  SalesOrder,
+  SalesOrderStatus,
+} from '../lib/api';
 import { tr } from '../i18n/tr';
+
+const SALES_ORDER_STATUS_OPTIONS: { value: SalesOrderStatus; label: string }[] = (
+  [
+    'PENDING',
+    'PROCESSING',
+    'READY_FOR_SHIPMENT',
+    'SHIPPED',
+    'DELIVERED',
+    'COMPLETED',
+    'CANCELLED',
+  ] as const
+).map((status) => ({ value: status, label: tr.crm.salesOrders.statusOptions[status] }));
 
 const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
 
@@ -35,6 +65,19 @@ const QUOTE_STATUS_BADGE_VARIANT: Record<
 const INTERACTION_STATUS_BADGE_VARIANT: Record<string, 'success' | 'neutral'> = {
   OPEN: 'success',
   CLOSED: 'neutral',
+};
+
+const SALES_ORDER_STATUS_BADGE_VARIANT: Record<
+  string,
+  'success' | 'warning' | 'danger' | 'neutral' | 'orange' | 'info'
+> = {
+  PENDING: 'neutral',
+  PROCESSING: 'info',
+  READY_FOR_SHIPMENT: 'info',
+  SHIPPED: 'info',
+  DELIVERED: 'success',
+  COMPLETED: 'success',
+  CANCELLED: 'danger',
 };
 
 function formatBudget(value: string | null): string {
@@ -166,6 +209,35 @@ const QUOTE_COLUMNS: TableColumn<Quote>[] = [
   },
 ];
 
+const SALES_ORDER_COLUMNS: TableColumn<SalesOrder>[] = [
+  {
+    key: 'orderNumber',
+    header: tr.crm.salesOrders.numberColumn,
+    render: (o) => <span className="font-semibold text-app-text">{o.orderNumber}</span>,
+  },
+  {
+    key: 'quote',
+    header: tr.crm.salesOrders.quoteColumn,
+    className: 'text-app-muted',
+    render: (o) => o.quote?.quoteNumber ?? '—',
+  },
+  {
+    key: 'status',
+    header: tr.crm.salesOrders.statusColumn,
+    render: (o) => (
+      <Badge variant={SALES_ORDER_STATUS_BADGE_VARIANT[o.status]}>
+        {tr.crm.salesOrders.statusOptions[o.status]}
+      </Badge>
+    ),
+  },
+  {
+    key: 'createdAt',
+    header: tr.crm.salesOrders.createdAtColumn,
+    className: 'text-app-muted',
+    render: (o) => new Date(o.createdAt).toLocaleDateString('tr-TR'),
+  },
+];
+
 const CONTACT_COLUMNS: TableColumn<Contact>[] = [
   {
     key: 'name',
@@ -216,6 +288,98 @@ const PROJECT_COLUMNS: TableColumn<Project>[] = [
   },
 ];
 
+/** Firma detayi "Teklifler" sekmesinde, teklif listesinin ustunde gosterilen durum
+ * dagilim grafigi - /settings/kullanicilar/:slug'daki QuoteChartsSection ile ayni
+ * desen, ama tenant/kullanici yerine bu firmaya (`accountId`) daraltilmis. Dilime
+ * tiklaninca /teklifler?tab=quotes sayfasina bu firmaya ve tiklanan duruma
+ * filtrelenmis sekilde gider (bkz. quotes-list-page.tsx'teki URL destegi). */
+function AccountQuoteStatusChart({ accountId }: { accountId: string }) {
+  const navigate = useNavigate();
+  const theme = getChartTheme();
+  const statusCounts = useQuoteStatusCounts(
+    QUOTE_STATUS_OPTIONS.map((option) => option.value),
+    { accountId },
+  );
+
+  function goToAccountQuotes(status?: QuoteStatus) {
+    const params = new URLSearchParams({ tab: 'quotes', accountId });
+    if (status) params.set('status', status);
+    navigate(`/teklifler?${params.toString()}`);
+  }
+
+  const statusDistributionPoints = QUOTE_STATUS_OPTIONS.map((option) => ({
+    status: option.value,
+    name: option.label,
+    value: statusCounts.counts[option.value] ?? 0,
+  })).filter((point) => point.value > 0);
+  const hasQuotes = statusDistributionPoints.length > 0;
+  const statusDistributionOption = buildPieOptionFromPoints(
+    theme,
+    statusDistributionPoints,
+    (value) => numberFormatter.format(value),
+  );
+
+  if (!hasQuotes) return null;
+
+  return (
+    <ChartCard title={tr.crm.quoteReports.statusDistributionTitle} className="mb-4">
+      <ChartWithExport
+        option={statusDistributionOption}
+        fileName={tr.crm.quoteReports.statusDistributionTitle}
+        onEvents={{
+          click: (params) => goToAccountQuotes(statusDistributionPoints[params.dataIndex]?.status),
+        }}
+      />
+    </ChartCard>
+  );
+}
+
+/** Firma detayi "Satış Siparişleri" sekmesinde, siparis listesinin ustunde gosterilen
+ * durum dagilim grafigi - AccountQuoteStatusChart ile ayni desen. Dilime tiklaninca
+ * /siparisler?tab=salesOrders sayfasina bu firmaya ve tiklanan duruma filtrelenmis
+ * sekilde gider (bkz. sales-order-list-page.tsx'teki URL destegi). */
+function AccountSalesOrderStatusChart({ accountId }: { accountId: string }) {
+  const navigate = useNavigate();
+  const theme = getChartTheme();
+  const statusCounts = useSalesOrderStatusCounts(
+    SALES_ORDER_STATUS_OPTIONS.map((option) => option.value),
+    { accountId },
+  );
+
+  function goToAccountSalesOrders(status?: SalesOrderStatus) {
+    const params = new URLSearchParams({ tab: 'salesOrders', accountId });
+    if (status) params.set('status', status);
+    navigate(`/siparisler?${params.toString()}`);
+  }
+
+  const statusDistributionPoints = SALES_ORDER_STATUS_OPTIONS.map((option) => ({
+    status: option.value,
+    name: option.label,
+    value: statusCounts.counts[option.value] ?? 0,
+  })).filter((point) => point.value > 0);
+  const hasSalesOrders = statusDistributionPoints.length > 0;
+  const statusDistributionOption = buildPieOptionFromPoints(
+    theme,
+    statusDistributionPoints,
+    (value) => numberFormatter.format(value),
+  );
+
+  if (!hasSalesOrders) return null;
+
+  return (
+    <ChartCard title={tr.crm.salesOrders.statusDistributionTitle} className="mb-4">
+      <ChartWithExport
+        option={statusDistributionOption}
+        fileName={tr.crm.salesOrders.statusDistributionTitle}
+        onEvents={{
+          click: (params) =>
+            goToAccountSalesOrders(statusDistributionPoints[params.dataIndex]?.status),
+        }}
+      />
+    </ChartCard>
+  );
+}
+
 export function AccountDetailPage() {
   const { slug = '' } = useParams();
   const id = extractAccountId(slug);
@@ -226,6 +390,7 @@ export function AccountDetailPage() {
   const opportunitiesQuery = useOpportunitiesQuery({ accountId: id });
   const quotesQuery = useQuotesQuery({ accountId: id });
   const projectsQuery = useProjectsQuery({ accountId: id });
+  const salesOrdersQuery = useSalesOrdersQuery({ accountId: id });
 
   function goToTab(tabKey: string) {
     const next = new URLSearchParams(searchParams);
@@ -429,6 +594,7 @@ export function AccountDetailPage() {
               label: tr.crm.accounts.detail.tabQuotes,
               content: (
                 <div>
+                  <AccountQuoteStatusChart accountId={id} />
                   <div className="mb-3 flex justify-end">
                     <Button
                       type="button"
@@ -472,6 +638,33 @@ export function AccountDetailPage() {
                     getRowHref={(project) => `/projeler/${project.projectNumber}`}
                     isLoading={projectsQuery.isPending}
                     emptyMessage={tr.crm.accounts.detail.noProjects}
+                  />
+                </div>
+              ),
+            },
+            {
+              key: 'salesOrders',
+              label: tr.crm.accounts.detail.tabSalesOrders,
+              content: (
+                <div>
+                  <AccountSalesOrderStatusChart accountId={id} />
+                  <div className="mb-3 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => navigate(`/satis-siparisleri/yeni?accountId=${id}`)}
+                    >
+                      {tr.crm.salesOrders.newButton}
+                    </Button>
+                  </div>
+                  <Table<SalesOrder>
+                    columns={SALES_ORDER_COLUMNS}
+                    data={salesOrdersQuery.data?.data ?? []}
+                    keyField={(order) => order.id}
+                    onRowClick={(order) => navigate(`/satis-siparisleri/${order.id}`)}
+                    getRowHref={(order) => `/satis-siparisleri/${order.id}`}
+                    isLoading={salesOrdersQuery.isPending}
+                    emptyMessage={tr.crm.accounts.detail.noSalesOrders}
                   />
                 </div>
               ),

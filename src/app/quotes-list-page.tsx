@@ -134,19 +134,28 @@ export function QuotesListContent() {
       ? (fromUrl as QuoteStatus)
       : '';
   });
-  // Rapor sekmesindeki KPI kartlarindan "?status=..." (ve /settings/kullanicilar/:slug
-  // "Oluşturduğu Teklifler" grafiginden "?status=...&createdById=...") ile gelindiginde
-  // baslangic filtresini uygulamak icin yukarida okunuyor - URL'de kalip kafa
-  // karistirmasin diye tuketildikten sonra temizlenir (tab parametresi dokunulmadan kalir).
+  // Rapor sekmesindeki KPI kartlarindan "?status=..." (/settings/kullanicilar/:slug
+  // "Oluşturduğu Teklifler" grafiginden "?status=...&createdById=..." ve /firmalar/:slug
+  // "Teklifler" sekmesindeki durum grafiginden "?status=...&accountId=...") ile
+  // gelindiginde baslangic filtresini uygulamak icin yukarida okunuyor - URL'de kalip
+  // kafa karistirmasin diye tuketildikten sonra temizlenir (tab parametresi
+  // dokunulmadan kalir).
   useEffect(() => {
-    if (!searchParams.has('status') && !searchParams.has('createdById')) return;
+    if (
+      !searchParams.has('status') &&
+      !searchParams.has('createdById') &&
+      !searchParams.has('accountId')
+    )
+      return;
     const next = new URLSearchParams(searchParams);
     next.delete('status');
     next.delete('createdById');
+    next.delete('accountId');
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [createdById, setCreatedById] = useState(() => searchParams.get('createdById') ?? '');
+  const [accountIdFilter, setAccountIdFilter] = useState(() => searchParams.get('accountId') ?? '');
   const [sinceInput, setSinceInput] = useState('');
   const [rangeFromInput, setRangeFromInput] = useState('');
   const [rangeToInput, setRangeToInput] = useState('');
@@ -165,12 +174,18 @@ export function QuotesListContent() {
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
   const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
   const to = hasRange ? rangeToInput || undefined : undefined;
-  const hasActiveFilter = Boolean(status) || Boolean(createdById) || Boolean(from) || Boolean(to);
+  const hasActiveFilter =
+    Boolean(status) ||
+    Boolean(createdById) ||
+    Boolean(accountIdFilter) ||
+    Boolean(from) ||
+    Boolean(to);
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const quotesQuery = useQuotesQuery({
     page,
     pageSize,
     q: q || undefined,
+    accountId: accountIdFilter || undefined,
     status: status || undefined,
     createdById: createdById || undefined,
     from,
@@ -213,6 +228,7 @@ export function QuotesListContent() {
     setPage(1);
     setStatus('');
     setCreatedById('');
+    setAccountIdFilter('');
     setSinceInput('');
     setRangeFromInput('');
     setRangeToInput('');

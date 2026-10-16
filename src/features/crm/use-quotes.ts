@@ -54,7 +54,7 @@ export function useQuotesQuery(
  * secenek icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total kullanilir). */
 export function useQuoteStatusCounts(
   statuses: readonly QuoteStatus[],
-  range: { from?: string; to?: string; createdById?: string } = {},
+  range: { from?: string; to?: string; createdById?: string; accountId?: string } = {},
 ) {
   const results = useQueries({
     queries: [

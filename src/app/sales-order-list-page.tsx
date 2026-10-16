@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { Copy, ListFilter, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
@@ -11,6 +11,7 @@ import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { hasPermission } from '../features/auth/permissions';
@@ -21,6 +22,7 @@ import {
   useSalesOrdersQuery,
   useUpdateSalesOrderStatusMutation,
 } from '../features/crm/use-sales-orders';
+import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type SalesOrder, type SalesOrderStatus } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -96,10 +98,37 @@ function SalesOrderStatusSelect({ order }: { order: SalesOrder }) {
 export function SalesOrdersListContent() {
   const navigate = useNavigate();
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
-  const [status, setStatus] = useState<SalesOrderStatus | ''>('');
+  // /settings/kullanicilar/:slug "Oluşturduğu Satış Siparişleri" grafiginden
+  // "?status=...&createdById=..." ve /firmalar/:slug "Satış Siparişleri" sekmesindeki
+  // durum grafiginden "?status=...&accountId=..." ile gelindiginde baslangic
+  // filtresini uygulamak icin okunur - URL'de kalip kafa karistirmasin diye
+  // tuketildikten sonra temizlenir (bkz. quotes-list-page.tsx'teki ayni desen).
+  const [status, setStatus] = useState<SalesOrderStatus | ''>(() => {
+    const fromUrl = searchParams.get('status');
+    return STATUS_OPTIONS.some((option) => option.value === fromUrl)
+      ? (fromUrl as SalesOrderStatus)
+      : '';
+  });
+  const [createdById, setCreatedById] = useState(() => searchParams.get('createdById') ?? '');
+  const [accountIdFilter, setAccountIdFilter] = useState(() => searchParams.get('accountId') ?? '');
+  useEffect(() => {
+    if (
+      !searchParams.has('status') &&
+      !searchParams.has('createdById') &&
+      !searchParams.has('accountId')
+    )
+      return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('status');
+    next.delete('createdById');
+    next.delete('accountId');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sinceInput, setSinceInput] = useState('');
   const [rangeFromInput, setRangeFromInput] = useState('');
@@ -109,14 +138,18 @@ export function SalesOrdersListContent() {
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
   const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
   const to = hasRange ? rangeToInput || undefined : undefined;
-  const hasActiveFilter = Boolean(from) || Boolean(to);
+  const hasActiveFilter =
+    Boolean(createdById) || Boolean(accountIdFilter) || Boolean(from) || Boolean(to);
   const meQuery = useMeQuery();
+  const usersQuery = useUsersQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const salesOrdersQuery = useSalesOrdersQuery({
     page,
     pageSize,
     q: q || undefined,
     status: status || undefined,
+    createdById: createdById || undefined,
+    accountId: accountIdFilter || undefined,
     from,
     to,
   });
@@ -134,6 +167,8 @@ export function SalesOrdersListContent() {
 
   function resetFilters() {
     setPage(1);
+    setCreatedById('');
+    setAccountIdFilter('');
     setSinceInput('');
     setRangeFromInput('');
     setRangeToInput('');
@@ -276,6 +311,21 @@ export function SalesOrdersListContent() {
       {drawerOpen && (
         <Drawer title={tr.crm.salesOrders.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
           <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.salesOrders.filterDrawer.createdByLabel}
+              placeholder={tr.crm.salesOrders.filterDrawer.createdByPlaceholder}
+              value={createdById}
+              onChange={(event) => {
+                setPage(1);
+                setCreatedById(event.target.value);
+              }}
+              options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setCreatedById('');
+              }}
+            />
             <DateField
               label={tr.crm.salesOrders.filterDrawer.sinceLabel}
               value={sinceInput}

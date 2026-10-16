@@ -3550,6 +3550,7 @@ export function listPurchaseOrders(
     quoteId?: string;
     projectId?: string;
     status?: PurchaseOrderStatus;
+    createdById?: string;
     q?: string;
     from?: string;
     to?: string;
@@ -3561,6 +3562,7 @@ export function listPurchaseOrders(
   if (params.quoteId) query.set('quoteId', params.quoteId);
   if (params.projectId) query.set('projectId', params.projectId);
   if (params.status) query.set('status', params.status);
+  if (params.createdById) query.set('createdById', params.createdById);
   if (params.q) query.set('q', params.q);
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
@@ -3679,6 +3681,7 @@ export function listSalesOrders(
     pageSize?: number;
     accountId?: string;
     status?: SalesOrderStatus;
+    createdById?: string;
     q?: string;
     from?: string;
     to?: string;
@@ -3689,6 +3692,7 @@ export function listSalesOrders(
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
+  if (params.createdById) query.set('createdById', params.createdById);
   if (params.q) query.set('q', params.q);
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);

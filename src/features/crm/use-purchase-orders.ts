@@ -20,6 +20,7 @@ export function usePurchaseOrdersQuery(
     quoteId?: string;
     projectId?: string;
     status?: PurchaseOrderStatus;
+    createdById?: string;
     q?: string;
     from?: string;
     to?: string;
@@ -35,16 +36,19 @@ export function usePurchaseOrdersQuery(
  * yazilacak kayit sayisini getirir - `/purchase-orders` ucu durum bazli kirilim
  * dondurmuyor, bu yuzden her secenek icin ayri, pageSize=1 ile ucuz bir istek atilir
  * (sadece meta.total kullanilir). */
-export function usePurchaseOrderStatusCounts(statuses: readonly PurchaseOrderStatus[]) {
+export function usePurchaseOrderStatusCounts(
+  statuses: readonly PurchaseOrderStatus[],
+  params: { createdById?: string } = {},
+) {
   const results = useQueries({
     queries: [
       {
-        queryKey: [...PURCHASE_ORDERS_QUERY_KEY, 'count', 'all'],
-        queryFn: () => listPurchaseOrders({ pageSize: 1 }),
+        queryKey: [...PURCHASE_ORDERS_QUERY_KEY, 'count', 'all', params],
+        queryFn: () => listPurchaseOrders({ pageSize: 1, ...params }),
       },
       ...statuses.map((status) => ({
-        queryKey: [...PURCHASE_ORDERS_QUERY_KEY, 'count', status],
-        queryFn: () => listPurchaseOrders({ pageSize: 1, status }),
+        queryKey: [...PURCHASE_ORDERS_QUERY_KEY, 'count', status, params],
+        queryFn: () => listPurchaseOrders({ pageSize: 1, status, ...params }),
       })),
     ],
   });

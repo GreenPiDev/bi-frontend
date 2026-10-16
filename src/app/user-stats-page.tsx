@@ -16,6 +16,8 @@ import {
   useQuoteRejectionReasonsSummaryQuery,
   useQuoteStatusCounts,
 } from '../features/crm/use-quotes';
+import { usePurchaseOrderStatusCounts } from '../features/crm/use-purchase-orders';
+import { useSalesOrderStatusCounts } from '../features/crm/use-sales-orders';
 import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
 import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
 import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
@@ -25,7 +27,9 @@ import { tr } from '../i18n/tr';
 import { QUOTE_STATUS_OPTIONS } from '../lib/quote-totals';
 import type {
   InteractionStatus,
+  PurchaseOrderStatus,
   QuoteStatus,
+  SalesOrderStatus,
   UserStats,
   UserStatsAccountRow,
   UserStatsContactRow,
@@ -42,6 +46,22 @@ const INTERACTION_STATUS_OPTIONS: { value: InteractionStatus; label: string }[] 
   { value: 'OPEN', label: tr.crm.interactions.statusOptions.OPEN },
   { value: 'CLOSED', label: tr.crm.interactions.statusOptions.CLOSED },
 ];
+
+const SALES_ORDER_STATUS_OPTIONS: { value: SalesOrderStatus; label: string }[] = (
+  [
+    'PENDING',
+    'PROCESSING',
+    'READY_FOR_SHIPMENT',
+    'SHIPPED',
+    'DELIVERED',
+    'COMPLETED',
+    'CANCELLED',
+  ] as const
+).map((status) => ({ value: status, label: tr.crm.salesOrders.statusOptions[status] }));
+
+const PURCHASE_ORDER_STATUS_OPTIONS: { value: PurchaseOrderStatus; label: string }[] = (
+  ['DRAFT', 'CONFIRMED'] as const
+).map((status) => ({ value: status, label: tr.crm.purchaseOrders.statusOptions[status] }));
 
 const numberFormatter = new Intl.NumberFormat('tr-TR');
 
@@ -517,6 +537,104 @@ function InteractionChartsSection({ userId }: { userId: string }) {
   );
 }
 
+/** "Oluşturduğu Satış Siparişleri" karti acildiginda tablonun ustunde gosterilen durum
+ * dagilim grafigi - InteractionChartsSection ile ayni desen. Dilime tiklaninca
+ * /siparisler?tab=salesOrders sayfasina bu kullaniciya ve tiklanan duruma filtrelenmis
+ * sekilde gider (bkz. sales-order-list-page.tsx'teki URL destegi). */
+function SalesOrderChartsSection({ userId }: { userId: string }) {
+  const navigate = useNavigate();
+  const theme = getChartTheme();
+  const statusCounts = useSalesOrderStatusCounts(
+    SALES_ORDER_STATUS_OPTIONS.map((option) => option.value),
+    { createdById: userId },
+  );
+
+  function goToUsersSalesOrders(status?: SalesOrderStatus) {
+    const params = new URLSearchParams({ tab: 'salesOrders', createdById: userId });
+    if (status) params.set('status', status);
+    navigate(`/siparisler?${params.toString()}`);
+  }
+
+  const statusDistributionPoints = SALES_ORDER_STATUS_OPTIONS.map((option) => ({
+    status: option.value,
+    name: option.label,
+    value: statusCounts.counts[option.value] ?? 0,
+  })).filter((point) => point.value > 0);
+  const hasSalesOrders = statusDistributionPoints.length > 0;
+  const statusDistributionOption = buildPieOptionFromPoints(
+    theme,
+    statusDistributionPoints,
+    (value) => numberFormatter.format(value),
+  );
+
+  return (
+    <div className="mt-6 flex flex-col gap-4">
+      <ChartCard title={tr.crm.salesOrders.statusDistributionTitle}>
+        {hasSalesOrders ? (
+          <ChartWithExport
+            option={statusDistributionOption}
+            fileName={tr.crm.salesOrders.statusDistributionTitle}
+            onEvents={{
+              click: (params) =>
+                goToUsersSalesOrders(statusDistributionPoints[params.dataIndex]?.status),
+            }}
+          />
+        ) : (
+          <p className="text-sm text-app-muted">{tr.crm.salesOrders.statusDistributionEmpty}</p>
+        )}
+      </ChartCard>
+    </div>
+  );
+}
+
+/** "Oluşturduğu Satın Alma Siparişleri" karti icin SalesOrderChartsSection ile ayni
+ * desen - /siparisler?tab=purchaseOrders'a filtrelenmis sekilde gider. */
+function PurchaseOrderChartsSection({ userId }: { userId: string }) {
+  const navigate = useNavigate();
+  const theme = getChartTheme();
+  const statusCounts = usePurchaseOrderStatusCounts(
+    PURCHASE_ORDER_STATUS_OPTIONS.map((option) => option.value),
+    { createdById: userId },
+  );
+
+  function goToUsersPurchaseOrders(status?: PurchaseOrderStatus) {
+    const params = new URLSearchParams({ tab: 'purchaseOrders', createdById: userId });
+    if (status) params.set('status', status);
+    navigate(`/siparisler?${params.toString()}`);
+  }
+
+  const statusDistributionPoints = PURCHASE_ORDER_STATUS_OPTIONS.map((option) => ({
+    status: option.value,
+    name: option.label,
+    value: statusCounts.counts[option.value] ?? 0,
+  })).filter((point) => point.value > 0);
+  const hasPurchaseOrders = statusDistributionPoints.length > 0;
+  const statusDistributionOption = buildPieOptionFromPoints(
+    theme,
+    statusDistributionPoints,
+    (value) => numberFormatter.format(value),
+  );
+
+  return (
+    <div className="mt-6 flex flex-col gap-4">
+      <ChartCard title={tr.crm.purchaseOrders.statusDistributionTitle}>
+        {hasPurchaseOrders ? (
+          <ChartWithExport
+            option={statusDistributionOption}
+            fileName={tr.crm.purchaseOrders.statusDistributionTitle}
+            onEvents={{
+              click: (params) =>
+                goToUsersPurchaseOrders(statusDistributionPoints[params.dataIndex]?.status),
+            }}
+          />
+        ) : (
+          <p className="text-sm text-app-muted">{tr.crm.purchaseOrders.statusDistributionEmpty}</p>
+        )}
+      </ChartCard>
+    </div>
+  );
+}
+
 function EntityRowsTable({
   entity,
   userId,
@@ -656,6 +774,8 @@ export function UserStatsPage() {
             <>
               {selectedEntity === 'quotes' && <QuoteChartsSection userId={id} />}
               {selectedEntity === 'interactions' && <InteractionChartsSection userId={id} />}
+              {selectedEntity === 'salesOrders' && <SalesOrderChartsSection userId={id} />}
+              {selectedEntity === 'purchaseOrders' && <PurchaseOrderChartsSection userId={id} />}
               <EntityRowsTable entity={selectedEntity} userId={id} config={entityTableConfig} />
             </>
           )}

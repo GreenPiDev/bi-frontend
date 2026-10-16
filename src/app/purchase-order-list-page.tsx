@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { Copy, ListFilter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
@@ -12,6 +12,7 @@ import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
+import { Select } from '../components/ui/select';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { hasPermission } from '../features/auth/permissions';
@@ -23,6 +24,7 @@ import {
   usePurchaseOrdersQuery,
   useUpdatePurchaseOrderMutation,
 } from '../features/crm/use-purchase-orders';
+import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type PurchaseOrder, type PurchaseOrderStatus } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -84,11 +86,29 @@ function PurchaseOrderStatusSelect({ order }: { order: PurchaseOrder }) {
 export function PurchaseOrdersListContent() {
   const navigate = useNavigate();
   const toast = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
-  const [status, setStatus] = useState<PurchaseOrderStatus | ''>('');
+  // /settings/kullanicilar/:slug "Oluşturduğu Satın Alma Siparişleri" grafiginden
+  // "?status=...&createdById=..." ile gelindiginde baslangic filtresini uygulamak
+  // icin okunur - URL'de kalip kafa karistirmasin diye tuketildikten sonra temizlenir
+  // (bkz. quotes-list-page.tsx'teki ayni desen).
+  const [status, setStatus] = useState<PurchaseOrderStatus | ''>(() => {
+    const fromUrl = searchParams.get('status');
+    return STATUS_OPTIONS.some((option) => option.value === fromUrl)
+      ? (fromUrl as PurchaseOrderStatus)
+      : '';
+  });
+  const [createdById, setCreatedById] = useState(() => searchParams.get('createdById') ?? '');
+  useEffect(() => {
+    if (!searchParams.has('status') && !searchParams.has('createdById')) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete('status');
+    next.delete('createdById');
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sinceInput, setSinceInput] = useState('');
   const [rangeFromInput, setRangeFromInput] = useState('');
@@ -98,10 +118,11 @@ export function PurchaseOrdersListContent() {
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
   const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
   const to = hasRange ? rangeToInput || undefined : undefined;
-  const hasActiveFilter = Boolean(from) || Boolean(to);
+  const hasActiveFilter = Boolean(createdById) || Boolean(from) || Boolean(to);
   const quoteId = searchParams.get('quoteId') ?? undefined;
   const projectId = searchParams.get('projectId') ?? undefined;
   const meQuery = useMeQuery();
+  const usersQuery = useUsersQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const purchaseOrdersQuery = usePurchaseOrdersQuery({
     page,
@@ -110,6 +131,7 @@ export function PurchaseOrdersListContent() {
     quoteId,
     projectId,
     status: status || undefined,
+    createdById: createdById || undefined,
     from,
     to,
   });
@@ -138,6 +160,7 @@ export function PurchaseOrdersListContent() {
 
   function resetFilters() {
     setPage(1);
+    setCreatedById('');
     setSinceInput('');
     setRangeFromInput('');
     setRangeToInput('');
@@ -331,6 +354,21 @@ export function PurchaseOrdersListContent() {
           onClose={() => setDrawerOpen(false)}
         >
           <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.purchaseOrders.filterDrawer.createdByLabel}
+              placeholder={tr.crm.purchaseOrders.filterDrawer.createdByPlaceholder}
+              value={createdById}
+              onChange={(event) => {
+                setPage(1);
+                setCreatedById(event.target.value);
+              }}
+              options={(usersQuery.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setCreatedById('');
+              }}
+            />
             <DateField
               label={tr.crm.purchaseOrders.filterDrawer.sinceLabel}
               value={sinceInput}

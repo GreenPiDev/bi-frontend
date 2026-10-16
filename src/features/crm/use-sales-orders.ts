@@ -17,6 +17,7 @@ export function useSalesOrdersQuery(
     pageSize?: number;
     accountId?: string;
     status?: SalesOrderStatus;
+    createdById?: string;
     q?: string;
     from?: string;
     to?: string;
@@ -31,16 +32,19 @@ export function useSalesOrdersQuery(
 /** "Durum" buton filtresindeki her secenegin yanina yazilacak kayit sayisini
  * getirir - usePurchaseOrderStatusCounts ile ayni desen (backend durum bazli
  * kirilim dondurmuyor, her secenek icin ayri pageSize=1 istek atilir). */
-export function useSalesOrderStatusCounts(statuses: readonly SalesOrderStatus[]) {
+export function useSalesOrderStatusCounts(
+  statuses: readonly SalesOrderStatus[],
+  params: { createdById?: string; accountId?: string } = {},
+) {
   const results = useQueries({
     queries: [
       {
-        queryKey: [...SALES_ORDERS_QUERY_KEY, 'count', 'all'],
-        queryFn: () => listSalesOrders({ pageSize: 1 }),
+        queryKey: [...SALES_ORDERS_QUERY_KEY, 'count', 'all', params],
+        queryFn: () => listSalesOrders({ pageSize: 1, ...params }),
       },
       ...statuses.map((status) => ({
-        queryKey: [...SALES_ORDERS_QUERY_KEY, 'count', status],
-        queryFn: () => listSalesOrders({ pageSize: 1, status }),
+        queryKey: [...SALES_ORDERS_QUERY_KEY, 'count', status, params],
+        queryFn: () => listSalesOrders({ pageSize: 1, status, ...params }),
       })),
     ],
   });

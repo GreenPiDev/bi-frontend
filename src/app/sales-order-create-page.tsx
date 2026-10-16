@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { X } from 'lucide-react';
 import type { ChangeEvent } from 'react';
 import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { BackLink } from '../components/ui/back-link';
@@ -43,6 +43,8 @@ export function SalesOrderCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
   const createMutation = useCreateSalesOrderMutation();
+  const [searchParams] = useSearchParams();
+  const prefillAccountId = searchParams.get('accountId') ?? '';
 
   const {
     control,
@@ -54,7 +56,7 @@ export function SalesOrderCreatePage() {
   } = useForm<SalesOrderCreateFormValues>({
     resolver: zodResolver(salesOrderCreateFormSchema),
     defaultValues: {
-      accountId: '',
+      accountId: prefillAccountId,
       items: [{ productListId: undefined, productId: '', quantity: '1', unitPrice: '' }],
     },
   });
