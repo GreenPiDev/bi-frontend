@@ -407,6 +407,9 @@ export const quoteFormSchema = z
           currency: z.string().optional(),
           discountPct: z.string().optional(),
           vatPct: z.string().optional(),
+          /** Boş bırakılırsa ürünün kendi markası kullanılır (currency ile aynı
+           * desen) - aynı ürün bu teklifte başka bir marka adıyla görünebilsin diye. */
+          brand: z.string().max(120).optional(),
         }),
       )
       .min(1, 'En az bir ürün satırı eklenmelidir.'),

@@ -268,6 +268,15 @@ export function QuoteContentBody({
       render: (item) => item.product.name,
     },
     {
+      key: 'brand',
+      header: tr.crm.quotes.detail.brandColumn,
+      // PDF'te (isPrintMode) "Ürün" kolonu auto-layout'ta bosta kalan tum genisligi
+      // yuttugu icin uzun urun isimleriyle bu kolona yapisabiliyordu - sol padding
+      // artirilarak kolon biraz daha saga itiliyor (web gorunumunde degismiyor).
+      className: clsx('w-24 whitespace-nowrap text-app-muted', isPrintMode && '!pl-10'),
+      render: (item) => item.brand ?? '—',
+    },
+    {
       key: 'quantity',
       header: tr.crm.quotes.detail.quantityColumn,
       className: 'w-20 whitespace-nowrap text-right text-app-muted',

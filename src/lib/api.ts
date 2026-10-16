@@ -2815,6 +2815,10 @@ export interface QuoteItem {
    * degisse bile bu teklifteki kar/maliyet hesabini degistirmez. Eski (migration
    * oncesi) kayitlarda en yakin tahmin olarak backfill edilmistir. */
   costPriceAtSale: string | null;
+  /** unitPrice/currency ile ayni snapshot semantigi: olusturulurken/guncellenirken
+   * Product.brand'den kopyalanir, ama bu teklif icin manuel ezilebilir (ayni urun
+   * bir teklifte baska bir marka adiyla gorunsun diye) - bkz. backend resolveItems. */
+  brand: string | null;
 }
 
 /** quoteCurrency disindaki her item para biriminin quoteCurrency'ye cevrim kuru
@@ -2917,6 +2921,9 @@ export interface QuoteItemInput {
   currency?: string;
   discountPct?: number;
   vatPct?: number;
+  /** Verilmezse Product.brand'den alinir, verilirse (bos string dahil) manuel
+   * ezme sayilir - currency ile ayni desen. */
+  brand?: string;
 }
 
 export interface CreateQuoteInput {

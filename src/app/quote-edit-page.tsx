@@ -13,6 +13,7 @@ import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
+import { BrandSelect } from '../features/crm/brand-select';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import {
   QuoteExchangeRatesSection,
@@ -63,6 +64,9 @@ interface EditableItem {
   currency: string;
   discountPct: string;
   vatPct: string;
+  /** Boş bırakılırsa ürünün kendi markası kullanılır (currency ile aynı desen) -
+   * bkz. backend QuoteItem.brand doc comment'i. */
+  brand: string;
 }
 
 export function QuoteEditPage() {
@@ -129,6 +133,7 @@ export function QuoteEditPage() {
         currency: item.currency,
         discountPct: item.discountPct,
         vatPct: item.vatPct,
+        brand: item.brand ?? '',
       })),
     );
     setProductListId(quoteQuery.data.items[0]?.product.productListId);
@@ -206,6 +211,7 @@ export function QuoteEditPage() {
   const [addCurrency, setAddCurrency] = useState('TRY');
   const [addDiscountPct, setAddDiscountPct] = useState('0');
   const [addVatPct, setAddVatPct] = useState(defaultVatPct);
+  const [addBrand, setAddBrand] = useState('');
 
   // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçili
   // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
@@ -224,6 +230,7 @@ export function QuoteEditPage() {
         currency: product.currency,
         discountPct: '0',
         vatPct: defaultVatPct,
+        brand: product.brand ?? '',
       },
     ]);
     setIsNewProductModalOpen(false);
@@ -240,6 +247,7 @@ export function QuoteEditPage() {
     setAddCurrency(product.currency);
     setAddDiscountPct('0');
     setAddVatPct(defaultVatPct);
+    setAddBrand(product.brand ?? '');
   }
 
   // Satır para birimi değiştirilince, girilmiş birim fiyat anlık kurla yeni para
@@ -279,6 +287,7 @@ export function QuoteEditPage() {
         currency: addCurrency,
         discountPct: addDiscountPct || '0',
         vatPct: addVatPct || '0',
+        brand: addBrand,
       },
     ]);
     setAddingProductId(null);
@@ -303,6 +312,7 @@ export function QuoteEditPage() {
         currency: product.currency,
         discountPct: '0',
         vatPct: defaultVatPct,
+        brand: product.brand ?? '',
       },
     ]);
     if (addingProductId === product.id) setAddingProductId(null);
@@ -409,6 +419,7 @@ export function QuoteEditPage() {
   const [editCurrency, setEditCurrency] = useState('TRY');
   const [editDiscountPct, setEditDiscountPct] = useState('0');
   const [editVatPct, setEditVatPct] = useState('0');
+  const [editBrand, setEditBrand] = useState('');
 
   function handleToggleEditRow(index: number) {
     if (editingIndex === index) {
@@ -423,6 +434,7 @@ export function QuoteEditPage() {
     setEditCurrency(item.currency);
     setEditDiscountPct(item.discountPct);
     setEditVatPct(item.vatPct);
+    setEditBrand(item.brand);
   }
 
   // handleAddCurrencyChange ile ayni desen (bkz. convertCurrencyAmount).
@@ -461,6 +473,7 @@ export function QuoteEditPage() {
               currency: editCurrency,
               discountPct: editDiscountPct || '0',
               vatPct: editVatPct || '0',
+              brand: editBrand,
             }
           : it,
       ),
@@ -522,6 +535,7 @@ export function QuoteEditPage() {
           currency: item.currency || undefined,
           discountPct: item.discountPct ? Number(item.discountPct) : 0,
           vatPct: item.vatPct ? Number(item.vatPct) : 0,
+          brand: item.brand,
         })),
         contactId: contactId ?? null,
         quoteDate: quoteDate ? new Date(quoteDate).toISOString() : undefined,
@@ -603,7 +617,7 @@ export function QuoteEditPage() {
 
   function renderAddPanel(product: Product) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-7">
         <TextField
           type="text"
           inputMode="decimal"
@@ -638,6 +652,7 @@ export function QuoteEditPage() {
           value={addVatPct}
           onChange={(event) => setAddVatPct(sanitizeDecimalInput(event.target.value))}
         />
+        <BrandSelect value={addBrand} onChange={setAddBrand} />
         <div className="col-span-2 sm:col-span-4 lg:col-span-1">
           <Button type="button" className="w-full" onClick={() => handleAddItem(product)}>
             {tr.crm.quotes.form.addToQuote}
@@ -699,7 +714,7 @@ export function QuoteEditPage() {
 
   function renderEditPanel() {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-end lg:grid-cols-7">
         <TextField
           type="text"
           inputMode="decimal"
@@ -734,6 +749,7 @@ export function QuoteEditPage() {
           value={editVatPct}
           onChange={(event) => setEditVatPct(sanitizeDecimalInput(event.target.value))}
         />
+        <BrandSelect value={editBrand} onChange={setEditBrand} />
         <div className="col-span-2 sm:col-span-4 lg:col-span-1">
           <Button
             type="button"

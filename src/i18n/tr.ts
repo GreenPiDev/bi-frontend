@@ -2765,6 +2765,7 @@ export const tr = {
         attributesTitle: 'Özel Alanlar',
         attributesEmpty: 'Bu teklifte içe aktarımdan gelen özel bir alan yok.',
         skuColumn: 'Ürün Kodu',
+        brandColumn: 'Marka',
         quantityColumn: 'Miktar',
         unitPriceColumn: 'Birim Fiyat',
         discountColumn: 'İskonto',

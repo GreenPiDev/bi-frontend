@@ -20,6 +20,7 @@ import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
+import { BrandSelect } from '../features/crm/brand-select';
 import {
   decodeIbanSelections,
   encodeIbanGroupSelection,
@@ -38,6 +39,7 @@ import {
 } from '../features/crm/quote-exchange-rates';
 import { QUOTE_CURRENCY_OPTIONS, QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
+import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
 import { useProductAttributeKeysQuery, useProductsQuery } from '../features/crm/use-products';
@@ -141,12 +143,15 @@ export function QuoteFormPage() {
   const defaultVatPct = String(defaultVatPctSetting?.value ?? DEFAULT_QUOTE_VAT_PCT);
   const createMutation = useCreateQuoteMutation();
   const createPaymentMethodOptionMutation = useCreatePaymentMethodOptionMutation();
+  const createBrandOptionMutation = useCreateBrandOptionMutation();
   // Odeme Yontemi/IBAN icin "+ Yeni ..." modallari, urun formundaki
   // Birim/Kategori/Marka desenindeki gibi bilincli olarak <form>'un DISINDA render
   // edilir - Select'lerin kendi icinde render edilselerdi modal'in <form>'u disardaki
   // teklif formunun <form>'una ic ice girer, "Kaydet" native submit'e dusup sayfayi
   // yeniler ve eklenen deger hic kaydedilmez (bkz. product-form-page.tsx).
-  const [activeOptionModal, setActiveOptionModal] = useState<'paymentMethod' | 'iban' | null>(null);
+  const [activeOptionModal, setActiveOptionModal] = useState<
+    'paymentMethod' | 'iban' | 'brandEntry' | 'brandEdit' | null
+  >(null);
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
@@ -286,6 +291,7 @@ export function QuoteFormPage() {
   const [entryCurrency, setEntryCurrency] = useState('TRY');
   const [entryDiscountPct, setEntryDiscountPct] = useState('0');
   const [entryVatPct, setEntryVatPct] = useState(defaultVatPct);
+  const [entryBrand, setEntryBrand] = useState('');
 
   function handleToggleEntry(product: Product) {
     if (entryProductId === product.id) {
@@ -298,6 +304,7 @@ export function QuoteFormPage() {
     setEntryCurrency(product.currency);
     setEntryDiscountPct('0');
     setEntryVatPct(defaultVatPct);
+    setEntryBrand(product.brand ?? '');
   }
 
   // Satır para birimi değiştirilince, girilmiş birim fiyat anlık kurla yeni para
@@ -333,6 +340,7 @@ export function QuoteFormPage() {
       currency: entryCurrency,
       discountPct: entryDiscountPct || '0',
       vatPct: entryVatPct || '0',
+      brand: entryBrand,
     });
     setEntryProductId(null);
     toast.success(tr.crm.quotes.form.itemAddSuccess);
@@ -352,6 +360,7 @@ export function QuoteFormPage() {
       currency: product.currency,
       discountPct: '0',
       vatPct: defaultVatPct,
+      brand: product.brand ?? '',
     });
     if (entryProductId === product.id) setEntryProductId(null);
     toast.success(tr.crm.quotes.form.itemAddSuccess);
@@ -370,6 +379,7 @@ export function QuoteFormPage() {
       currency: product.currency,
       discountPct: '0',
       vatPct: defaultVatPct,
+      brand: product.brand ?? '',
     });
     setIsNewProductModalOpen(false);
   }
@@ -398,6 +408,7 @@ export function QuoteFormPage() {
   const [editCurrency, setEditCurrency] = useState('TRY');
   const [editDiscountPct, setEditDiscountPct] = useState('0');
   const [editVatPct, setEditVatPct] = useState('0');
+  const [editBrand, setEditBrand] = useState('');
 
   function handleToggleEditRow(index: number) {
     if (editingIndex === index) {
@@ -412,6 +423,7 @@ export function QuoteFormPage() {
     setEditCurrency(item.currency ?? productCurrencyById.get(item.productId) ?? 'TRY');
     setEditDiscountPct(item.discountPct ?? '0');
     setEditVatPct(item.vatPct ?? '0');
+    setEditBrand(item.brand ?? '');
   }
 
   // handleEntryCurrencyChange ile ayni desen (bkz. convertCurrencyAmount).
@@ -447,6 +459,7 @@ export function QuoteFormPage() {
       currency: editCurrency,
       discountPct: editDiscountPct || '0',
       vatPct: editVatPct || '0',
+      brand: editBrand,
     });
     setEditingIndex(null);
     toast.success(tr.crm.quotes.form.itemUpdateSuccess);
@@ -507,6 +520,7 @@ export function QuoteFormPage() {
         currency: item.currency || undefined,
         discountPct: item.discountPct ? Number(item.discountPct) : 0,
         vatPct: item.vatPct ? Number(item.vatPct) : 0,
+        brand: item.brand ?? undefined,
       })),
       ...(values.hasOpportunity && values.opportunityName
         ? {
@@ -660,7 +674,7 @@ export function QuoteFormPage() {
 
   function renderEntryPanel(product: Product) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-7">
         <TextField
           type="text"
           inputMode="decimal"
@@ -701,6 +715,11 @@ export function QuoteFormPage() {
           />
           <VatPctDefaultLink />
         </div>
+        <BrandSelect
+          value={entryBrand}
+          onChange={setEntryBrand}
+          onRequestAddNew={() => setActiveOptionModal('brandEntry')}
+        />
         <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-4 lg:col-span-1">
           <span aria-hidden="true" className="text-sm font-semibold text-transparent select-none">
             &nbsp;
@@ -775,7 +794,7 @@ export function QuoteFormPage() {
 
   function renderEditPanel() {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:items-start lg:grid-cols-7">
         <TextField
           type="text"
           inputMode="decimal"
@@ -816,6 +835,11 @@ export function QuoteFormPage() {
           />
           <VatPctDefaultLink />
         </div>
+        <BrandSelect
+          value={editBrand}
+          onChange={setEditBrand}
+          onRequestAddNew={() => setActiveOptionModal('brandEdit')}
+        />
         <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-4 lg:col-span-1">
           <span aria-hidden="true" className="text-sm font-semibold text-transparent select-none">
             &nbsp;
@@ -1220,6 +1244,24 @@ export function QuoteFormPage() {
               [...(watch('ibanSelections') ?? []), encodeIbanOptionSelection(option.id)],
               { shouldValidate: true, shouldDirty: true },
             );
+            setActiveOptionModal(null);
+          }}
+        />
+      )}
+      {(activeOptionModal === 'brandEntry' || activeOptionModal === 'brandEdit') && (
+        <AddOptionModal
+          title={tr.crm.products.form.brandNewModalTitle}
+          fieldLabel={tr.crm.products.form.brandNewFieldLabel}
+          placeholder={tr.crm.products.form.brandNewPlaceholder}
+          successMessage={tr.crm.products.form.brandNewSuccess}
+          createMutation={createBrandOptionMutation}
+          onClose={() => setActiveOptionModal(null)}
+          onCreated={(label) => {
+            if (activeOptionModal === 'brandEntry') {
+              setEntryBrand(label);
+            } else {
+              setEditBrand(label);
+            }
             setActiveOptionModal(null);
           }}
         />
