@@ -3548,6 +3548,9 @@ export interface CreatePurchaseOrderInput {
   quoteId?: string;
   title?: string;
   items: CreatePurchaseOrderItemInput[];
+  /** Cift tiklama/tekrar denemede duplicate siparis acilmamasi icin - form her
+   * acildiginda bir kez uretilir, bkz. purchase-order-create-page.tsx. */
+  clientRequestId?: string;
 }
 
 export function listPurchaseOrders(

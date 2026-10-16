@@ -52,6 +52,10 @@ export function PurchaseOrderCreatePage() {
   const quoteIdFromUrl = searchParams.get('quoteId') ?? undefined;
   const draftQuery = usePurchaseOrderDraftFromQuoteQuery(quoteIdFromUrl);
   const appliedDraftRef = useRef(false);
+  // Cift tiklama/tekrar denemede duplicate siparis acilmamasi icin (bkz.
+  // PurchaseOrdersService.create()) - sayfa yasam dongusu boyunca sabit, "Siparis
+  // Olustur"a kac kez basilirsa basilsin ayni key gider.
+  const clientRequestIdRef = useRef(crypto.randomUUID());
 
   const {
     control,
@@ -220,6 +224,7 @@ export function PurchaseOrderCreatePage() {
           description: item.description,
           quantity: Number(item.quantity),
         })),
+        clientRequestId: clientRequestIdRef.current,
       },
       {
         onSuccess: (purchaseOrder) => {
