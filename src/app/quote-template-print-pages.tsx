@@ -371,8 +371,10 @@ export function buildQuoteTemplatePrintPages(quote: QuoteTemplatePrintDocumentDa
   }
 
   // 4. Kosullar (teklifin kendi satis/teslimat sartlari) + onay
+  // Not: bilerek print-page-break YOK - banka hesaplari bolumunden sonra ayni
+  // sayfanin devaminda akmasi isteniyor, zorla yeni sayfaya gecmemeli.
   pages.push(
-    <section key="terms" className="print-page-break p-10">
+    <section key="terms" className="p-10">
       {quote.paymentTerms && (
         <div className="mb-8">
           <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>

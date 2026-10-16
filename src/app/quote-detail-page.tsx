@@ -251,7 +251,12 @@ export function QuoteContentBody({
     {
       key: 'sku',
       header: tr.crm.quotes.detail.skuColumn,
-      className: 'w-24 whitespace-nowrap text-app-muted',
+      // "w-[1%]" + whitespace-nowrap: auto-layout tablolarda kolonu icerigi kadar
+      // daraltan bilinen bir CSS hilesi - aksi halde genislik belirtilmeyen bu kolon,
+      // bosta kalan tum alani "ÜRÜN" kolonuyla paylasip aralarinda devasa bosluk
+      // birakiyordu. Hem web hem PDF (isPrintMode) ayni auto-layout mantigini kullanir
+      // (bkz. kullanici istegi: "aynı web sayfasındaki mantıkla davransın").
+      className: 'w-[1%] whitespace-nowrap text-app-muted',
       render: (item) => item.product.sku ?? '—',
     },
     {
@@ -508,7 +513,9 @@ export function QuoteContentBody({
                 ? tr.crm.quotes.detail.manualTotalItemsEmpty
                 : tr.crm.quotes.form.summaryEmpty
             }
-            fixedLayout
+            // table-fixed kullanilmiyor: auto-layout + "w-[1%]" hilesi (sku kolonunda)
+            // hem web hem PDF'te kolonlarin icerige gore boyutlanmasini, uzun urun
+            // kodlarinin gereksiz yere satirlara bolunmemesini sagliyor.
           />
         </div>
 
@@ -662,7 +669,7 @@ export function QuoteContentBody({
       )}
 
       {(quote.paymentTerms || quote.salesTerms || quote.deliveryTerms || quote.generalTerms) && (
-        <div className="print-page-break mt-8 flex flex-col gap-4">
+        <div className="mt-8 flex flex-col gap-4">
           {quote.paymentTerms && (
             <div>
               <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
