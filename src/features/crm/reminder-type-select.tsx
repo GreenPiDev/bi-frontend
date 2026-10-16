@@ -1,8 +1,8 @@
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
+import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { QuickAddReminderTypeModal } from './quick-add-reminder-type-modal';
 import { useReminderTypeOptionsQuery } from './use-reminder-type-options';
@@ -30,14 +30,9 @@ export function ReminderTypeSelect({ label, value, onChange, error }: ReminderTy
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.calendar.form.reminderTypeEmptyMessage}{' '}
-          <Link
-            to="/settings?tab=crm"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-app-brand hover:underline"
-          >
+          <SettingsNavigateLink tab="crm" highlightKey="reminderTypeOptions">
             {tr.crm.calendar.form.reminderTypeEmptyLink}
-          </Link>
+          </SettingsNavigateLink>
         </div>
       </div>
     );

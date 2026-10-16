@@ -1,10 +1,16 @@
 import { ChevronDown } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { useSectionHighlight } from './use-section-highlight';
 
 interface CollapsibleSectionProps {
   title: string;
   subtitle?: string;
   defaultOpen?: boolean;
+  className?: string;
+  /** Baska bir sayfadaki "...tanimlamak icin ayarlara git" linki `?highlight=<key>`
+   * ile buraya yonlendirdiginde bu bolume scroll edip (ACMADAN) arka planini bir
+   * kere mavi yanip-sondurur - bkz. `useSectionHighlight`. */
+  highlightKey?: string;
   children: ReactNode;
 }
 
@@ -12,12 +18,15 @@ export function CollapsibleSection({
   title,
   subtitle,
   defaultOpen = false,
+  className,
+  highlightKey,
   children,
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const { ref, className: highlightClassName } = useSectionHighlight(highlightKey);
 
   return (
-    <div className="rounded-lg bg-white">
+    <div ref={ref} className={`rounded-lg bg-white ${className ?? ''} ${highlightClassName ?? ''}`}>
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}

@@ -12,6 +12,7 @@ import { FormError } from '../components/ui/form-error';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
+import { SettingsNavigateLink } from '../components/ui/settings-navigate-link';
 import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
@@ -53,7 +54,6 @@ import {
   DEFAULT_QUOTE_SALES_TERMS_KEY,
   DEFAULT_QUOTE_VAT_PCT,
   DEFAULT_QUOTE_VAT_PCT_KEY,
-  QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID,
   QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
 } from '../features/crm/tenant-settings.constants';
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
@@ -105,19 +105,14 @@ function VatPctDefaultLink() {
 }
 
 /** Koşul metni alanlarının altında, tenant'ın varsayılan koşul metinleri ayarına
- * (yeni sekmede, ilgili bölüme kaydırarak) götüren kısa bağlantı - VatPctDefaultLink
- * ile aynı desen. */
+ * (yeni sekmede, ilgili bölüme scroll+flash ile) götüren kısa bağlantı - bkz.
+ * `SettingsNavigateLink` / `CollapsibleSection`in `highlightKey` prop'u. */
 function TermsDefaultLink() {
   return (
     <p className="text-xs text-app-muted">
-      <Link
-        to={`/settings?tab=crm#${QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-semibold text-app-brand hover:underline"
-      >
+      <SettingsNavigateLink tab="crm" highlightKey="defaultQuoteTerms">
         {tr.crm.quotes.form.termsSetDefaultLink}
-      </Link>
+      </SettingsNavigateLink>
     </p>
   );
 }

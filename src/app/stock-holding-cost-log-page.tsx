@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -52,6 +53,16 @@ export function StockHoldingCostLogContent() {
   return (
     <>
       <p className="text-sm text-app-muted">{tr.crm.stock.holdingCostLog.subtitle}</p>
+      <p className="mt-1 text-sm text-app-muted">
+        {tr.crm.stock.holdingCostLog.subtitleSettingsPrefix}{' '}
+        <Link
+          to="/settings?tab=general&highlight=stockHoldingCost"
+          className="font-semibold text-app-brand hover:underline"
+        >
+          {tr.crm.stock.holdingCostLog.subtitleSettingsLinkText}
+        </Link>{' '}
+        {tr.crm.stock.holdingCostLog.subtitleSettingsSuffix}
+      </p>
       <div className="mt-4">
         <Table
           columns={columns}

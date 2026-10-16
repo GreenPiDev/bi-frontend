@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
+import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { usePaymentMethodOptionsQuery } from './use-payment-method-options';
 
@@ -38,14 +38,9 @@ export function PaymentMethodSelect({
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.quotes.form.paymentMethodEmptyMessage}{' '}
-          <Link
-            to="/settings?tab=crm"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-app-brand hover:underline"
-          >
+          <SettingsNavigateLink tab="crm" highlightKey="paymentMethodOptions">
             {tr.crm.quotes.form.paymentMethodEmptyLink}
-          </Link>
+          </SettingsNavigateLink>
         </div>
       </div>
     );

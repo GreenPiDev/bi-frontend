@@ -3450,7 +3450,10 @@ export const tr = {
       },
       holdingCostLog: {
         subtitle:
-          'Opsiyonel stok bekletme maliyetinin her gece eklediği artışın tenant bazlı özeti (gün başına tek satır).',
+          'Bu özellik etkinleştirildiği zaman, tüm ürünlerinizin toplam stok değerine; belirlediğiniz aylık orandan bir günlük maliyet ekler ve o günün özetini burada bir satır olarak bırakır.',
+        subtitleSettingsPrefix: 'Henüz hiç satır görmüyorsanız bu özellik kapalı olabilir —',
+        subtitleSettingsLinkText: 'buradan',
+        subtitleSettingsSuffix: 'açıp oranı girebilirsiniz.',
         loading: 'Bekletme maliyeti geçmişi yükleniyor...',
         empty: 'Henüz stok bekletme maliyeti uygulanmadı.',
         dateColumn: 'Tarih',

@@ -328,3 +328,27 @@ body {
     animation: none;
   }
 }
+
+/* SettingsPage GeneralTab: /envanter?tab=stockHoldingCostLog'daki "buradan" linkiyle
+   buraya gelindiginde (?highlight=stockHoldingCost), kullanicinin dikkatini ilgili
+   CollapsibleSection'a cekmek icin acik mavi bir kere yanip-sonen arka plan. */
+@keyframes highlight-pulse {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  25%,
+  75% {
+    background-color: var(--color-sky-100, #e0f2fe);
+  }
+}
+
+.animate-highlight-pulse {
+  animation: highlight-pulse 1.4s ease-in-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-highlight-pulse {
+    animation: none;
+  }
+}

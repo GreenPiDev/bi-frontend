@@ -26,7 +26,10 @@ function isStockHoldingCostSetting(value: unknown): value is StockHoldingCostSet
  * bolunmus bilesik bir oranla otomatik artmasini saglayan opsiyonel ayar.
  * InactivityThresholdSetting/PostSaleFollowUpDaysSetting ile ayni "tek
  * CollapsibleSection + tek Kaydet" deseni, tek fark bir Switch + sayi
- * alaninin birlikte tek JSON deger olarak kaydedilmesi. */
+ * alaninin birlikte tek JSON deger olarak kaydedilmesi.
+ * `/envanter?tab=stockHoldingCostLog`'daki "buradan" linki `?highlight=
+ * stockHoldingCost` ile buraya yonlendirir - bkz. `CollapsibleSection`in
+ * `highlightKey` prop'u / `useSectionHighlight`. */
 export function StockHoldingCostSection() {
   const toast = useToast();
   const settingsQuery = useTenantSettingsQuery();
@@ -68,6 +71,7 @@ export function StockHoldingCostSection() {
     <CollapsibleSection
       title={tr.settings.stockHoldingCost.title}
       subtitle={tr.settings.stockHoldingCost.subtitle}
+      highlightKey="stockHoldingCost"
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2.5">

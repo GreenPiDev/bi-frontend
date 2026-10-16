@@ -23,7 +23,6 @@ import {
   DEFAULT_QUOTE_PAYMENT_TERMS_KEY,
   DEFAULT_QUOTE_SALES_TERMS_KEY,
   DEFAULT_QUOTE_VAT_PCT_KEY,
-  QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID,
   QUOTE_VAT_PCT_SETTING_ANCHOR_ID,
 } from './tenant-settings.constants';
 import {
@@ -305,6 +304,7 @@ function OptionListManager({
   createMutation,
   updateMutation,
   deleteMutation,
+  highlightKey,
 }: {
   title: string;
   subtitle: string;
@@ -322,6 +322,10 @@ function OptionListManager({
   createMutation: MutationLike<string>;
   updateMutation: MutationLike<{ id: string; label: string }>;
   deleteMutation: MutationLike<string>;
+  /** Baska bir sayfadaki "...tanimlamak icin ayarlara git" linki buraya
+   * `?highlight=<key>` ile yonlendirdiginde bu bolumu acmadan scroll edip
+   * mavi yanip-sondurur - bkz. `CollapsibleSection`in `highlightKey` prop'u. */
+  highlightKey?: string;
 }) {
   const toast = useToast();
   const [label, setLabel] = useState('');
@@ -383,7 +387,7 @@ function OptionListManager({
   }
 
   return (
-    <CollapsibleSection title={title} subtitle={subtitle}>
+    <CollapsibleSection title={title} subtitle={subtitle} highlightKey={highlightKey}>
       <div className="flex gap-2">
         <input
           type="text"
@@ -493,6 +497,7 @@ function SectorOptionsManager() {
       createMutation={useCreateSectorOptionMutation()}
       updateMutation={useUpdateSectorOptionMutation()}
       deleteMutation={useDeleteSectorOptionMutation()}
+      highlightKey="sectorOptions"
     />
   );
 }
@@ -516,6 +521,7 @@ function DepartmentOptionsManager() {
       createMutation={useCreateDepartmentOptionMutation()}
       updateMutation={useUpdateDepartmentOptionMutation()}
       deleteMutation={useDeleteDepartmentOptionMutation()}
+      highlightKey="departmentOptions"
     />
   );
 }
@@ -539,6 +545,7 @@ function TitleOptionsManager() {
       createMutation={useCreateTitleOptionMutation()}
       updateMutation={useUpdateTitleOptionMutation()}
       deleteMutation={useDeleteTitleOptionMutation()}
+      highlightKey="titleOptions"
     />
   );
 }
@@ -562,6 +569,7 @@ function ProductCategoryOptionsManager() {
       createMutation={useCreateProductCategoryOptionMutation()}
       updateMutation={useUpdateProductCategoryOptionMutation()}
       deleteMutation={useDeleteProductCategoryOptionMutation()}
+      highlightKey="productCategoryOptions"
     />
   );
 }
@@ -585,6 +593,7 @@ function BrandOptionsManager() {
       createMutation={useCreateBrandOptionMutation()}
       updateMutation={useUpdateBrandOptionMutation()}
       deleteMutation={useDeleteBrandOptionMutation()}
+      highlightKey="brandOptions"
     />
   );
 }
@@ -608,6 +617,7 @@ function UnitOptionsManager() {
       createMutation={useCreateUnitOptionMutation()}
       updateMutation={useUpdateUnitOptionMutation()}
       deleteMutation={useDeleteUnitOptionMutation()}
+      highlightKey="unitOptions"
     />
   );
 }
@@ -631,6 +641,7 @@ function PaymentMethodOptionsManager() {
       createMutation={useCreatePaymentMethodOptionMutation()}
       updateMutation={useUpdatePaymentMethodOptionMutation()}
       deleteMutation={useDeletePaymentMethodOptionMutation()}
+      highlightKey="paymentMethodOptions"
     />
   );
 }
@@ -654,6 +665,7 @@ function QuoteRejectionReasonOptionsManager() {
       createMutation={useCreateQuoteRejectionReasonOptionMutation()}
       updateMutation={useUpdateQuoteRejectionReasonOptionMutation()}
       deleteMutation={useDeleteQuoteRejectionReasonOptionMutation()}
+      highlightKey="quoteRejectionReasonOptions"
     />
   );
 }
@@ -677,6 +689,7 @@ function InteractionTypeOptionsManager() {
       createMutation={useCreateInteractionTypeOptionMutation()}
       updateMutation={useUpdateInteractionTypeOptionMutation()}
       deleteMutation={useDeleteInteractionTypeOptionMutation()}
+      highlightKey="interactionTypeOptions"
     />
   );
 }
@@ -700,6 +713,7 @@ function ReminderTypeOptionsManager() {
       createMutation={useCreateReminderTypeOptionMutation()}
       updateMutation={useUpdateReminderTypeOptionMutation()}
       deleteMutation={useDeleteReminderTypeOptionMutation()}
+      highlightKey="reminderTypeOptions"
     />
   );
 }
@@ -1128,6 +1142,7 @@ function IbanOptionsManager() {
     <CollapsibleSection
       title={tr.settings.crm.ibanOptions.title}
       subtitle={tr.settings.crm.ibanOptions.subtitle}
+      highlightKey="ibanOptions"
     >
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
         <TextField
@@ -1472,26 +1487,16 @@ function DefaultQuoteVatPctSetting() {
 }
 
 /** Teklif formundaki (/teklifler/yeni) dort kosul metni alaninin varsayilan
- * degerleri - DefaultQuoteVatPctSetting ile ayni hash-link/scroll deseni,
- * tek fark 4 metin alaninin tek "Kaydet" ile ayni anda kaydedilmesi
- * (Promise.all ile dort mutateAsync cagrisi). */
+ * degerleri - 4 metin alani tek "Kaydet" ile ayni anda kaydedilir (Promise.all
+ * ile dort mutateAsync cagrisi). `highlightKey="defaultQuoteTerms"` ile
+ * `/teklifler/yeni`deki her 4 alanin altindaki "ayarlara git" linki buraya
+ * scroll+flash ile yonlendirir - bkz. `CollapsibleSection`in `highlightKey`
+ * prop'u. */
 function DefaultQuoteTermsSettings() {
   const toast = useToast();
   const strings = tr.settings.crm.defaultQuoteTerms;
   const settingsQuery = useTenantSettingsQuery();
   const updateMutation = useUpdateTenantSettingMutation();
-
-  const [isLinkedFromHash] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      window.location.hash === `#${QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID}`,
-  );
-  const sectionRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (isLinkedFromHash) {
-      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [isLinkedFromHash]);
 
   const [paymentTerms, setPaymentTerms] = useState('');
   const [salesTerms, setSalesTerms] = useState('');
@@ -1536,15 +1541,11 @@ function DefaultQuoteTermsSettings() {
   }
 
   return (
-    <div
-      ref={sectionRef}
-      id={QUOTE_DEFAULT_TERMS_SETTING_ANCHOR_ID}
-      className="mt-3 border-t border-app-border"
-    >
+    <div className="mt-3 border-t border-app-border">
       <CollapsibleSection
         title={strings.title}
         subtitle={strings.subtitle}
-        defaultOpen={isLinkedFromHash}
+        highlightKey="defaultQuoteTerms"
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <TextareaField

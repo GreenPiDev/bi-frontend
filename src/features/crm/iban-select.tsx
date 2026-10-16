@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { MultiSelect } from '../../components/ui/multi-select';
+import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { encodeIbanGroupSelection, encodeIbanOptionSelection } from './iban-selection';
 import { useIbanOptionGroupsQuery } from './use-iban-option-groups';
@@ -48,14 +48,9 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.quotes.form.ibanEmptyMessage}{' '}
-          <Link
-            to="/settings?tab=crm"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-app-brand hover:underline"
-          >
+          <SettingsNavigateLink tab="crm" highlightKey="ibanOptions">
             {tr.crm.quotes.form.ibanEmptyLink}
-          </Link>
+          </SettingsNavigateLink>
         </div>
       </div>
     );
@@ -86,7 +81,6 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
       value={value}
       onChange={onChange}
       options={[...groupOptions, ...singleOptions]}
-      showChips
       trailingAction={
         onRequestAddNew && (
           <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
