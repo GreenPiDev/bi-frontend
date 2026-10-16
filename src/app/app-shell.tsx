@@ -3,8 +3,10 @@ import {
   Briefcase,
   Building2,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Contact2,
   FileText,
   HeartHandshake,
@@ -99,8 +101,53 @@ export function AppShell({
   const [navSearch, setNavSearch] = useState('');
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
+  const navListRef = useRef<HTMLUListElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const [hoveredNavItem, setHoveredNavItem] = useState<{ label: string; top: number } | null>(null);
+
+  // Sidebar listesi tasan icerikle scroll olabiliyor - kullanicinin bunu fark
+  // etmesi icin en ustteyken altta asagi, en alttayken ustte yukari oku gosteriyoruz.
+  const [navScrollState, setNavScrollState] = useState({
+    canScrollUp: false,
+    canScrollDown: false,
+  });
+  useEffect(() => {
+    const list = navListRef.current;
+    if (!list) {
+      return;
+    }
+    function recomputeScrollState() {
+      if (!list) {
+        return;
+      }
+      setNavScrollState({
+        canScrollUp: list.scrollTop > 1,
+        canScrollDown: list.scrollTop + list.clientHeight < list.scrollHeight - 1,
+      });
+    }
+    recomputeScrollState();
+    list.addEventListener('scroll', recomputeScrollState);
+    const resizeObserver = new ResizeObserver(recomputeScrollState);
+    resizeObserver.observe(list);
+    window.addEventListener('resize', recomputeScrollState);
+    return () => {
+      list.removeEventListener('scroll', recomputeScrollState);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', recomputeScrollState);
+    };
+  }, [sidebarOpen, navSearch, meQuery.data]);
+
+  function scrollNavToTop() {
+    navListRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function scrollNavToBottom() {
+    const list = navListRef.current;
+    if (!list) {
+      return;
+    }
+    list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+  }
 
   function toggleSidebar() {
     if (sidebarOpen) {
@@ -404,7 +451,7 @@ export function AppShell({
             />
           </label>
         </div>
-        <ul className="flex flex-col overflow-y-auto pb-3">
+        <ul ref={navListRef} className="scrollbar-hidden flex flex-col overflow-y-auto pb-3">
           {visibleNavItems.length === 0 && (
             <li className="px-5 py-3 text-xs text-white whitespace-nowrap">
               {tr.shell.searchNoResults}
@@ -465,6 +512,43 @@ export function AppShell({
             );
           })}
         </ul>
+
+        {/* Liste tasarsa bile kullaniciya fark ettirmek icin: en ustteyken altta
+         * asagi, en alttayken ustte yukari oku. Tiklayinca animasyonlu scroll. */}
+        <div
+          aria-hidden={!navScrollState.canScrollUp}
+          className={clsx(
+            'pointer-events-none absolute top-14 right-0 left-0 z-10 flex justify-center transition-opacity duration-200',
+            navScrollState.canScrollUp ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          <button
+            type="button"
+            tabIndex={navScrollState.canScrollUp ? 0 : -1}
+            onClick={scrollNavToTop}
+            className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-app-brand-dark text-white shadow-md hover:bg-white hover:text-app-brand"
+            aria-label={tr.shell.scrollNavUp}
+          >
+            <ChevronUp size={16} />
+          </button>
+        </div>
+        <div
+          aria-hidden={!navScrollState.canScrollDown}
+          className={clsx(
+            'pointer-events-none absolute right-0 bottom-2 left-0 z-10 flex justify-center transition-opacity duration-200',
+            navScrollState.canScrollDown ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          <button
+            type="button"
+            tabIndex={navScrollState.canScrollDown ? 0 : -1}
+            onClick={scrollNavToBottom}
+            className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-app-brand-dark text-white shadow-md hover:bg-white hover:text-app-brand"
+            aria-label={tr.shell.scrollNavDown}
+          >
+            <ChevronDown size={16} />
+          </button>
+        </div>
       </nav>
 
       {!sidebarOpen && hoveredNavItem && (

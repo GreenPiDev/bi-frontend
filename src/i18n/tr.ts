@@ -224,6 +224,8 @@ export const tr = {
     searchNoResults: 'Sonuç bulunamadı',
     expandSidebar: 'Menüyü aç',
     collapseSidebar: 'Menüyü kapat',
+    scrollNavUp: 'Yukarı kaydır',
+    scrollNavDown: 'Aşağı kaydır',
   },
   notifications: {
     bellAriaLabel: 'Bildirimler',
