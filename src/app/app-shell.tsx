@@ -228,12 +228,20 @@ export function AppShell({
     reports: useIsPageModuleAccessible('reports'),
     settings: useIsPageModuleAccessible('settings'),
   };
-  const canAccessPage = (pageKey: string) => canView(pageKey) && pageModuleAccess[pageKey];
+  /* Superadmin (isPlatformAdmin) icin route guard (protected-route.tsx) zaten tum
+   * tenant-scoped sayfalari (ve /anasayfa'yi) engelleyip /platform-admin'e yonlendiriyor -
+   * sadece /profile acikca allowPlatformAdmin ile istisna. Sidebar bu tutarsizligi
+   * yansitmamasi icin, superadmin'de canAccessPage her zaman false doner; Home ve
+   * tum pageModuleAccess'e bagli ogeler boylece otomatik gizlenir, sadece Profil ve
+   * asagidaki platform-admin baglantilari gorunur kalir. */
+  const isPlatformAdmin = !!meQuery.data?.isPlatformAdmin;
+  const canAccessPage = (pageKey: string) =>
+    !isPlatformAdmin && canView(pageKey) && pageModuleAccess[pageKey];
   const canAccessMessages = canAccessPage('messages');
   const unreadConversationsTotal = useUnreadConversationsTotal(canAccessMessages);
 
   const navItems: NavItem[] = [
-    { label: tr.shell.nav.home, icon: Home, path: '/anasayfa' },
+    ...(!isPlatformAdmin ? [{ label: tr.shell.nav.home, icon: Home, path: '/anasayfa' }] : []),
     ...(canAccessPage('accounts')
       ? [{ label: tr.shell.nav.accounts, icon: Building2, path: '/firmalar' }]
       : []),
