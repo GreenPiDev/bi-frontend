@@ -65,6 +65,7 @@ const salesOrderItem: api.SalesOrderItem = {
   discountPct: '0',
   vatPct: '20',
   brand: null,
+  deliveredQuantity: '0',
 };
 
 const salesOrder: api.SalesOrder = {

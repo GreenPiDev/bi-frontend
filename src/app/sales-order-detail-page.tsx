@@ -1,13 +1,16 @@
 import { useState } from 'react';
+import { Truck } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { QuoteViewModal } from './quote-view-modal';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import {
+  useMarkSalesOrderItemDeliveredMutation,
   useSalesOrderQuery,
   useUpdateSalesOrderStatusMutation,
 } from '../features/crm/use-sales-orders';
@@ -38,34 +41,76 @@ const STATUS_OPTIONS: { value: SalesOrderStatus; label: string }[] = (
 ).map((status) => ({ value: status, label: tr.crm.salesOrders.statusOptions[status] }));
 
 /** Hem Quote.items hem kendi SalesOrderItem'lari ayni kolonlarda gosterilebilir -
- * ikisi de product/quantity/unitPrice/currency tasiyor (bkz. SalesOrder.items alani). */
+ * ikisi de product/quantity/unitPrice/currency/deliveredQuantity tasiyor (bkz.
+ * SalesOrder.items alani). */
 interface DisplayItem {
   id: string;
   product: Product;
   quantity: string;
   unitPrice: string;
   currency: string;
+  deliveredQuantity: string;
 }
 
-const ITEM_COLUMNS: TableColumn<DisplayItem>[] = [
-  {
-    key: 'product',
-    header: tr.crm.salesOrders.detail.productColumn,
-    render: (item) => item.product?.name ?? '—',
-  },
-  {
-    key: 'quantity',
-    header: tr.crm.salesOrders.detail.quantityColumn,
-    className: 'text-app-muted',
-    render: (item) => item.quantity,
-  },
-  {
-    key: 'unitPrice',
-    header: tr.crm.salesOrders.detail.unitPriceColumn,
-    className: 'text-app-muted',
-    render: (item) => `${item.unitPrice} ${item.currency}`,
-  },
-];
+function buildItemColumns(params: {
+  onDeliverAll: (itemId: string) => void;
+  isDelivering: boolean;
+}): TableColumn<DisplayItem>[] {
+  return [
+    {
+      key: 'product',
+      header: tr.crm.salesOrders.detail.productColumn,
+      className: 'w-[30%]',
+      render: (item) => item.product?.name ?? '—',
+    },
+    {
+      key: 'quantity',
+      header: tr.crm.salesOrders.detail.quantityColumn,
+      className: 'w-[12%] text-app-muted',
+      render: (item) => item.quantity,
+    },
+    {
+      key: 'delivered',
+      header: tr.crm.salesOrders.detail.deliveredColumn,
+      className: 'w-[13%] text-app-muted',
+      render: (item) => item.deliveredQuantity,
+    },
+    {
+      key: 'remaining',
+      header: tr.crm.salesOrders.detail.remainingColumn,
+      className: 'w-[13%] text-app-muted',
+      render: (item) => String(Number(item.quantity) - Number(item.deliveredQuantity)),
+    },
+    {
+      key: 'unitPrice',
+      header: tr.crm.salesOrders.detail.unitPriceColumn,
+      className: 'w-[20%] text-app-muted',
+      render: (item) => `${item.unitPrice} ${item.currency}`,
+    },
+    {
+      key: 'actions',
+      header: tr.crm.salesOrders.detail.actionsColumn,
+      className: 'w-[12%]',
+      required: true,
+      render: (item) => {
+        const isFullyDelivered = Number(item.deliveredQuantity) >= Number(item.quantity);
+        return (
+          <IconActionButton
+            icon={Truck}
+            tooltip={tr.crm.salesOrders.detail.deliverAllButton}
+            disabled={isFullyDelivered || params.isDelivering}
+            onClick={() => params.onDeliverAll(item.id)}
+          />
+        );
+      },
+    },
+  ];
+}
+
+function itemRowClassName(item: DisplayItem): string {
+  const isFullyDelivered = Number(item.deliveredQuantity) >= Number(item.quantity);
+  return isFullyDelivered ? '!bg-green-50' : '!bg-red-50';
+}
 
 export function SalesOrderDetailPage() {
   const { id = '' } = useParams();
@@ -73,6 +118,7 @@ export function SalesOrderDetailPage() {
   const toast = useToast();
   const salesOrderQuery = useSalesOrderQuery(id);
   const updateMutation = useUpdateSalesOrderStatusMutation(id);
+  const deliverMutation = useMarkSalesOrderItemDeliveredMutation(id);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
 
   if (salesOrderQuery.isPending) {
@@ -170,10 +216,25 @@ export function SalesOrderDetailPage() {
             <p className="text-sm text-app-muted">{tr.crm.salesOrders.detail.itemsEmpty}</p>
           ) : (
             <Table
-              columns={ITEM_COLUMNS}
+              columns={buildItemColumns({
+                isDelivering: deliverMutation.isPending,
+                onDeliverAll: (itemId) => {
+                  deliverMutation.mutate(itemId, {
+                    onSuccess: () => toast.success(tr.crm.salesOrders.detail.deliverAllSuccess),
+                    onError: (error) => {
+                      toast.error(
+                        error instanceof ApiError
+                          ? error.message
+                          : tr.crm.salesOrders.detail.deliverAllError,
+                      );
+                    },
+                  });
+                },
+              })}
               data={displayItems}
               keyField={(item) => item.id}
               emptyMessage={tr.crm.salesOrders.detail.itemsEmpty}
+              rowClassName={itemRowClassName}
               fixedLayout
             />
           )}

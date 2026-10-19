@@ -2823,6 +2823,9 @@ export interface QuoteItem {
    * Product.brand'den kopyalanir, ama bu teklif icin manuel ezilebilir (ayni urun
    * bir teklifte baska bir marka adiyla gorunsun diye) - bkz. backend resolveItems. */
   brand: string | null;
+  /** Ad-hoc kismi sevkiyat takibi (bkz. docs/VARSAYIMLAR.md) - sadece bu teklif bir
+   * satis siparisine donustuyse anlamlidir, SalesOrderDetailPage okur. */
+  deliveredQuantity: string;
 }
 
 /** quoteCurrency disindaki her item para biriminin quoteCurrency'ye cevrim kuru
@@ -3653,6 +3656,9 @@ export interface SalesOrderItem {
   discountPct: string;
   vatPct: string;
   brand: string | null;
+  /** Ad-hoc kismi sevkiyat takibi (bkz. docs/VARSAYIMLAR.md) - QuoteItem.
+   * deliveredQuantity ile ayni amac. */
+  deliveredQuantity: string;
 }
 
 export interface SalesOrder {
@@ -3737,6 +3743,18 @@ export function updateSalesOrderStatus(
   input: UpdateSalesOrderInput,
 ): Promise<SalesOrder> {
   return request(`/sales-orders/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+/** Ad-hoc (kullanici istegi) - kalemin tamamini "teslim edildi" olarak isaretler
+ * (deliveredQuantity = quantity). itemId, teklifli siparislerde bir QuoteItem.id,
+ * teklifsiz siparislerde bir SalesOrderItem.id'dir (bkz. SalesOrderDetailPage). */
+export function markSalesOrderItemDelivered(
+  salesOrderId: string,
+  itemId: string,
+): Promise<SalesOrder> {
+  return request(`/sales-orders/${salesOrderId}/items/${itemId}/deliver`, {
+    method: 'POST',
+  });
 }
 
 export interface StockItemWarehouseBreakdown {

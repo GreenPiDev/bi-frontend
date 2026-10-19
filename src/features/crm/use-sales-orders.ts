@@ -3,6 +3,7 @@ import {
   createSalesOrder,
   getSalesOrder,
   listSalesOrders,
+  markSalesOrderItemDelivered,
   updateSalesOrderStatus,
   type CreateSalesOrderInput,
   type SalesOrderStatus,
@@ -81,6 +82,17 @@ export function useUpdateSalesOrderStatusMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdateSalesOrderInput) => updateSalesOrderStatus(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SALES_ORDERS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['sales-orders', id] });
+    },
+  });
+}
+
+export function useMarkSalesOrderItemDeliveredMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (itemId: string) => markSalesOrderItemDelivered(id, itemId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SALES_ORDERS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['sales-orders', id] });
