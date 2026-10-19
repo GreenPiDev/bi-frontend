@@ -16,6 +16,8 @@ export function usePostSaleCasesQuery(
     accountId?: string;
     status?: PostSaleCaseStatus;
     q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ) {
   return useQuery({

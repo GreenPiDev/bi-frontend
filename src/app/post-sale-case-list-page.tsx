@@ -1,9 +1,13 @@
 import { clsx } from 'clsx';
-import { Copy, Search } from 'lucide-react';
+import { Copy, ListFilter, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { Button } from '../components/ui/button';
+import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
+import { DateField } from '../components/ui/date-field';
+import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { InlineSelect } from '../components/ui/inline-select';
@@ -93,13 +97,25 @@ export function PostSaleCaseListPage() {
   const [status, setStatus] = useState<PostSaleCaseStatus | ''>('');
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sinceInput, setSinceInput] = useState('');
+  const [rangeFromInput, setRangeFromInput] = useState('');
+  const [rangeToInput, setRangeToInput] = useState('');
   const meQuery = useMeQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
+  // Iki tarih filtresi ayni createdAt alanini hedefler, birbirini sifirlar: aralik
+  // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. quotes-list-page.tsx).
+  const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
+  const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
+  const to = hasRange ? rangeToInput || undefined : undefined;
+  const hasActiveFilter = Boolean(from) || Boolean(to);
   const casesQuery = usePostSaleCasesQuery({
     page,
     pageSize,
     status: status || undefined,
     q: q || undefined,
+    from,
+    to,
   });
   const statusCounts = usePostSaleCaseStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<PostSaleCaseStatus | '', number>> = {
@@ -107,25 +123,35 @@ export function PostSaleCaseListPage() {
     ...statusCounts.counts,
   };
 
-  async function handleCopyQuoteNumber(quoteNumber: string) {
-    await navigator.clipboard.writeText(quoteNumber);
-    toast.success(tr.crm.postSaleCases.quoteNumberCopiedToast);
+  function resetFilters() {
+    setPage(1);
+    setSinceInput('');
+    setRangeFromInput('');
+    setRangeToInput('');
+  }
+
+  async function handleCopyOrderNumber(orderNumber: string) {
+    await navigator.clipboard.writeText(orderNumber);
+    toast.success(tr.crm.postSaleCases.orderNumberCopiedToast);
   }
 
   const ALL_COLUMNS: TableColumn<PostSaleCase>[] = [
     {
-      key: 'quote',
-      header: tr.crm.postSaleCases.quoteColumn,
+      key: 'order',
+      header: tr.crm.postSaleCases.orderColumn,
       required: true,
       render: (c) => (
-        <div className="flex items-center gap-1">
-          <span className="font-semibold text-app-text">{c.quote.quoteNumber}</span>
-          <IconActionButton
-            icon={Copy}
-            tooltip={tr.crm.postSaleCases.copyQuoteNumberButton}
-            iconSize={14}
-            onClick={() => void handleCopyQuoteNumber(c.quote.quoteNumber)}
-          />
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-1">
+            <span className="font-semibold text-app-text">{c.salesOrder.orderNumber}</span>
+            <IconActionButton
+              icon={Copy}
+              tooltip={tr.crm.postSaleCases.copyOrderNumberButton}
+              iconSize={14}
+              onClick={() => void handleCopyOrderNumber(c.salesOrder.orderNumber)}
+            />
+          </div>
+          {c.quote && <span className="text-xs text-app-muted">{c.quote.quoteNumber}</span>}
         </div>
       ),
     },
@@ -146,6 +172,15 @@ export function PostSaleCaseListPage() {
       header: tr.crm.postSaleCases.statusColumn,
       render: (c) => <PostSaleCaseStatusSelect postSaleCase={c} />,
     },
+    {
+      key: 'createdAt',
+      header: tr.crm.postSaleCases.createdAtColumn,
+      className: 'text-app-muted',
+      render: (c) =>
+        new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short', timeStyle: 'short' }).format(
+          new Date(c.createdAt),
+        ),
+    },
   ];
 
   const { isColumnVisible, optionalColumns, visibleOptionalKeys, setVisibleOptionalKeys } =
@@ -157,12 +192,25 @@ export function PostSaleCaseListPage() {
 
   return (
     <AppShell>
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-app-text">{tr.crm.postSaleCases.title}</h1>
-          <PageHelp text={tr.help.postSaleCases} />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">{tr.crm.postSaleCases.title}</h1>
+            <PageHelp text={tr.help.postSaleCases} />
+          </div>
+          <p className="mt-1 text-sm text-app-muted">{tr.crm.postSaleCases.subtitle}</p>
         </div>
-        <p className="mt-1 text-sm text-app-muted">{tr.crm.postSaleCases.subtitle}</p>
+        <div className="flex items-center gap-2 pt-1">
+          <CircleIconButton
+            icon={ListFilter}
+            tooltip={tr.crm.postSaleCases.filterButton}
+            onClick={() => setDrawerOpen(true)}
+          >
+            {hasActiveFilter && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
+            )}
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="relative mt-6 w-full">
@@ -221,6 +269,62 @@ export function PostSaleCaseListPage() {
           onPrevious={() => setPage((p) => p - 1)}
           onNext={() => setPage((p) => p + 1)}
         />
+      )}
+
+      {drawerOpen && (
+        <Drawer
+          title={tr.crm.postSaleCases.filterDrawer.title}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <div className="flex flex-col gap-4">
+            <DateField
+              label={tr.crm.postSaleCases.filterDrawer.sinceLabel}
+              value={sinceInput}
+              onChange={(value) => {
+                setPage(1);
+                setRangeFromInput('');
+                setRangeToInput('');
+                setSinceInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setSinceInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.postSaleCases.filterDrawer.rangeFromLabel}
+              value={rangeFromInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeFromInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeFromInput('');
+              }}
+            />
+            <DateField
+              label={tr.crm.postSaleCases.filterDrawer.rangeToLabel}
+              value={rangeToInput}
+              onChange={(value) => {
+                setPage(1);
+                setSinceInput('');
+                setRangeToInput(value);
+              }}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setRangeToInput('');
+              }}
+            />
+            <Button type="button" variant="secondary" onClick={resetFilters}>
+              {tr.crm.postSaleCases.filterDrawer.reset}
+            </Button>
+          </div>
+        </Drawer>
       )}
     </AppShell>
   );

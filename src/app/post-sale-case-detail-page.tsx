@@ -88,7 +88,7 @@ export function PostSaleCaseDetailPage() {
       <BackLink to={'/satis-sonrasi'} label={tr.crm.postSaleCases.detail.back} />
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-bold text-app-text">{postSaleCase.quote.quoteNumber}</h1>
+        <h1 className="text-xl font-bold text-app-text">{postSaleCase.salesOrder.orderNumber}</h1>
         <PageHelp text={tr.help.postSaleCaseDetail} />
         <Badge variant={STATUS_BADGE_VARIANT[postSaleCase.status]}>
           {tr.crm.postSaleCases.statusOptions[postSaleCase.status]}
@@ -98,6 +98,8 @@ export function PostSaleCaseDetailPage() {
         {postSaleCase.account.name}
         {postSaleCase.contact &&
           ` · ${postSaleCase.contact.firstName} ${postSaleCase.contact.lastName}`}
+        {postSaleCase.quote &&
+          ` · ${tr.crm.postSaleCases.quoteColumn}: ${postSaleCase.quote.quoteNumber}`}
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">

@@ -99,7 +99,7 @@ export const tr = {
     productImports:
       'Farklı tedarikçilerin (marka) fiyat listesi dosyalarını bu ürün listesine aktarın. Dosyanız standart olmasa da (kolon sırası/sayısı farklı, başlık ilk satırda olmayabilir) her adımda ne yapılacağını siz seçersiniz; marka\'ya özgü sütunlar kaybolmaz, ürünün "özel alanları" olarak saklanır.',
     quotes:
-      'Müşterilerinize gönderdiğiniz tekliflerin listesi, durumlarına göre filtrelenebilir. Onaylanmış bir teklif otomatik olarak satış sonrası desteğe ve bir satış siparişine, isterseniz ayrıca satın alma siparişine dönüşür.',
+      'Müşterilerinize gönderdiğiniz tekliflerin listesi, durumlarına göre filtrelenebilir. Onaylanmış bir teklif otomatik olarak bir satış siparişine (ve onunla birlikte satış sonrası desteğe), isterseniz ayrıca satın alma siparişine dönüşür.',
     quoteImports:
       'Eski sisteminizden aldığınız teklif raporlarını (genelde kalem/ürün detayı olmayan, sadece toplam tutar içeren excel dosyaları) buraya aktarın. Aktarılan teklifler kalem detayı taşımaz, sadece toplam tutar olarak görünür.',
     quoteDetail:
@@ -107,7 +107,7 @@ export const tr = {
     quoteTemplates:
       'Teklif PDF çıktısının kapak sayfası, şirket/gönderen bilgileri, banka hesapları ve satış/teslimat koşulları buradan tasarlanır. Birden fazla şablon oluşturabilir, her teklifte hangisinin kullanılacağını ayrıca seçebilirsiniz; varsayılan şablon yeni tekliflere otomatik atanır.',
     postSaleCases:
-      'Onaylanan tekliflerin satış sonrası takibi burada yapılır: memnuniyet hatırlatmaları ve anket geri bildirimleri bu listeden izlenir.',
+      'Oluşan satış siparişlerinin (teklifli ya da teklifsiz, elle oluşturulanlar dahil) satış sonrası takibi burada yapılır: memnuniyet hatırlatmaları ve anket geri bildirimleri bu listeden izlenir.',
     postSaleCaseDetail:
       'Bu satış sonrası kaydın hatırlatma ve anket durumunu görüntüleyip geri bildirimi işaretleyin.',
     projects:
@@ -1017,7 +1017,7 @@ export const tr = {
       postSaleFollowUpDays: {
         title: 'Satış Sonrası Hatırlatma',
         subtitle:
-          'Bir teklif onaylandıktan bu kadar gün sonra satış temsilcisine kontrol hatırlatması gönderilir.',
+          'Bir satış siparişi oluştuktan bu kadar gün sonra satış temsilcisine kontrol hatırlatması gönderilir.',
         label: 'Hatırlatma süresi (gün)',
         saveButton: 'Kaydet',
         saveSuccess: 'Eşik güncellendi.',
@@ -1196,6 +1196,15 @@ export const tr = {
       copiedToast: 'Panoya kopyalandı.',
       closeButton: 'Kapat',
     },
+    flushAllCachesButton: 'Tüm Önbellekleri Boşalt',
+    flushAllCachesConfirm: {
+      title: 'Tüm Önbellekleri Boşalt',
+      message:
+        'Tüm kiracıların Redis önbellekleri silinecek. Bu işlem geri alınamaz, ancak veriler kaybolmaz - sadece bir sonraki istekte yeniden hesaplanır. Devam edilsin mi?',
+      confirmButton: 'Evet, Boşalt',
+    },
+    flushAllCachesSuccessToast: 'Önbellekler boşaltıldı.',
+    flushAllCachesError: 'Önbellekler boşaltılamadı.',
     alwaysOnBadge: 'Her zaman açık',
     loading: 'Kiracılar yükleniyor...',
     empty: 'Henüz kayıtlı kiracı yok.',
@@ -3077,19 +3086,29 @@ export const tr = {
     },
     postSaleCases: {
       title: 'Satış Sonrası Destek',
-      subtitle: 'Onaylanan tekliflerin satış sonrası takibini yönetin.',
+      subtitle: 'Oluşan satış siparişlerinin satış sonrası takibini yönetin.',
       loading: 'Kayıtlar yükleniyor...',
       empty: 'Henüz satış sonrası kayıt yok.',
+      orderColumn: 'Sipariş',
+      copyOrderNumberButton: 'Sipariş Numarasını Kopyala',
+      orderNumberCopiedToast: 'Sipariş numarası panoya kopyalandı.',
       quoteColumn: 'Teklif',
-      copyQuoteNumberButton: 'Teklif Numarasını Kopyala',
-      quoteNumberCopiedToast: 'Teklif numarası panoya kopyalandı.',
       accountColumn: 'Firma',
       contactColumn: 'Kişi',
       statusColumn: 'Durum',
+      createdAtColumn: 'Oluşma Tarihi',
       statusFilterLabel: 'Durum',
       allStatuses: 'Tümü',
       noContact: '—',
-      searchPlaceholder: 'Teklif no, firma veya kişi ara...',
+      searchPlaceholder: 'Sipariş no, teklif no, firma veya kişi ara...',
+      filterButton: 'Filtrele',
+      filterDrawer: {
+        title: 'Satış Sonrası Kayıtlarını Filtrele',
+        sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
+        rangeFromLabel: 'Başlangıç tarihi',
+        rangeToLabel: 'Bitiş tarihi',
+        reset: 'Sıfırla',
+      },
       statusOptions: {
         BEKLEMEDE: 'Beklemede',
         HATIRLATILDI: 'Hatırlatıldı',
@@ -3249,6 +3268,12 @@ export const tr = {
       form: {
         newTitle: 'Yeni Satış Siparişi',
         accountLabel: 'Firma',
+        productListLabel: 'Ürün Listesi',
+        productListPlaceholder: 'Ürün listesi seçin',
+        productListHint: 'Zorunlu. Kalemlerin seçileceği katalogu belirler.',
+        summaryTitle: 'Sipariş Özeti',
+        summaryItemCount: (count: number) => `${count} ürün`,
+        summaryEmpty: 'Henüz ürün eklenmedi. Yukarıdaki butondan bir satır ekleyin.',
         create: 'Sipariş Oluştur',
         creating: 'Oluşturuluyor...',
         createSuccess: 'Satış siparişi oluşturuldu.',

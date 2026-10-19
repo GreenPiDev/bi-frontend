@@ -62,6 +62,9 @@ const salesOrderItem: api.SalesOrderItem = {
   quantity: '3',
   unitPrice: '150',
   currency: 'TRY',
+  discountPct: '0',
+  vatPct: '20',
+  brand: null,
 };
 
 const salesOrder: api.SalesOrder = {
@@ -120,6 +123,9 @@ describe('SalesOrderCreatePage', () => {
       ],
       meta: { page: 1, pageSize: 100, total: 1, totalPages: 1 },
     });
+    vi.spyOn(api, 'getProduct').mockResolvedValue(product);
+    vi.spyOn(api, 'listBrandOptions').mockResolvedValue([]);
+    vi.spyOn(api, 'listTenantSettings').mockResolvedValue([]);
   });
 
   it('firma secip bir kalem girerek teklifsiz satis siparisi olusturur', async () => {
@@ -136,13 +142,11 @@ describe('SalesOrderCreatePage', () => {
     await user.type(accountInput, 'Acme');
     await user.click(await screen.findByText('Acme A.S.'));
 
-    // Select'e productListId Controller'i sadece value/onChange geciyor (name yok),
-    // bu yuzden label htmlFor/id ile iliskilenmiyor - getByLabelText calismiyor.
-    const productListLabel = await screen.findByText('Ürün Listesi', { selector: 'label' });
-    const productListSelect = productListLabel.parentElement?.querySelector(
-      'select',
-    ) as HTMLSelectElement;
-    await user.selectOptions(productListSelect, 'pl1');
+    // quote-form-page.tsx ile ayni desen: urun listesi sayfa basina BIR kere secilir
+    // (register('productListId') ile, htmlFor/id iliskili - getByLabelText calisir).
+    // Select'in "required" yildizi (aria-hidden span) <label>'in textContent'ine
+    // dahil oldugundan ("Ürün Listesi*") tam esleşme yerine regex kullanilir.
+    await user.selectOptions(await screen.findByLabelText(/Ürün Listesi/), 'pl1');
 
     const productLabel = screen.getByText('Ürün', { selector: 'label' });
     const productInput = productLabel.parentElement?.querySelector('input') as HTMLInputElement;
@@ -158,7 +162,17 @@ describe('SalesOrderCreatePage', () => {
     await waitFor(() =>
       expect(createSpy).toHaveBeenCalledWith({
         accountId: 'acc-1',
-        items: [{ productId: 'p1', quantity: 3, unitPrice: 150 }],
+        items: [
+          {
+            productId: 'p1',
+            quantity: 3,
+            unitPrice: 150,
+            currency: 'TRY',
+            discountPct: 0,
+            vatPct: 20,
+            brand: undefined,
+          },
+        ],
       }),
     );
     expect(await screen.findByText('detail-page')).toBeInTheDocument();

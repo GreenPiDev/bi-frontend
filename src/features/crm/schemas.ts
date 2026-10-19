@@ -487,16 +487,23 @@ export type PurchaseOrderCreateFormValues = z.infer<typeof purchaseOrderCreateFo
  * backend SalesOrderItem modeli). */
 export const salesOrderCreateFormSchema = z.object({
   accountId: z.string().min(1, 'Firma secilmelidir.'),
+  // quoteFormSchema ile ayni desen (bkz. quote-form-page.tsx): urun listesi her kalem
+  // icin tek tek degil, sayfa basina BIR kere secilir; tum kalemler o listeyle
+  // filtrelenir. UI-only, backend'e gonderilmez.
+  productListId: z.string().min(1, 'Urun listesi secilmelidir.'),
+  // quoteFormSchema'nin items semasiyla ayni alanlar (currency/discountPct/vatPct/
+  // brand) - 2026-10-19 kullanici istegiyle teklif formuyla esitlendi (bkz.
+  // backend SalesOrderItem model doc comment'i).
   items: z
     .array(
       z.object({
-        // purchaseOrderCreateFormSchema ile ayni "once urun listesi, sonra urun"
-        // deseni (bkz. ProductAutocomplete'in productListId prop'u) - productListId
-        // sadece UI'da filtreleme icin, backend'e gonderilmez.
-        productListId: z.string().optional(),
         productId: z.string().min(1, 'Urun secilmelidir.'),
         quantity: z.string().min(1, 'Miktar gerekli.'),
         unitPrice: z.string().min(1, 'Birim fiyat gerekli.'),
+        currency: z.string().optional(),
+        discountPct: z.string().optional(),
+        vatPct: z.string().optional(),
+        brand: z.string().max(120).optional(),
       }),
     )
     .min(1, 'En az bir kalem eklemelisiniz.'),

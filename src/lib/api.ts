@@ -334,6 +334,10 @@ export function setPlatformPageModule(
   });
 }
 
+export function flushAllTenantCaches(): Promise<{ deletedKeyCount: number }> {
+  return request('/platform-admin/cache/flush-all', { method: 'POST' });
+}
+
 export type DataSourceStatus = 'PENDING' | 'PROCESSING' | 'READY' | 'FAILED';
 
 export interface DataSourceStatusView {
@@ -3431,8 +3435,11 @@ export interface FeedbackSurvey {
 
 export interface PostSaleCase {
   id: string;
-  quoteId: string;
-  quote: Quote;
+  salesOrderId: string;
+  salesOrder: SalesOrder;
+  /** Teklifsiz (manuel) SalesOrder'lardan acilan kayitlarda null - bkz. SalesOrder.quoteId. */
+  quoteId: string | null;
+  quote: Quote | null;
   accountId: string;
   account: Account;
   contactId: string | null;
@@ -3454,6 +3461,8 @@ export function listPostSaleCases(
     accountId?: string;
     status?: PostSaleCaseStatus;
     q?: string;
+    from?: string;
+    to?: string;
   } = {},
 ): Promise<PagedResult<PostSaleCase>> {
   const query = new URLSearchParams();
@@ -3462,6 +3471,8 @@ export function listPostSaleCases(
   if (params.accountId) query.set('accountId', params.accountId);
   if (params.status) query.set('status', params.status);
   if (params.q) query.set('q', params.q);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
   const qs = query.toString();
   return request(`/post-sale-cases${qs ? `?${qs}` : ''}`);
 }
@@ -3639,6 +3650,9 @@ export interface SalesOrderItem {
   quantity: string;
   unitPrice: string;
   currency: string;
+  discountPct: string;
+  vatPct: string;
+  brand: string | null;
 }
 
 export interface SalesOrder {
@@ -3669,6 +3683,10 @@ export interface CreateSalesOrderItemInput {
   productId: string;
   quantity: number;
   unitPrice: number;
+  currency?: string;
+  discountPct?: number;
+  vatPct?: number;
+  brand?: string;
 }
 
 /** Iki ayri yol (bkz. backend SalesOrdersService.create() doc comment'i):
