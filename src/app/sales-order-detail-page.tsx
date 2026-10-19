@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Truck } from 'lucide-react';
+import { Ban, Truck, Undo2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { QuoteViewModal } from './quote-view-modal';
@@ -14,6 +14,7 @@ import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import {
   useSalesOrderQuery,
+  useSetSalesOrderItemCancelledMutation,
   useSetSalesOrderItemDeliveredQuantityMutation,
   useUpdateSalesOrderStatusMutation,
 } from '../features/crm/use-sales-orders';
@@ -53,17 +54,24 @@ interface DisplayItem {
   unitPrice: string;
   currency: string;
   deliveredQuantity: string;
+  isCancelled: boolean;
 }
 
 function buildItemColumns(params: {
   onRequestEditDelivery: (item: DisplayItem) => void;
+  onToggleCancelled: (item: DisplayItem) => void;
+  isTogglingCancelled: boolean;
 }): TableColumn<DisplayItem>[] {
   return [
     {
       key: 'product',
       header: tr.crm.salesOrders.detail.productColumn,
       className: 'w-[30%]',
-      render: (item) => item.product?.name ?? '—',
+      render: (item) => (
+        <span className={item.isCancelled ? 'line-through' : undefined}>
+          {item.product?.name ?? '—'}
+        </span>
+      ),
     },
     {
       key: 'quantity',
@@ -92,14 +100,27 @@ function buildItemColumns(params: {
     {
       key: 'actions',
       header: tr.crm.salesOrders.detail.actionsColumn,
-      className: 'w-[12%]',
+      className: 'w-[14%]',
       required: true,
       render: (item) => (
-        <IconActionButton
-          icon={Truck}
-          tooltip={tr.crm.salesOrders.detail.editDeliveryButton}
-          onClick={() => params.onRequestEditDelivery(item)}
-        />
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Truck}
+            tooltip={tr.crm.salesOrders.detail.editDeliveryButton}
+            onClick={() => params.onRequestEditDelivery(item)}
+          />
+          <IconActionButton
+            icon={item.isCancelled ? Undo2 : Ban}
+            tooltip={
+              item.isCancelled
+                ? tr.crm.salesOrders.detail.uncancelItemButton
+                : tr.crm.salesOrders.detail.cancelItemButton
+            }
+            variant={item.isCancelled ? 'default' : 'danger'}
+            disabled={params.isTogglingCancelled}
+            onClick={() => params.onToggleCancelled(item)}
+          />
+        </div>
       ),
     },
   ];
@@ -120,7 +141,12 @@ function deliveryStatusPriority(item: DisplayItem): 0 | 1 | 2 {
   return 1;
 }
 
+/** Iptal edilen kalem, teslimat durumu renginden bagimsiz olarak "golge gibi"
+ * (soluk/gri) gorunur - bkz. kullanici talebi. */
 function itemRowClassName(item: DisplayItem): string {
+  if (item.isCancelled) {
+    return 'opacity-40 grayscale';
+  }
   const ROW_CLASS_BY_PRIORITY = ['!bg-red-50', '!bg-yellow-50', '!bg-green-50'] as const;
   return ROW_CLASS_BY_PRIORITY[deliveryStatusPriority(item)];
 }
@@ -221,6 +247,7 @@ export function SalesOrderDetailPage() {
   const salesOrderQuery = useSalesOrderQuery(id);
   const updateMutation = useUpdateSalesOrderStatusMutation(id);
   const setDeliveredQuantityMutation = useSetSalesOrderItemDeliveredQuantityMutation(id);
+  const setCancelledMutation = useSetSalesOrderItemCancelledMutation(id);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DisplayItem | undefined>(undefined);
 
@@ -321,6 +348,30 @@ export function SalesOrderDetailPage() {
             <Table
               columns={buildItemColumns({
                 onRequestEditDelivery: (item) => setEditingItem(item),
+                isTogglingCancelled: setCancelledMutation.isPending,
+                onToggleCancelled: (item) => {
+                  setCancelledMutation.mutate(
+                    { itemId: item.id, isCancelled: !item.isCancelled },
+                    {
+                      onSuccess: () => {
+                        toast.success(
+                          item.isCancelled
+                            ? tr.crm.salesOrders.detail.uncancelItemSuccess
+                            : tr.crm.salesOrders.detail.cancelItemSuccess,
+                        );
+                      },
+                      onError: (error) => {
+                        toast.error(
+                          error instanceof ApiError
+                            ? error.message
+                            : item.isCancelled
+                              ? tr.crm.salesOrders.detail.uncancelItemError
+                              : tr.crm.salesOrders.detail.cancelItemError,
+                        );
+                      },
+                    },
+                  );
+                },
               })}
               data={displayItems}
               keyField={(item) => item.id}

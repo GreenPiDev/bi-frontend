@@ -2826,6 +2826,10 @@ export interface QuoteItem {
   /** Ad-hoc kismi sevkiyat takibi (bkz. docs/VARSAYIMLAR.md) - sadece bu teklif bir
    * satis siparisine donustuyse anlamlidir, SalesOrderDetailPage okur. */
   deliveredQuantity: string;
+  /** Ad-hoc (bkz. docs/VARSAYIMLAR.md) - kalem siparis icinde kalir ama
+   * "musteriye gonderilmeyecek" olarak isaretlenir, deliveredQuantity'den
+   * bagimsizdir, geri alinabilir. */
+  isCancelled: boolean;
 }
 
 /** quoteCurrency disindaki her item para biriminin quoteCurrency'ye cevrim kuru
@@ -3659,6 +3663,8 @@ export interface SalesOrderItem {
   /** Ad-hoc kismi sevkiyat takibi (bkz. docs/VARSAYIMLAR.md) - QuoteItem.
    * deliveredQuantity ile ayni amac. */
   deliveredQuantity: string;
+  /** Ad-hoc (bkz. docs/VARSAYIMLAR.md) - QuoteItem.isCancelled ile ayni amac. */
+  isCancelled: boolean;
 }
 
 export interface SalesOrder {
@@ -3759,6 +3765,19 @@ export function setSalesOrderItemDeliveredQuantity(
   return request(`/sales-orders/${salesOrderId}/items/${itemId}/delivered-quantity`, {
     method: 'PATCH',
     body: JSON.stringify({ deliveredQuantity }),
+  });
+}
+
+/** Ad-hoc (kullanici istegi) - kalemi "musteriye gonderilmeyecek" olarak
+ * isaretler/isareti geri alir (bkz. SalesOrderDetailPage). */
+export function setSalesOrderItemCancelled(
+  salesOrderId: string,
+  itemId: string,
+  isCancelled: boolean,
+): Promise<SalesOrder> {
+  return request(`/sales-orders/${salesOrderId}/items/${itemId}/cancelled`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isCancelled }),
   });
 }
 

@@ -3,6 +3,7 @@ import {
   createSalesOrder,
   getSalesOrder,
   listSalesOrders,
+  setSalesOrderItemCancelled,
   setSalesOrderItemDeliveredQuantity,
   updateSalesOrderStatus,
   type CreateSalesOrderInput,
@@ -94,6 +95,18 @@ export function useSetSalesOrderItemDeliveredQuantityMutation(id: string) {
   return useMutation({
     mutationFn: ({ itemId, deliveredQuantity }: { itemId: string; deliveredQuantity: number }) =>
       setSalesOrderItemDeliveredQuantity(id, itemId, deliveredQuantity),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SALES_ORDERS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['sales-orders', id] });
+    },
+  });
+}
+
+export function useSetSalesOrderItemCancelledMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, isCancelled }: { itemId: string; isCancelled: boolean }) =>
+      setSalesOrderItemCancelled(id, itemId, isCancelled),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SALES_ORDERS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['sales-orders', id] });

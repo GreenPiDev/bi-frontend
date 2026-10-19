@@ -64,6 +64,7 @@ const salesOrderItem: api.SalesOrderItem = {
   currency: 'TRY',
   discountPct: '0',
   vatPct: '20',
+  isCancelled: false,
   brand: null,
   deliveredQuantity: '0',
 };

@@ -3281,6 +3281,12 @@ export const tr = {
           invalidError: 'Teslim edilen miktar 0 ile toplam miktar arasında olmalıdır.',
           save: 'Kaydet',
         },
+        cancelItemButton: 'İptal Et',
+        uncancelItemButton: 'İptali Geri Al',
+        cancelItemSuccess: 'Kalem iptal edildi.',
+        uncancelItemSuccess: 'Kalemin iptali geri alındı.',
+        cancelItemError: 'Kalem iptal edilemedi.',
+        uncancelItemError: 'Kalemin iptali geri alınamadı.',
       },
       form: {
         newTitle: 'Yeni Satış Siparişi',
