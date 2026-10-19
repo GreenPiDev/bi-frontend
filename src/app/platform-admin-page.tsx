@@ -1,9 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
-import { usePlatformTenantsQuery } from '../features/platform-admin/use-platform-admin';
-import type { TenantSummary } from '../lib/api';
+import { useToast } from '../components/ui/toast-context';
+import {
+  useFlushAllTenantCachesMutation,
+  usePlatformTenantsQuery,
+} from '../features/platform-admin/use-platform-admin';
+import { ApiError, type TenantSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
 import { AppShell } from './app-shell';
 import { PlatformAdminTenantActions } from './platform-admin-tenant-actions';
@@ -13,6 +19,23 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
 export function PlatformAdminPage() {
   const tenantsQuery = usePlatformTenantsQuery();
+  const toast = useToast();
+  const flushCachesMutation = useFlushAllTenantCachesMutation();
+  const [confirmingFlush, setConfirmingFlush] = useState(false);
+
+  function handleFlushAllCaches() {
+    flushCachesMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success(tr.platformAdmin.flushAllCachesSuccessToast);
+        setConfirmingFlush(false);
+      },
+      onError: (error) => {
+        toast.error(
+          error instanceof ApiError ? error.message : tr.platformAdmin.flushAllCachesError,
+        );
+      },
+    });
+  }
 
   const columns: TableColumn<TenantSummary>[] = [
     {
@@ -72,9 +95,14 @@ export function PlatformAdminPage() {
           </div>
           <p className="mt-1 text-sm text-app-muted">{tr.platformAdmin.subtitle}</p>
         </div>
-        <Link to="/new-customer">
-          <Button type="button">{tr.platformAdmin.addTenantButton}</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Button type="button" variant="secondary" onClick={() => setConfirmingFlush(true)}>
+            {tr.platformAdmin.flushAllCachesButton}
+          </Button>
+          <Link to="/new-customer">
+            <Button type="button">{tr.platformAdmin.addTenantButton}</Button>
+          </Link>
+        </div>
       </div>
 
       <Table
@@ -85,6 +113,17 @@ export function PlatformAdminPage() {
         loadingMessage={tr.platformAdmin.loading}
         emptyMessage={tr.platformAdmin.empty}
       />
+
+      {confirmingFlush && (
+        <ConfirmModal
+          title={tr.platformAdmin.flushAllCachesConfirm.title}
+          message={tr.platformAdmin.flushAllCachesConfirm.message}
+          confirmLabel={tr.platformAdmin.flushAllCachesConfirm.confirmButton}
+          isPending={flushCachesMutation.isPending}
+          onConfirm={handleFlushAllCaches}
+          onCancel={() => setConfirmingFlush(false)}
+        />
+      )}
     </AppShell>
   );
 }

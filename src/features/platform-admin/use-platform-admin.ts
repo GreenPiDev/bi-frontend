@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createTenant,
+  flushAllTenantCaches,
   getPlatformModuleDefinitions,
   getPlatformPageModules,
   getPlatformTenantModules,
@@ -100,5 +101,11 @@ export function useSetPlatformPageModuleMutation() {
     onSuccess: (assignments: PageModuleAssignment[]) => {
       queryClient.setQueryData(PLATFORM_PAGE_MODULES_QUERY_KEY, assignments);
     },
+  });
+}
+
+export function useFlushAllTenantCachesMutation() {
+  return useMutation({
+    mutationFn: () => flushAllTenantCaches(),
   });
 }
