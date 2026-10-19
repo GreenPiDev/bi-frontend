@@ -211,6 +211,18 @@ export function SalesOrdersListContent() {
       render: (order) => order.quote?.project?.name ?? tr.crm.salesOrders.noProject,
     },
     {
+      key: 'product',
+      header: tr.crm.salesOrders.productColumn,
+      className: 'text-app-muted',
+      // Teklifli siparislerde kalemler Quote.items'tan (MANUAL_TOTAL teklifte
+      // bos), teklifsiz (manuel) siparislerde kendi SalesOrderItem'larindan
+      // gelir - bkz. sales-order-detail-page.tsx'teki ayni desen.
+      render: (order) => {
+        const itemCount = order.quoteId ? (order.quote?.items.length ?? 0) : order.items.length;
+        return tr.crm.salesOrders.productCount(itemCount);
+      },
+    },
+    {
       key: 'status',
       header: tr.crm.salesOrders.statusColumn,
       render: (order) => <SalesOrderStatusSelect order={order} />,

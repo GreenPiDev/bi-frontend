@@ -230,6 +230,12 @@ export function PurchaseOrdersListContent() {
       render: (order) => order.quote?.project?.name ?? tr.crm.purchaseOrders.noProject,
     },
     {
+      key: 'product',
+      header: tr.crm.purchaseOrders.productColumn,
+      className: 'text-app-muted',
+      render: (order) => tr.crm.purchaseOrders.productCount(order.items.length),
+    },
+    {
       key: 'status',
       header: tr.crm.purchaseOrders.statusColumn,
       render: (order) => <PurchaseOrderStatusSelect order={order} />,

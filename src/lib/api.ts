@@ -3745,15 +3745,20 @@ export function updateSalesOrderStatus(
   return request(`/sales-orders/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
 }
 
-/** Ad-hoc (kullanici istegi) - kalemin tamamini "teslim edildi" olarak isaretler
- * (deliveredQuantity = quantity). itemId, teklifli siparislerde bir QuoteItem.id,
- * teklifsiz siparislerde bir SalesOrderItem.id'dir (bkz. SalesOrderDetailPage). */
-export function markSalesOrderItemDelivered(
+/** Ad-hoc (kullanici istegi) - kalemin deliveredQuantity'sini dogrudan verilen
+ * degere esitler. Hem kismi sevkiyat ("10 adetten 5'i gonderildi") hem kismi
+ * geri alma ("gonderilen 5'in 1'i geri alindi, 4 kaldi") AYNI bu uc uzerinden
+ * yapilir - ayri "tam gonder"/"geri al" uclari yok. itemId, teklifli
+ * siparislerde bir QuoteItem.id, teklifsiz siparislerde bir SalesOrderItem.id'dir
+ * (bkz. SalesOrderDetailPage). */
+export function setSalesOrderItemDeliveredQuantity(
   salesOrderId: string,
   itemId: string,
+  deliveredQuantity: number,
 ): Promise<SalesOrder> {
-  return request(`/sales-orders/${salesOrderId}/items/${itemId}/deliver`, {
-    method: 'POST',
+  return request(`/sales-orders/${salesOrderId}/items/${itemId}/delivered-quantity`, {
+    method: 'PATCH',
+    body: JSON.stringify({ deliveredQuantity }),
   });
 }
 
