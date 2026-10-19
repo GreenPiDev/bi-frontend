@@ -3,15 +3,18 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { PlatformAdminPage } from './platform-admin-page';
+import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
 function renderPage() {
   const queryClient = new QueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <PlatformAdminPage />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter>
+          <PlatformAdminPage />
+        </MemoryRouter>
+      </ToastProvider>
     </QueryClientProvider>,
   );
 }
