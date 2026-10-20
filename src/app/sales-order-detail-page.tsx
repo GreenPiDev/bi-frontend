@@ -441,24 +441,27 @@ export function SalesOrderDetailPage() {
           ) : (
             <>
               {selectedIds.size > 0 && (
-                <div className="mb-3 flex items-center gap-1 rounded-lg border border-app-border bg-app-surface px-2 py-1.5">
+                <div className="mb-3 flex items-center gap-1 rounded-lg bg-app-brand px-2 py-1.5">
                   <IconActionButton
                     icon={PackageCheck}
                     tooltip={tr.crm.salesOrders.detail.bulkBar.markDelivered}
                     onClick={() => handleBulkMarkDelivered(true)}
                     disabled={bulkPending}
+                    className="border border-white text-white hover:bg-white/10 hover:text-white"
                   />
                   <IconActionButton
                     icon={PackageX}
                     tooltip={tr.crm.salesOrders.detail.bulkBar.markNotDelivered}
                     onClick={() => handleBulkMarkDelivered(false)}
                     disabled={bulkPending}
+                    className="border border-white text-white hover:bg-white/10 hover:text-white"
                   />
                   <IconActionButton
                     icon={X}
                     tooltip={tr.crm.salesOrders.detail.bulkBar.clearSelection}
                     onClick={() => setSelectedIds(new Set())}
                     disabled={bulkPending}
+                    className="border border-white text-white hover:bg-white/10 hover:text-white"
                   />
                 </div>
               )}
