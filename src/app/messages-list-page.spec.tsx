@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -287,21 +287,28 @@ describe('MessagesListPage', () => {
     renderMessagesListPage();
 
     await screen.findByText('Birinci konu');
-    expect(screen.queryByText('2 mesaj seçili')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Okundu olarak işaretle' }),
+    ).not.toBeInTheDocument();
 
     const checkboxes = screen.getAllByRole('checkbox', { name: 'Mesajı seç' });
     expect(checkboxes).toHaveLength(2);
     await user.click(checkboxes[0]!);
     await user.click(checkboxes[1]!);
 
-    expect(screen.getByText('2 mesaj seçili')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Okundu olarak işaretle' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Okundu olarak işaretle' }));
 
     expect(setConversationReadSpy).toHaveBeenCalledWith('conv-1', true);
     expect(setConversationReadSpy).toHaveBeenCalledWith('conv-2', true);
-    // Basarili toplu islemden sonra secim temizlenir.
-    expect(screen.queryByText('2 mesaj seçili')).not.toBeInTheDocument();
+    // Basarili toplu islemden sonra secim temizlenir - cubuk kapanis animasyonu
+    // bitene kadar (bkz. Table bulkActions) DOM'da kalmaya devam eder.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: 'Okundu olarak işaretle' }),
+      ).not.toBeInTheDocument(),
+    );
   });
 
   it('sayfadaki tumunu sec checkboxu tum satirlari secer', async () => {
@@ -340,7 +347,7 @@ describe('MessagesListPage', () => {
     await screen.findByText('Birinci konu');
     await user.click(screen.getByRole('checkbox', { name: 'Sayfadaki tüm mesajları seç' }));
 
-    expect(screen.getByText('1 mesaj seçili')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Okundu olarak işaretle' })).toBeInTheDocument();
   });
 
   it('yeni mesaj butonu formu acar', async () => {
