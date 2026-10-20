@@ -1,9 +1,22 @@
 import { clsx } from 'clsx';
 import { ArrowRight, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import { Fragment, type ReactNode, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { tr } from '../../i18n/tr';
 import { Button } from './button';
+import { IconActionButton } from './icon-action-button';
 import { Tooltip } from './tooltip';
+
+export interface TableBulkAction {
+  key: string;
+  icon: LucideIcon;
+  tooltip: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+// suresi index.css'teki .animate-bulk-bar-out ile esit olmali.
+const BULK_BAR_EXIT_ANIMATION_MS = 200;
 
 export type SortDirection = 'asc' | 'desc';
 export interface TableSort {
@@ -66,6 +79,20 @@ interface TableProps<T> {
   /** Kolonlari icerige gore degil, esit araliklarla (table-layout: fixed) dagitir -
    * az sayida, sabit genislikte kolonu olan tablolar icin (orn. siparis kalemleri). */
   fixedLayout?: boolean;
+  /** Dis sarmalayicinin varsayilan `mt-6` ust bosluguna ek/yerine gececek class. */
+  className?: string;
+  /** Verilirse, secili satir(lar) oldugunda (bulkActionsVisible=true) tablonun
+   * hemen ustune, onunla AYNI border kutusunu paylasan lacivert bir ikon-buton
+   * cubugu eklenir - "cekmece" gibi tablonun arkasindan yukari kayarak acilir,
+   * kapanista ayni yonde geri kayar (bkz. index.css animate-bulk-bar-in/out).
+   * Toplu secim/aksiyon gerektiren tum liste ve detay sayfalarinda (siparis
+   * kalemleri, mesajlar...) ayni bilesen kullanilir - sayfa sadece ikon/tooltip/
+   * onClick listesini saglar. */
+  bulkActions?: TableBulkAction[];
+  /** bulkActions cubugunun gorunur olup olmadigi - genelde `selectedIds.size > 0`.
+   * false'a dustugunde cubuk aninda kaybolmaz, kapanis animasyonu bitene kadar
+   * (BULK_BAR_EXIT_ANIMATION_MS) DOM'da kalmaya devam eder. */
+  bulkActionsVisible?: boolean;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -86,7 +113,31 @@ export function Table<T>({
   rowClassName,
   scrollX = false,
   fixedLayout = false,
+  className,
+  bulkActions,
+  bulkActionsVisible = false,
 }: TableProps<T>) {
+  const [isBulkBarClosing, setIsBulkBarClosing] = useState(false);
+  const [prevBulkActionsVisible, setPrevBulkActionsVisible] = useState(bulkActionsVisible);
+
+  // bulkActionsVisible degistigi render icinde (bir efekt yerine) kapanis
+  // animasyonunu tetikler - Pagination'daki "render sirasinda state ayarlama"
+  // deseniyle ayni (bkz. asagisi), gereksiz ekstra render/flaş yaratmaz.
+  if (bulkActionsVisible !== prevBulkActionsVisible) {
+    setPrevBulkActionsVisible(bulkActionsVisible);
+    setIsBulkBarClosing(!bulkActionsVisible && prevBulkActionsVisible);
+  }
+
+  const isBulkBarMounted = bulkActionsVisible || isBulkBarClosing;
+
+  useEffect(() => {
+    if (!isBulkBarClosing) return;
+    const timeoutId = window.setTimeout(() => {
+      setIsBulkBarClosing(false);
+    }, BULK_BAR_EXIT_ANIMATION_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [isBulkBarClosing]);
+
   if (isLoading) {
     return <p className="mt-6 text-sm text-app-muted">{loadingMessage}</p>;
   }
@@ -113,10 +164,30 @@ export function Table<T>({
   return (
     <div
       className={clsx(
-        'mt-6 border border-app-border bg-app-surface',
+        className ?? 'mt-6',
+        'border border-app-border bg-app-surface',
         scrollX ? 'overflow-x-auto' : 'overflow-hidden',
       )}
     >
+      {isBulkBarMounted && bulkActions && bulkActions.length > 0 && (
+        <div
+          className={clsx(
+            'flex items-center gap-1 border-b border-white bg-app-brand px-2 py-1.5',
+            isBulkBarClosing ? 'animate-bulk-bar-out' : 'animate-bulk-bar-in',
+          )}
+        >
+          {bulkActions.map((action) => (
+            <IconActionButton
+              key={action.key}
+              icon={action.icon}
+              tooltip={action.tooltip}
+              onClick={action.onClick}
+              disabled={action.disabled}
+              className="border border-white text-white hover:bg-white/10 hover:text-white"
+            />
+          ))}
+        </div>
+      )}
       <table
         className={clsx(
           'text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]',

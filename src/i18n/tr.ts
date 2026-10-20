@@ -3575,7 +3575,6 @@ export const tr = {
       you: 'Sen',
       filterButton: 'Filtrele',
       bulkBar: {
-        selectedCount: (count: number) => `${count} mesaj seçili`,
         markRead: 'Okundu olarak işaretle',
         markUnread: 'Okunmadı olarak işaretle',
         clearSelection: 'Seçimi temizle',

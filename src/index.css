@@ -329,6 +329,44 @@ body {
   }
 }
 
+/* sales-order-detail-page.tsx bulk-action cubugu: tablonun arkasindan/altindan
+   yukari dogru kayarak (cekmece gibi) beliriyor - tablo DOM'da sonra geldigi icin
+   dogal yigin sirasiyla zaten ustte boyaniyor, sadece bar kendi kutusu icinde asagidan
+   yukari translate ediliyor. */
+@keyframes bulk-bar-slide-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes bulk-bar-slide-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.animate-bulk-bar-in {
+  animation: bulk-bar-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* suresi sales-order-detail-page.tsx'teki EXIT_ANIMATION_MS ile esit olmali. */
+.animate-bulk-bar-out {
+  animation: bulk-bar-slide-out 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-bulk-bar-in,
+  .animate-bulk-bar-out {
+    animation: none;
+  }
+}
+
 /* SettingsPage GeneralTab: /envanter?tab=stockHoldingCostLog'daki "buradan" linkiyle
    buraya gelindiginde (?highlight=stockHoldingCost), kullanicinin dikkatini ilgili
    CollapsibleSection'a cekmek icin acik mavi bir kere yanip-sonen arka plan. */

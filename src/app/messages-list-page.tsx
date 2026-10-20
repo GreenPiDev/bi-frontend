@@ -1,10 +1,9 @@
-import { ListFilter, Plus, Search, Star } from 'lucide-react';
+import { ListFilter, Mail, MailOpen, Plus, Search, Star, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { NewMessageModal } from './new-message-modal';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { PageHelp } from '../components/ui/page-help';
@@ -310,41 +309,31 @@ export function MessagesListPage() {
         />
       </div>
 
-      {selectedIds.size > 0 && (
-        <div className="mt-3 flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-2.5">
-          <span className="text-sm text-app-text">
-            {tr.crm.messages.bulkBar.selectedCount(selectedIds.size)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => handleBulkRead(true)}
-              disabled={bulkPending}
-            >
-              {tr.crm.messages.bulkBar.markRead}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => handleBulkRead(false)}
-              disabled={bulkPending}
-            >
-              {tr.crm.messages.bulkBar.markUnread}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setSelectedIds(new Set())}
-              disabled={bulkPending}
-            >
-              {tr.crm.messages.bulkBar.clearSelection}
-            </Button>
-          </div>
-        </div>
-      )}
-
       <Table
+        bulkActionsVisible={selectedIds.size > 0}
+        bulkActions={[
+          {
+            key: 'mark-read',
+            icon: MailOpen,
+            tooltip: tr.crm.messages.bulkBar.markRead,
+            onClick: () => handleBulkRead(true),
+            disabled: bulkPending,
+          },
+          {
+            key: 'mark-unread',
+            icon: Mail,
+            tooltip: tr.crm.messages.bulkBar.markUnread,
+            onClick: () => handleBulkRead(false),
+            disabled: bulkPending,
+          },
+          {
+            key: 'clear-selection',
+            icon: X,
+            tooltip: tr.crm.messages.bulkBar.clearSelection,
+            onClick: () => setSelectedIds(new Set()),
+            disabled: bulkPending,
+          },
+        ]}
         columns={columns}
         data={rows}
         keyField={(conversation) => conversation.conversationId}
