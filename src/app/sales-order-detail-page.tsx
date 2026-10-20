@@ -67,12 +67,17 @@ function buildItemColumns(params: {
   onToggleSelected: (itemId: string) => void;
   allSelected: boolean;
   onToggleSelectAll: () => void;
+  /** Siparis Iptal Edildi/Tamamlandi durumundayken true - bu nihai durumlarda
+   * kalem teslimat/iptal duzenlemesi UI'dan engellenir (bkz. kullanici talebi:
+   * otomatik durum senkronizasyonu bu durumlara dokunmamali, elle de kalem
+   * degistirilmemeli). Durum tekrar baska bir seye cekilirse duzenleme acilir. */
+  itemEditingDisabled: boolean;
 }): TableColumn<DisplayItem>[] {
   return [
     {
       key: 'select',
       header: '',
-      headerNode: (
+      headerNode: params.itemEditingDisabled ? null : (
         <input
           type="checkbox"
           checked={params.allSelected}
@@ -86,7 +91,7 @@ function buildItemColumns(params: {
       className: 'w-8',
       required: true,
       render: (item) =>
-        item.isCancelled ? null : (
+        item.isCancelled || params.itemEditingDisabled ? null : (
           <input
             type="checkbox"
             checked={params.selectedIds.has(item.id)}
@@ -141,6 +146,7 @@ function buildItemColumns(params: {
           <IconActionButton
             icon={Truck}
             tooltip={tr.crm.salesOrders.detail.editDeliveryButton}
+            disabled={params.itemEditingDisabled}
             onClick={() => params.onRequestEditDelivery(item)}
           />
           <IconActionButton
@@ -151,7 +157,7 @@ function buildItemColumns(params: {
                 : tr.crm.salesOrders.detail.cancelItemButton
             }
             variant={item.isCancelled ? 'default' : 'danger'}
-            disabled={params.isTogglingCancelled}
+            disabled={params.isTogglingCancelled || params.itemEditingDisabled}
             onClick={() => params.onToggleCancelled(item)}
           />
         </div>
@@ -327,9 +333,16 @@ export function SalesOrderDetailPage() {
     salesOrder.quoteId ? (salesOrder.quote?.items ?? []) : salesOrder.items,
   );
 
+  // Siparis Iptal Edildi/Tamamlandi durumundayken kalem teslimat/iptal
+  // duzenlemesi UI'dan engellenir (bkz. kullanici talebi).
+  const itemEditingDisabled =
+    salesOrder.status === 'CANCELLED' || salesOrder.status === 'COMPLETED';
+
   // Iptal edilen kalemler secilemez - tumunu sec ve bulk islemler sadece aktif
   // kalemleri kapsar (bkz. kullanici talebi).
-  const selectableItems = displayItems.filter((item) => !item.isCancelled);
+  const selectableItems = itemEditingDisabled
+    ? []
+    : displayItems.filter((item) => !item.isCancelled);
 
   const allItemsSelected =
     selectableItems.length > 0 && selectableItems.every((item) => selectedIds.has(item.id));
@@ -443,7 +456,7 @@ export function SalesOrderDetailPage() {
           ) : (
             <>
               <Table
-                bulkActionsVisible={selectedIds.size > 0}
+                bulkActionsVisible={!itemEditingDisabled && selectedIds.size > 0}
                 bulkActions={[
                   {
                     key: 'mark-delivered',
@@ -474,6 +487,7 @@ export function SalesOrderDetailPage() {
                   onToggleSelected: toggleSelected,
                   allSelected: allItemsSelected,
                   onToggleSelectAll: toggleSelectAll,
+                  itemEditingDisabled,
                   onToggleCancelled: (item) => {
                     setCancelledMutation.mutate(
                       { itemId: item.id, isCancelled: !item.isCancelled },
