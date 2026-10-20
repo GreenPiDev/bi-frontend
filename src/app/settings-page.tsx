@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, ListFilter } from 'lucide-react';
+import { ChevronDown, ChevronRight, Filter } from 'lucide-react';
 import { useState } from 'react';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
@@ -254,7 +254,7 @@ function AuditLogTab() {
     <section>
       <div className="mb-4 flex justify-end">
         <CircleIconButton
-          icon={ListFilter}
+          icon={Filter}
           tooltip={tr.settings.audit.filterButton}
           onClick={() => setDrawerOpen(true)}
         >

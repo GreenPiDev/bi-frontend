@@ -1,4 +1,4 @@
-import { ListFilter, Mail, MailOpen, Plus, Search, Star, X } from 'lucide-react';
+import { Filter, Mail, MailOpen, Plus, Search, Star, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -254,7 +254,7 @@ export function MessagesListPage() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.messages.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

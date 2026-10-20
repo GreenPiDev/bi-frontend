@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Copy, ListFilter, Search } from 'lucide-react';
+import { Copy, Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -202,7 +202,7 @@ export function PostSaleCaseListPage() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.postSaleCases.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

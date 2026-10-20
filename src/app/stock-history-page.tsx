@@ -1,4 +1,4 @@
-import { ListFilter, Search } from 'lucide-react';
+import { Filter, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -164,7 +164,7 @@ export function StockHistoryContent() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.stock.history.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

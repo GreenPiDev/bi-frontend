@@ -1,4 +1,4 @@
-import { AlertTriangle, ListFilter, Pencil, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, Filter, Pencil, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -335,7 +335,7 @@ export function ProductsListContent() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.products.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

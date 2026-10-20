@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Copy, ListFilter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Copy, Filter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -125,7 +125,7 @@ export function PurchaseOrdersListContent() {
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
   const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
   const to = hasRange ? rangeToInput || undefined : undefined;
-  const hasActiveFilter = Boolean(createdById) || Boolean(from) || Boolean(to);
+  const hasActiveFilter = Boolean(status) || Boolean(createdById) || Boolean(from) || Boolean(to);
   const quoteId = searchParams.get('quoteId') ?? undefined;
   const projectId = searchParams.get('projectId') ?? undefined;
   const meQuery = useMeQuery();
@@ -167,6 +167,7 @@ export function PurchaseOrdersListContent() {
 
   function resetFilters() {
     setPage(1);
+    setStatus('');
     setCreatedById('');
     setSinceInput('');
     setRangeFromInput('');
@@ -284,7 +285,7 @@ export function PurchaseOrdersListContent() {
     <div>
       <div className="flex justify-end gap-2">
         <CircleIconButton
-          icon={ListFilter}
+          icon={Filter}
           tooltip={tr.crm.purchaseOrders.filterButton}
           onClick={() => setDrawerOpen(true)}
         >
@@ -367,6 +368,21 @@ export function PurchaseOrdersListContent() {
           onClose={() => setDrawerOpen(false)}
         >
           <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.purchaseOrders.filterDrawer.statusLabel}
+              placeholder={tr.crm.purchaseOrders.filterDrawer.statusPlaceholder}
+              value={status}
+              onChange={(event) => {
+                setPage(1);
+                setStatus(event.target.value as PurchaseOrderStatus | '');
+              }}
+              options={STATUS_OPTIONS}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setStatus('');
+              }}
+            />
             <Select
               label={tr.crm.purchaseOrders.filterDrawer.createdByLabel}
               placeholder={tr.crm.purchaseOrders.filterDrawer.createdByPlaceholder}

@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { ListFilter, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Filter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -243,7 +243,7 @@ export function OpportunitiesListPage() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.opportunities.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

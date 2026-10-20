@@ -4,7 +4,7 @@ import {
   Copy,
   Download,
   FileDown,
-  ListFilter,
+  Filter,
   Mail,
   Pencil,
   Plus,
@@ -428,7 +428,7 @@ export function QuotesListContent() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.quotes.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

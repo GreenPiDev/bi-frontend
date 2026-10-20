@@ -3,7 +3,7 @@ import {
   ArrowLeftRight,
   ChevronDown,
   ChevronUp,
-  ListFilter,
+  Filter,
   Minus,
   Plus,
   Search,
@@ -230,7 +230,7 @@ export function StockListContent() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.stock.filterButton}
             onClick={() => setDrawerOpen(true)}
           >

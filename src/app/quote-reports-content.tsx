@@ -1,4 +1,4 @@
-import { ListFilter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -186,7 +186,7 @@ export function QuoteReportsContent({
           <div className="flex items-center gap-2">
             {headerActions}
             <CircleIconButton
-              icon={ListFilter}
+              icon={Filter}
               tooltip={tr.crm.quoteReports.filterButton}
               onClick={() => setDrawerOpen(true)}
             >
