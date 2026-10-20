@@ -1,4 +1,4 @@
-import { Download, ListFilter, Mail, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Download, Filter, Mail, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -25,6 +25,7 @@ import { InteractionStatusSelect } from '../features/crm/interaction-status-sele
 import { useInteractionTypeOptionsQuery } from '../features/crm/use-interaction-type-options';
 import {
   useDeleteInteractionMutation,
+  useExportInteractionsFilteredMutation,
   useExportInteractionsMutation,
   useInteractionCreatorsQuery,
   useInteractionsQuery,
@@ -36,7 +37,7 @@ import {
   type InteractionStatus,
   type InteractionType,
 } from '../lib/api';
-import { openExportPreviewTab, resolveExportResult } from '../lib/download';
+import { downloadBlob, openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -125,6 +126,7 @@ export function InteractionsListPage() {
   };
   const deleteMutation = useDeleteInteractionMutation();
   const exportMutation = useExportInteractionsMutation();
+  const exportFilteredMutation = useExportInteractionsFilteredMutation();
 
   function resetFilters() {
     setPage(1);
@@ -244,7 +246,7 @@ export function InteractionsListPage() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={
               hasActiveFilter
                 ? tr.crm.interactions.filterActiveTooltip
@@ -258,8 +260,28 @@ export function InteractionsListPage() {
           </CircleIconButton>
           <ExportMenuButton
             tooltip={tr.crm.interactions.exportButton}
-            disabled={exportMutation.isPending}
+            disabled={exportMutation.isPending || exportFilteredMutation.isPending}
             onSelect={(format) => {
+              if (format === 'xlsx') {
+                exportFilteredMutation.mutate(
+                  {
+                    q: q || undefined,
+                    accountId: accountId || undefined,
+                    contactId: contactId || undefined,
+                    createdById: createdById || undefined,
+                    type: type || undefined,
+                    status: status || undefined,
+                    from,
+                    to,
+                    columns: columns.filter((c) => c.key !== 'actions').map((c) => c.key),
+                  },
+                  {
+                    onSuccess: (blob) => downloadBlob(blob, 'gorusmeler.xlsx'),
+                    onError: () => toast.error(tr.common.exportFormatModal.exportError),
+                  },
+                );
+                return;
+              }
               const tabHandle = openExportPreviewTab(format);
               exportMutation.mutate(format, {
                 onSuccess: (blob) =>

@@ -8,6 +8,7 @@ import {
 import {
   createAccount,
   deleteAccount,
+  exportAccounts,
   getAccount,
   listAccounts,
   updateAccount,
@@ -15,6 +16,18 @@ import {
 } from '../../lib/api';
 
 export const ACCOUNTS_QUERY_KEY = ['accounts'];
+
+export function useExportAccountsMutation() {
+  return useMutation({
+    mutationFn: (params: {
+      q?: string;
+      from?: string;
+      notContactedDays?: number;
+      createdById?: string;
+      columns: string[];
+    }) => exportAccounts(params),
+  });
+}
 
 /** /raporlar "Firmalar" tab'indaki KPI kartlari - `/accounts` ucu kirilim dondurmuyor,
  * bu yuzden her kart icin ayri, pageSize=1 ile ucuz bir istek atilir (sadece meta.total

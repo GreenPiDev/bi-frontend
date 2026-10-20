@@ -884,6 +884,27 @@ export function listAccounts(
   return request(`/accounts${qs ? `?${qs}` : ''}`);
 }
 
+/** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md): /firmalar sayfasindaki
+ * "Excel'e Aktar" butonu - sales-orders'taki ayni merkezi yapi (bkz. lib/download.ts,
+ * exportSalesOrders). O anda ekranda ACIK olan filtreyle eslesen TUM kayitlari
+ * (sayfalama yok), o anda GORUNUR olan kolonlarla (ColumnVisibilityPicker'in sirasiyla,
+ * dinamik `attr:<key>` ozel alan kolonlari dahil) disa aktarir. */
+export function exportAccounts(params: {
+  q?: string;
+  from?: string;
+  notContactedDays?: number;
+  createdById?: string;
+  columns: string[];
+}): Promise<Blob> {
+  const query = new URLSearchParams();
+  if (params.q) query.set('q', params.q);
+  if (params.from) query.set('from', params.from);
+  if (params.notContactedDays) query.set('notContactedDays', String(params.notContactedDays));
+  if (params.createdById) query.set('createdById', params.createdById);
+  query.set('columns', params.columns.join(','));
+  return requestBlob(`/accounts/export?${query.toString()}`, 'GET');
+}
+
 export function getAccount(id: string): Promise<AccountWithContacts> {
   return request(`/accounts/${id}`);
 }
@@ -956,6 +977,24 @@ export function listContacts(
   if (params.createdById) query.set('createdById', params.createdById);
   const qs = query.toString();
   return request(`/contacts${qs ? `?${qs}` : ''}`);
+}
+
+/** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md): /kisiler sayfasindaki
+ * "Excel'e Aktar" butonu - exportAccounts ile ayni merkezi yapi. */
+export function exportContacts(params: {
+  q?: string;
+  accountId?: string;
+  status?: ContactStatus;
+  createdById?: string;
+  columns: string[];
+}): Promise<Blob> {
+  const query = new URLSearchParams();
+  if (params.q) query.set('q', params.q);
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
+  if (params.createdById) query.set('createdById', params.createdById);
+  query.set('columns', params.columns.join(','));
+  return requestBlob(`/contacts/export?${query.toString()}`, 'GET');
 }
 
 export function getContact(id: string): Promise<Contact> {
@@ -2145,6 +2184,34 @@ export function listInteractionCreators(): Promise<InteractionCreator[]> {
 
 export function exportInteractions(format: ExportFormat): Promise<Blob> {
   return requestBlob(`/interactions/export?format=${format}`, 'GET');
+}
+
+/** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md): /gorusmeler sayfasindaki
+ * "Excel'e Aktar" butonu - exportAccounts/exportContacts ile ayni merkezi yapi, yukaridaki
+ * exportInteractions (PDF+Excel, tum kayit, sabit kolon) ile KARISTIRILMAMALI - o PDF
+ * secenegi icin aynen kaliyor, bu YENI ve ayri bir uc (/interactions/export-filtered). */
+export function exportInteractionsFiltered(params: {
+  q?: string;
+  accountId?: string;
+  contactId?: string;
+  createdById?: string;
+  type?: InteractionType;
+  status?: InteractionStatus;
+  from?: string;
+  to?: string;
+  columns: string[];
+}): Promise<Blob> {
+  const query = new URLSearchParams();
+  if (params.q) query.set('q', params.q);
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.contactId) query.set('contactId', params.contactId);
+  if (params.createdById) query.set('createdById', params.createdById);
+  if (params.type) query.set('type', params.type);
+  if (params.status) query.set('status', params.status);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  query.set('columns', params.columns.join(','));
+  return requestBlob(`/interactions/export-filtered?${query.toString()}`, 'GET');
 }
 
 export function getInteraction(id: string): Promise<Interaction> {
@@ -3779,6 +3846,30 @@ export function listSalesOrders(
 
 export function getSalesOrder(id: string): Promise<SalesOrder> {
   return request(`/sales-orders/${id}`);
+}
+
+/** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md): /siparisler?tab=salesOrders
+ * sayfasindaki "Excel'e Aktar" butonu - o anda ekranda ACIK olan filtreyle (listSalesOrders
+ * ile ayni alanlar, page/pageSize haric) eslesen TUM kayitlari, o anda GORUNUR olan
+ * kolonlarla (ColumnVisibilityPicker'in sirasiyla) disa aktarir. */
+export function exportSalesOrders(params: {
+  accountId?: string;
+  status?: SalesOrderStatus;
+  createdById?: string;
+  q?: string;
+  from?: string;
+  to?: string;
+  columns: string[];
+}): Promise<Blob> {
+  const query = new URLSearchParams();
+  if (params.accountId) query.set('accountId', params.accountId);
+  if (params.status) query.set('status', params.status);
+  if (params.createdById) query.set('createdById', params.createdById);
+  if (params.q) query.set('q', params.q);
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  query.set('columns', params.columns.join(','));
+  return requestBlob(`/sales-orders/export?${query.toString()}`, 'GET');
 }
 
 export function updateSalesOrderStatus(

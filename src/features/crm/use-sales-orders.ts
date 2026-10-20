@@ -1,6 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createSalesOrder,
+  exportSalesOrders,
   getSalesOrder,
   listSalesOrders,
   setSalesOrderItemCancelled,
@@ -99,6 +100,20 @@ export function useSetSalesOrderItemDeliveredQuantityMutation(id: string) {
       void queryClient.invalidateQueries({ queryKey: SALES_ORDERS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['sales-orders', id] });
     },
+  });
+}
+
+export function useExportSalesOrdersMutation() {
+  return useMutation({
+    mutationFn: (params: {
+      accountId?: string;
+      status?: SalesOrderStatus;
+      createdById?: string;
+      q?: string;
+      from?: string;
+      to?: string;
+      columns: string[];
+    }) => exportSalesOrders(params),
   });
 }
 

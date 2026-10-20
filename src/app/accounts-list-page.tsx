@@ -1,13 +1,4 @@
-import {
-  AlertTriangle,
-  Copy,
-  Download,
-  ListFilter,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-} from 'lucide-react';
+import { AlertTriangle, Copy, Download, Filter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -29,11 +20,15 @@ import { IconActionButton } from '../components/ui/icon-action-button';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import { buildAccountSlug } from '../features/crm/account-slug';
-import { useAccountsQuery, useDeleteAccountMutation } from '../features/crm/use-accounts';
+import {
+  useAccountsQuery,
+  useDeleteAccountMutation,
+  useExportAccountsMutation,
+} from '../features/crm/use-accounts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Account } from '../lib/api';
-import { openExportPreviewTab, resolveExportResult } from '../lib/download';
+import { downloadBlob, openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -72,6 +67,7 @@ export function AccountsListPage() {
     sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const exportMutation = useExportEntityMutation('accounts');
+  const exportFilteredMutation = useExportAccountsMutation();
   const deleteMutation = useDeleteAccountMutation();
   const hasActiveFilter = Boolean(from) || Boolean(notContactedDays) || Boolean(createdById);
 
@@ -296,7 +292,7 @@ export function AccountsListPage() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.accounts.filterButton}
             onClick={() => setDrawerOpen(true)}
           >
@@ -306,8 +302,24 @@ export function AccountsListPage() {
           </CircleIconButton>
           <ExportMenuButton
             tooltip={tr.crm.accounts.exportButton}
-            disabled={exportMutation.isPending}
+            disabled={exportMutation.isPending || exportFilteredMutation.isPending}
             onSelect={(format) => {
+              if (format === 'xlsx') {
+                exportFilteredMutation.mutate(
+                  {
+                    q: q || undefined,
+                    from: from || undefined,
+                    notContactedDays,
+                    createdById: createdById || undefined,
+                    columns: columns.filter((c) => c.key !== 'actions').map((c) => c.key),
+                  },
+                  {
+                    onSuccess: (blob) => downloadBlob(blob, 'firmalar.xlsx'),
+                    onError: () => toast.error(tr.common.exportFormatModal.exportError),
+                  },
+                );
+                return;
+              }
               const tabHandle = openExportPreviewTab(format);
               exportMutation.mutate(format, {
                 onSuccess: (blob) =>

@@ -2,6 +2,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import {
   createContact,
   deleteContact,
+  exportContacts,
   getContact,
   listContacts,
   updateContact,
@@ -10,6 +11,18 @@ import {
 } from '../../lib/api';
 
 export const CONTACTS_QUERY_KEY = ['contacts'];
+
+export function useExportContactsMutation() {
+  return useMutation({
+    mutationFn: (params: {
+      q?: string;
+      accountId?: string;
+      status?: ContactStatus;
+      createdById?: string;
+      columns: string[];
+    }) => exportContacts(params),
+  });
+}
 
 /** /raporlar "Kişiler" tab'indaki KPI kartlari - `/contacts` ucu durum bazli kirilim
  * dondurmuyor, her kart icin ayri, pageSize=1 ile ucuz bir istek atilir (bkz.

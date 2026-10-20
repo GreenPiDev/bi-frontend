@@ -3,6 +3,7 @@ import {
   createInteraction,
   deleteInteraction,
   exportInteractions,
+  exportInteractionsFiltered,
   getInteraction,
   listInteractionCreators,
   listInteractions,
@@ -153,6 +154,22 @@ export function useInteractionCreatorsQuery() {
 export function useExportInteractionsMutation() {
   return useMutation({
     mutationFn: (format: ExportFormat) => exportInteractions(format),
+  });
+}
+
+export function useExportInteractionsFilteredMutation() {
+  return useMutation({
+    mutationFn: (params: {
+      q?: string;
+      accountId?: string;
+      contactId?: string;
+      createdById?: string;
+      type?: InteractionType;
+      status?: InteractionStatus;
+      from?: string;
+      to?: string;
+      columns: string[];
+    }) => exportInteractionsFiltered(params),
   });
 }
 

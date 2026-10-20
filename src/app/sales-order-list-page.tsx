@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Copy, ListFilter, Plus, Search } from 'lucide-react';
+import { Copy, FileSpreadsheet, Filter, Plus, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -18,12 +18,14 @@ import { hasPermission } from '../features/auth/permissions';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
+  useExportSalesOrdersMutation,
   useSalesOrderStatusCounts,
   useSalesOrdersQuery,
   useUpdateSalesOrderStatusMutation,
 } from '../features/crm/use-sales-orders';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type SalesOrder, type SalesOrderStatus } from '../lib/api';
+import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -144,7 +146,11 @@ export function SalesOrdersListContent() {
   const from = hasRange ? rangeFromInput || undefined : sinceInput || undefined;
   const to = hasRange ? rangeToInput || undefined : undefined;
   const hasActiveFilter =
-    Boolean(createdById) || Boolean(accountIdFilter) || Boolean(from) || Boolean(to);
+    Boolean(status) ||
+    Boolean(createdById) ||
+    Boolean(accountIdFilter) ||
+    Boolean(from) ||
+    Boolean(to);
   const meQuery = useMeQuery();
   const usersQuery = useUsersQuery();
   const pageSize = meQuery.data?.defaultPageSize ?? 25;
@@ -164,6 +170,8 @@ export function SalesOrdersListContent() {
     ...statusCounts.counts,
   };
   const canCreateSalesOrder = hasPermission(meQuery.data?.permissions, 'sales-orders', 'CREATE');
+  const canExportSalesOrders = hasPermission(meQuery.data?.permissions, 'sales-orders', 'EXPORT');
+  const exportMutation = useExportSalesOrdersMutation();
 
   async function handleCopyOrderNumber(orderNumber: string) {
     await navigator.clipboard.writeText(orderNumber);
@@ -172,6 +180,7 @@ export function SalesOrdersListContent() {
 
   function resetFilters() {
     setPage(1);
+    setStatus('');
     setCreatedById('');
     setAccountIdFilter('');
     setSinceInput('');
@@ -248,7 +257,7 @@ export function SalesOrdersListContent() {
     <div>
       <div className="flex justify-end gap-2">
         <CircleIconButton
-          icon={ListFilter}
+          icon={Filter}
           tooltip={tr.crm.salesOrders.filterButton}
           onClick={() => setDrawerOpen(true)}
         >
@@ -256,6 +265,30 @@ export function SalesOrdersListContent() {
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
           )}
         </CircleIconButton>
+        {canExportSalesOrders && (
+          <CircleIconButton
+            icon={FileSpreadsheet}
+            tooltip={tr.crm.salesOrders.exportButton}
+            disabled={exportMutation.isPending}
+            onClick={() => {
+              exportMutation.mutate(
+                {
+                  status: status || undefined,
+                  createdById: createdById || undefined,
+                  accountId: accountIdFilter || undefined,
+                  from,
+                  to,
+                  q: q || undefined,
+                  columns: columns.map((c) => c.key),
+                },
+                {
+                  onSuccess: (blob) => downloadBlob(blob, 'satis-siparisleri.xlsx'),
+                  onError: () => toast.error(tr.crm.salesOrders.exportError),
+                },
+              );
+            }}
+          />
+        )}
         {canCreateSalesOrder && (
           <CircleIconButton
             icon={Plus}
@@ -328,6 +361,21 @@ export function SalesOrdersListContent() {
       {drawerOpen && (
         <Drawer title={tr.crm.salesOrders.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
           <div className="flex flex-col gap-4">
+            <Select
+              label={tr.crm.salesOrders.filterDrawer.statusLabel}
+              placeholder={tr.crm.salesOrders.filterDrawer.statusPlaceholder}
+              value={status}
+              onChange={(event) => {
+                setPage(1);
+                setStatus(event.target.value as SalesOrderStatus | '');
+              }}
+              options={STATUS_OPTIONS}
+              clearable
+              onClear={() => {
+                setPage(1);
+                setStatus('');
+              }}
+            />
             <Select
               label={tr.crm.salesOrders.filterDrawer.createdByLabel}
               placeholder={tr.crm.salesOrders.filterDrawer.createdByPlaceholder}

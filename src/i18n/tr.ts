@@ -54,6 +54,7 @@ export const tr = {
     exportFormatModal: {
       pdf: 'PDF',
       excel: 'Excel',
+      exportError: 'Dışa aktarma başarısız oldu.',
     },
   },
   help: {
@@ -3238,8 +3239,12 @@ export const tr = {
       statusUpdateSuccess: 'Durum güncellendi.',
       statusUpdateError: 'Durum güncellenemedi.',
       filterButton: 'Filtrele',
+      exportButton: "Excel'e Aktar",
+      exportError: 'Dışa aktarma başarısız oldu.',
       filterDrawer: {
         title: 'Satış Siparişlerini Filtrele',
+        statusLabel: 'Durum',
+        statusPlaceholder: 'Tüm durumlar',
         createdByLabel: 'Oluşturan',
         createdByPlaceholder: 'Tümü',
         sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',
@@ -3347,6 +3352,8 @@ export const tr = {
       filterButton: 'Filtrele',
       filterDrawer: {
         title: 'Siparişleri Filtrele',
+        statusLabel: 'Durum',
+        statusPlaceholder: 'Tüm durumlar',
         createdByLabel: 'Oluşturan',
         createdByPlaceholder: 'Tümü',
         sinceLabel: 'Şu tarihten itibaren (bugüne kadar)',

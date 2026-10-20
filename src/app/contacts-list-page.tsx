@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Copy, Download, ListFilter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Copy, Download, Filter, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -23,12 +23,13 @@ import { useMeQuery } from '../features/auth/use-auth';
 import {
   useContactsQuery,
   useDeleteContactMutation,
+  useExportContactsMutation,
   useUpdateContactMutation,
 } from '../features/crm/use-contacts';
 import { useExportEntityMutation } from '../features/crm/use-imports';
 import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Contact, type ContactStatus } from '../lib/api';
-import { openExportPreviewTab, resolveExportResult } from '../lib/download';
+import { downloadBlob, openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -100,6 +101,7 @@ export function ContactsListPage() {
     sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const exportMutation = useExportEntityMutation('contacts');
+  const exportFilteredMutation = useExportContactsMutation();
   const deleteMutation = useDeleteContactMutation();
   const hasActiveFilter = Boolean(accountId) || Boolean(status) || Boolean(createdById);
 
@@ -239,7 +241,7 @@ export function ContactsListPage() {
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
-            icon={ListFilter}
+            icon={Filter}
             tooltip={tr.crm.contacts.filterButton}
             onClick={() => setDrawerOpen(true)}
           >
@@ -249,8 +251,24 @@ export function ContactsListPage() {
           </CircleIconButton>
           <ExportMenuButton
             tooltip={tr.crm.contacts.exportButton}
-            disabled={exportMutation.isPending}
+            disabled={exportMutation.isPending || exportFilteredMutation.isPending}
             onSelect={(format) => {
+              if (format === 'xlsx') {
+                exportFilteredMutation.mutate(
+                  {
+                    q: q || undefined,
+                    accountId: accountId || undefined,
+                    status: status || undefined,
+                    createdById: createdById || undefined,
+                    columns: columns.filter((c) => c.key !== 'actions').map((c) => c.key),
+                  },
+                  {
+                    onSuccess: (blob) => downloadBlob(blob, 'kisiler.xlsx'),
+                    onError: () => toast.error(tr.common.exportFormatModal.exportError),
+                  },
+                );
+                return;
+              }
               const tabHandle = openExportPreviewTab(format);
               exportMutation.mutate(format, {
                 onSuccess: (blob) =>
