@@ -3291,7 +3291,6 @@ export const tr = {
         selectRowAria: 'Satırı seç',
         selectAllAria: 'Tümünü seç',
         bulkBar: {
-          selectedCount: (count: number) => `${count} kalem seçildi`,
           markDelivered: 'Teslim Edildi Olarak İşaretle',
           markNotDelivered: 'Teslim Edilmedi Olarak İşaretle',
           clearSelection: 'Seçimi Temizle',

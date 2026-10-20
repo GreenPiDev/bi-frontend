@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Ban, Truck, Undo2 } from 'lucide-react';
+import { Ban, PackageCheck, PackageX, Truck, Undo2, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { QuoteViewModal } from './quote-view-modal';
@@ -441,36 +441,25 @@ export function SalesOrderDetailPage() {
           ) : (
             <>
               {selectedIds.size > 0 && (
-                <div className="mb-3 flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-2.5">
-                  <span className="text-sm text-app-text">
-                    {tr.crm.salesOrders.detail.bulkBar.selectedCount(selectedIds.size)}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => handleBulkMarkDelivered(true)}
-                      disabled={bulkPending}
-                    >
-                      {tr.crm.salesOrders.detail.bulkBar.markDelivered}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => handleBulkMarkDelivered(false)}
-                      disabled={bulkPending}
-                    >
-                      {tr.crm.salesOrders.detail.bulkBar.markNotDelivered}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => setSelectedIds(new Set())}
-                      disabled={bulkPending}
-                    >
-                      {tr.crm.salesOrders.detail.bulkBar.clearSelection}
-                    </Button>
-                  </div>
+                <div className="mb-3 flex items-center gap-1 rounded-lg border border-app-border bg-app-surface px-2 py-1.5">
+                  <IconActionButton
+                    icon={PackageCheck}
+                    tooltip={tr.crm.salesOrders.detail.bulkBar.markDelivered}
+                    onClick={() => handleBulkMarkDelivered(true)}
+                    disabled={bulkPending}
+                  />
+                  <IconActionButton
+                    icon={PackageX}
+                    tooltip={tr.crm.salesOrders.detail.bulkBar.markNotDelivered}
+                    onClick={() => handleBulkMarkDelivered(false)}
+                    disabled={bulkPending}
+                  />
+                  <IconActionButton
+                    icon={X}
+                    tooltip={tr.crm.salesOrders.detail.bulkBar.clearSelection}
+                    onClick={() => setSelectedIds(new Set())}
+                    disabled={bulkPending}
+                  />
                 </div>
               )}
 
