@@ -61,8 +61,38 @@ function buildItemColumns(params: {
   onRequestEditDelivery: (item: DisplayItem) => void;
   onToggleCancelled: (item: DisplayItem) => void;
   isTogglingCancelled: boolean;
+  selectedIds: Set<string>;
+  onToggleSelected: (itemId: string) => void;
+  allSelected: boolean;
+  onToggleSelectAll: () => void;
 }): TableColumn<DisplayItem>[] {
   return [
+    {
+      key: 'select',
+      header: '',
+      headerNode: (
+        <input
+          type="checkbox"
+          checked={params.allSelected}
+          onChange={params.onToggleSelectAll}
+          aria-label={tr.crm.salesOrders.detail.selectAllAria}
+          className="accent-app-primary cursor-pointer"
+        />
+      ),
+      className: 'w-8',
+      required: true,
+      render: (item) =>
+        item.isCancelled ? null : (
+          <input
+            type="checkbox"
+            checked={params.selectedIds.has(item.id)}
+            onChange={() => params.onToggleSelected(item.id)}
+            onClick={(event) => event.stopPropagation()}
+            aria-label={tr.crm.salesOrders.detail.selectRowAria}
+            className="accent-app-primary cursor-pointer"
+          />
+        ),
+    },
     {
       key: 'product',
       header: tr.crm.salesOrders.detail.productColumn,
@@ -153,9 +183,16 @@ function itemRowClassName(item: DisplayItem): string {
 
 /** Siparis kalemlerini teslimat durumuna gore kirmizi -> sari -> yesil sirala
  * (bkz. kullanici talebi) - ayni durumdaki kalemler arasinda orijinal sira
- * korunur (Array.prototype.sort stabildir). */
+ * korunur (Array.prototype.sort stabildir). Iptal edilen kalemler, teslimat
+ * durumundan bagimsiz olarak her zaman en altta kalir (bkz. kullanici talebi -
+ * iptal iptali geri alinana kadar "hayalet gibi" en altta durur). */
 function sortItemsByDeliveryStatus(items: DisplayItem[]): DisplayItem[] {
-  return [...items].sort((a, b) => deliveryStatusPriority(a) - deliveryStatusPriority(b));
+  return [...items].sort((a, b) => {
+    if (a.isCancelled !== b.isCancelled) {
+      return a.isCancelled ? 1 : -1;
+    }
+    return deliveryStatusPriority(a) - deliveryStatusPriority(b);
+  });
 }
 
 interface EditDeliveredQuantityModalProps {
@@ -250,6 +287,20 @@ export function SalesOrderDetailPage() {
   const setCancelledMutation = useSetSalesOrderItemCancelledMutation(id);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DisplayItem | undefined>(undefined);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkPending, setBulkPending] = useState(false);
+
+  function toggleSelected(itemId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  }
 
   if (salesOrderQuery.isPending) {
     return (
@@ -271,6 +322,47 @@ export function SalesOrderDetailPage() {
   const displayItems: DisplayItem[] = sortItemsByDeliveryStatus(
     salesOrder.quoteId ? (salesOrder.quote?.items ?? []) : salesOrder.items,
   );
+
+  // Iptal edilen kalemler secilemez - tumunu sec ve bulk islemler sadece aktif
+  // kalemleri kapsar (bkz. kullanici talebi).
+  const selectableItems = displayItems.filter((item) => !item.isCancelled);
+
+  const allItemsSelected =
+    selectableItems.length > 0 && selectableItems.every((item) => selectedIds.has(item.id));
+
+  function toggleSelectAll() {
+    setSelectedIds(allItemsSelected ? new Set() : new Set(selectableItems.map((item) => item.id)));
+  }
+
+  async function handleBulkMarkDelivered(delivered: boolean) {
+    setBulkPending(true);
+    try {
+      await Promise.all(
+        selectableItems
+          .filter((item) => selectedIds.has(item.id))
+          .map((item) =>
+            setDeliveredQuantityMutation.mutateAsync({
+              itemId: item.id,
+              deliveredQuantity: delivered ? Number(item.quantity) : 0,
+            }),
+          ),
+      );
+      toast.success(
+        delivered
+          ? tr.crm.salesOrders.detail.bulkBar.markDeliveredSuccess
+          : tr.crm.salesOrders.detail.bulkBar.markNotDeliveredSuccess,
+      );
+      setSelectedIds(new Set());
+    } catch (error) {
+      toast.error(
+        error instanceof ApiError
+          ? error.message
+          : tr.crm.salesOrders.detail.bulkBar.markDeliveredError,
+      );
+    } finally {
+      setBulkPending(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -345,40 +437,80 @@ export function SalesOrderDetailPage() {
           {isManualTotalQuote ? (
             <p className="text-sm text-app-muted">{tr.crm.salesOrders.detail.itemsEmpty}</p>
           ) : (
-            <Table
-              columns={buildItemColumns({
-                onRequestEditDelivery: (item) => setEditingItem(item),
-                isTogglingCancelled: setCancelledMutation.isPending,
-                onToggleCancelled: (item) => {
-                  setCancelledMutation.mutate(
-                    { itemId: item.id, isCancelled: !item.isCancelled },
-                    {
-                      onSuccess: () => {
-                        toast.success(
-                          item.isCancelled
-                            ? tr.crm.salesOrders.detail.uncancelItemSuccess
-                            : tr.crm.salesOrders.detail.cancelItemSuccess,
-                        );
+            <>
+              {selectedIds.size > 0 && (
+                <div className="mb-3 flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-2.5">
+                  <span className="text-sm text-app-text">
+                    {tr.crm.salesOrders.detail.bulkBar.selectedCount(selectedIds.size)}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => handleBulkMarkDelivered(true)}
+                      disabled={bulkPending}
+                    >
+                      {tr.crm.salesOrders.detail.bulkBar.markDelivered}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => handleBulkMarkDelivered(false)}
+                      disabled={bulkPending}
+                    >
+                      {tr.crm.salesOrders.detail.bulkBar.markNotDelivered}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setSelectedIds(new Set())}
+                      disabled={bulkPending}
+                    >
+                      {tr.crm.salesOrders.detail.bulkBar.clearSelection}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Table
+                columns={buildItemColumns({
+                  onRequestEditDelivery: (item) => setEditingItem(item),
+                  isTogglingCancelled: setCancelledMutation.isPending,
+                  selectedIds,
+                  onToggleSelected: toggleSelected,
+                  allSelected: allItemsSelected,
+                  onToggleSelectAll: toggleSelectAll,
+                  onToggleCancelled: (item) => {
+                    setCancelledMutation.mutate(
+                      { itemId: item.id, isCancelled: !item.isCancelled },
+                      {
+                        onSuccess: () => {
+                          toast.success(
+                            item.isCancelled
+                              ? tr.crm.salesOrders.detail.uncancelItemSuccess
+                              : tr.crm.salesOrders.detail.cancelItemSuccess,
+                          );
+                        },
+                        onError: (error) => {
+                          toast.error(
+                            error instanceof ApiError
+                              ? error.message
+                              : item.isCancelled
+                                ? tr.crm.salesOrders.detail.uncancelItemError
+                                : tr.crm.salesOrders.detail.cancelItemError,
+                          );
+                        },
                       },
-                      onError: (error) => {
-                        toast.error(
-                          error instanceof ApiError
-                            ? error.message
-                            : item.isCancelled
-                              ? tr.crm.salesOrders.detail.uncancelItemError
-                              : tr.crm.salesOrders.detail.cancelItemError,
-                        );
-                      },
-                    },
-                  );
-                },
-              })}
-              data={displayItems}
-              keyField={(item) => item.id}
-              emptyMessage={tr.crm.salesOrders.detail.itemsEmpty}
-              rowClassName={itemRowClassName}
-              fixedLayout
-            />
+                    );
+                  },
+                })}
+                data={displayItems}
+                keyField={(item) => item.id}
+                emptyMessage={tr.crm.salesOrders.detail.itemsEmpty}
+                rowClassName={itemRowClassName}
+                fixedLayout
+              />
+            </>
           )}
         </div>
       </div>

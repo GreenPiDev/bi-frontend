@@ -14,6 +14,11 @@ export interface TableSort {
 export interface TableColumn<T> {
   key: string;
   header: string;
+  /** Verilirse basligin gorsel icerigi olarak `header` yerine bu render edilir
+   * (ornek: "Tumunu sec" checkbox'i bir kolon basliginda) - `header` yine de
+   * kolon secici (useColumnVisibility) gibi metin bekleyen yerler icin string
+   * olarak kalir. */
+  headerNode?: ReactNode;
   render: (row: T) => ReactNode;
   className?: string;
   /** "Gosterilecek kolonlar" secicisinde (bkz. features/auth/use-column-visibility)
@@ -131,13 +136,13 @@ export function Table<T>({
                       onClick={() => handleSortClick(column)}
                       className="inline-flex items-center gap-1 uppercase hover:opacity-80"
                     >
-                      {column.header}
+                      {column.headerNode ?? column.header}
                       {isActive && sort?.direction === 'asc' && <ChevronUp size={18} />}
                       {isActive && sort?.direction === 'desc' && <ChevronDown size={18} />}
                       {!isActive && <ChevronsUpDown size={18} className="opacity-60" />}
                     </button>
                   ) : (
-                    column.header
+                    (column.headerNode ?? column.header)
                   )}
                 </th>
               );

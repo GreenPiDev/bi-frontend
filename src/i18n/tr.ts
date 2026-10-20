@@ -3287,6 +3287,17 @@ export const tr = {
         uncancelItemSuccess: 'Kalemin iptali geri alındı.',
         cancelItemError: 'Kalem iptal edilemedi.',
         uncancelItemError: 'Kalemin iptali geri alınamadı.',
+        selectRowAria: 'Satırı seç',
+        selectAllAria: 'Tümünü seç',
+        bulkBar: {
+          selectedCount: (count: number) => `${count} kalem seçildi`,
+          markDelivered: 'Teslim Edildi Olarak İşaretle',
+          markNotDelivered: 'Teslim Edilmedi Olarak İşaretle',
+          clearSelection: 'Seçimi Temizle',
+          markDeliveredSuccess: 'Seçili kalemler teslim edildi olarak işaretlendi.',
+          markNotDeliveredSuccess: 'Seçili kalemler teslim edilmedi olarak işaretlendi.',
+          markDeliveredError: 'Seçili kalemler güncellenemedi.',
+        },
       },
       form: {
         newTitle: 'Yeni Satış Siparişi',
