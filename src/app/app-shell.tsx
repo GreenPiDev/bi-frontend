@@ -217,6 +217,7 @@ export function AppShell({
     products: useIsPageModuleAccessible('products'),
     quotes: useIsPageModuleAccessible('quotes'),
     'post-sale-cases': useIsPageModuleAccessible('post-sale-cases'),
+    surveys: useIsPageModuleAccessible('surveys'),
     projects: useIsPageModuleAccessible('projects'),
     'sales-orders': useIsPageModuleAccessible('sales-orders'),
     'purchase-orders': useIsPageModuleAccessible('purchase-orders'),
@@ -273,7 +274,7 @@ export function AppShell({
     ...(canAccessPage('purchase-orders') || canAccessPage('sales-orders')
       ? [{ label: tr.shell.nav.orders, icon: Truck, path: '/siparisler' }]
       : []),
-    ...(canAccessPage('post-sale-cases')
+    ...(canAccessPage('post-sale-cases') || canAccessPage('surveys')
       ? [{ label: tr.shell.nav.postSaleSupport, icon: HeartHandshake, path: '/satis-sonrasi' }]
       : []),
     ...(canAccessPage('opportunities')

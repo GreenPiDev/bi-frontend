@@ -5,6 +5,7 @@ import {
   markPostSaleFeedback,
   sendPostSaleSurvey,
   type PostSaleCaseStatus,
+  type SendPostSaleSurveyInput,
 } from '../../lib/api';
 
 export const POST_SALE_CASES_QUERY_KEY = ['post-sale-cases'];
@@ -65,7 +66,7 @@ export function usePostSaleCaseQuery(id: string) {
 export function useSendPostSaleSurveyMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { contactId?: string } = {}) => sendPostSaleSurvey(id, input),
+    mutationFn: (input: SendPostSaleSurveyInput) => sendPostSaleSurvey(id, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: POST_SALE_CASES_QUERY_KEY,

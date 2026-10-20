@@ -185,7 +185,11 @@ function CompanyInfoSection() {
   }
 
   return (
-    <CollapsibleSection title={strings.title} subtitle={strings.subtitle}>
+    <CollapsibleSection
+      title={strings.title}
+      subtitle={strings.subtitle}
+      highlightKey="companyInfo"
+    >
       <div className="flex items-center gap-4">
         {logoUrl ? (
           <img

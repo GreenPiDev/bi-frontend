@@ -3498,13 +3498,30 @@ export function getQuoteStockCheck(quoteId: string): Promise<QuoteStockCheckResu
 
 export type PostSaleCaseStatus = 'BEKLEMEDE' | 'HATIRLATILDI' | 'GERI_BILDIRIM_ALINDI';
 
+export type SurveyRecipientKind = 'CONTACT' | 'EMAIL';
+
+export interface SurveyResponseView {
+  id: string;
+  questionId: string;
+  answerText: string | null;
+  answerOptionId: string | null;
+  answerLikertValue: number | null;
+  question: { text: string; type: SurveyQuestionType };
+  answerOption: { label: string } | null;
+}
+
 export interface FeedbackSurvey {
   id: string;
   postSaleCaseId: string;
-  contactId: string;
+  surveyId: string;
+  recipientKind: SurveyRecipientKind;
+  contactId: string | null;
+  recipientName: string;
+  recipientEmail: string;
   sentAt: string;
   respondedAt: string | null;
   responseNote: string | null;
+  responses: SurveyResponseView[];
 }
 
 export interface PostSaleCase {
@@ -3555,9 +3572,20 @@ export function getPostSaleCase(id: string): Promise<PostSaleCase> {
   return request(`/post-sale-cases/${id}`);
 }
 
+export interface SendPostSaleSurveyInput {
+  surveyId: string;
+  recipientKind: SurveyRecipientKind;
+  contactId?: string;
+  recipientName: string;
+  recipientEmail: string;
+  /** Varsayilan olarak sistemde kayitli sirket maili (Tenant.email) gelir, bu
+   * gonderime ozel override edilebilir (kullanici talebi, 2026-10-20). */
+  fromEmail?: string;
+}
+
 export function sendPostSaleSurvey(
   id: string,
-  input: { contactId?: string } = {},
+  input: SendPostSaleSurveyInput,
 ): Promise<PostSaleCase> {
   return request(`/post-sale-cases/${id}/send-survey`, {
     method: 'POST',
@@ -3572,6 +3600,117 @@ export function markPostSaleFeedback(
   return request(`/post-sale-cases/${id}/feedback`, {
     method: 'PATCH',
     body: JSON.stringify(input),
+  });
+}
+
+// Anket sablonlari (Survey) - /satis-sonrasi?tab=surveys (2026-10-20 genislemesi)
+export type SurveyQuestionType = 'MULTIPLE_CHOICE' | 'OPEN_ENDED' | 'LIKERT';
+
+export interface SurveyQuestionOption {
+  id: string;
+  label: string;
+  ordinal: number;
+}
+
+export interface SurveyQuestion {
+  id: string;
+  type: SurveyQuestionType;
+  text: string;
+  ordinal: number;
+  required: boolean;
+  options: SurveyQuestionOption[];
+}
+
+export interface Survey {
+  id: string;
+  name: string;
+  description: string | null;
+  isActive: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  questions: SurveyQuestion[];
+}
+
+export interface SurveyQuestionInput {
+  type: SurveyQuestionType;
+  text: string;
+  required?: boolean;
+  options?: { label: string }[];
+}
+
+export interface SurveyInput {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+  questions: SurveyQuestionInput[];
+}
+
+export function listSurveys(
+  params: { page?: number; pageSize?: number; q?: string } = {},
+): Promise<PagedResult<Survey>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/surveys${qs ? `?${qs}` : ''}`);
+}
+
+export function listActiveSurveys(): Promise<Survey[]> {
+  return request('/surveys/active');
+}
+
+export function getSurvey(id: string): Promise<Survey> {
+  return request(`/surveys/${id}`);
+}
+
+export function createSurvey(input: SurveyInput): Promise<Survey> {
+  return request('/surveys', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateSurvey(id: string, input: Partial<SurveyInput>): Promise<Survey> {
+  return request(`/surveys/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteSurvey(id: string): Promise<void> {
+  return request(`/surveys/${id}`, { method: 'DELETE' });
+}
+
+// Public anket yanitlama (Faz 4, kimlik dogrulamasiz - /anket/:token)
+export interface PublicSurveyQuestion {
+  id: string;
+  type: SurveyQuestionType;
+  text: string;
+  required: boolean;
+  options: { id: string; label: string }[];
+}
+
+export interface PublicSurveyView {
+  surveyName: string;
+  surveyDescription: string | null;
+  alreadyResponded: boolean;
+  questions: PublicSurveyQuestion[];
+}
+
+export interface PublicSurveyAnswerInput {
+  questionId: string;
+  answerText?: string;
+  answerOptionId?: string;
+  answerLikertValue?: number;
+}
+
+export function getPublicSurvey(token: string): Promise<PublicSurveyView> {
+  return request(`/public/surveys/${token}`);
+}
+
+export function submitPublicSurveyResponse(
+  token: string,
+  answers: PublicSurveyAnswerInput[],
+): Promise<void> {
+  return request(`/public/surveys/${token}/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ answers }),
   });
 }
 
@@ -4254,7 +4393,8 @@ export type NotificationType =
   | 'CALENDAR_EVENT_RESPONSE'
   | 'CALENDAR_EVENT_UPDATED'
   | 'MEETING_REPORT_SENT'
-  | 'QUOTE_REVISION_REQUESTED';
+  | 'QUOTE_REVISION_REQUESTED'
+  | 'POST_SALE_SURVEY_REMINDER';
 
 export interface Notification {
   id: string;

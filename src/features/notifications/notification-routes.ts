@@ -22,6 +22,10 @@ export function resolveNotificationRoute(notification: Notification): string | n
       return notification.relatedEntityId
         ? `/teklifler/${notification.relatedEntityId}`
         : '/teklifler';
+    case 'PostSaleCase':
+      return notification.relatedEntityId
+        ? `/satis-sonrasi/${notification.relatedEntityId}`
+        : '/satis-sonrasi';
     default:
       return null;
   }

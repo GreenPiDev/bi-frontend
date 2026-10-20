@@ -55,8 +55,10 @@ import { ProjectDetailPage } from './app/project-detail-page';
 import { ProjectFormPage } from './app/project-form-page';
 import { ProjectsListPage } from './app/projects-list-page';
 import { ProtectedRoute } from './app/protected-route';
+import { PublicSurveyResponsePage } from './app/public-survey-response-page';
 import { PostSaleCaseDetailPage } from './app/post-sale-case-detail-page';
-import { PostSaleCaseListPage } from './app/post-sale-case-list-page';
+import { PostSaleManagementPage } from './app/post-sale-management-page';
+import { SurveyFormPage } from './app/survey-form-page';
 import { PurchaseOrderCreatePage } from './app/purchase-order-create-page';
 import { PurchaseOrderDetailPage } from './app/purchase-order-detail-page';
 import { PurchaseOrderEditPage } from './app/purchase-order-edit-page';
@@ -134,6 +136,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/anket/:token" element={<PublicSurveyResponsePage />} />
         <Route
           path="/platform-admin"
           element={
@@ -490,9 +493,9 @@ function App() {
         <Route
           path="/satis-sonrasi"
           element={
-            <TenantPageRoute pageKey="post-sale-cases">
-              <PostSaleCaseListPage />
-            </TenantPageRoute>
+            <ProtectedRoute>
+              <PostSaleManagementPage />
+            </ProtectedRoute>
           }
         />
         <Route
@@ -500,6 +503,22 @@ function App() {
           element={
             <TenantPageRoute pageKey="post-sale-cases">
               <PostSaleCaseDetailPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/anketler/yeni"
+          element={
+            <TenantPageRoute pageKey="surveys">
+              <SurveyFormPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/anketler/duzenle/:id"
+          element={
+            <TenantPageRoute pageKey="surveys">
+              <SurveyFormPage />
             </TenantPageRoute>
           }
         />

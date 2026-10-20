@@ -90,7 +90,9 @@ function PostSaleCaseStatusSelect({ postSaleCase }: { postSaleCase: PostSaleCase
   );
 }
 
-export function PostSaleCaseListPage() {
+/** AppShell'siz icerik - /satis-sonrasi yonetim sayfasinda sekme olarak gomulur
+ * (bkz. orders-management-page.tsx'teki *ListContent deseni). */
+export function PostSaleCasesListContent() {
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);
@@ -191,15 +193,8 @@ export function PostSaleCaseListPage() {
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
   return (
-    <AppShell>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{tr.crm.postSaleCases.title}</h1>
-            <PageHelp text={tr.help.postSaleCases} />
-          </div>
-          <p className="mt-1 text-sm text-app-muted">{tr.crm.postSaleCases.subtitle}</p>
-        </div>
+    <div>
+      <div className="flex flex-wrap items-start justify-end gap-4">
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
             icon={Filter}
@@ -326,6 +321,21 @@ export function PostSaleCaseListPage() {
           </div>
         </Drawer>
       )}
+    </div>
+  );
+}
+
+export function PostSaleCaseListPage() {
+  return (
+    <AppShell>
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold text-app-text">{tr.crm.postSaleCases.title}</h1>
+        <PageHelp text={tr.help.postSaleCases} />
+      </div>
+      <p className="mt-1 text-sm text-app-muted">{tr.crm.postSaleCases.subtitle}</p>
+      <div className="mt-6">
+        <PostSaleCasesListContent />
+      </div>
     </AppShell>
   );
 }
