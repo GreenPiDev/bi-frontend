@@ -30,12 +30,16 @@ import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
 const STATUS_OPTIONS: { value: PurchaseOrderStatus; label: string }[] = (
-  ['DRAFT', 'CONFIRMED'] as const
+  ['DRAFT', 'CONFIRMED', 'PARTIALLY_RECEIVED', 'FULLY_RECEIVED', 'COMPLETED', 'CANCELLED'] as const
 ).map((status) => ({ value: status, label: tr.crm.purchaseOrders.statusOptions[status] }));
 
 const STATUS_TEXT_CLASS: Record<PurchaseOrderStatus, string> = {
   DRAFT: 'text-app-muted',
-  CONFIRMED: 'text-app-success',
+  CONFIRMED: 'text-app-primary',
+  PARTIALLY_RECEIVED: 'text-app-primary',
+  FULLY_RECEIVED: 'text-app-success',
+  COMPLETED: 'text-app-success',
+  CANCELLED: 'text-app-danger',
 };
 
 function formatDate(value: string): string {

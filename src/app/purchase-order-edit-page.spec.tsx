@@ -130,6 +130,8 @@ const purchaseOrder: api.PurchaseOrder = {
       description: 'Widget',
       quantity: '3',
       source: 'QUOTE',
+      receivedQuantity: '0',
+      isCancelled: false,
       product,
       createdAt: '2026-09-07T00:00:00.000Z',
     },

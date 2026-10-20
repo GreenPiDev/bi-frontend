@@ -32,9 +32,16 @@ interface ItemRow {
   index: number;
 }
 
-const STATUS_BADGE_VARIANT: Record<PurchaseOrderStatus, 'success' | 'neutral'> = {
+const STATUS_BADGE_VARIANT: Record<
+  PurchaseOrderStatus,
+  'success' | 'neutral' | 'warning' | 'danger'
+> = {
   DRAFT: 'neutral',
-  CONFIRMED: 'success',
+  CONFIRMED: 'warning',
+  PARTIALLY_RECEIVED: 'warning',
+  FULLY_RECEIVED: 'success',
+  COMPLETED: 'success',
+  CANCELLED: 'danger',
 };
 
 function decimalOnly(registration: UseFormRegisterReturn) {

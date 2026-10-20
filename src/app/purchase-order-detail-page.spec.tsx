@@ -127,6 +127,8 @@ const purchaseOrder: api.PurchaseOrder = {
       description: 'Widget',
       quantity: '3',
       source: 'QUOTE',
+      receivedQuantity: '0',
+      isCancelled: false,
       product,
       createdAt: '2026-09-07T00:00:00.000Z',
     },
@@ -140,14 +142,14 @@ describe('PurchaseOrderDetailPage', () => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
   });
 
-  it('siparis basligini ve kalemlerini salt-okunur gosterir', async () => {
+  it('siparis basligini ve kalemlerini gosterir, durum degistirilebilir bir dropdown ile sunulur', async () => {
     vi.spyOn(api, 'getPurchaseOrder').mockResolvedValue(purchaseOrder);
     renderPage();
 
     expect(await screen.findByText('SIP-2026-09-07-001')).toBeInTheDocument();
     expect(screen.getAllByText('Widget').length).toBeGreaterThan(0);
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.getAllByText('3').length).toBeGreaterThan(0);
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Kaydet' })).not.toBeInTheDocument();
   });
 

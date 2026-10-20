@@ -3510,7 +3510,8 @@ export function markPostSaleFeedback(
 
 // Siparis / Satin Alma (SP1-SP3) + Stok (ST1) - §2.3.11/§2.3.12
 
-export type PurchaseOrderStatus = 'DRAFT' | 'CONFIRMED';
+export type PurchaseOrderStatus =
+  'DRAFT' | 'CONFIRMED' | 'PARTIALLY_RECEIVED' | 'FULLY_RECEIVED' | 'COMPLETED' | 'CANCELLED';
 export type PurchaseOrderItemSource = 'QUOTE' | 'EXTRA';
 
 export interface PurchaseOrderItem {
@@ -3521,6 +3522,12 @@ export interface PurchaseOrderItem {
   quantity: string;
   source: PurchaseOrderItemSource;
   product: Product | null;
+  /** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md) - SalesOrderItem.
+   * deliveredQuantity ile ayni amac, bu siparisin "bize teslim edilen" miktari. */
+  receivedQuantity: string;
+  /** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md) - SalesOrderItem.
+   * isCancelled ile ayni amac. */
+  isCancelled: boolean;
   createdAt: string;
 }
 
@@ -3633,6 +3640,35 @@ export function updatePurchaseOrder(
 
 export function deletePurchaseOrder(id: string): Promise<void> {
   return request(`/purchase-orders/${id}`, { method: 'DELETE' });
+}
+
+/** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md) - kalemin
+ * receivedQuantity'sini dogrudan verilen degere esitler. Hem kismi teslim alma
+ * hem kismi geri alma AYNI bu uc uzerinden yapilir (bkz.
+ * setSalesOrderItemDeliveredQuantity ile ayni desen). */
+export function setPurchaseOrderItemReceivedQuantity(
+  purchaseOrderId: string,
+  itemId: string,
+  receivedQuantity: number,
+): Promise<PurchaseOrder> {
+  return request(`/purchase-orders/${purchaseOrderId}/items/${itemId}/received-quantity`, {
+    method: 'PATCH',
+    body: JSON.stringify({ receivedQuantity }),
+  });
+}
+
+/** Ad-hoc (2026-10-20, kullanici istegi, bkz. CLAUDE.md) - kalemi "tedarikciden
+ * beklenmeyecek" olarak isaretler/isareti geri alir (bkz.
+ * setSalesOrderItemCancelled ile ayni desen). */
+export function setPurchaseOrderItemCancelled(
+  purchaseOrderId: string,
+  itemId: string,
+  isCancelled: boolean,
+): Promise<PurchaseOrder> {
+  return request(`/purchase-orders/${purchaseOrderId}/items/${itemId}/cancelled`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isCancelled }),
+  });
 }
 
 // Ad-hoc: Satis Siparisi (kullanici istegi, bkz. CLAUDE.md) - Quote APPROVED olunca

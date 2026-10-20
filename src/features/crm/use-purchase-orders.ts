@@ -5,6 +5,8 @@ import {
   getPurchaseOrder,
   getPurchaseOrderDraftFromQuote,
   listPurchaseOrders,
+  setPurchaseOrderItemCancelled,
+  setPurchaseOrderItemReceivedQuantity,
   updatePurchaseOrder,
   type CreatePurchaseOrderInput,
   type PurchaseOrderStatus,
@@ -95,6 +97,30 @@ export function useUpdatePurchaseOrderMutation(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: UpdatePurchaseOrderInput) => updatePurchaseOrder(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PURCHASE_ORDERS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
+    },
+  });
+}
+
+export function useSetPurchaseOrderItemReceivedQuantityMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, receivedQuantity }: { itemId: string; receivedQuantity: number }) =>
+      setPurchaseOrderItemReceivedQuantity(id, itemId, receivedQuantity),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PURCHASE_ORDERS_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
+    },
+  });
+}
+
+export function useSetPurchaseOrderItemCancelledMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ itemId, isCancelled }: { itemId: string; isCancelled: boolean }) =>
+      setPurchaseOrderItemCancelled(id, itemId, isCancelled),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PURCHASE_ORDERS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['purchase-orders', id] });
