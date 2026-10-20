@@ -53,6 +53,7 @@ const SALES_ORDER_STATUS_OPTIONS: { value: SalesOrderStatus; label: string }[] =
     'PROCESSING',
     'READY_FOR_SHIPMENT',
     'SHIPPED',
+    'PARTIALLY_DELIVERED',
     'DELIVERED',
     'COMPLETED',
     'CANCELLED',

@@ -3643,6 +3643,7 @@ export type SalesOrderStatus =
   | 'PROCESSING'
   | 'READY_FOR_SHIPMENT'
   | 'SHIPPED'
+  | 'PARTIALLY_DELIVERED'
   | 'DELIVERED'
   | 'COMPLETED'
   | 'CANCELLED';

@@ -3252,6 +3252,7 @@ export const tr = {
         PROCESSING: 'İşlemde',
         READY_FOR_SHIPMENT: 'Sevkiyata Hazır',
         SHIPPED: 'Sevk Edildi',
+        PARTIALLY_DELIVERED: 'Kısmen Teslim Edildi',
         DELIVERED: 'Teslim Edildi',
         COMPLETED: 'Tamamlandı',
         CANCELLED: 'İptal Edildi',
