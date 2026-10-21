@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import {
   Check,
@@ -47,9 +47,7 @@ import { useDrawingsQuery } from '../features/crm/use-drawings';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import {
   ApiError,
-  exportQuoteChartsPdf,
-  exportQuoteCostPdf,
-  exportQuotePdf,
+  API_BASE_URL,
   getQuotePrintData,
   type Drawing,
   type IbanAccountSnapshot,
@@ -61,7 +59,7 @@ import {
   type QuoteStatusHistoryEntry,
   type QuoteStockCheckRow,
 } from '../lib/api';
-import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
+import { openUrlInNewTab } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
 import {
   computeLineTotal,
@@ -1114,33 +1112,6 @@ export function QuoteDetailPage() {
   const sendForApprovalMutation = useUpdateQuoteMutation(id);
   const reviseMutation = useUpdateQuoteMutation(id);
   const deleteMutation = useDeleteQuoteMutation();
-  const exportPdfMutation = useMutation({
-    mutationFn: () => exportQuotePdf(id),
-    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
-    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
-    onError: (error, _vars, context) => {
-      context?.tabHandle?.close();
-      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
-    },
-  });
-  const exportCostPdfMutation = useMutation({
-    mutationFn: () => exportQuoteCostPdf(id),
-    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
-    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
-    onError: (error, _vars, context) => {
-      context?.tabHandle?.close();
-      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
-    },
-  });
-  const exportChartsPdfMutation = useMutation({
-    mutationFn: () => exportQuoteChartsPdf(id),
-    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
-    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
-    onError: (error, _vars, context) => {
-      context?.tabHandle?.close();
-      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
-    },
-  });
 
   if (quoteQuery.isPending || (needsPrintData && printDataQuery.isPending)) {
     return (
@@ -1159,6 +1130,24 @@ export function QuoteDetailPage() {
   }
 
   const quote = quoteQuery.data;
+  // Backend'deki QUOTE_EXPORTABLE_STATUSES (exports.service.ts) ile ayni liste -
+  // bu durumlarin disinda export ucu 409 QUOTE_NOT_READY doner. PDF butonu artik
+  // blob fetch yerine dogrudan backend URL'ine yonlendirdigi icin (bkz. asagidaki
+  // not) bu kontrol burada ON CE yapiliyor, aksi halde kullanici onay bekleyen bir
+  // teklifte "PDF Goruntule"ye basinca yeni sekmede ham bir hata metni gorurdu.
+  const canExportQuotePdf =
+    quote.status === 'DRAFT' || quote.status === 'SENT' || quote.status === 'APPROVED';
+  // Chrome'un PDF goruntuleyicisi blob: URL'lerde "kaydet" tiklaninca dosya adini
+  // blob'un kendi rastgele UUID'sinden aliyor (PDF Title metadata'sini es geciyor,
+  // denendi) - bu yuzden artik fetch+blob yerine dogrudan backend'in gercek GET
+  // ucuna yonlendiriyoruz, Content-Disposition'daki dosya adi boylece korunuyor.
+  function exportQuotePdfInNewTab(path: string) {
+    if (!canExportQuotePdf) {
+      toast.error(tr.crm.quotes.detail.exportPdfError);
+      return;
+    }
+    openUrlInNewTab(`${API_BASE_URL}${path}`);
+  }
   const canApprove = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
   const canCreatePurchaseOrder = hasPermission(
     meQuery.data?.permissions,
@@ -1328,8 +1317,7 @@ export function QuoteDetailPage() {
               <CircleIconButton
                 icon={FileDown}
                 tooltip={tr.crm.quotes.detail.exportPdfButton}
-                onClick={() => exportPdfMutation.mutate()}
-                disabled={exportPdfMutation.isPending}
+                onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/pdf`)}
               />
             )}
             {quote.status === 'PENDING_APPROVAL' && canApprove && (
@@ -1365,8 +1353,7 @@ export function QuoteDetailPage() {
             <CircleIconButton
               icon={FileDown}
               tooltip={tr.crm.quotes.costTab.exportPdfButton}
-              onClick={() => exportCostPdfMutation.mutate()}
-              disabled={exportCostPdfMutation.isPending}
+              onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/cost-pdf`)}
             />
           </div>
         )}
@@ -1375,8 +1362,7 @@ export function QuoteDetailPage() {
             <CircleIconButton
               icon={FileDown}
               tooltip={tr.crm.quotes.chartsTab.exportPdfButton}
-              onClick={() => exportChartsPdfMutation.mutate()}
-              disabled={exportChartsPdfMutation.isPending}
+              onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/charts-pdf`)}
             />
           </div>
         )}

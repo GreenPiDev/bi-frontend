@@ -1,4 +1,3 @@
-import { useMutation } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import {
   Copy,
@@ -42,8 +41,8 @@ import {
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
 import { useUsersQuery } from '../features/roles/use-users';
-import { ApiError, exportQuotePdf, type Quote, type QuoteStatus } from '../lib/api';
-import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
+import { ApiError, API_BASE_URL, type Quote, type QuoteStatus } from '../lib/api';
+import { openUrlInNewTab } from '../lib/download';
 import { QUOTE_STATUS_OPTIONS, quoteGrandTotalDisplay } from '../lib/quote-totals';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
@@ -204,15 +203,21 @@ export function QuotesListContent() {
     'purchase-orders',
     'CREATE',
   );
-  const exportPdfMutation = useMutation({
-    mutationFn: (quoteId: string) => exportQuotePdf(quoteId),
-    onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
-    onSuccess: (blob, _vars, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
-    onError: (error, _vars, context) => {
-      context?.tabHandle?.close();
-      toast.error(error instanceof ApiError ? error.message : tr.crm.quotes.detail.exportPdfError);
-    },
-  });
+  // Backend'deki QUOTE_EXPORTABLE_STATUSES (exports.service.ts) ile ayni liste.
+  // PDF butonu artik blob fetch yerine dogrudan backend URL'ine yonlendirdigi
+  // icin (bkz. lib/download.ts openUrlInNewTab doc comment'i - Chrome'un PDF
+  // goruntuleyicisi blob: URL'lerde dosya adini korumuyor) bu kontrol burada
+  // ONCE yapiliyor, aksi halde export edilemeyen bir teklifte yeni sekmede ham
+  // bir hata metni gorulurdu.
+  function exportQuotePdfInNewTab(quote: Quote) {
+    const canExport =
+      quote.status === 'DRAFT' || quote.status === 'SENT' || quote.status === 'APPROVED';
+    if (!canExport) {
+      toast.error(tr.crm.quotes.detail.exportPdfError);
+      return;
+    }
+    openUrlInNewTab(`${API_BASE_URL}/exports/quote/${quote.id}/pdf`);
+  }
 
   async function handleCopyQuoteNumber(quoteNumber: string) {
     await navigator.clipboard.writeText(quoteNumber);
@@ -391,8 +396,7 @@ export function QuotesListContent() {
             <IconActionButton
               icon={FileDown}
               tooltip={tr.crm.quotes.detail.exportPdfButton}
-              onClick={() => exportPdfMutation.mutate(q.id)}
-              disabled={exportPdfMutation.isPending}
+              onClick={() => exportQuotePdfInNewTab(q)}
             />
           )}
           {q.status === 'APPROVED' &&

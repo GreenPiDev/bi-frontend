@@ -66,6 +66,20 @@ export function openBlobInNewTabHandle(): Window | null {
   return tabHandle;
 }
 
+// Teklif PDF export'lari (bkz. exports.controller.ts) artik blob: URL yerine
+// dogrudan backend'in gercek GET ucuna yonlendiriyor - Chrome'un PDF
+// goruntuleyicisi blob: URL'lerde "kaydet" tiklaninca dosya adini PDF'in
+// Info/Title metadata'sindan DEGIL, blob'un kendi rastgele UUID'sinden
+// aliyor (denendi, calismadi); gercek bir HTTP kaynagi olarak acilinca
+// Content-Disposition'daki filename dogru kullaniliyor.
+export function openUrlInNewTab(url: string): void {
+  const tabHandle = window.open(url, '_blank');
+  if (!tabHandle) {
+    // Popup engellendiyse en azindan ayni sekmede ac.
+    window.location.href = url;
+  }
+}
+
 export function loadBlobIntoTabHandle(tabHandle: Window | null, blob: Blob): void {
   const url = URL.createObjectURL(blob);
   if (tabHandle) {

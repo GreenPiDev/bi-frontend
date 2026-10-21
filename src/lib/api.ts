@@ -3315,20 +3315,6 @@ export function rejectQuote(id: string, reason: string, note?: string): Promise<
   });
 }
 
-export function exportQuotePdf(quoteId: string): Promise<Blob> {
-  return requestBlob(`/exports/quote/${quoteId}/pdf`);
-}
-
-/** /teklifler/:id?tab=cost ekraninin kendi PDF export'u - exportQuotePdf'ten bagimsiz. */
-export function exportQuoteCostPdf(quoteId: string): Promise<Blob> {
-  return requestBlob(`/exports/quote/${quoteId}/cost-pdf`);
-}
-
-/** /teklifler/:id?tab=charts ekraninin kendi PDF export'u. */
-export function exportQuoteChartsPdf(quoteId: string): Promise<Blob> {
-  return requestBlob(`/exports/quote/${quoteId}/charts-pdf`);
-}
-
 /** /raporlar?tab=... ekraninin aktif sekmesinin PDF export'u. */
 export function exportReportsPdf(tab: string): Promise<Blob> {
   return requestBlob(`/exports/reports/pdf?tab=${encodeURIComponent(tab)}`);
