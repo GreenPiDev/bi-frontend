@@ -3,6 +3,7 @@ import {
   createUnitOption,
   deleteUnitOption,
   listUnitOptions,
+  setDefaultUnitOption,
   updateUnitOption,
 } from '../../lib/api';
 
@@ -35,6 +36,14 @@ export function useDeleteUnitOptionMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteUnitOption(id),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: UNIT_OPTIONS_QUERY_KEY }),
+  });
+}
+
+export function useSetDefaultUnitOptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => setDefaultUnitOption(id),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: UNIT_OPTIONS_QUERY_KEY }),
   });
 }

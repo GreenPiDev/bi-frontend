@@ -1150,6 +1150,7 @@ export function deleteBrandOption(id: string): Promise<void> {
 export interface UnitOption {
   id: string;
   label: string;
+  isDefault: boolean;
   createdAt: string;
 }
 
@@ -1173,6 +1174,10 @@ export function updateUnitOption(id: string, label: string): Promise<UnitOption>
 
 export function deleteUnitOption(id: string): Promise<void> {
   return request(`/unit-options/${id}`, { method: 'DELETE' });
+}
+
+export function setDefaultUnitOption(id: string): Promise<UnitOption> {
+  return request(`/unit-options/${id}/set-default`, { method: 'POST' });
 }
 
 export interface InteractionTypeOption {

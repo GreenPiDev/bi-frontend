@@ -1,4 +1,4 @@
-import { Check, Pencil, X } from 'lucide-react';
+import { Check, Pencil, Star, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -78,6 +78,7 @@ import {
 import {
   useCreateUnitOptionMutation,
   useDeleteUnitOptionMutation,
+  useSetDefaultUnitOptionMutation,
   useUnitOptionsQuery,
   useUpdateUnitOptionMutation,
 } from './use-unit-options';
@@ -276,6 +277,7 @@ function CompanyInfoSection() {
 interface NamedOption {
   id: string;
   label: string;
+  isDefault?: boolean;
 }
 
 interface MutationLike<T> {
@@ -309,6 +311,8 @@ function OptionListManager({
   updateMutation,
   deleteMutation,
   highlightKey,
+  setDefaultMutation,
+  setDefaultButtonLabel,
 }: {
   title: string;
   subtitle: string;
@@ -330,6 +334,11 @@ function OptionListManager({
    * `?highlight=<key>` ile yonlendirdiginde bu bolumu acmadan scroll edip
    * mavi yanip-sondurur - bkz. `CollapsibleSection`in `highlightKey` prop'u. */
   highlightKey?: string;
+  /** Sadece Birimler (UnitOption) icin: varsayilan birim secme yildizi. Verilmezse
+   * chip'lerde yildiz hic gosterilmez - diger option tipleri (sektor, departman…)
+   * etkilenmez. */
+  setDefaultMutation?: MutationLike<string>;
+  setDefaultButtonLabel?: string;
 }) {
   const toast = useToast();
   const [label, setLabel] = useState('');
@@ -384,6 +393,15 @@ function OptionListManager({
   function handleDelete(id: string) {
     deleteMutation.mutate(id, {
       onSuccess: () => toast.success(deleteSuccessMessage),
+      onError: (error) => {
+        toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      },
+    });
+  }
+
+  function handleSetDefault(id: string) {
+    setDefaultMutation?.mutate(id, {
+      onSuccess: () => {},
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
       },
@@ -453,6 +471,29 @@ function OptionListManager({
                 className="flex items-center gap-1.5 rounded-md bg-app-primary py-1 pr-1.5 pl-2.5 text-sm font-medium text-white"
               >
                 {option.label}
+                {setDefaultMutation && (
+                  <Tooltip
+                    content={
+                      option.isDefault
+                        ? tr.settings.crm.unitOptions.defaultBadge
+                        : (setDefaultButtonLabel ?? '')
+                    }
+                  >
+                    <button
+                      type="button"
+                      onClick={() => !option.isDefault && handleSetDefault(option.id)}
+                      aria-label={setDefaultButtonLabel}
+                      disabled={option.isDefault || setDefaultMutation.isPending}
+                      className={
+                        option.isDefault
+                          ? 'inline-flex h-5 w-5 items-center justify-center rounded-full text-amber-300'
+                          : 'inline-flex h-5 w-5 items-center justify-center rounded-full text-white/60 hover:bg-white/15 hover:text-amber-300'
+                      }
+                    >
+                      <Star size={12} fill={option.isDefault ? 'currentColor' : 'none'} />
+                    </button>
+                  </Tooltip>
+                )}
                 <Tooltip content={editButtonLabel}>
                   <button
                     type="button"
@@ -621,6 +662,8 @@ function UnitOptionsManager() {
       createMutation={useCreateUnitOptionMutation()}
       updateMutation={useUpdateUnitOptionMutation()}
       deleteMutation={useDeleteUnitOptionMutation()}
+      setDefaultMutation={useSetDefaultUnitOptionMutation()}
+      setDefaultButtonLabel={tr.settings.crm.unitOptions.setDefaultButton}
       highlightKey="unitOptions"
     />
   );

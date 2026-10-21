@@ -877,6 +877,8 @@ export const tr = {
         addSuccess: 'Birim eklendi.',
         editSuccess: 'Birim güncellendi.',
         deleteSuccess: 'Birim silindi.',
+        setDefaultButton: 'Varsayılan yap',
+        defaultBadge: 'Varsayılan birim',
       },
       interactionTypeOptions: {
         title: 'Görüşme Şekilleri',

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -17,7 +17,7 @@ import {
   useProductQuery,
   useUpdateProductMutation,
 } from '../features/crm/use-products';
-import { useCreateUnitOptionMutation } from '../features/crm/use-unit-options';
+import { useCreateUnitOptionMutation, useUnitOptionsQuery } from '../features/crm/use-unit-options';
 import { productFormSchema, type ProductFormValues } from '../features/crm/schemas';
 import { ApiError, type ProductInput } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -46,6 +46,7 @@ export function ProductFormPage() {
   const createMutation = useCreateProductMutation();
   const updateMutation = useUpdateProductMutation(id ?? '');
   const mutation = isEdit ? updateMutation : createMutation;
+  const unitOptionsQuery = useUnitOptionsQuery();
   const createUnitOptionMutation = useCreateUnitOptionMutation();
   const createCategoryOptionMutation = useCreateProductCategoryOptionMutation();
   const createBrandOptionMutation = useCreateBrandOptionMutation();
@@ -94,6 +95,19 @@ export function ProductFormPage() {
       });
     }
   }, [productQuery.data, reset]);
+
+  // Sadece ilk yuklemede bir kez uygulanir - kullanici "+ Yeni Birim" ile baska bir
+  // birim secip olusturduktan sonra (unitOptionsQuery yeniden fetch edilince) bu efektin
+  // onu tekrar varsayilana ezmesini engeller.
+  const defaultUnitAppliedRef = useRef(false);
+  useEffect(() => {
+    if (isEdit || defaultUnitAppliedRef.current || !unitOptionsQuery.data) return;
+    defaultUnitAppliedRef.current = true;
+    const defaultUnit = unitOptionsQuery.data.find((option) => option.isDefault)?.label;
+    if (defaultUnit) {
+      setValue('unit', defaultUnit);
+    }
+  }, [isEdit, unitOptionsQuery.data, setValue]);
 
   if (isEdit && productQuery.isPending) {
     return (

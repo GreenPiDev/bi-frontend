@@ -19,6 +19,7 @@ import { ProductListInlineSelect } from '../features/crm/product-list-inline-sel
 import { useProductsQuery } from '../features/crm/use-products';
 import { productListFormSchema, type ProductListFormValues } from '../features/crm/schemas';
 import { ApiError, type Product, type ProductListInput } from '../lib/api';
+import { formatCurrencyAmount } from '../lib/quote-totals';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -86,6 +87,12 @@ export function ProductListFormPage() {
       header: tr.crm.products.brandColumn,
       className: 'text-app-muted',
       render: (p) => p.brand ?? '—',
+    },
+    {
+      key: 'price',
+      header: tr.crm.products.priceColumn,
+      className: 'text-app-muted',
+      render: (p) => (p.price != null ? formatCurrencyAmount(Number(p.price), p.currency) : '—'),
     },
     ...attributeKeys.map((key) => ({
       key: `attr:${key}`,
