@@ -1,28 +1,23 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X } from 'lucide-react';
-import { useState, type ChangeEvent } from 'react';
-import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
+import { useState } from 'react';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
-import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
-import { Select } from '../components/ui/select';
-import { Table, type TableColumn } from '../components/ui/table';
-import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
 import { AddOptionModal } from '../features/crm/add-option-modal';
-import { BrandSelect } from '../features/crm/brand-select';
 import { NewProductModal } from '../features/crm/new-product-modal';
-import { QUOTE_CURRENCY_OPTIONS } from '../features/crm/quote-meta-fields';
-import { ProductAutocomplete } from '../features/crm/product-autocomplete';
+import { QuoteItemLinesCard } from '../features/crm/quote-item-lines-card';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
+import { useCreateProductMutation } from '../features/crm/use-products';
 import { useCreateSalesOrderMutation } from '../features/crm/use-sales-orders';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
+import { useUnitOptionsQuery } from '../features/crm/use-unit-options';
 import {
   DEFAULT_QUOTE_VAT_PCT,
   DEFAULT_QUOTE_VAT_PCT_KEY,
@@ -31,28 +26,8 @@ import {
   salesOrderCreateFormSchema,
   type SalesOrderCreateFormValues,
 } from '../features/crm/schemas';
-import { ApiError, convertCurrencyAmount, getProduct, type Product } from '../lib/api';
-import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import { ApiError, type Product } from '../lib/api';
 import { tr } from '../i18n/tr';
-
-interface ItemRow {
-  id: string;
-  index: number;
-}
-
-function sanitizeDecimalInput(value: string): string {
-  return value.replace(/[^0-9.]/g, '');
-}
-
-function decimalOnly(registration: UseFormRegisterReturn) {
-  return {
-    ...registration,
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = sanitizeDecimalInput(event.target.value);
-      return registration.onChange(event);
-    },
-  };
-}
 
 function defaultItem(vatPct: string) {
   return {
@@ -67,12 +42,17 @@ function defaultItem(vatPct: string) {
 }
 
 /** /satis-siparisleri/yeni - urun secimi/ekleme formu quote-form-page.tsx'teki "Teklif
- * Özeti" kartiyla AYNI (2026-10-19 kullanici istegi: "ayni olsun"): tek seferlik urun
- * listesi secimi + "+ Yeni Ürün" (NewProductModal), satir tablosu (Urun/Miktar/Birim
+ * Özeti" kartiyla AYNI (2026-10-19 kullanici istegi: "ayni olsun"), artik gercekten
+ * ortak `QuoteItemLinesCard` bileseni uzerinden (2026-10-21, bkz. o dosyanin doc
+ * comment'i): tek seferlik urun listesi secimi + "+ Yeni Ürün" (NewProductModal),
+ * ProductAutocomplete'e secili listede eslesmeyen bir ad yazilinca hizli urun ekleme
+ * (submit'te resolveQuickAddedProducts urunu gercekten olusturup productId'sini
+ * doldurur - quote-form-page.tsx ile ayni mantik), satir tablosu (Urun/Miktar/Birim
  * Fiyat/Para Birimi/Iskonto (%)/KDV (%)/Marka + "+ Yeni Marka", Tutar), para birimi
- * kur cevrimi, para birimi bazinda ara toplam/KDV/genel toplam ozeti - bkz. backend
- * SalesOrderItem model doc comment'i (costPriceAtSale/iskonto-onay akisi HARIC,
- * bkz. docs/VARSAYIMLAR.md V69). */
+ * bazinda ara toplam/KDV/genel toplam ozeti - bkz. backend SalesOrderItem model doc
+ * comment'i (costPriceAtSale/iskonto-onay akisi HARIC, bkz. docs/VARSAYIMLAR.md V69).
+ * Teklif formundan farkli olarak kur cevrimi bolumu (QuoteExchangeRatesSection) YOK -
+ * satis siparisinde teklifin tersine tek bir para birimi kavrami yok. */
 export function SalesOrderCreatePage() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -85,6 +65,8 @@ export function SalesOrderCreatePage() {
   );
   const defaultVatPct = String(defaultVatPctSetting?.value ?? DEFAULT_QUOTE_VAT_PCT);
   const createBrandOptionMutation = useCreateBrandOptionMutation();
+  const unitOptionsQuery = useUnitOptionsQuery();
+  const createProductMutation = useCreateProductMutation();
 
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
   const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
@@ -94,7 +76,6 @@ export function SalesOrderCreatePage() {
 
   const {
     control,
-    register,
     handleSubmit,
     watch,
     setValue,
@@ -117,38 +98,31 @@ export function SalesOrderCreatePage() {
   // tekrar tekrar secilmez).
   const selectedProductListId = watch('productListId');
   const watchedItems = watch('items');
-
-  // Urun satirina yeni bir urun secilince fiyat/para birimi/marka varsayilanlarini o
-  // satira uygular - quote-form-page.tsx'teki handleRowProductChange ile ayni desen.
-  async function handleRowProductChange(index: number, productId: string) {
-    try {
-      const product = await getProduct(productId);
-      setValue(`items.${index}.unitPrice`, product.price ?? '');
-      setValue(`items.${index}.currency`, product.currency);
-      setValue(`items.${index}.brand`, product.brand ?? '');
-      if (!watch(`items.${index}.vatPct`)) {
-        setValue(`items.${index}.vatPct`, defaultVatPct);
-      }
-    } catch {
-      // Urun detaylari cekilemezse kullanici fiyat/marka alanlarini elle doldurur.
-    }
-  }
-
-  // Satir para birimi degistirilince girilmis birim fiyat anlik kurla yeni para
-  // birimine cevrilir - quote-form-page.tsx'teki handleRowCurrencyChange ile ayni.
-  async function handleRowCurrencyChange(index: number, newCurrency: string) {
-    const oldCurrency = watch(`items.${index}.currency`) || 'TRY';
-    setValue(`items.${index}.currency`, newCurrency);
-    const currentPrice = watch(`items.${index}.unitPrice`);
-    const amount = Number(currentPrice);
-    if (oldCurrency === newCurrency || !currentPrice || Number.isNaN(amount) || amount <= 0) {
-      return;
-    }
-    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
-    if (converted !== null) {
-      setValue(`items.${index}.unitPrice`, converted.toFixed(2));
-    }
-  }
+  // quote-form-page.tsx'teki itemRowErrors ile ayni donusum - QuoteItemLinesCard'in
+  // beklediği duz string hata sekline cevirir.
+  const rawItemErrors = errors.items as
+    | Array<
+        | {
+            productId?: { message?: string };
+            quantity?: { message?: string };
+            unitPrice?: { message?: string };
+            discountPct?: { message?: string };
+            vatPct?: { message?: string };
+          }
+        | undefined
+      >
+    | undefined;
+  const itemRowErrors = (rawItemErrors ?? []).map((itemError) =>
+    itemError
+      ? {
+          productId: itemError.productId?.message,
+          quantity: itemError.quantity?.message,
+          unitPrice: itemError.unitPrice?.message,
+          discountPct: itemError.discountPct?.message,
+          vatPct: itemError.vatPct?.message,
+        }
+      : undefined,
+  );
 
   // "+ Yeni Ürün" ile sistemde hic kayitli olmayan bir urun olusturulunca, hem secili
   // urun listesine kalici olarak eklenir (NewProductModal icinde) hem de bu siparise
@@ -167,194 +141,50 @@ export function SalesOrderCreatePage() {
     setIsNewProductModalOpen(false);
   }
 
-  const itemRows: ItemRow[] = fields.map((field, index) => ({ id: field.id, index }));
+  // Satirda gercek bir urun secilmemis ama ProductAutocomplete'e serbest metin bir ad
+  // yazilmissa (hizli urun ekleme), submit oncesi o urunu secili urun listesine
+  // gercekten olusturup productId'sini doldurur - quote-form-page.tsx'teki
+  // resolveQuickAddedProducts ile ayni mantik.
+  async function resolveQuickAddedProducts(
+    items: SalesOrderCreateFormValues['items'],
+  ): Promise<SalesOrderCreateFormValues['items']> {
+    const defaultUnit =
+      unitOptionsQuery.data?.find((option) => option.isDefault)?.label ??
+      unitOptionsQuery.data?.[0]?.label ??
+      'adet';
+    const resolved = [...items];
+    for (let index = 0; index < resolved.length; index += 1) {
+      const item = resolved[index];
+      if (item.productId) continue;
+      const quickAddName = (item.productName ?? '').trim();
+      if (!quickAddName) continue;
+      const product = await createProductMutation.mutateAsync({
+        productListId: selectedProductListId!,
+        name: quickAddName,
+        unit: defaultUnit,
+        price: Number(item.unitPrice),
+        currency: item.currency || 'TRY',
+        brand: item.brand || undefined,
+      });
+      resolved[index] = { ...item, productId: product.id };
+    }
+    return resolved;
+  }
 
-  const summaryRows = (watchedItems ?? []).map((item, index) => {
-    const quantity = Number(item.quantity) || 0;
-    const unitPrice = Number(item.unitPrice) || 0;
-    const discountPct = Number(item.discountPct) || 0;
-    const vatPct = Number(item.vatPct) || 0;
-    const currency = item.currency || 'TRY';
-    const { lineSubtotal, lineTotal } = computeLineTotal({
-      quantity,
-      unitPrice,
-      discountPct,
-      vatPct,
-    });
-    return { index, quantity, unitPrice, currency, discountPct, vatPct, lineSubtotal, lineTotal };
-  });
-  const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
+  const onSubmit = handleSubmit(async (values) => {
+    let resolvedItems: SalesOrderCreateFormValues['items'];
+    try {
+      resolvedItems = await resolveQuickAddedProducts(values.items);
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      return;
+    }
 
-  const itemColumns: TableColumn<ItemRow>[] = [
-    {
-      key: 'product',
-      header: tr.crm.salesOrders.detail.productColumn,
-      className: 'align-top w-[18%]',
-      render: (row) => (
-        <Controller
-          control={control}
-          name={`items.${row.index}.productId` as const}
-          render={({ field }) => (
-            <ProductAutocomplete
-              label={tr.crm.salesOrders.detail.productColumn}
-              hideLabel
-              placeholder={
-                selectedProductListId
-                  ? tr.crm.quotes.form.pickerSearchPlaceholder
-                  : tr.crm.quotes.form.pickerSelectProductListFirst
-              }
-              error={errors.items?.[row.index]?.productId?.message}
-              value={field.value}
-              onChange={(productId) => {
-                field.onChange(productId ?? '');
-                if (productId) void handleRowProductChange(row.index, productId);
-              }}
-              productListId={selectedProductListId || undefined}
-              disabled={!selectedProductListId}
-              clearable
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: 'quantity',
-      header: tr.crm.salesOrders.detail.quantityColumn,
-      className: 'align-top w-[7%]',
-      render: (row) => (
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.salesOrders.detail.quantityColumn}
-          hideLabel
-          error={errors.items?.[row.index]?.quantity?.message}
-          {...decimalOnly(register(`items.${row.index}.quantity` as const))}
-        />
-      ),
-    },
-    {
-      key: 'unitPrice',
-      header: tr.crm.quotes.form.unitPriceLabel('TRY'),
-      className: 'align-top w-[12%]',
-      render: (row) => {
-        const currency = watchedItems?.[row.index]?.currency || 'TRY';
-        return (
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.quotes.form.unitPriceLabel(currency)}
-            hideLabel
-            error={errors.items?.[row.index]?.unitPrice?.message}
-            {...decimalOnly(register(`items.${row.index}.unitPrice` as const))}
-          />
-        );
-      },
-    },
-    {
-      key: 'currency',
-      header: tr.crm.quotes.form.currencyLabel,
-      className: 'align-top w-[9%]',
-      render: (row) => (
-        <Controller
-          control={control}
-          name={`items.${row.index}.currency` as const}
-          render={({ field }) => (
-            <Select
-              label={tr.crm.quotes.form.currencyLabel}
-              hideLabel
-              options={QUOTE_CURRENCY_OPTIONS}
-              value={field.value || 'TRY'}
-              onChange={(event) => void handleRowCurrencyChange(row.index, event.target.value)}
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: 'discountPct',
-      header: tr.crm.quotes.form.discountPctLabel,
-      className: 'align-top w-[7%]',
-      render: (row) => (
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.discountPctLabel}
-          hideLabel
-          error={errors.items?.[row.index]?.discountPct?.message}
-          {...decimalOnly(register(`items.${row.index}.discountPct` as const))}
-        />
-      ),
-    },
-    {
-      key: 'vatPct',
-      header: tr.crm.quotes.form.vatPctLabel,
-      className: 'align-top w-[7%]',
-      render: (row) => (
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.vatPctLabel}
-          hideLabel
-          error={errors.items?.[row.index]?.vatPct?.message}
-          {...decimalOnly(register(`items.${row.index}.vatPct` as const))}
-        />
-      ),
-    },
-    {
-      key: 'brand',
-      header: tr.crm.products.brandColumn,
-      className: 'align-top w-[19%]',
-      render: (row) => (
-        <Controller
-          control={control}
-          name={`items.${row.index}.brand` as const}
-          render={({ field }) => (
-            <BrandSelect
-              value={field.value ?? ''}
-              onChange={field.onChange}
-              hideLabel
-              compactAddButton
-              onRequestAddNew={() => {
-                setBrandTargetIndex(row.index);
-                setIsBrandModalOpen(true);
-              }}
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: 'lineTotal',
-      header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'align-top w-[13%] whitespace-nowrap font-semibold text-app-text',
-      render: (row) => {
-        const summaryRow = summaryRows[row.index];
-        return summaryRow ? formatCurrencyAmount(summaryRow.lineTotal, summaryRow.currency) : '—';
-      },
-    },
-    {
-      key: 'actions',
-      header: '',
-      className: 'align-middle w-[8%]',
-      render: (row) => (
-        <div className="flex items-center justify-end">
-          <IconActionButton
-            icon={X}
-            tooltip={tr.crm.purchaseOrders.detail.removeItem}
-            variant="danger"
-            onClick={() => remove(row.index)}
-          />
-        </div>
-      ),
-    },
-  ];
-
-  const onSubmit = handleSubmit((values) => {
     createMutation.mutate(
       {
         accountId: values.accountId,
-        items: values.items.map((item) => ({
-          productId: item.productId,
+        items: resolvedItems.map((item) => ({
+          productId: item.productId!,
           quantity: Number(item.quantity),
           unitPrice: Number(item.unitPrice),
           currency: item.currency || undefined,
@@ -404,83 +234,37 @@ export function SalesOrderCreatePage() {
           )}
         />
 
-        <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-app-text">
-              {tr.crm.salesOrders.form.summaryTitle}
-            </h2>
-            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
-              {tr.crm.salesOrders.form.summaryItemCount(summaryRows.length)}
-            </span>
-          </div>
-
-          <Select
-            label={tr.crm.salesOrders.form.productListLabel}
-            required
-            placeholder={tr.crm.salesOrders.form.productListPlaceholder}
-            hint={tr.crm.salesOrders.form.productListHint}
-            error={errors.productListId?.message}
-            options={productListOptions}
-            trailingAction={
-              <Button
-                type="button"
-                variant="navy"
-                className="shrink-0"
-                onClick={() => setIsNewProductModalOpen(true)}
-              >
-                {tr.crm.quotes.form.newProductButton}
-              </Button>
-            }
-            {...register('productListId')}
-          />
-
-          <FormError message={errors.items?.message} />
-
-          <div>
-            <Button
-              type="button"
-              className="w-full"
-              disabled={!selectedProductListId}
-              onClick={() => append(defaultItem(defaultVatPct))}
-            >
-              {tr.crm.quotes.form.addLineButton}
-            </Button>
-          </div>
-
-          {!selectedProductListId ? (
-            <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
-              {tr.crm.quotes.form.pickerSelectProductListFirst}
-            </p>
-          ) : summaryRows.length === 0 ? (
-            <p className="text-sm text-app-muted">{tr.crm.salesOrders.form.summaryEmpty}</p>
-          ) : (
-            <Table columns={itemColumns} data={itemRows} keyField={(row) => row.id} fixedLayout />
-          )}
-
-          {summaryTotalsByCurrency.length > 0 && (
-            <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">
-              {summaryTotalsByCurrency.map((totals) => (
-                <div key={totals.currency} className="flex min-w-40 flex-1 flex-col gap-1.5">
-                  {summaryTotalsByCurrency.length > 1 && (
-                    <span className="text-xs font-semibold text-app-muted">{totals.currency}</span>
-                  )}
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.subtotalLabel}</span>
-                    <span>{formatCurrencyAmount(totals.subtotal, totals.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
-                    <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-app-text">
-                    <span>{tr.crm.quotes.detail.totalLabel}</span>
-                    <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <QuoteItemLinesCard
+          texts={{
+            title: tr.crm.salesOrders.form.summaryTitle,
+            productListHint: tr.crm.salesOrders.form.productListHint,
+            emptyState: tr.crm.salesOrders.form.summaryEmpty,
+          }}
+          productListId={selectedProductListId}
+          productListOptions={productListOptions}
+          productListError={errors.productListId?.message}
+          onProductListChange={(value) =>
+            setValue('productListId', value, { shouldValidate: true })
+          }
+          onRequestAddProductList={() => setIsNewProductModalOpen(true)}
+          itemKeys={fields.map((field) => field.id)}
+          items={watchedItems ?? []}
+          itemErrors={itemRowErrors}
+          itemsError={errors.items?.message}
+          defaultVatPct={defaultVatPct}
+          onAddItem={() => append(defaultItem(defaultVatPct))}
+          onRemoveItem={remove}
+          onItemChange={(index, field, value) =>
+            setValue(`items.${index}.${field}` as never, value as never, {
+              shouldValidate: true,
+            })
+          }
+          onRequestAddBrand={(index) => {
+            setBrandTargetIndex(index);
+            setIsBrandModalOpen(true);
+          }}
+          onProductFreeTextChange={(index, text) => setValue(`items.${index}.productName`, text)}
+        />
 
         <div>
           <Button type="submit" disabled={createMutation.isPending}>

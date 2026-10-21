@@ -1,14 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowDown, ArrowUp, X } from 'lucide-react';
-import { useEffect, useState, type ChangeEvent } from 'react';
-import { Controller, useFieldArray, useForm, type UseFormRegisterReturn } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
-import { IconActionButton } from '../components/ui/icon-action-button';
-import { Table, type TableColumn } from '../components/ui/table';
 import { Select } from '../components/ui/select';
 import { SettingsNavigateLink } from '../components/ui/settings-navigate-link';
 import { Switch } from '../components/ui/switch';
@@ -18,7 +15,6 @@ import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
 import { AddOptionModal } from '../features/crm/add-option-modal';
-import { BrandSelect } from '../features/crm/brand-select';
 import {
   decodeIbanSelections,
   deriveIbanSelectionsFromSnapshot,
@@ -29,7 +25,7 @@ import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups
 import { useIbanOptionsQuery } from '../features/crm/use-iban-options';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
-import { ProductAutocomplete } from '../features/crm/product-autocomplete';
+import { QuoteItemLinesCard } from '../features/crm/quote-item-lines-card';
 import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
 import { useAccountQuery } from '../features/crm/use-accounts';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -37,7 +33,7 @@ import {
   QuoteExchangeRatesSection,
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
-import { QUOTE_CURRENCY_OPTIONS, QuoteMetaFields } from '../features/crm/quote-meta-fields';
+import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
@@ -63,8 +59,6 @@ import {
 import { quoteFormSchema, type QuoteFormValues } from '../features/crm/schemas';
 import {
   ApiError,
-  convertCurrencyAmount,
-  getProduct,
   type Account,
   type Contact,
   type CreateQuoteInput,
@@ -72,32 +66,12 @@ import {
   type Product,
   type UpdateQuoteInput,
 } from '../lib/api';
-import { computeLineTotal, formatCurrencyAmount, groupQuoteItemTotals } from '../lib/quote-totals';
+import { groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
 ).map((stage) => ({ value: stage, label: tr.crm.opportunities.stageOptions[stage] }));
-
-/** Sayısal metin alanları icin: type="number" spinner oklarini kaldirmak amaciyla
- * type="text" kullanilir, bu yuzden rakam/nokta disindaki karakterler onChange'de
- * filtrelenir. */
-function sanitizeDecimalInput(value: string): string {
-  return value.replace(/[^0-9.]/g, '');
-}
-
-/** Satir tablosundaki sayisal hucreler icin register() sarmalayicisi - sales-order
- * -create-page.tsx'teki ayni desen, degerin her tus vurusunda sanitizeDecimalInput
- * ile filtrelenmesini saglar. */
-function decimalOnly(registration: UseFormRegisterReturn) {
-  return {
-    ...registration,
-    onChange: (event: ChangeEvent<HTMLInputElement>) => {
-      event.target.value = sanitizeDecimalInput(event.target.value);
-      return registration.onChange(event);
-    },
-  };
-}
 
 /** Koşul metni alanlarının altında, tenant'ın varsayılan koşul metinleri ayarına
  * (yeni sekmede, ilgili bölüme scroll+flash ile) götüren kısa bağlantı - bkz.
@@ -319,40 +293,6 @@ export function QuoteFormPage() {
     dirtyFields.generalTerms,
   ]);
 
-  // Ürün satırına yeni bir ürün seçilince, fiyat/para birimi/marka varsayılanlarını o
-  // satıra uygular - handleQuickAdd'in yerini alan, satır-içi autocomplete ile uyumlu
-  // versiyon (bkz. itemColumns 'product' kolonu).
-  async function handleRowProductChange(index: number, productId: string) {
-    try {
-      const product = await getProduct(productId);
-      setValue(`items.${index}.unitPrice`, product.price ?? '');
-      setValue(`items.${index}.currency`, product.currency);
-      setValue(`items.${index}.brand`, product.brand ?? '');
-      if (!watch(`items.${index}.vatPct`)) {
-        setValue(`items.${index}.vatPct`, defaultVatPct);
-      }
-    } catch {
-      // Urun detaylari cekilemezse kullanici fiyat/marka alanlarini elle doldurur.
-    }
-  }
-
-  // Satır para birimi değiştirilince, girilmiş birim fiyat anlık kurla yeni para
-  // birimine çevrilir (otomatik ön doldurma - kullanıcı isterse elle düzeltebilir,
-  // bkz. convertCurrencyAmount).
-  async function handleRowCurrencyChange(index: number, newCurrency: string) {
-    const oldCurrency = watch(`items.${index}.currency`) || 'TRY';
-    setValue(`items.${index}.currency`, newCurrency);
-    const currentPrice = watch(`items.${index}.unitPrice`);
-    const amount = Number(currentPrice);
-    if (oldCurrency === newCurrency || !currentPrice || Number.isNaN(amount) || amount <= 0) {
-      return;
-    }
-    const converted = await convertCurrencyAmount(amount, oldCurrency, newCurrency);
-    if (converted !== null) {
-      setValue(`items.${index}.unitPrice`, converted.toFixed(2));
-    }
-  }
-
   // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçtiği
   // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
   // varsayılan miktar/fiyatla doğrudan satır olarak eklenir.
@@ -398,30 +338,41 @@ export function QuoteFormPage() {
     label: user.name,
   }));
 
-  const summaryRows = (watchedItems ?? []).map((item, index) => {
-    const quantity = Number(item.quantity) || 0;
-    const unitPrice = Number(item.unitPrice) || 0;
-    const discountPct = Number(item.discountPct) || 0;
-    const vatPct = Number(item.vatPct) || 0;
-    const currency = item.currency || 'TRY';
-    const { lineSubtotal, lineTotal } = computeLineTotal({
-      quantity,
-      unitPrice,
-      discountPct,
-      vatPct,
-    });
-    return {
-      index,
-      quantity,
-      unitPrice,
-      currency,
-      discountPct,
-      vatPct,
-      lineSubtotal,
-      lineTotal,
-    };
-  });
-  const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
+  // Para birimi bazli ara toplam/KDV/genel toplam - satir detayi/tablosu artik
+  // QuoteItemLinesCard'in kendi icinde hesaplaniyor, bu toplamlar sadece
+  // QuoteExchangeRatesSection'a (kur bilgisi bolumu) aktarilmak icin burada tutulur.
+  const summaryTotalsByCurrency = groupQuoteItemTotals(
+    (watchedItems ?? []).map((item) => ({
+      quantity: Number(item.quantity) || 0,
+      unitPrice: Number(item.unitPrice) || 0,
+      discountPct: Number(item.discountPct) || 0,
+      vatPct: Number(item.vatPct) || 0,
+      currency: item.currency || 'TRY',
+    })),
+  );
+  const rawItemErrors = errors.items as
+    | Array<
+        | {
+            productId?: { message?: string };
+            quantity?: { message?: string };
+            unitPrice?: { message?: string };
+            discountPct?: { message?: string };
+            vatPct?: { message?: string };
+          }
+        | undefined
+      >
+    | undefined;
+  const itemRowErrors = (rawItemErrors ?? []).map((itemError) =>
+    itemError
+      ? {
+          productId: itemError.productId?.message,
+          quantity: itemError.quantity?.message,
+          unitPrice: itemError.unitPrice?.message,
+          discountPct: itemError.discountPct?.message,
+          vatPct: itemError.vatPct?.message,
+        }
+      : undefined,
+  );
 
   // Satirda gercek bir urun secilmemis ama ProductAutocomplete'e serbest metin bir ad
   // yazilmissa (hizli urun ekleme - bkz. kullanici talebi), submit oncesi o urunu
@@ -593,191 +544,6 @@ export function QuoteFormPage() {
 
   const apiErrorMessage = mutation.error instanceof ApiError ? mutation.error.message : undefined;
 
-  interface ItemRow {
-    id: string;
-    index: number;
-  }
-  const itemRows: ItemRow[] = fields.map((field, index) => ({ id: field.id, index }));
-
-  const itemColumns: TableColumn<ItemRow>[] = [
-    {
-      key: 'product',
-      header: tr.crm.quotes.form.productLabel,
-      className: 'align-top w-[18%]',
-      render: (row) => (
-        <Controller
-          control={control}
-          name={`items.${row.index}.productId` as const}
-          render={({ field }) => (
-            <ProductAutocomplete
-              label={tr.crm.quotes.form.productLabel}
-              hideLabel
-              placeholder={
-                selectedProductListId
-                  ? tr.crm.quotes.form.pickerSearchPlaceholder
-                  : tr.crm.quotes.form.pickerSelectProductListFirst
-              }
-              value={field.value}
-              onChange={(productId) => {
-                field.onChange(productId ?? '');
-                if (productId) void handleRowProductChange(row.index, productId);
-              }}
-              onFreeTextChange={(text) => setValue(`items.${row.index}.productName`, text)}
-              productListId={selectedProductListId || undefined}
-              disabled={!selectedProductListId}
-              error={errors.items?.[row.index]?.productId?.message}
-              clearable
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: 'quantity',
-      header: tr.crm.quotes.form.quantityLabel,
-      className: 'align-top w-[7%]',
-      render: (row) => (
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.quantityLabel}
-          hideLabel
-          error={errors.items?.[row.index]?.quantity?.message}
-          {...decimalOnly(register(`items.${row.index}.quantity` as const))}
-        />
-      ),
-    },
-    {
-      key: 'unitPrice',
-      header: tr.crm.quotes.form.unitPriceLabel('TRY'),
-      className: 'align-top w-[12%]',
-      render: (row) => {
-        const currency = watchedItems?.[row.index]?.currency || 'TRY';
-        return (
-          <TextField
-            type="text"
-            inputMode="decimal"
-            label={tr.crm.quotes.form.unitPriceLabel(currency)}
-            hideLabel
-            error={errors.items?.[row.index]?.unitPrice?.message}
-            {...decimalOnly(register(`items.${row.index}.unitPrice` as const))}
-          />
-        );
-      },
-    },
-    {
-      key: 'currency',
-      header: tr.crm.quotes.form.currencyLabel,
-      className: 'align-top w-[9%]',
-      render: (row) => (
-        <Controller
-          control={control}
-          name={`items.${row.index}.currency` as const}
-          render={({ field }) => (
-            <Select
-              label={tr.crm.quotes.form.currencyLabel}
-              hideLabel
-              options={QUOTE_CURRENCY_OPTIONS}
-              value={field.value || 'TRY'}
-              onChange={(event) => void handleRowCurrencyChange(row.index, event.target.value)}
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: 'discountPct',
-      header: tr.crm.quotes.form.discountPctLabel,
-      className: 'align-top w-[7%]',
-      render: (row) => (
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.discountPctLabel}
-          hideLabel
-          error={errors.items?.[row.index]?.discountPct?.message}
-          {...decimalOnly(register(`items.${row.index}.discountPct` as const))}
-        />
-      ),
-    },
-    {
-      key: 'vatPct',
-      header: tr.crm.quotes.form.vatPctLabel,
-      className: 'align-top w-[7%]',
-      render: (row) => (
-        <TextField
-          type="text"
-          inputMode="decimal"
-          label={tr.crm.quotes.form.vatPctLabel}
-          hideLabel
-          error={errors.items?.[row.index]?.vatPct?.message}
-          {...decimalOnly(register(`items.${row.index}.vatPct` as const))}
-        />
-      ),
-    },
-    {
-      key: 'brand',
-      header: tr.crm.products.brandColumn,
-      className: 'align-top w-[19%]',
-      render: (row) => (
-        <Controller
-          control={control}
-          name={`items.${row.index}.brand` as const}
-          render={({ field }) => (
-            <BrandSelect
-              value={field.value ?? ''}
-              onChange={field.onChange}
-              hideLabel
-              compactAddButton
-              onRequestAddNew={() => {
-                setBrandTargetIndex(row.index);
-                setActiveOptionModal('brand');
-              }}
-            />
-          )}
-        />
-      ),
-    },
-    {
-      key: 'lineTotal',
-      header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'align-top w-[13%] whitespace-nowrap font-semibold text-app-text',
-      render: (row) => {
-        const summaryRow = summaryRows[row.index];
-        return summaryRow ? formatCurrencyAmount(summaryRow.lineTotal, summaryRow.currency) : '—';
-      },
-    },
-    {
-      key: 'actions',
-      header: '',
-      className: 'align-middle w-[8%]',
-      render: (row) => (
-        <div className="flex items-center justify-end gap-0.5">
-          <IconActionButton
-            icon={ArrowUp}
-            tooltip={tr.crm.quotes.form.moveItemUp}
-            iconSize={16}
-            disabled={row.index === 0}
-            onClick={() => move(row.index, row.index - 1)}
-          />
-          <IconActionButton
-            icon={ArrowDown}
-            tooltip={tr.crm.quotes.form.moveItemDown}
-            iconSize={16}
-            disabled={row.index === itemRows.length - 1}
-            onClick={() => move(row.index, row.index + 1)}
-          />
-          <IconActionButton
-            icon={X}
-            tooltip={tr.crm.quotes.form.removeItem}
-            variant="danger"
-            onClick={() => remove(row.index)}
-          />
-        </div>
-      ),
-    },
-  ];
-
   if (isEdit && quoteQuery.isPending) {
     return (
       <AppShell>
@@ -940,101 +706,59 @@ export function QuoteFormPage() {
             {...register('title')}
           />
 
-          <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-app-text">{tr.crm.quotes.form.summaryTitle}</h2>
-              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
-                {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
-              </span>
-            </div>
-
-            <Select
-              label={
-                isEdit ? tr.crm.quotes.edit.productListLabel : tr.crm.quotes.form.productListLabel
-              }
-              required
-              placeholder={tr.crm.quotes.form.productListPlaceholder}
-              hint={tr.crm.quotes.form.productListHint}
-              error={errors.productListId?.message}
-              options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                value: productList.id,
-                label: productList.name,
-              }))}
-              trailingAction={
-                <Button
-                  type="button"
-                  variant="navy"
-                  className="shrink-0"
-                  onClick={() => setIsNewProductModalOpen(true)}
-                >
-                  {tr.crm.quotes.form.newProductButton}
-                </Button>
-              }
-              {...register('productListId')}
-            />
-
-            <FormError message={errors.items?.message} />
-
-            <div>
-              <Button
-                type="button"
-                className="w-full"
-                disabled={!selectedProductListId}
-                onClick={() =>
-                  append({
-                    productId: '',
-                    quantity: '1',
-                    unitPrice: '',
-                    currency: quoteCurrency || 'TRY',
-                    discountPct: '0',
-                    vatPct: defaultVatPct,
-                    brand: '',
-                  })
-                }
-              >
-                {tr.crm.quotes.form.addLineButton}
-              </Button>
-            </div>
-
-            {!selectedProductListId ? (
-              <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
-                {tr.crm.quotes.form.pickerSelectProductListFirst}
-              </p>
-            ) : summaryRows.length === 0 ? (
-              <p className="text-sm text-app-muted">{tr.crm.quotes.form.summaryEmpty}</p>
-            ) : (
-              <Table columns={itemColumns} data={itemRows} keyField={(row) => row.id} fixedLayout />
-            )}
-
-            <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">
-              {summaryTotalsByCurrency.map((totals) => (
-                <div key={totals.currency} className="flex min-w-40 flex-1 flex-col gap-1.5">
-                  {summaryTotalsByCurrency.length > 1 && (
-                    <span className="text-xs font-semibold text-app-muted">{totals.currency}</span>
-                  )}
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.subtotalLabel}</span>
-                    <span>{formatCurrencyAmount(totals.subtotal, totals.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-app-muted">
-                    <span>{tr.crm.quotes.detail.vatTotalLabel}</span>
-                    <span>{formatCurrencyAmount(totals.vatTotal, totals.currency)}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-app-text">
-                    <span>{tr.crm.quotes.detail.totalLabel}</span>
-                    <span>{formatCurrencyAmount(totals.grandTotal, totals.currency)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <QuoteExchangeRatesSection
-              quoteCurrency={quoteCurrency}
-              totalsByCurrency={summaryTotalsByCurrency}
-              value={exchangeRates}
-              onChange={setExchangeRates}
-            />
-          </div>
+          <QuoteItemLinesCard
+            texts={{
+              title: tr.crm.quotes.form.summaryTitle,
+              productListHint: tr.crm.quotes.form.productListHint,
+              emptyState: tr.crm.quotes.form.summaryEmpty,
+            }}
+            productListId={selectedProductListId}
+            productListOptions={(productListsQuery.data?.data ?? []).map((productList) => ({
+              value: productList.id,
+              label: productList.name,
+            }))}
+            productListError={errors.productListId?.message}
+            onProductListChange={(value) =>
+              setValue('productListId', value, { shouldValidate: true })
+            }
+            onRequestAddProductList={() => setIsNewProductModalOpen(true)}
+            itemKeys={fields.map((field) => field.id)}
+            items={watchedItems ?? []}
+            itemErrors={itemRowErrors}
+            itemsError={errors.items?.message}
+            defaultVatPct={defaultVatPct}
+            onAddItem={() =>
+              append({
+                productId: '',
+                quantity: '1',
+                unitPrice: '',
+                currency: quoteCurrency || 'TRY',
+                discountPct: '0',
+                vatPct: defaultVatPct,
+                brand: '',
+              })
+            }
+            onRemoveItem={remove}
+            onMoveItem={move}
+            onItemChange={(index, field, value) =>
+              setValue(`items.${index}.${field}` as const, value as never, {
+                shouldValidate: true,
+              })
+            }
+            onRequestAddBrand={(index) => {
+              setBrandTargetIndex(index);
+              setActiveOptionModal('brand');
+            }}
+            onProductFreeTextChange={(index, text) => setValue(`items.${index}.productName`, text)}
+            footer={
+              <QuoteExchangeRatesSection
+                quoteCurrency={quoteCurrency}
+                totalsByCurrency={summaryTotalsByCurrency}
+                value={exchangeRates}
+                onChange={setExchangeRates}
+              />
+            }
+          />
 
           <div className="flex flex-col gap-4">
             <div>

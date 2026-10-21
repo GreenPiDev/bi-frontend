@@ -518,29 +518,57 @@ export type PurchaseOrderCreateFormValues = z.infer<typeof purchaseOrderCreateFo
  * secimi kaldirildi ("butun siparislerim bir teklifle iliskili olmak zorunda
  * degil"): dogrudan firma + urun/miktar/birim fiyat kalemleri girilir (bkz.
  * backend SalesOrderItem modeli). */
-export const salesOrderCreateFormSchema = z.object({
-  accountId: z.string().min(1, 'Firma secilmelidir.'),
-  // quoteFormSchema ile ayni desen (bkz. quote-form-page.tsx): urun listesi her kalem
-  // icin tek tek degil, sayfa basina BIR kere secilir; tum kalemler o listeyle
-  // filtrelenir. UI-only, backend'e gonderilmez.
-  productListId: z.string().min(1, 'Urun listesi secilmelidir.'),
-  // quoteFormSchema'nin items semasiyla ayni alanlar (currency/discountPct/vatPct/
-  // brand) - 2026-10-19 kullanici istegiyle teklif formuyla esitlendi (bkz.
-  // backend SalesOrderItem model doc comment'i).
-  items: z
-    .array(
-      z.object({
-        productId: z.string().min(1, 'Urun secilmelidir.'),
-        quantity: z.string().min(1, 'Miktar gerekli.'),
-        unitPrice: z.string().min(1, 'Birim fiyat gerekli.'),
-        currency: z.string().optional(),
-        discountPct: z.string().optional(),
-        vatPct: z.string().optional(),
-        brand: z.string().max(120).optional(),
-      }),
-    )
-    .min(1, 'En az bir kalem eklemelisiniz.'),
-});
+export const salesOrderCreateFormSchema = z
+  .object({
+    accountId: z.string().min(1, 'Firma secilmelidir.'),
+    // quoteFormSchema ile ayni desen (bkz. quote-form-page.tsx): urun listesi her kalem
+    // icin tek tek degil, sayfa basina BIR kere secilir; tum kalemler o listeyle
+    // filtrelenir. UI-only, backend'e gonderilmez.
+    productListId: z.string().min(1, 'Urun listesi secilmelidir.'),
+    // quoteFormSchema'nin items semasiyla ayni alanlar (currency/discountPct/vatPct/
+    // brand/productName) - 2026-10-19 kullanici istegiyle teklif formuyla esitlendi,
+    // 2026-10-21'de hizli urun ekleme (productName + asagidaki superRefine) de eklendi
+    // (bkz. backend SalesOrderItem model doc comment'i, quoteFormSchema superRefine'i).
+    items: z
+      .array(
+        z.object({
+          productId: z.string().optional(),
+          /** Secili urun listesinde esleyen bir urun yoksa, ProductAutocomplete'e
+           * yazilan serbest metin ad - hizli urun ekleme icin (bkz.
+           * quoteFormSchema'daki ayni alan). productId doluysa dikkate alinmaz. */
+          productName: z.string().optional(),
+          quantity: z.string().min(1, 'Miktar gerekli.'),
+          unitPrice: z.string().optional(),
+          currency: z.string().optional(),
+          discountPct: z.string().optional(),
+          vatPct: z.string().optional(),
+          brand: z.string().max(120).optional(),
+        }),
+      )
+      .min(1, 'En az bir kalem eklemelisiniz.'),
+  })
+  .superRefine((values, ctx) => {
+    // quoteFormSchema'daki ayni hizli-urun-ekleme kurali - bkz. o semanin doc comment'i.
+    values.items.forEach((item, index) => {
+      const hasProduct = (item.productId ?? '').length > 0;
+      const quickAddName = (item.productName ?? '').trim();
+      if (!hasProduct && quickAddName.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Ürün gerekli.',
+          path: ['items', index, 'productId'],
+        });
+        return;
+      }
+      if (!hasProduct && !(item.unitPrice ?? '').trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Yeni ürün için fiyat gerekli.',
+          path: ['items', index, 'unitPrice'],
+        });
+      }
+    });
+  });
 
 export type SalesOrderCreateFormValues = z.infer<typeof salesOrderCreateFormSchema>;
 
