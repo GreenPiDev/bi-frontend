@@ -398,7 +398,12 @@ export const quoteFormSchema = z
     items: z
       .array(
         z.object({
-          productId: z.string().min(1, 'Ürün gerekli.'),
+          productId: z.string().optional(),
+          /** Secili urun listesinde esleyen bir urun yoksa, ProductAutocomplete'e
+           * yazilan serbest metin ad - hizli urun ekleme icin (bkz.
+           * ProductAutocomplete onFreeTextChange, quote-form-page.tsx
+           * resolveQuickAddedProducts). productId doluysa bu alan dikkate alinmaz. */
+          productName: z.string().optional(),
           quantity: z.string().min(1, 'Miktar gerekli.'),
           unitPrice: z.string().optional(),
           /** Boş bırakılırsa ürünün kendi para birimi kullanılır (unitPrice ile
@@ -433,9 +438,37 @@ export const quoteFormSchema = z
     templateId: z.string().optional(),
     senderId: z.string({ message: 'Gönderen gerekli.' }).min(1, 'Gönderen gerekli.'),
   })
-  .refine((values) => !values.hasOpportunity || (values.opportunityName ?? '').length >= 2, {
-    message: 'Fırsat adı en az 2 karakter olmalı.',
-    path: ['opportunityName'],
+  .superRefine((values, ctx) => {
+    if (values.hasOpportunity && (values.opportunityName ?? '').length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Fırsat adı en az 2 karakter olmalı.',
+        path: ['opportunityName'],
+      });
+    }
+    // Hizli urun ekleme: productId bos ama en az 2 karakterlik serbest metin bir ad
+    // yazilmissa satir gecerli sayilir (submit'te resolveQuickAddedProducts urunu
+    // olusturur) - ama o durumda fiyat da girilmis olmali (yeni urun icin zorunlu,
+    // bkz. CreateProductManualSchema).
+    values.items.forEach((item, index) => {
+      const hasProduct = (item.productId ?? '').length > 0;
+      const quickAddName = (item.productName ?? '').trim();
+      if (!hasProduct && quickAddName.length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Ürün gerekli.',
+          path: ['items', index, 'productId'],
+        });
+        return;
+      }
+      if (!hasProduct && !(item.unitPrice ?? '').trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Yeni ürün için fiyat gerekli.',
+          path: ['items', index, 'unitPrice'],
+        });
+      }
+    });
   });
 
 export type QuoteFormValues = z.infer<typeof quoteFormSchema>;

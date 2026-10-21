@@ -17,6 +17,11 @@ interface ProductAutocompleteProps {
   productListId?: string;
   disabled?: boolean;
   hideLabel?: boolean;
+  /** Yazilan ama herhangi bir urune eslenmeyen serbest metin degisince tetiklenir -
+   * hizli urun ekleme icin (bkz. quote-form-page.tsx satir ici "Urun" hucresi):
+   * secili bir urun yoksa parent bu metni saklayip submit'te yeni bir urun olarak
+   * olusturabilir. Gercek bir urun secilince/temizlenince de bos string ile cagrilir. */
+  onFreeTextChange?: (text: string) => void;
 }
 
 const PAGE_SIZE = 20;
@@ -41,6 +46,7 @@ export function ProductAutocomplete({
   productListId,
   disabled,
   hideLabel,
+  onFreeTextChange,
 }: ProductAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
@@ -68,6 +74,7 @@ export function ProductAutocomplete({
       value={displayValue}
       onInputChange={(text) => {
         setTypedQuery(text);
+        onFreeTextChange?.(text);
         if (value) {
           onChange(undefined);
         }
@@ -76,6 +83,7 @@ export function ProductAutocomplete({
       onSelectOption={(option) => {
         onChange(option.id);
         setTypedQuery(option.label);
+        onFreeTextChange?.('');
       }}
       placeholder={placeholder}
       error={error}
@@ -89,6 +97,7 @@ export function ProductAutocomplete({
           ? () => {
               setTypedQuery(null);
               onChange(undefined);
+              onFreeTextChange?.('');
             }
           : undefined
       }

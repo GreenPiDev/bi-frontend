@@ -42,6 +42,7 @@ import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
+import { useCreateProductMutation } from '../features/crm/use-products';
 import {
   useCreateQuoteMutation,
   useQuoteAssignableUsersQuery,
@@ -50,6 +51,7 @@ import {
   useUpdateQuoteMutation,
 } from '../features/crm/use-quotes';
 import { useTenantSettingsQuery } from '../features/crm/use-tenant-settings';
+import { useUnitOptionsQuery } from '../features/crm/use-unit-options';
 import {
   DEFAULT_QUOTE_DELIVERY_TERMS_KEY,
   DEFAULT_QUOTE_GENERAL_TERMS_KEY,
@@ -133,6 +135,8 @@ export function QuoteFormPage() {
   const meQuery = useMeQuery();
   const assignableUsersQuery = useQuoteAssignableUsersQuery();
   const productListsQuery = useProductListsQuery();
+  const unitOptionsQuery = useUnitOptionsQuery();
+  const createProductMutation = useCreateProductMutation();
   const tenantSettingsQuery = useTenantSettingsQuery();
   const defaultVatPctSetting = tenantSettingsQuery.data?.find(
     (setting) => setting.key === DEFAULT_QUOTE_VAT_PCT_KEY,
@@ -419,7 +423,48 @@ export function QuoteFormPage() {
   });
   const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
 
-  const onSubmit = handleSubmit((values) => {
+  // Satirda gercek bir urun secilmemis ama ProductAutocomplete'e serbest metin bir ad
+  // yazilmissa (hizli urun ekleme - bkz. kullanici talebi), submit oncesi o urunu
+  // secili urun listesine gercekten olusturup productId'sini doldurur. Birim secimi
+  // kullaniciya sorulmaz, tenant'in varsayilan birimi (UnitOption.isDefault)
+  // kullanilir - backend'deki CreateProductManualSchema'nin 'adet' varsayilanindan
+  // farkli olarak burada tenant'in gercek varsayilan birimi tercih edilir.
+  async function resolveQuickAddedProducts(
+    items: QuoteFormValues['items'],
+  ): Promise<QuoteFormValues['items']> {
+    const defaultUnit =
+      unitOptionsQuery.data?.find((option) => option.isDefault)?.label ??
+      unitOptionsQuery.data?.[0]?.label ??
+      'adet';
+    const resolved = [...items];
+    for (let index = 0; index < resolved.length; index += 1) {
+      const item = resolved[index];
+      if (item.productId) continue;
+      const quickAddName = (item.productName ?? '').trim();
+      if (!quickAddName) continue;
+      const product = await createProductMutation.mutateAsync({
+        productListId: selectedProductListId!,
+        name: quickAddName,
+        unit: defaultUnit,
+        price: Number(item.unitPrice),
+        currency: item.currency || quoteCurrency || 'TRY',
+        brand: item.brand || undefined,
+      });
+      resolved[index] = { ...item, productId: product.id };
+    }
+    return resolved;
+  }
+
+  const onSubmit = handleSubmit(async (values) => {
+    let resolvedItems: QuoteFormValues['items'];
+    try {
+      resolvedItems = await resolveQuickAddedProducts(values.items);
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
+      return;
+    }
+    values = { ...values, items: resolvedItems };
+
     if (isEdit) {
       const isRevisionMode = quoteQuery.data?.status === 'REVIZE';
       if (isRevisionMode && !revisionNote.trim()) {
@@ -429,8 +474,11 @@ export function QuoteFormPage() {
       }
       const updateInput: UpdateQuoteInput = {
         ...(isRevisionMode ? { revisionNote: revisionNote.trim() } : {}),
+        // Validasyon + resolveQuickAddedProducts yukarida gectiyse her satirin
+        // productId'si garanti doludur (hizli eklenenler de artik gercek bir urune
+        // sahip) - bkz. superRefine.
         items: values.items.map((item) => ({
-          productId: item.productId,
+          productId: item.productId!,
           quantity: Number(item.quantity),
           unitPrice: item.unitPrice ? Number(item.unitPrice) : undefined,
           currency: item.currency || undefined,
@@ -488,7 +536,7 @@ export function QuoteFormPage() {
       contactId: values.contactId || undefined,
       senderId: values.senderId,
       items: values.items.map((item) => ({
-        productId: item.productId,
+        productId: item.productId!,
         quantity: Number(item.quantity),
         unitPrice: item.unitPrice ? Number(item.unitPrice) : undefined,
         currency: item.currency || undefined,
@@ -574,6 +622,7 @@ export function QuoteFormPage() {
                 field.onChange(productId ?? '');
                 if (productId) void handleRowProductChange(row.index, productId);
               }}
+              onFreeTextChange={(text) => setValue(`items.${row.index}.productName`, text)}
               productListId={selectedProductListId || undefined}
               disabled={!selectedProductListId}
               error={errors.items?.[row.index]?.productId?.message}
