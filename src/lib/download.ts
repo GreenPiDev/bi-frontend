@@ -72,9 +72,18 @@ export function openBlobInNewTabHandle(): Window | null {
 // Info/Title metadata'sindan DEGIL, blob'un kendi rastgele UUID'sinden
 // aliyor (denendi, calismadi); gercek bir HTTP kaynagi olarak acilinca
 // Content-Disposition'daki filename dogru kullaniliyor.
+//
+// PDF Playwright'ta render edildigi icin backend yaniti birkac saniye
+// surebiliyor - bu sure boyunca sekme bos/beyaz kalip kullaniciyi "bozuk mu"
+// diye suphelendirmesin diye openBlobInNewTabHandle'daki ayni LOADING_PAGE_HTML
+// hemen yazilir, SONRA sekmenin adresi gercek backend URL'ine degistirilir.
+// Tarayici, yeni navigasyonun yaniti gelmeye baslayana kadar eski (spinner)
+// icerigi ekranda tutar - link tiklamakla ayni davranis.
 export function openUrlInNewTab(url: string): void {
-  const tabHandle = window.open(url, '_blank');
-  if (!tabHandle) {
+  const tabHandle = openBlobInNewTabHandle();
+  if (tabHandle) {
+    tabHandle.location.href = url;
+  } else {
     // Popup engellendiyse en azindan ayni sekmede ac.
     window.location.href = url;
   }
