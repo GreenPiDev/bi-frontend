@@ -311,6 +311,7 @@ export function MessagesListPage() {
 
       <Table
         bulkActionsVisible={selectedIds.size > 0}
+        selectedCount={selectedIds.size}
         bulkActions={[
           {
             key: 'mark-read',

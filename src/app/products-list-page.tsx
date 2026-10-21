@@ -1,4 +1,4 @@
-import { AlertTriangle, Filter, Pencil, Search, Trash2 } from 'lucide-react';
+import { AlertTriangle, Filter, FolderInput, Pencil, Search, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -7,6 +7,7 @@ import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { Drawer } from '../components/ui/drawer';
+import { Modal } from '../components/ui/modal';
 import { Badge } from '../components/ui/badge';
 import { PageHelp } from '../components/ui/page-help';
 import { Select } from '../components/ui/select';
@@ -53,6 +54,7 @@ export function ProductsListContent() {
   const [deletingProduct, setDeletingProduct] = useState<ProductWithStock | undefined>(undefined);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [moveModalOpen, setMoveModalOpen] = useState(false);
   const [moveTargetListId, setMoveTargetListId] = useState('');
   const [showDeleted, setShowDeleted] = useState(false);
   const [sort, setSort] = useState<TableSort | null>(null);
@@ -132,6 +134,7 @@ export function ProductsListContent() {
           toast.success(tr.crm.products.moveSuccess);
           setSelectedIds(new Set());
           setMoveTargetListId('');
+          setMoveModalOpen(false);
         },
         onError: (error) => {
           toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
@@ -171,7 +174,7 @@ export function ProductsListContent() {
   const ALL_COLUMNS: TableColumn<ProductWithStock>[] = [
     {
       key: 'select',
-      header: tr.crm.products.selectColumn,
+      header: '',
       className: 'w-px',
       required: true,
       render: (p) => (
@@ -400,42 +403,31 @@ export function ProductsListContent() {
         />
       </div>
 
-      {selectedIds.size > 0 && (
-        <div className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-app-border bg-app-surface p-3">
-          <span className="text-sm font-semibold text-app-text">
-            {tr.crm.products.selectedCount(selectedIds.size)}
-          </span>
-          <div className="min-w-[220px]">
-            <Select
-              label={tr.crm.products.moveToListLabel}
-              placeholder={tr.crm.products.movePlaceholder}
-              value={moveTargetListId}
-              onChange={(event) => setMoveTargetListId(event.target.value)}
-              options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                value: productList.id,
-                label: productList.name,
-              }))}
-            />
-          </div>
-          <Button
-            type="button"
-            onClick={handleMoveSelected}
-            disabled={!moveTargetListId || bulkMoveMutation.isPending}
-          >
-            {bulkMoveMutation.isPending ? tr.crm.products.moving : tr.crm.products.moveButton}
-          </Button>
-          <Button type="button" variant="secondary" onClick={() => setSelectedIds(new Set())}>
-            {tr.crm.products.clearSelection}
-          </Button>
-          <Button type="button" variant="danger" onClick={() => setBulkDeleteConfirmOpen(true)}>
-            {tr.crm.products.bulkDeleteButton}
-          </Button>
-        </div>
-      )}
-
       <StockStatusLegend />
 
       <Table
+        bulkActionsVisible={selectedIds.size > 0}
+        selectedCount={selectedIds.size}
+        bulkActions={[
+          {
+            key: 'move',
+            icon: FolderInput,
+            tooltip: tr.crm.products.moveTooltip,
+            onClick: () => setMoveModalOpen(true),
+          },
+          {
+            key: 'bulk-delete',
+            icon: Trash2,
+            tooltip: tr.crm.products.bulkDeleteButton,
+            onClick: () => setBulkDeleteConfirmOpen(true),
+          },
+          {
+            key: 'clear-selection',
+            icon: X,
+            tooltip: tr.crm.products.clearSelection,
+            onClick: () => setSelectedIds(new Set()),
+          },
+        ]}
         columns={columns}
         data={productsQuery.data?.data ?? []}
         keyField={(product) => product.id}
@@ -450,6 +442,38 @@ export function ProductsListContent() {
             : stockStatusRowClassName(product.stockQuantity, product.minStockLevel)
         }
       />
+
+      {moveModalOpen && (
+        <Modal title={tr.crm.products.moveToListLabel} onClose={() => setMoveModalOpen(false)}>
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-app-muted">
+              {tr.crm.products.selectedCount(selectedIds.size)}
+            </p>
+            <Select
+              label={tr.crm.products.moveToListLabel}
+              placeholder={tr.crm.products.movePlaceholder}
+              value={moveTargetListId}
+              onChange={(event) => setMoveTargetListId(event.target.value)}
+              options={(productListsQuery.data?.data ?? []).map((productList) => ({
+                value: productList.id,
+                label: productList.name,
+              }))}
+            />
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="secondary" onClick={() => setMoveModalOpen(false)}>
+                {tr.common.cancel}
+              </Button>
+              <Button
+                type="button"
+                onClick={handleMoveSelected}
+                disabled={!moveTargetListId || bulkMoveMutation.isPending}
+              >
+                {bulkMoveMutation.isPending ? tr.crm.products.moving : tr.crm.products.moveButton}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {productsQuery.data && productsQuery.data.data.length > 0 && (
         <Pagination

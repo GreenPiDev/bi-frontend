@@ -439,6 +439,7 @@ export function PurchaseOrderDetailPage() {
         <div className="mt-3">
           <Table
             bulkActionsVisible={!itemEditingDisabled && selectedIds.size > 0}
+            selectedCount={selectedIds.size}
             bulkActions={[
               {
                 key: 'mark-received',

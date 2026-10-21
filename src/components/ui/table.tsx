@@ -93,6 +93,9 @@ interface TableProps<T> {
    * false'a dustugunde cubuk aninda kaybolmaz, kapanis animasyonu bitene kadar
    * (BULK_BAR_EXIT_ANIMATION_MS) DOM'da kalmaya devam eder. */
   bulkActionsVisible?: boolean;
+  /** Verilirse, bulkActions cubugunun ikonlarinin saginda "X öge seçildi" metni
+   * gosterilir - genelde `selectedIds.size`. */
+  selectedCount?: number;
 }
 
 /** Projedeki tüm liste ekranlarının (firmalar, kişiler, Faz 11a'nın yeni ekranları...)
@@ -116,6 +119,7 @@ export function Table<T>({
   className,
   bulkActions,
   bulkActionsVisible = false,
+  selectedCount,
 }: TableProps<T>) {
   const [isBulkBarClosing, setIsBulkBarClosing] = useState(false);
   const [prevBulkActionsVisible, setPrevBulkActionsVisible] = useState(bulkActionsVisible);
@@ -186,6 +190,11 @@ export function Table<T>({
               className="border border-white text-white hover:bg-white/10 hover:text-white"
             />
           ))}
+          {selectedCount !== undefined && (
+            <span className="ml-2 text-sm font-medium text-white">
+              {tr.common.selectedCount(selectedCount)}
+            </span>
+          )}
         </div>
       )}
       <table

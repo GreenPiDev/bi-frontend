@@ -457,6 +457,7 @@ export function SalesOrderDetailPage() {
             <>
               <Table
                 bulkActionsVisible={!itemEditingDisabled && selectedIds.size > 0}
+                selectedCount={selectedIds.size}
                 bulkActions={[
                   {
                     key: 'mark-delivered',
