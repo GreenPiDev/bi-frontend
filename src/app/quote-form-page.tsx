@@ -26,7 +26,7 @@ import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups
 import { useIbanOptionsQuery } from '../features/crm/use-iban-options';
 import { NewAccountModal } from '../features/crm/new-account-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
-import { QuoteItemLinesCard } from '../features/crm/quote-item-lines-card';
+import { QuoteItemLinesCard, type QuoteProductGroup } from '../features/crm/quote-item-lines-card';
 import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
 import { useAccountQuery } from '../features/crm/use-accounts';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -87,6 +87,14 @@ function TermsDefaultLink() {
   );
 }
 
+/** productGroups icin GECICI client-id uretir - `crypto.randomUUID()` guvenli olmayan
+ * (HTTPS/localhost disi) baglamlarda tanimsiz kalabiliyor (bkz. kullanici bildirimi),
+ * bu yuzden sadece bu client-only id'ler icin baglamdan bagimsiz basit bir uretici
+ * kullanilir. */
+function generateClientId(): string {
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function todayDateString(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -142,6 +150,10 @@ export function QuoteFormPage() {
   // Sadece duzenleme + REVIZE durumunda kullanilir (bkz. asagidaki isRevisionMode).
   const [revisionNote, setRevisionNote] = useState('');
   const [revisionNoteTouched, setRevisionNoteTouched] = useState(false);
+  // "Ürünleri Gruplayarak Ekle" (bkz. QuoteItemLinesCard doc comment'i) - bu UI-only
+  // state, items alanindaki her satirin `groupId` degeri uzerinden eslenir; submit'te
+  // bu id'ler uzerinden guncel grup adi `groupName` olarak backend'e gonderilir.
+  const [productGroups, setProductGroups] = useState<QuoteProductGroup[]>([]);
 
   const {
     register,
@@ -159,6 +171,7 @@ export function QuoteFormPage() {
       items: [],
       hasOpportunity: false,
       quoteCurrency: 'TRY',
+      groupItemsByProduct: false,
     },
   });
   const { fields, append, remove, move } = useFieldArray({ control, name: 'items' });
@@ -188,6 +201,20 @@ export function QuoteFormPage() {
     if (!isEdit || !quoteQuery.data || quoteQuery.data.id === initializedForQuoteId) return;
     const quote = quoteQuery.data;
     setInitializedForQuoteId(quote.id);
+    // Gruplu modda duzenlemeye girerken, kalemlerdeki serbest metin `groupName`
+    // degerlerinden (ilk goruldukleri sirada, tekilleştirilmis) productGroups
+    // state'i yeniden olusturulur - her gruba taze bir id atanir, kalemler bu
+    // id'ye `groupId` ile baglanir (bkz. QuoteItemLinesCard doc comment'i).
+    const groupNameToId = new Map<string, string>();
+    const reconstructedGroups: QuoteProductGroup[] = [];
+    for (const item of quote.items) {
+      const name = item.groupName;
+      if (!name || groupNameToId.has(name)) continue;
+      const groupId = generateClientId();
+      groupNameToId.set(name, groupId);
+      reconstructedGroups.push({ id: groupId, name });
+    }
+    setProductGroups(reconstructedGroups);
     reset({
       accountId: quote.accountId,
       contactId: quote.contactId ?? undefined,
@@ -201,6 +228,7 @@ export function QuoteFormPage() {
         discountPct: item.discountPct,
         vatPct: item.vatPct,
         brand: item.brand ?? '',
+        groupId: item.groupName ? groupNameToId.get(item.groupName) : undefined,
       })),
       title: quote.title ?? undefined,
       leadTime: quote.leadTime ?? undefined,
@@ -214,6 +242,7 @@ export function QuoteFormPage() {
       senderId: quote.senderId ?? undefined,
       quoteCurrency: quote.quoteCurrency,
       hasOpportunity: false,
+      groupItemsByProduct: quote.groupItemsByProduct,
     });
     const savedRates = quote.exchangeRates;
     setExchangeRates({
@@ -294,6 +323,25 @@ export function QuoteFormPage() {
     dirtyFields.generalTerms,
   ]);
 
+  // "Ürünleri Gruplayarak Ekle" grup yonetimi (bkz. productGroups state'i doc comment'i).
+  function handleAddGroup() {
+    setProductGroups((prev) => [...prev, { id: generateClientId(), name: '' }]);
+  }
+  function handleRemoveGroup(groupId: string) {
+    setProductGroups((prev) => prev.filter((group) => group.id !== groupId));
+    // Grupla birlikte ona ait satirlar da kaldirilir - "grup dışı" artik kalemler
+    // gruplu modda anlamsiz olurdu (bkz. QuoteItemLinesCard'in render mantigi).
+    const indexesToRemove = (watchedItems ?? [])
+      .map((item, index) => (item.groupId === groupId ? index : -1))
+      .filter((index) => index !== -1);
+    if (indexesToRemove.length > 0) remove(indexesToRemove);
+  }
+  function handleGroupNameChange(groupId: string, name: string) {
+    setProductGroups((prev) =>
+      prev.map((group) => (group.id === groupId ? { ...group, name } : group)),
+    );
+  }
+
   // "+ Yeni Ürün" ile sistemde hiç kayıtlı olmayan bir ürün oluşturulunca, hem seçtiği
   // ürün listesine kalıcı olarak eklenir (NewProductModal içinde) hem de bu teklife
   // varsayılan miktar/fiyatla doğrudan satır olarak eklenir.
@@ -306,6 +354,10 @@ export function QuoteFormPage() {
       discountPct: '0',
       vatPct: defaultVatPct,
       brand: product.brand ?? '',
+      // Gruplu modda ilk gruba eklenir ki satir gorunmez/kaybolmus olmasin (bkz.
+      // QuoteItemLinesCard'in gruba gore filtreleyen render mantigi) - hangi gruba
+      // ait olacagi belirsizse (hic grup yoksa) grupsuz kalir, kullanici elle tasir.
+      groupId: watch('groupItemsByProduct') ? productGroups[0]?.id : undefined,
     });
     setIsNewProductModalOpen(false);
   }
@@ -407,6 +459,13 @@ export function QuoteFormPage() {
     return resolved;
   }
 
+  // Satirin GECICI groupId'sini, backend'e gonderilecek guncel grup adina (groupName)
+  // cevirir - bkz. productGroups state'i doc comment'i.
+  function resolveGroupName(groupId: string | undefined): string | undefined {
+    if (!groupId) return undefined;
+    return productGroups.find((group) => group.id === groupId)?.name || undefined;
+  }
+
   const onSubmit = handleSubmit(async (values) => {
     let resolvedItems: QuoteFormValues['items'];
     try {
@@ -437,6 +496,7 @@ export function QuoteFormPage() {
           discountPct: item.discountPct ? Number(item.discountPct) : 0,
           vatPct: item.vatPct ? Number(item.vatPct) : 0,
           brand: item.brand ?? undefined,
+          groupName: resolveGroupName(item.groupId),
         })),
         contactId: values.contactId || null,
         quoteDate: values.quoteDate ? new Date(values.quoteDate).toISOString() : undefined,
@@ -459,6 +519,7 @@ export function QuoteFormPage() {
         templateId: values.templateId || null,
         senderId: values.senderId || undefined,
         quoteCurrency: values.quoteCurrency,
+        groupItemsByProduct: values.groupItemsByProduct,
         exchangeRates:
           Object.keys(exchangeRates.rates).length > 0
             ? {
@@ -495,6 +556,7 @@ export function QuoteFormPage() {
         discountPct: item.discountPct ? Number(item.discountPct) : 0,
         vatPct: item.vatPct ? Number(item.vatPct) : 0,
         brand: item.brand ?? undefined,
+        groupName: resolveGroupName(item.groupId),
       })),
       ...(values.hasOpportunity && values.opportunityName
         ? {
@@ -516,6 +578,7 @@ export function QuoteFormPage() {
       generalTerms: values.generalTerms || undefined,
       ...decodeIbanSelections(values.ibanSelections ?? []),
       quoteCurrency: values.quoteCurrency,
+      groupItemsByProduct: values.groupItemsByProduct,
       // Bos birakilirsa backend tenant'in varsayilan sablonunu otomatik atar
       // (bkz. QuotesService.resolveTemplateId) - bu yuzden burada undefined.
       templateId: values.templateId || undefined,
@@ -728,7 +791,7 @@ export function QuoteFormPage() {
             itemErrors={itemRowErrors}
             itemsError={errors.items?.message}
             defaultVatPct={defaultVatPct}
-            onAddItem={() =>
+            onAddItem={(groupId) =>
               append({
                 productId: '',
                 quantity: '1',
@@ -737,6 +800,7 @@ export function QuoteFormPage() {
                 discountPct: '0',
                 vatPct: defaultVatPct,
                 brand: '',
+                groupId,
               })
             }
             onRemoveItem={remove}
@@ -751,6 +815,14 @@ export function QuoteFormPage() {
               setActiveOptionModal('brand');
             }}
             onProductFreeTextChange={(index, text) => setValue(`items.${index}.productName`, text)}
+            groupItemsByProduct={watch('groupItemsByProduct') ?? false}
+            onGroupItemsByProductChange={(value) =>
+              setValue('groupItemsByProduct', value, { shouldDirty: true })
+            }
+            productGroups={productGroups}
+            onAddGroup={handleAddGroup}
+            onRemoveGroup={handleRemoveGroup}
+            onGroupNameChange={handleGroupNameChange}
             footer={
               <QuoteExchangeRatesSection
                 quoteCurrency={quoteCurrency}

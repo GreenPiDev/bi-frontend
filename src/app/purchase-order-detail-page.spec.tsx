@@ -31,6 +31,7 @@ const quote: api.Quote = {
   manualSubtotal: null,
   manualVatAmount: null,
   manualCurrency: null,
+  groupItemsByProduct: false,
   attributes: null,
   exchangeRates: null,
   quoteDate: '2026-09-07T00:00:00.000Z',

@@ -415,6 +415,12 @@ export const quoteFormSchema = z
           /** Boş bırakılırsa ürünün kendi markası kullanılır (currency ile aynı
            * desen) - aynı ürün bu teklifte başka bir marka adıyla görünebilsin diye. */
           brand: z.string().max(120).optional(),
+          /** "Ürünleri Gruplayarak Ekle" modunda bu satirin hangi gruba ait oldugunu
+           * gosteren GECICI/UI-only anahtar - quote-form-page.tsx'teki productGroups
+           * state'indeki bir grubun id'sine referans verir, backend'e hic gonderilmez
+           * (submit'te bu id uzerinden guncel grup adi `groupName` olarak cozulup
+           * gonderilir, bkz. quote-form-page.tsx onSubmit). */
+          groupId: z.string().optional(),
         }),
       )
       .min(1, 'En az bir ürün satırı eklenmelidir.'),
@@ -437,6 +443,9 @@ export const quoteFormSchema = z
     quoteCurrency: z.string().min(1, 'Teklif para birimi gerekli.'),
     templateId: z.string().optional(),
     senderId: z.string({ message: 'Gönderen gerekli.' }).min(1, 'Gönderen gerekli.'),
+    /** "Ürünleri Gruplayarak Ekle" checkbox'ı - isaretlenince urun satirlari gruplar
+     * halinde girilir (bkz. productGroups state'i, quote-form-page.tsx). */
+    groupItemsByProduct: z.boolean().optional(),
   })
   .superRefine((values, ctx) => {
     if (values.hasOpportunity && (values.opportunityName ?? '').length < 2) {

@@ -3119,6 +3119,12 @@ export const tr = {
         addLineButton: '+ Satır Ekle',
         moveItemUp: 'Yukarı taşı',
         moveItemDown: 'Aşağı taşı',
+        groupItemsByProductCheckboxLabel: 'Ürünleri Gruplayarak Ekle',
+        addGroupButton: '+ Grup Ekle',
+        noGroupsYet: 'Henüz grup eklenmedi. Yukarıdan grup ekleyin.',
+        groupNameLabel: 'Grup Adı',
+        groupNamePlaceholder: 'Örn. Kompanzasyon Panosu',
+        removeGroup: 'Grubu kaldır',
       },
       edit: {
         title: 'Teklifi Düzenle',

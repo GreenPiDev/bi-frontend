@@ -63,6 +63,7 @@ function makeQuote(overrides: Partial<api.Quote>): api.Quote {
     manualSubtotal: null,
     manualVatAmount: null,
     manualCurrency: null,
+    groupItemsByProduct: false,
     attributes: null,
     projectId: null,
     project: null,

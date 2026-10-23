@@ -3006,6 +3006,10 @@ export interface QuoteItem {
    * "musteriye gonderilmeyecek" olarak isaretlenir, deliveredQuantity'den
    * bagimsizdir, geri alinabilir. */
   isCancelled: boolean;
+  /** Ad-hoc "Ürünleri Gruplayarak Ekle" (bkz. Quote.groupItemsByProduct) - bu
+   * satirin ait oldugu grubun serbest metin adi, bkz. QuoteItem.groupName doc
+   * comment'i (backend). */
+  groupName: string | null;
 }
 
 /** quoteCurrency disindaki her item para biriminin quoteCurrency'ye cevrim kuru
@@ -3083,6 +3087,10 @@ export interface Quote {
   manualSubtotal: string | null;
   manualVatAmount: string | null;
   manualCurrency: string | null;
+  /** "Ürünleri Gruplayarak Ekle" checkbox'ı (/teklifler/yeni) - true ise kalemler
+   * `QuoteItem.groupName`e gore gruplanir (bkz. quote-detail-page.tsx grouped render,
+   * QuotePdfService). */
+  groupItemsByProduct: boolean;
   /** Ad-hoc /teklifler Excel ice aktarma - Product.attributes ile ayni "bilinen alana
    * eslenmeyen ama kaybedilmek istenmeyen kolon" catch-all deseni. quote-imports
    * disinda hic yazilmaz. */
@@ -3111,6 +3119,9 @@ export interface QuoteItemInput {
   /** Verilmezse Product.brand'den alinir, verilirse (bos string dahil) manuel
    * ezme sayilir - currency ile ayni desen. */
   brand?: string;
+  /** Ad-hoc "Ürünleri Gruplayarak Ekle" - bu satirin ait oldugu grubun serbest
+   * metin adi (bkz. Quote.groupItemsByProduct). */
+  groupName?: string;
 }
 
 export interface CreateQuoteInput {
@@ -3140,6 +3151,8 @@ export interface CreateQuoteInput {
   /** Teklifin "gonderen"i - varsayilan olarak isteği yapan kullanici onceden
    * secili gelir, ama degistirilebilir (createdById'den bagimsiz). */
   senderId: string;
+  /** "Ürünleri Gruplayarak Ekle" checkbox'ı - bkz. Quote.groupItemsByProduct. */
+  groupItemsByProduct?: boolean;
 }
 
 export interface UpdateQuoteInput {
@@ -3171,6 +3184,8 @@ export interface UpdateQuoteInput {
   exchangeRates?: QuoteExchangeRates;
   templateId?: string | null;
   senderId?: string;
+  /** "Ürünleri Gruplayarak Ekle" checkbox'ı - bkz. Quote.groupItemsByProduct. */
+  groupItemsByProduct?: boolean;
   /** status 'REJECTED' ise zorunlu - kullanicinin sectigi red sebebi (bkz.
    * crm_quote_rejection_reason_options). */
   rejectionReason?: string;

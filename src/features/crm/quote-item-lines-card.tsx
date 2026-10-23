@@ -37,6 +37,17 @@ export interface QuoteLineItemValues {
   discountPct?: string;
   vatPct?: string;
   brand?: string;
+  /** Sadece "Ürünleri Gruplayarak Ekle" modunda kullanılır - bu satırın ait olduğu
+   * `QuoteProductGroup.id`'si (bkz. quote-form-page.tsx productGroups state'i). */
+  groupId?: string;
+}
+
+/** "Ürünleri Gruplayarak Ekle" modunda tanımlanan bir grup - sadece bu formun UI
+ * state'inde yaşar, backend'e grup kendisi değil, her satırın çözümlenmiş grup
+ * adı (`groupName`) gönderilir (bkz. quote-form-page.tsx onSubmit). */
+export interface QuoteProductGroup {
+  id: string;
+  name: string;
 }
 
 export interface QuoteItemRowError {
@@ -75,7 +86,8 @@ export interface QuoteItemLinesCardProps {
    * tenant varsayılanı (bkz. DEFAULT_QUOTE_VAT_PCT_KEY). */
   defaultVatPct: string;
 
-  onAddItem: () => void;
+  /** groupId verilirse yeni satır o gruba atanır - sadece gruplu modda kullanılır. */
+  onAddItem: (groupId?: string) => void;
   onRemoveItem: (index: number) => void;
   /** Verilmezse satır sıralama okları (yukarı/aşağı) gösterilmez - sadece teklif formu
    * bu özelliği destekler, satış siparişi formu desteklemez. */
@@ -93,6 +105,21 @@ export interface QuoteItemLinesCardProps {
   /** Toplamların altında, aynı kart içinde gösterilecek ek içerik (örn. kur bilgisi
    * bölümü - sadece teklif formu). */
   footer?: ReactNode;
+
+  /** "Ürünleri Gruplayarak Ekle" checkbox'ı - Quote entity'sine ozgu bir alan (bkz.
+   * CLAUDE.md'ye gore domain terimleri sadece CRM modullerinde yasar), bu yuzden
+   * sadece teklif formu (quote-form-page.tsx) geçirir - satış siparişi formu
+   * (sales-order-create-page.tsx) bu prop'u vermediginde checkbox hic render edilmez. */
+  groupItemsByProduct?: boolean;
+  onGroupItemsByProductChange?: (value: boolean) => void;
+
+  /** groupItemsByProduct true oldugunda kullanilir - tanimli gruplarin sirali listesi
+   * (bkz. QuoteProductGroup). Verilmezse (satis siparisi formu gibi caller'lar) grup
+   * UI'si hic render edilmez, mevcut duz tablo davranisi degismez. */
+  productGroups?: QuoteProductGroup[];
+  onAddGroup?: () => void;
+  onRemoveGroup?: (groupId: string) => void;
+  onGroupNameChange?: (groupId: string, name: string) => void;
 }
 
 function sanitizeDecimalInput(value: string): string {
@@ -123,6 +150,12 @@ export function QuoteItemLinesCard({
   onRequestAddBrand,
   onProductFreeTextChange,
   footer,
+  groupItemsByProduct,
+  onGroupItemsByProductChange,
+  productGroups,
+  onAddGroup,
+  onRemoveGroup,
+  onGroupNameChange,
 }: QuoteItemLinesCardProps) {
   // Urun secilince fiyat/para birimi/marka varsayilanlarini o satira uygular -
   // quote-form-page.tsx/sales-order-create-page.tsx'teki eski handleRowProductChange
@@ -160,6 +193,10 @@ export function QuoteItemLinesCard({
   }
 
   const itemRows: ItemRow[] = itemKeys.map((key, index) => ({ key, index }));
+  // Gruplu moddaki satirlar farkli gruplar arasinda serbestce tasindiginda grup
+  // sinirlarini anlamsizlastirir - bu yuzden yukari/asagi oklari sadece duz (grupsuz)
+  // modda gosterilir (bkz. asagidaki 'actions' kolonu).
+  const isGroupedMode = Boolean(groupItemsByProduct && productGroups);
 
   const summaryRows = items.map((item, index) => {
     const quantity = Number(item.quantity) || 0;
@@ -326,7 +363,7 @@ export function QuoteItemLinesCard({
       className: 'align-middle w-[8%]',
       render: (row) => (
         <div className="flex items-center justify-end gap-0.5">
-          {onMoveItem && (
+          {onMoveItem && !isGroupedMode && (
             <>
               <IconActionButton
                 icon={ArrowUp}
@@ -364,6 +401,18 @@ export function QuoteItemLinesCard({
         </span>
       </div>
 
+      {onGroupItemsByProductChange && (
+        <label className="flex items-center gap-2 text-sm font-semibold text-app-text">
+          <input
+            type="checkbox"
+            className="accent-app-primary"
+            checked={groupItemsByProduct ?? false}
+            onChange={(event) => onGroupItemsByProductChange(event.target.checked)}
+          />
+          {tr.crm.quotes.form.groupItemsByProductCheckboxLabel}
+        </label>
+      )}
+
       <Select
         label={tr.crm.quotes.form.productListLabel}
         name="productListId"
@@ -388,20 +437,80 @@ export function QuoteItemLinesCard({
 
       <FormError message={itemsError} />
 
-      <div>
-        <Button type="button" className="w-full" disabled={!productListId} onClick={onAddItem}>
-          {tr.crm.quotes.form.addLineButton}
-        </Button>
-      </div>
-
       {!productListId ? (
         <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
           {tr.crm.quotes.form.pickerSelectProductListFirst}
         </p>
-      ) : summaryRows.length === 0 ? (
-        <p className="text-sm text-app-muted">{texts.emptyState}</p>
+      ) : isGroupedMode ? (
+        <div className="flex flex-col gap-4">
+          <Button type="button" className="w-full" onClick={onAddGroup}>
+            {tr.crm.quotes.form.addGroupButton}
+          </Button>
+
+          {(productGroups ?? []).length === 0 ? (
+            <p className="text-sm text-app-muted">{tr.crm.quotes.form.noGroupsYet}</p>
+          ) : (
+            (productGroups ?? []).map((group) => {
+              const groupRows = itemRows.filter((row) => items[row.index]?.groupId === group.id);
+              return (
+                <div
+                  key={group.id}
+                  className="flex flex-col gap-3 rounded-lg border border-app-border p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <TextField
+                      label={tr.crm.quotes.form.groupNameLabel}
+                      hideLabel
+                      placeholder={tr.crm.quotes.form.groupNamePlaceholder}
+                      value={group.name}
+                      onChange={(event) => onGroupNameChange?.(group.id, event.target.value)}
+                    />
+                    <IconActionButton
+                      icon={X}
+                      tooltip={tr.crm.quotes.form.removeGroup}
+                      variant="danger"
+                      onClick={() => onRemoveGroup?.(group.id)}
+                    />
+                  </div>
+
+                  {groupRows.length === 0 ? (
+                    <p className="text-sm text-app-muted">{texts.emptyState}</p>
+                  ) : (
+                    <Table
+                      columns={itemColumns}
+                      data={groupRows}
+                      keyField={(row) => row.key}
+                      fixedLayout
+                    />
+                  )}
+
+                  <Button type="button" onClick={() => onAddItem(group.id)}>
+                    {tr.crm.quotes.form.addLineButton}
+                  </Button>
+                </div>
+              );
+            })
+          )}
+        </div>
       ) : (
-        <Table columns={itemColumns} data={itemRows} keyField={(row) => row.key} fixedLayout />
+        <>
+          <div>
+            <Button
+              type="button"
+              className="w-full"
+              disabled={!productListId}
+              onClick={() => onAddItem()}
+            >
+              {tr.crm.quotes.form.addLineButton}
+            </Button>
+          </div>
+
+          {summaryRows.length === 0 ? (
+            <p className="text-sm text-app-muted">{texts.emptyState}</p>
+          ) : (
+            <Table columns={itemColumns} data={itemRows} keyField={(row) => row.key} fixedLayout />
+          )}
+        </>
       )}
 
       <div className="flex flex-wrap gap-4 border-t border-app-border pt-4 text-sm">

@@ -147,6 +147,51 @@ function formatOldTotalFromSnapshot(snapshot: QuoteRevisionSnapshot): string {
   return formatCurrencyAmount(oldConversion.grandTotal, snapshot.quoteCurrency);
 }
 
+/** Ad-hoc "Ürünleri Gruplayarak Ekle" (bkz. Quote.groupItemsByProduct) - kalemleri
+ * `groupName`e gore, ilk goruldukleri sirada kumeler (ayni ad birden fazla yerde
+ * gorunse de TEK grup sayilir). `groupName` olmayan kalemler `null` anahtarli, baslik
+ * satiri basilmayan bir "grupsuz" kumede toplanir. */
+function groupQuoteItemsByGroupName(
+  items: QuoteItem[],
+): { groupName: string | null; items: QuoteItem[] }[] {
+  const groups: { groupName: string | null; items: QuoteItem[] }[] = [];
+  const indexByName = new Map<string | null, number>();
+  for (const item of items) {
+    const name = item.groupName ?? null;
+    let index = indexByName.get(name);
+    if (index === undefined) {
+      index = groups.length;
+      indexByName.set(name, index);
+      groups.push({ groupName: name, items: [] });
+    }
+    groups[index].items.push(item);
+  }
+  return groups;
+}
+
+type QuoteItemPrintRow =
+  | { kind: 'group'; key: string; groupName: string }
+  | { kind: 'item'; key: string; item: QuoteItem; zebraIndex: number };
+
+/** Gruplu modda, print zebra deseninin (beyaz/acik yesil) grup baslik satirlariyla
+ * kesintiye ugramadan TUM tablo boyunca sürmesi icin - zebraIndex sadece urun
+ * satirlarinda artar, grup basligi satirlari hic saymaz (bkz. asagidaki render,
+ * grupsuz tablonun orijinal `nth-child` CSS deseniyle AYNI sirayi uretir). */
+function buildQuoteItemPrintRows(items: QuoteItem[]): QuoteItemPrintRow[] {
+  const rows: QuoteItemPrintRow[] = [];
+  let zebraIndex = 0;
+  for (const group of groupQuoteItemsByGroupName(items)) {
+    if (group.groupName) {
+      rows.push({ kind: 'group', key: `group-${group.groupName}`, groupName: group.groupName });
+    }
+    for (const item of group.items) {
+      rows.push({ kind: 'item', key: item.id, item, zebraIndex });
+      zebraIndex += 1;
+    }
+  }
+  return rows;
+}
+
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
@@ -506,27 +551,109 @@ export function QuoteContentBody({
 
       <div className="mt-8">
         {!isPrintMode && <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>}
-        <div
-          className={clsx(
-            '[&_tbody_td]:text-xs',
-            isPrintMode &&
-              '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-white [&_tbody_tr:nth-child(even)]:!bg-[#e8f5e9]',
-          )}
-        >
-          <Table
-            columns={itemColumns}
-            data={quote.items}
-            keyField={(item) => item.id}
-            emptyMessage={
-              quote.itemsEntryMode === 'MANUAL_TOTAL'
-                ? tr.crm.quotes.detail.manualTotalItemsEmpty
-                : tr.crm.quotes.form.summaryEmpty
-            }
-            // table-fixed kullanilmiyor: auto-layout + "w-[1%]" hilesi (sku kolonunda)
-            // hem web hem PDF'te kolonlarin icerige gore boyutlanmasini, uzun urun
-            // kodlarinin gereksiz yere satirlara bolunmemesini sagliyor.
-          />
-        </div>
+        {quote.groupItemsByProduct ? (
+          // Gruplu teklif: grupsuz tablonun (asagidaki else kolu, Table bileseni)
+          // birebir AYNI gorunumu - sadece grup baslik satirlari acik mavi arkaplanla
+          // araya girer. Grupsuz tablo nasil `isPrintMode`da CSS descendant selector'lariyle
+          // (header beyaz+mavi yazi, satir kenarliklari kalkar) donusuyorsa burada da
+          // AYNI mekanizma kullanilir - sadece zebra (beyaz/acik yesil) deseni CSS
+          // `nth-child` yerine JS'te hesaplanir (bkz. buildQuoteItemPrintRows doc
+          // comment'i) - grup baslik satirlari araya girince nth-child sirasi bozulurdu.
+          <div
+            className={clsx(
+              '[&_tbody_td]:text-xs',
+              isPrintMode &&
+                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0',
+            )}
+          >
+            <div className="border border-app-border bg-app-surface overflow-hidden">
+              <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+                <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
+                  <tr>
+                    {itemColumns.map((column) => (
+                      <th
+                        key={column.key}
+                        className={clsx('px-4 py-3 !text-white', column.className)}
+                      >
+                        {column.header}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {quote.items.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={itemColumns.length}
+                        className="px-4 py-8 text-center text-app-muted"
+                      >
+                        {quote.itemsEntryMode === 'MANUAL_TOTAL'
+                          ? tr.crm.quotes.detail.manualTotalItemsEmpty
+                          : tr.crm.quotes.form.summaryEmpty}
+                      </td>
+                    </tr>
+                  ) : (
+                    buildQuoteItemPrintRows(quote.items).map((row) =>
+                      row.kind === 'group' ? (
+                        <tr
+                          key={row.key}
+                          className="border-b border-app-border bg-[#e3f2fd] last:border-0"
+                        >
+                          <td colSpan={itemColumns.length} className="px-4 py-2 font-bold">
+                            {row.groupName}
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr
+                          key={row.key}
+                          className={clsx(
+                            'border-b border-app-border last:border-0',
+                            isPrintMode
+                              ? row.zebraIndex % 2 === 0
+                                ? '!bg-white'
+                                : '!bg-[#e8f5e9]'
+                              : 'bg-app-surface',
+                          )}
+                        >
+                          {itemColumns.map((column) => (
+                            <td
+                              key={column.key}
+                              className={clsx('px-4 py-3 !text-app-text', column.className)}
+                            >
+                              {column.render(row.item)}
+                            </td>
+                          ))}
+                        </tr>
+                      ),
+                    )
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={clsx(
+              '[&_tbody_td]:text-xs',
+              isPrintMode &&
+                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-white [&_tbody_tr:nth-child(even)]:!bg-[#e8f5e9]',
+            )}
+          >
+            <Table
+              columns={itemColumns}
+              data={quote.items}
+              keyField={(item) => item.id}
+              emptyMessage={
+                quote.itemsEntryMode === 'MANUAL_TOTAL'
+                  ? tr.crm.quotes.detail.manualTotalItemsEmpty
+                  : tr.crm.quotes.form.summaryEmpty
+              }
+              // table-fixed kullanilmiyor: auto-layout + "w-[1%]" hilesi (sku kolonunda)
+              // hem web hem PDF'te kolonlarin icerige gore boyutlanmasini, uzun urun
+              // kodlarinin gereksiz yere satirlara bolunmemesini sagliyor.
+            />
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap justify-end gap-4 text-xs">
           {totals.map((t) => (
