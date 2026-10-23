@@ -387,7 +387,7 @@ function App() {
           }
         />
         <Route
-          path="/firsatlar/:id/duzenle"
+          path="/firsatlar/duzenle/:id"
           element={
             <TenantPageRoute pageKey="opportunities">
               <OpportunityFormPage />

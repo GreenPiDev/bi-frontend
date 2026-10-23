@@ -210,7 +210,7 @@ export function OpportunitiesListPage() {
           <IconActionButton
             icon={Pencil}
             tooltip={tr.crm.opportunities.detail.editButton}
-            onClick={() => navigate(`/firsatlar/${o.id}/duzenle`)}
+            onClick={() => navigate(`/firsatlar/duzenle/${o.id}`)}
           />
           <IconActionButton
             icon={Trash2}

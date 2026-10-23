@@ -75,7 +75,7 @@ export function OpportunityDetailPage() {
           <CircleIconButton
             icon={Pencil}
             tooltip={tr.crm.opportunities.detail.editButton}
-            onClick={() => navigate(`/firsatlar/${opportunity.id}/duzenle`)}
+            onClick={() => navigate(`/firsatlar/duzenle/${opportunity.id}`)}
           />
           <CircleIconButton
             icon={Trash2}
