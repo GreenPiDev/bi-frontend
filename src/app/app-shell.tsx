@@ -535,7 +535,10 @@ export function AppShell({
             type="button"
             tabIndex={navScrollState.canScrollUp ? 0 : -1}
             onClick={scrollNavToTop}
-            className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-app-brand-dark shadow-md hover:bg-sky-200"
+            className={clsx(
+              'flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-app-brand-dark shadow-md hover:bg-sky-200',
+              navScrollState.canScrollUp ? 'pointer-events-auto' : 'pointer-events-none',
+            )}
             aria-label={tr.shell.scrollNavUp}
           >
             <ChevronUp size={16} />
@@ -552,7 +555,10 @@ export function AppShell({
             type="button"
             tabIndex={navScrollState.canScrollDown ? 0 : -1}
             onClick={scrollNavToBottom}
-            className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-app-brand-dark shadow-md hover:bg-sky-200"
+            className={clsx(
+              'flex h-7 w-7 items-center justify-center rounded-full bg-sky-100 text-app-brand-dark shadow-md hover:bg-sky-200',
+              navScrollState.canScrollDown ? 'pointer-events-auto' : 'pointer-events-none',
+            )}
             aria-label={tr.shell.scrollNavDown}
           >
             <ChevronDown size={16} />
