@@ -418,6 +418,8 @@ export const tr = {
       wonLabel: 'Kazanılan',
       lostLabel: 'Kaybedilen',
     },
+    opportunityStageDistributionTitle: 'Mevcut Durum Dağılımı',
+    opportunityStageDistributionEmpty: 'Gösterilecek fırsat bulunamadı.',
   },
   drawingSettings: {
     title: 'Teknik Çizim Ayarları',
