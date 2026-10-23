@@ -11,6 +11,7 @@ import { SettingsNavigateLink } from '../components/ui/settings-navigate-link';
 import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
+import { ThousandsNumberField } from '../components/ui/thousands-number-field';
 import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { AddIbanOptionModal } from '../features/crm/add-iban-option-modal';
@@ -847,13 +848,18 @@ export function QuoteFormPage() {
                     error={errors.opportunityStage?.message}
                     {...register('opportunityStage')}
                   />
-                  <TextField
-                    type="number"
-                    step="0.01"
-                    label={tr.crm.quotes.form.opportunityValueLabel}
-                    hint={tr.crm.quotes.form.opportunityValueHint}
-                    error={errors.opportunityValue?.message}
-                    {...register('opportunityValue')}
+                  <Controller
+                    name="opportunityValue"
+                    control={control}
+                    render={({ field }) => (
+                      <ThousandsNumberField
+                        label={tr.crm.quotes.form.opportunityValueLabel}
+                        hint={tr.crm.quotes.form.opportunityValueHint}
+                        error={errors.opportunityValue?.message}
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
                   />
                 </div>
               )}
