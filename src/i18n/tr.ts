@@ -282,6 +282,9 @@ export const tr = {
       projects: 'Toplam Proje',
       lowStock: 'Kritik Stok Seviyesindeki Ürün',
     },
+    quoteCharts: {
+      title: 'Teklif Grafikleri',
+    },
     notes: {
       title: 'Not Defteri',
       newButton: 'Yeni Not',
@@ -1309,6 +1312,20 @@ export const tr = {
     send: 'Gönder',
     thinking: 'Düşünüyor...',
     error: 'Bir hata oluştu, lütfen tekrar deneyin.',
+    backButtonLabel: 'Konuşma listesine dön',
+    newConversationButton: 'Yeni Konuşma',
+    conversationsTitle: 'Konuşmalar',
+    untitledConversation: 'Yeni Konuşma',
+    loadingConversations: 'Konuşmalar yükleniyor...',
+    emptyConversations: 'Henüz bir konuşmanız yok. "Yeni Konuşma" ile başlayın.',
+    loadingMessages: 'Mesajlar yükleniyor...',
+    deleteConversationTooltip: 'Konuşmayı sil',
+    deleteConversationConfirmTitle: 'Konuşmayı sil',
+    deleteConversationConfirmMessage:
+      'Bu konuşmayı ve tüm mesajlarını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+    deleteConversationConfirmButton: 'Sil',
+    deleteConversationError: 'Konuşma silinemedi, lütfen tekrar deneyin.',
+    createConversationError: 'Yeni konuşma başlatılamadı, lütfen tekrar deneyin.',
   },
   crm: {
     moduleDisabledTitle: 'CRM modülü kapalı',

@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { clearChatHistory } from '../chatbot/chatbot-storage';
 import {
   ApiError,
   changePassword,
@@ -106,7 +105,11 @@ export function useLogoutMutation() {
     mutationFn: () => logout(),
     onSuccess: () => {
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
-      clearChatHistory();
+      // Sohbet gecmisi artik sunucuda kullanici bazli tutuluyor (bkz.
+      // docs/VARSAYIMLAR.md V77) - ayni sekmede baska bir kullanici giris
+      // yaparsa onceki kullanicinin konusma listesi/mesajlari cache'te
+      // kalmasin diye temizlenir.
+      void queryClient.removeQueries({ queryKey: ['chatbot'] });
     },
   });
 }

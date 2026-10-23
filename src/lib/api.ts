@@ -698,17 +698,47 @@ export interface ChatHistoryItem {
 }
 
 export interface SendChatMessageInput {
+  conversationId: string;
   message: string;
-  history: ChatHistoryItem[];
 }
 
 export interface ChatMessageResponse {
   reply: string;
   navigateTo: string | null;
+  /** Bu, konusmanin ilk mesajiysa yeni atanan baslik - aksi halde null. */
+  title: string | null;
 }
 
 export function sendChatMessage(input: SendChatMessageInput): Promise<ChatMessageResponse> {
   return request('/chatbot/message', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export interface ChatConversationSummary {
+  id: string;
+  title: string | null;
+  updatedAt: string;
+}
+
+export interface ChatConversationDetail {
+  id: string;
+  title: string | null;
+  messages: ChatHistoryItem[];
+}
+
+export function listChatConversations(): Promise<ChatConversationSummary[]> {
+  return request('/chatbot/conversations');
+}
+
+export function createChatConversation(): Promise<ChatConversationSummary> {
+  return request('/chatbot/conversations', { method: 'POST' });
+}
+
+export function getChatConversation(id: string): Promise<ChatConversationDetail> {
+  return request(`/chatbot/conversations/${id}`);
+}
+
+export function deleteChatConversation(id: string): Promise<void> {
+  return request(`/chatbot/conversations/${id}`, { method: 'DELETE' });
 }
 
 async function requestBlob(path: string, method: 'GET' | 'POST' = 'POST'): Promise<Blob> {
