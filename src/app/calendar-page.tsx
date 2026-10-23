@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { CalendarDays, ChevronLeft, ChevronRight, List, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { CalendarDayEventsModal } from './calendar-day-events-modal';
 import { CalendarEventDetailModal } from './calendar-event-detail-modal';
@@ -20,6 +20,7 @@ import { useToast } from '../components/ui/toast-context';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
   useAssignableCalendarUsersQuery,
+  useCalendarEventQuery,
   useCalendarEventsQuery,
   useDeleteCalendarEventMutation,
   usePendingCalendarInvitesQuery,
@@ -126,6 +127,8 @@ function eventsOnDay(events: CalendarEvent[], day: Date): CalendarEvent[] {
 }
 
 export function CalendarTabContent() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLinkEventId = searchParams.get('eventId') ?? '';
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -150,6 +153,27 @@ export function CalendarTabContent() {
   // Date.now() render sirasinda dogrudan cagrilamaz (react-hooks/purity) - lazy useState
   // initializer'i istisna, bir kere mount'ta calisir.
   const [now] = useState(() => Date.now());
+
+  // Not Defteri'ndeki ("/anasayfa") bir hatirlatma satirina tiklaninca buraya
+  // ?eventId=... ile gelinir - ay izgarasinin o an yuklu sayfasinda olmayabilecegi
+  // icin (gecmis/gelecek bir ay) ayri, dogrudan id'yle calisan bir sorgu kullanilir.
+  // Ayri bir efekt+setState yerine turetilmis bir deger: selectedEvent (elle secim)
+  // varsa o kazanir, yoksa deep-link sorgusunun sonucu gosterilir.
+  const deepLinkEventQuery = useCalendarEventQuery(deepLinkEventId);
+  const activeEvent = selectedEvent ?? (deepLinkEventId ? (deepLinkEventQuery.data ?? null) : null);
+
+  function clearDeepLinkParam() {
+    if (!deepLinkEventId) return;
+    setSearchParams((params) => {
+      params.delete('eventId');
+      return params;
+    });
+  }
+
+  function closeDetailModal() {
+    setSelectedEvent(null);
+    clearDeepLinkParam();
+  }
 
   const { from, to } = useMemo(() => getMonthGridRange(monthCursor), [monthCursor]);
   const viewedUserQueryParam =
@@ -186,6 +210,7 @@ export function CalendarTabContent() {
 
   function openEditModal(event: CalendarEvent) {
     setSelectedEvent(null);
+    clearDeepLinkParam();
     setEditingEvent(event);
     setShowForm(true);
   }
@@ -198,7 +223,7 @@ export function CalendarTabContent() {
     if (!deletingEvent) return;
     deleteMutation.mutate(deletingEvent.id, {
       onSuccess: () => {
-        setSelectedEvent(null);
+        closeDetailModal();
         setDeletingEvent(null);
       },
       onError: (error) => {
@@ -456,13 +481,13 @@ export function CalendarTabContent() {
         />
       )}
 
-      {selectedEvent && (
+      {activeEvent && (
         <CalendarEventDetailModal
-          event={selectedEvent}
+          event={activeEvent}
           currentUserId={currentUserId}
-          onClose={() => setSelectedEvent(null)}
-          onEdit={() => openEditModal(selectedEvent)}
-          onDelete={() => handleDelete(selectedEvent)}
+          onClose={closeDetailModal}
+          onEdit={() => openEditModal(activeEvent)}
+          onDelete={() => handleDelete(activeEvent)}
           isDeleting={deleteMutation.isPending}
         />
       )}

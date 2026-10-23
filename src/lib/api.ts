@@ -2037,6 +2037,64 @@ export function respondToCalendarEvent(
   });
 }
 
+export type NoteColor = 'YELLOW' | 'BLUE' | 'RED' | 'GREEN' | 'PURPLE';
+
+export interface NoteReminderSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  startAt: string;
+}
+
+export interface Note {
+  id: string;
+  content: string;
+  color: NoteColor;
+  /** true: not sadece olusturana gorunur. false: tenant'taki herkese paylasimli. */
+  isPrivate: boolean;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  reminder: NoteReminderSummary | null;
+}
+
+export interface NoteReminderInput {
+  startAt: string;
+  title: string;
+  description?: string;
+}
+
+export interface CreateNoteInput {
+  content: string;
+  color: NoteColor;
+  isPrivate: boolean;
+  reminder?: NoteReminderInput;
+}
+
+export interface UpdateNoteInput {
+  content?: string;
+  color?: NoteColor;
+  isPrivate?: boolean;
+  /** undefined = hatirlatmaya dokunma, null = kaldir, obje = olustur/guncelle. */
+  reminder?: NoteReminderInput | null;
+}
+
+export function listNotes(): Promise<Note[]> {
+  return request('/notes');
+}
+
+export function createNote(input: CreateNoteInput): Promise<Note> {
+  return request('/notes', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateNote(id: string, input: UpdateNoteInput): Promise<Note> {
+  return request(`/notes/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+
+export function deleteNote(id: string): Promise<void> {
+  return request(`/notes/${id}`, { method: 'DELETE' });
+}
+
 /** Eskiden 5 sabit degerli bir union'du - artik tenant'in /settings?tab=crm'de yonettigi
  * dinamik InteractionTypeOption listesine karsi dogrulanan serbest metin (bkz.
  * schema.prisma Interaction.type yorumu, InteractionTypeSelect). */

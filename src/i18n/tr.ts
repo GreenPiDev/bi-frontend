@@ -165,6 +165,8 @@ export const tr = {
     userStats:
       'Bu kullanıcının sistemde oluşturduğu firma, kişi, görüşme, fırsat, teklif, proje ve sipariş sayılarını görüntüleyin. Salt okunur bir özet ekranıdır.',
     home: 'Sisteme girdiğinizde ilk bilmeniz gerekenler burada: bekleyen davetleriniz, bugünün hatırlatıcıları ve genel rakamlar. Her kart sizi ilgili sayfaya yönlendirir.',
+    homeNotes:
+      'Şirketinizin paylaşımlı not panosu - herkesin görüp ekleyebildiği post-it tarzı notlar. İsterseniz bir nota hatırlatma da bağlayabilirsiniz.',
   },
   health: {
     checking: 'Bağlantı kontrol ediliyor...',
@@ -279,6 +281,41 @@ export const tr = {
       opportunities: 'Toplam Fırsat',
       projects: 'Toplam Proje',
       lowStock: 'Kritik Stok Seviyesindeki Ürün',
+    },
+    notes: {
+      title: 'Not Defteri',
+      newButton: 'Yeni Not',
+      empty: 'Henüz not yok. İlk notunuzu eklemek için "Yeni Not" butonuna tıklayın.',
+      editMenuLabel: 'Not seçenekleri',
+      privateIndicator: 'Bu not size özeldir, yalnızca siz görebilirsiniz.',
+      editAction: 'Düzenle',
+      deleteAction: 'Sil',
+      deleteConfirmTitle: 'Notu Sil',
+      deleteConfirmMessage: 'Bu notu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+      deleteConfirmButton: 'Sil',
+      deleteError: 'Not silinirken bir hata oluştu.',
+      form: {
+        newTitle: 'Yeni Not',
+        editTitle: 'Notu Düzenle',
+        contentLabel: 'Not',
+        contentPlaceholder: 'Not içeriğinizi yazın...',
+        colorLabel: 'Renk',
+        privateLabel: 'Bu not yalnızca bana özeldir',
+        privateHint:
+          'Bu seçenek kaldırıldığında not, şirketinizdeki diğer tüm kullanıcılar tarafından da görüntülenebilir hale gelir.',
+        cancel: 'Vazgeç',
+        submit: 'Kaydet',
+        submitting: 'Kaydediliyor...',
+        createSuccess: 'Not eklendi.',
+        updateSuccess: 'Not güncellendi.',
+        reminderSwitchLabel: 'Hatırlatma oluştur',
+        reminderDateLabel: 'Hatırlatma Tarihi ve Saati',
+        reminderTitleLabel: 'Hatırlatma Başlığı',
+        reminderDescriptionLabel: 'Hatırlatma Açıklaması',
+      },
+      reminderRow: {
+        label: 'Hatırlatma',
+      },
     },
   },
   inventory: {

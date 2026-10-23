@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { NotesBoard } from './notes-board';
 import { PageHelp } from '../components/ui/page-help';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
@@ -307,6 +308,8 @@ export function HomePage() {
           </div>
         )}
       </div>
+
+      <NotesBoard />
     </AppShell>
   );
 }
