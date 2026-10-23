@@ -745,7 +745,7 @@ export function QuoteContentBody({
       )}
 
       {quote.ibanAccounts && quote.ibanAccounts.length > 0 && isPrintMode && (
-        <div className="print-page-break mt-8">
+        <div className="mt-8">
           <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
             {tr.crm.quotes.detail.bankDetailsTitle}
           </h3>
