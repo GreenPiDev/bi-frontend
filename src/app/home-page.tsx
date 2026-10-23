@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { HomeQuoteChartsSection } from './home-quote-charts-section';
 import { NotesBoard } from './notes-board';
 import { PageHelp } from '../components/ui/page-help';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -308,6 +309,8 @@ export function HomePage() {
           </div>
         )}
       </div>
+
+      {canAccessQuotes && <HomeQuoteChartsSection />}
 
       <NotesBoard />
     </AppShell>
