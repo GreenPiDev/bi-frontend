@@ -3155,6 +3155,7 @@ export function listQuotes(
     q?: string;
     from?: string;
     to?: string;
+    sort?: string;
   } = {},
 ): Promise<PagedResult<Quote>> {
   const query = new URLSearchParams();
@@ -3166,6 +3167,7 @@ export function listQuotes(
   if (params.q) query.set('q', params.q);
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
+  if (params.sort) query.set('sort', params.sort);
   const qs = query.toString();
   return request(`/quotes${qs ? `?${qs}` : ''}`);
 }

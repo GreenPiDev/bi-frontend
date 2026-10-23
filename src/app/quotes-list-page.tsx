@@ -25,7 +25,8 @@ import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
 import { InlineSelect } from '../components/ui/inline-select';
 import { Select } from '../components/ui/select';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { SortPicker, type SortPickerOption } from '../components/ui/sort-picker';
+import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
@@ -168,6 +169,7 @@ export function QuotesListContent() {
   // bildirim modali acilir (reason+opsiyonel not) - APPROVED'daki ApproveQuoteModal
   // ile ayni "once onay, sonra form" deseni, REVIZE'de boyle bir ikinci adim yok.
   const [rejectFeedbackOpen, setRejectFeedbackOpen] = useState(false);
+  const [sort, setSort] = useState<TableSort | null>(null);
   // Iki tarih filtresi ayni quoteDate alanini hedefler, birbirini sifirlar: aralik
   // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. opportunities-list-page.tsx).
   const hasRange = Boolean(rangeFromInput) || Boolean(rangeToInput);
@@ -189,6 +191,7 @@ export function QuotesListContent() {
     createdById: createdById || undefined,
     from,
     to,
+    sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const statusCounts = useQuoteStatusCounts(STATUS_OPTIONS.map((option) => option.value));
   const filterCounts: Partial<Record<QuoteStatus | '', number>> = {
@@ -420,6 +423,13 @@ export function QuotesListContent() {
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
+  const SORT_OPTIONS: SortPickerOption[] = [
+    { key: 'quoteDate', direction: 'asc', label: tr.crm.quotes.sortOptions.quoteDateAsc },
+    { key: 'quoteDate', direction: 'desc', label: tr.crm.quotes.sortOptions.quoteDateDesc },
+    { key: 'grandTotal', direction: 'asc', label: tr.crm.quotes.sortOptions.grandTotalAsc },
+    { key: 'grandTotal', direction: 'desc', label: tr.crm.quotes.sortOptions.grandTotalDesc },
+  ];
+
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -486,11 +496,21 @@ export function QuotesListContent() {
           options={STATUS_OPTIONS}
           counts={filterCounts}
         />
-        <ColumnVisibilityPicker
-          columns={optionalColumns}
-          value={visibleOptionalKeys}
-          onChange={setVisibleOptionalKeys}
-        />
+        <div className="flex items-center gap-2">
+          <SortPicker
+            options={SORT_OPTIONS}
+            value={sort}
+            onChange={(next) => {
+              setSort(next);
+              setPage(1);
+            }}
+          />
+          <ColumnVisibilityPicker
+            columns={optionalColumns}
+            value={visibleOptionalKeys}
+            onChange={setVisibleOptionalKeys}
+          />
+        </div>
       </div>
 
       <Table

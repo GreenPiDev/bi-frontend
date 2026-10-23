@@ -9,6 +9,7 @@ import {
   getQuoteRevisionSummary,
   getQuoteStatusHistory,
   getQuoteStockCheck,
+  getQuoteValueByStatus,
   getRejectedQuotesWithReasons,
   listQuoteAssignableUsers,
   listQuotes,
@@ -39,6 +40,7 @@ export function useQuotesQuery(
     q?: string;
     from?: string;
     to?: string;
+    sort?: string;
   } = {},
   options: { enabled?: boolean } = {},
 ) {
@@ -86,6 +88,17 @@ export function useQuoteRejectionReasonsSummaryQuery(
   return useQuery({
     queryKey: [...QUOTES_QUERY_KEY, 'rejection-reasons-summary', range],
     queryFn: () => getQuoteRejectionReasonsSummary(range),
+  });
+}
+
+/** /teklifler?tab=reports "Durum Bazlı Toplam Değer" pasta grafigi. */
+export function useQuoteValueByStatusQuery(
+  range: { from?: string; to?: string; createdById?: string } = {},
+  displayCurrency: string,
+) {
+  return useQuery({
+    queryKey: [...QUOTES_QUERY_KEY, 'value-by-status', range, displayCurrency],
+    queryFn: () => getQuoteValueByStatus({ ...range, displayCurrency }),
   });
 }
 

@@ -2773,6 +2773,12 @@ export const tr = {
         rangeToLabel: 'Bitiş tarihi',
         reset: 'Sıfırla',
       },
+      sortOptions: {
+        quoteDateAsc: 'Teklif tarihine göre (eskiden yeniye)',
+        quoteDateDesc: 'Teklif tarihine göre (yeniden eskiye)',
+        grandTotalAsc: 'Genel toplama göre (küçükten büyüğe)',
+        grandTotalDesc: 'Genel toplama göre (büyükten küçüğe)',
+      },
       deleteConfirm: 'Bu teklifi silmek istediğinize emin misiniz?',
       deleteConfirmTitle: 'Teklifi Sil',
       deleteSuccess: 'Teklif silindi.',
