@@ -13,6 +13,7 @@ import { Select } from '../components/ui/select';
 import { Switch } from '../components/ui/switch';
 import { TextareaField } from '../components/ui/textarea-field';
 import { TextField } from '../components/ui/text-field';
+import { ThousandsNumberField } from '../components/ui/thousands-number-field';
 import { useToast } from '../components/ui/toast-context';
 import { AccountAutocomplete } from '../features/crm/account-autocomplete';
 import { useAssignableCalendarUsersQuery } from '../features/crm/use-calendar-events';
@@ -220,13 +221,18 @@ export function OpportunityFormPage() {
             />
             <div className="flex items-start gap-2">
               <div className="flex-1">
-                <TextField
-                  label={tr.crm.opportunities.form.valueLabel}
-                  type="number"
-                  step="0.01"
-                  hint={tr.crm.opportunities.form.valueHint}
-                  error={errors.estimatedValue?.message}
-                  {...register('estimatedValue')}
+                <Controller
+                  name="estimatedValue"
+                  control={control}
+                  render={({ field }) => (
+                    <ThousandsNumberField
+                      label={tr.crm.opportunities.form.valueLabel}
+                      hint={tr.crm.opportunities.form.valueHint}
+                      error={errors.estimatedValue?.message}
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
                 />
               </div>
               <div className="w-32">
