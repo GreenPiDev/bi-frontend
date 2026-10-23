@@ -67,6 +67,7 @@ import {
   formatCurrencyAmount,
   getQuoteCurrencyTotals,
   groupQuoteItemTotals,
+  quoteGrandTotalDisplay,
 } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 
@@ -263,11 +264,10 @@ export function QuoteContentBody({
       ? convertTotalsToQuoteCurrency(totals, quote.quoteCurrency, quote.exchangeRates?.rates ?? {})
       : null;
 
-  /** Ara toplam/KDV/genel toplam (+ kur cevrim) bloğu - normalde kalem tablosunun
-   * ALTINDA tek bir yerde render edilir. Gruplu teklifte (bkz. Quote.groupItemsByProduct)
-   * kullanıcı talebiyle bunun yeri degisti: "Gruplar" özet tablosu ile detaylı kalem
-   * tablosu ARASINA alınır - bu yuzden tek bir JSX degiskeni olarak çıkarılıp iki farklı
-   * yerde kosullu kullanilir (bkz. asagisi). Grupsuz teklifin yerlesimi degismedi. */
+  /** Ara toplam/KDV/genel toplam (+ kur cevrim) bloğu - kalem tablosunun ALTINDA
+   * gosterilir. SADECE grupsuz teklifte kullanilir (bkz. asagidaki
+   * `!quote.groupItemsByProduct && totalsSection`) - gruplu teklif kendi sadelestirilmis
+   * tek-satirlik ozetini kullanir (bkz. groupedTotalsSection). */
   const totalsSection = (
     <>
       <div className="mt-4 flex flex-wrap justify-end gap-4 text-xs">
@@ -326,6 +326,19 @@ export function QuoteContentBody({
         </div>
       )}
     </>
+  );
+
+  /** Gruplu teklifte (bkz. Quote.groupItemsByProduct) kullanıcı talebiyle totalsSection'ın
+   * para birimi bazlı ayrı alt toplamları/kur dönüşüm notu YERİNE sadece tek bir satır:
+   * teklif para birimine çevrilmiş kümülatif "Genel Toplam" (quoteGrandTotalDisplay ile
+   * aynı mantık - meta grid'deki grandTotalLabel hücresiyle birebir aynı değer). */
+  const groupedTotalsSection = (
+    <div className="mt-4 flex justify-end text-xs">
+      <div className="flex w-44 justify-between border-t border-app-border pt-1 text-sm font-bold">
+        <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
+        <span className="text-app-text">{quoteGrandTotalDisplay(quote)}</span>
+      </div>
+    </div>
   );
 
   const statusHistoryQuery = useQuoteStatusHistoryQuery(quote.id, { enabled: !isPrintMode });
@@ -723,7 +736,7 @@ export function QuoteContentBody({
             </div>
           </div>
 
-          {totalsSection}
+          {groupedTotalsSection}
         </div>
       )}
 
@@ -842,9 +855,9 @@ export function QuoteContentBody({
           </div>
         )}
 
-        {/* Gruplu teklifte bu blok yukarida, "Gruplar" ozeti ile bu tablonun arasinda
-            zaten gosterildi (bkz. totalsSection kullanimindaki ilk yer) - burada
-            TEKRAR basilmaz. */}
+        {/* Gruplu teklifte toplam zaten yukarida, "Gruplar" ozeti ile bu tablonun
+            arasinda farkli (tek satirlik) bir formatla gosterildi (bkz.
+            groupedTotalsSection kullanimi) - burada TEKRAR basilmaz. */}
         {!quote.groupItemsByProduct && totalsSection}
       </div>
 
