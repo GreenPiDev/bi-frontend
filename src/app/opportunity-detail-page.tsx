@@ -8,6 +8,7 @@ import { CircleIconButton } from '../components/ui/circle-icon-button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { PageHelp } from '../components/ui/page-help';
 import { useToast } from '../components/ui/toast-context';
+import { buildAccountSlug } from '../features/crm/account-slug';
 import {
   useDeleteOpportunityMutation,
   useOpportunityQuery,
@@ -86,6 +87,21 @@ export function OpportunityDetailPage() {
       </div>
 
       <div className="mt-6 flex flex-col gap-6">
+        {opportunity.account && (
+          <div className="rounded-xl border border-app-border bg-white p-5">
+            <p className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">
+              {tr.crm.opportunities.form.accountLabel}
+            </p>
+            <button
+              type="button"
+              onClick={() => navigate(`/firmalar/${buildAccountSlug(opportunity.account!)}`)}
+              className="mt-1.5 text-sm font-semibold text-app-brand hover:underline"
+            >
+              {opportunity.account.name}
+            </button>
+          </div>
+        )}
+
         {opportunity.description && (
           <div className="rounded-xl border border-app-border bg-white p-5">
             <p className="text-[11px] font-semibold tracking-wide text-app-muted uppercase">

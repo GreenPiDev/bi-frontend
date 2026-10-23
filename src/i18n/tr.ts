@@ -1944,6 +1944,12 @@ export const tr = {
         rangeToLabel: 'Bitiş tarihi',
         reset: 'Sıfırla',
       },
+      sortOptions: {
+        estimatedValueAsc: 'Tahmini değere göre (küçükten büyüğe)',
+        estimatedValueDesc: 'Tahmini değere göre (büyükten küçüğe)',
+        occurredAtAsc: 'Oluşma tarihine göre (eskiden yeniye)',
+        occurredAtDesc: 'Oluşma tarihine göre (yeniden eskiye)',
+      },
       deleteConfirm: 'Bu fırsatı silmek istediğinize emin misiniz?',
       deleteConfirmTitle: 'Fırsatı Sil',
       deleteError: 'Fırsat silinemedi.',

@@ -9,7 +9,8 @@ import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
 import { InlineSelect } from '../components/ui/inline-select';
 import { Modal } from '../components/ui/modal';
-import { Pagination, Table, type TableColumn } from '../components/ui/table';
+import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
+import { SortPicker, type SortPickerOption } from '../components/ui/sort-picker';
 import { DateField } from '../components/ui/date-field';
 import { TextField } from '../components/ui/text-field';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
@@ -111,6 +112,7 @@ export function OpportunitiesListPage() {
   const [rangeToInput, setRangeToInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [descriptionModal, setDescriptionModal] = useState<string | null>(null);
+  const [sort, setSort] = useState<TableSort | null>(null);
   const debouncedMinEstimatedValueInput = useDebouncedValue(minEstimatedValueInput.trim());
   const minEstimatedValue = debouncedMinEstimatedValueInput
     ? Number(debouncedMinEstimatedValueInput)
@@ -133,6 +135,7 @@ export function OpportunitiesListPage() {
         : undefined,
     from,
     to,
+    sort: sort ? `${sort.key}:${sort.direction}` : undefined,
   });
   const stageCounts = useOpportunityStageCounts(STAGE_OPTIONS.map((option) => option.value));
   const stageFilterCounts: Partial<Record<OpportunityStage | '', number>> = {
@@ -153,9 +156,14 @@ export function OpportunitiesListPage() {
 
   const ALL_COLUMNS: TableColumn<Opportunity>[] = [
     {
+      key: 'account',
+      header: tr.crm.opportunities.accountColumn,
+      required: true,
+      render: (o) => <span className="text-app-muted">{o.account ? o.account.name : '—'}</span>,
+    },
+    {
       key: 'name',
       header: tr.crm.opportunities.nameColumn,
-      required: true,
       render: (o) => <span className="font-semibold text-app-text">{o.name}</span>,
     },
     {
@@ -222,6 +230,29 @@ export function OpportunitiesListPage() {
     );
   const columns = ALL_COLUMNS.filter((c) => isColumnVisible(c.key));
 
+  const SORT_OPTIONS: SortPickerOption[] = [
+    {
+      key: 'estimatedValue',
+      direction: 'asc',
+      label: tr.crm.opportunities.sortOptions.estimatedValueAsc,
+    },
+    {
+      key: 'estimatedValue',
+      direction: 'desc',
+      label: tr.crm.opportunities.sortOptions.estimatedValueDesc,
+    },
+    {
+      key: 'occurredAt',
+      direction: 'asc',
+      label: tr.crm.opportunities.sortOptions.occurredAtAsc,
+    },
+    {
+      key: 'occurredAt',
+      direction: 'desc',
+      label: tr.crm.opportunities.sortOptions.occurredAtDesc,
+    },
+  ];
+
   function resetFilters() {
     setPage(1);
     setStage('');
@@ -273,11 +304,21 @@ export function OpportunitiesListPage() {
           options={STAGE_OPTIONS}
           counts={stageFilterCounts}
         />
-        <ColumnVisibilityPicker
-          columns={optionalColumns}
-          value={visibleOptionalKeys}
-          onChange={setVisibleOptionalKeys}
-        />
+        <div className="flex items-center gap-2">
+          <SortPicker
+            options={SORT_OPTIONS}
+            value={sort}
+            onChange={(next) => {
+              setSort(next);
+              setPage(1);
+            }}
+          />
+          <ColumnVisibilityPicker
+            columns={optionalColumns}
+            value={visibleOptionalKeys}
+            onChange={setVisibleOptionalKeys}
+          />
+        </div>
       </div>
 
       <Table

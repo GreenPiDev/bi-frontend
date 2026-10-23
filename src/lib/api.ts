@@ -2149,6 +2149,7 @@ export type CurrencyCode = 'TRY' | 'USD' | 'EUR' | 'GBP' | 'CHF' | 'JPY';
 export interface Opportunity {
   id: string;
   accountId: string;
+  account: Account | null;
   interactionId: string | null;
   quoteId: string | null;
   name: string;
@@ -2368,6 +2369,7 @@ export function listOpportunities(
     minEstimatedValue?: number;
     from?: string;
     to?: string;
+    sort?: string;
   } = {},
 ): Promise<PagedResult<Opportunity>> {
   const query = new URLSearchParams();
@@ -2380,6 +2382,7 @@ export function listOpportunities(
   }
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
+  if (params.sort) query.set('sort', params.sort);
   const qs = query.toString();
   return request(`/opportunities${qs ? `?${qs}` : ''}`);
 }

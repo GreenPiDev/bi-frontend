@@ -21,6 +21,7 @@ export function useOpportunitiesQuery(
     minEstimatedValue?: number;
     from?: string;
     to?: string;
+    sort?: string;
   } = {},
   options: { enabled?: boolean } = {},
 ) {
