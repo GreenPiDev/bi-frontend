@@ -263,6 +263,71 @@ export function QuoteContentBody({
       ? convertTotalsToQuoteCurrency(totals, quote.quoteCurrency, quote.exchangeRates?.rates ?? {})
       : null;
 
+  /** Ara toplam/KDV/genel toplam (+ kur cevrim) bloğu - normalde kalem tablosunun
+   * ALTINDA tek bir yerde render edilir. Gruplu teklifte (bkz. Quote.groupItemsByProduct)
+   * kullanıcı talebiyle bunun yeri degisti: "Gruplar" özet tablosu ile detaylı kalem
+   * tablosu ARASINA alınır - bu yuzden tek bir JSX degiskeni olarak çıkarılıp iki farklı
+   * yerde kosullu kullanilir (bkz. asagisi). Grupsuz teklifin yerlesimi degismedi. */
+  const totalsSection = (
+    <>
+      <div className="mt-4 flex flex-wrap justify-end gap-4 text-xs">
+        {totals.map((t) => (
+          <div key={t.currency} className="flex w-44 flex-col gap-1">
+            {totals.length > 1 && (
+              <span className="text-right text-[11px] font-semibold text-app-muted">
+                {t.currency}
+              </span>
+            )}
+            <div className="flex justify-between">
+              <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
+              <span className="text-app-text">{formatCurrencyAmount(t.subtotal, t.currency)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
+              <span className="text-app-text">{formatCurrencyAmount(t.vatTotal, t.currency)}</span>
+            </div>
+            <div className="flex justify-between border-t border-app-border pt-1 text-sm font-bold">
+              <span className="text-app-text">{tr.crm.quotes.detail.totalLabel}</span>
+              <span className="text-app-text">
+                {formatCurrencyAmount(t.grandTotal, t.currency)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {conversion && (
+        <div className="mt-4 flex flex-col items-end gap-1">
+          {conversion.missingRateCurrencies.length === 0 ? (
+            <>
+              <div className="flex w-44 justify-between border-t border-app-border pt-1 text-sm font-bold">
+                <span className="text-app-text">
+                  {tr.crm.quotes.form.convertedGrandTotalLabel(quote.quoteCurrency)}
+                </span>
+                <span className="text-app-text">
+                  {formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)}
+                </span>
+              </div>
+              <p className="text-right text-[11px] whitespace-nowrap text-app-muted">
+                {tr.crm.quotes.form.exchangeRateNote(
+                  foreignCurrencyTotals.map(
+                    (t) =>
+                      `1 ${t.currency} = ${quote.exchangeRates?.rates[t.currency]} ${quote.quoteCurrency}`,
+                  ),
+                  quote.exchangeRates?.asOf,
+                )}
+              </p>
+            </>
+          ) : (
+            <p className="max-w-xs text-right text-[11px] text-app-danger">
+              {tr.crm.quotes.form.missingExchangeRate(conversion.missingRateCurrencies)}
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+
   const statusHistoryQuery = useQuoteStatusHistoryQuery(quote.id, { enabled: !isPrintMode });
   const revisionEntries = (statusHistoryQuery.data ?? [])
     .filter((entry) => entry.status === 'REVIZE' && entry.note)
@@ -657,6 +722,8 @@ export function QuoteContentBody({
               </table>
             </div>
           </div>
+
+          {totalsSection}
         </div>
       )}
 
@@ -775,65 +842,10 @@ export function QuoteContentBody({
           </div>
         )}
 
-        <div className="mt-4 flex flex-wrap justify-end gap-4 text-xs">
-          {totals.map((t) => (
-            <div key={t.currency} className="flex w-44 flex-col gap-1">
-              {totals.length > 1 && (
-                <span className="text-right text-[11px] font-semibold text-app-muted">
-                  {t.currency}
-                </span>
-              )}
-              <div className="flex justify-between">
-                <span className="text-app-muted">{tr.crm.quotes.detail.subtotalLabel}</span>
-                <span className="text-app-text">
-                  {formatCurrencyAmount(t.subtotal, t.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-app-muted">{tr.crm.quotes.detail.vatTotalLabel}</span>
-                <span className="text-app-text">
-                  {formatCurrencyAmount(t.vatTotal, t.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between border-t border-app-border pt-1 text-sm font-bold">
-                <span className="text-app-text">{tr.crm.quotes.detail.totalLabel}</span>
-                <span className="text-app-text">
-                  {formatCurrencyAmount(t.grandTotal, t.currency)}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {conversion && (
-          <div className="mt-4 flex flex-col items-end gap-1">
-            {conversion.missingRateCurrencies.length === 0 ? (
-              <>
-                <div className="flex w-44 justify-between border-t border-app-border pt-1 text-sm font-bold">
-                  <span className="text-app-text">
-                    {tr.crm.quotes.form.convertedGrandTotalLabel(quote.quoteCurrency)}
-                  </span>
-                  <span className="text-app-text">
-                    {formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)}
-                  </span>
-                </div>
-                <p className="text-right text-[11px] whitespace-nowrap text-app-muted">
-                  {tr.crm.quotes.form.exchangeRateNote(
-                    foreignCurrencyTotals.map(
-                      (t) =>
-                        `1 ${t.currency} = ${quote.exchangeRates?.rates[t.currency]} ${quote.quoteCurrency}`,
-                    ),
-                    quote.exchangeRates?.asOf,
-                  )}
-                </p>
-              </>
-            ) : (
-              <p className="max-w-xs text-right text-[11px] text-app-danger">
-                {tr.crm.quotes.form.missingExchangeRate(conversion.missingRateCurrencies)}
-              </p>
-            )}
-          </div>
-        )}
+        {/* Gruplu teklifte bu blok yukarida, "Gruplar" ozeti ile bu tablonun arasinda
+            zaten gosterildi (bkz. totalsSection kullanimindaki ilk yer) - burada
+            TEKRAR basilmaz. */}
+        {!quote.groupItemsByProduct && totalsSection}
       </div>
 
       {quote.itemsEntryMode === 'MANUAL_TOTAL' && !isPrintMode && (
