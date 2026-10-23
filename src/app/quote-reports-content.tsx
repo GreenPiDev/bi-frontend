@@ -1,3 +1,4 @@
+import { clsx } from 'clsx';
 import { Filter } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -8,11 +9,14 @@ import { CollapsibleSection } from '../components/ui/collapsible-section';
 import { DateField } from '../components/ui/date-field';
 import { Drawer } from '../components/ui/drawer';
 import { Modal } from '../components/ui/modal';
+import { Select } from '../components/ui/select';
 import { Table, type TableColumn } from '../components/ui/table';
 import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
+import { QUOTE_CURRENCY_OPTIONS } from '../features/crm/quote-meta-fields';
 import {
   useQuoteRejectionReasonsSummaryQuery,
   useQuoteStatusCounts,
+  useQuoteValueByStatusQuery,
   useRejectedQuotesWithReasonsQuery,
 } from '../features/crm/use-quotes';
 import { ChartWithExport } from '../features/dashboards/widgets/chart-with-export';
@@ -20,7 +24,7 @@ import { getChartTheme } from '../features/dashboards/widgets/chart-theme';
 import { buildPieOptionFromPoints } from '../features/dashboards/widgets/query-result-to-echarts-option';
 import { tr } from '../i18n/tr';
 import type { QuoteStatus, RejectedQuoteReasonRow } from '../lib/api';
-import { QUOTE_STATUS_OPTIONS } from '../lib/quote-totals';
+import { formatCurrencyAmount, QUOTE_STATUS_OPTIONS } from '../lib/quote-totals';
 
 const numberFormatter = new Intl.NumberFormat('tr-TR');
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
@@ -149,6 +153,8 @@ export function QuoteReportsContent({
     range,
   );
   const rejectionReasonsQuery = useQuoteRejectionReasonsSummaryQuery(range);
+  const [valueByStatusCurrency, setValueByStatusCurrency] = useState('TRY');
+  const valueByStatusQuery = useQuoteValueByStatusQuery(range, valueByStatusCurrency);
   const theme = getChartTheme();
 
   function goToQuotes(status?: QuoteStatus) {
@@ -167,6 +173,7 @@ export function QuoteReportsContent({
     theme,
     statusDistributionPoints,
     (value) => numberFormatter.format(value),
+    'bottom',
   );
 
   const rejectionReasonPoints = (rejectionReasonsQuery.data ?? []).map((row) => ({
@@ -174,9 +181,29 @@ export function QuoteReportsContent({
     value: row.count,
   }));
   const hasRejectedQuotes = rejectionReasonPoints.length > 0;
-  const rejectionReasonsOption = buildPieOptionFromPoints(theme, rejectionReasonPoints, (value) =>
-    numberFormatter.format(value),
+  const rejectionReasonsOption = buildPieOptionFromPoints(
+    theme,
+    rejectionReasonPoints,
+    (value) => numberFormatter.format(value),
+    'bottom',
   );
+
+  const statusLabelByValue = new Map(
+    QUOTE_STATUS_OPTIONS.map((option) => [option.value, option.label]),
+  );
+  const valueByStatusPoints = (valueByStatusQuery.data?.totals ?? []).map((row) => ({
+    status: row.status,
+    name: statusLabelByValue.get(row.status) ?? row.status,
+    value: row.amount,
+  }));
+  const hasQuoteValue = valueByStatusPoints.length > 0;
+  const valueByStatusOption = buildPieOptionFromPoints(
+    theme,
+    valueByStatusPoints,
+    (value) => formatCurrencyAmount(value, valueByStatusCurrency),
+    'bottom',
+  );
+  const valueByStatusMissingRates = valueByStatusQuery.data?.missingRateCurrencies ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -214,38 +241,79 @@ export function QuoteReportsContent({
         ))}
       </div>
 
-      <ChartCard title={tr.crm.quoteReports.statusDistributionTitle}>
-        {hasQuotes ? (
-          <ChartWithExport
-            option={statusDistributionOption}
-            fileName={tr.crm.quoteReports.statusDistributionTitle}
-            hideExportButton={isPrintMode}
-            onEvents={{
-              click: (params) => goToQuotes(statusDistributionPoints[params.dataIndex]?.status),
-            }}
-          />
-        ) : (
-          <p className="text-sm text-app-muted">{tr.crm.quotes.costTab.empty}</p>
-        )}
-      </ChartCard>
+      <div className={clsx('grid grid-cols-1 gap-4', !isPrintMode && 'lg:grid-cols-3')}>
+        <ChartCard title={tr.crm.quoteReports.statusDistributionTitle}>
+          {hasQuotes ? (
+            <ChartWithExport
+              option={statusDistributionOption}
+              fileName={tr.crm.quoteReports.statusDistributionTitle}
+              hideExportButton={isPrintMode}
+              onEvents={{
+                click: (params) => goToQuotes(statusDistributionPoints[params.dataIndex]?.status),
+              }}
+            />
+          ) : (
+            <p className="text-sm text-app-muted">{tr.crm.quotes.costTab.empty}</p>
+          )}
+        </ChartCard>
 
-      {/* PDF'te sayfa sonuna denk gelince ikiye bolunmesini onlemek icin ikinci
-       * grafik her zaman yeni bir sayfadan baslar (bkz. index.css .print-page-break,
-       * quote-detail-page.tsx'teki ayni desen). */}
-      <ChartCard
-        title={tr.crm.quoteReports.rejectionReasonsTitle}
-        className={isPrintMode ? 'print-page-break' : undefined}
-      >
-        {hasRejectedQuotes ? (
-          <ChartWithExport
-            option={rejectionReasonsOption}
-            fileName={tr.crm.quoteReports.rejectionReasonsTitle}
-            hideExportButton={isPrintMode}
-          />
-        ) : (
-          <p className="text-sm text-app-muted">{tr.crm.quoteReports.rejectionReasonsEmpty}</p>
-        )}
-      </ChartCard>
+        {/* PDF'te sayfa sonuna denk gelince ikiye bolunmesini onlemek icin ikinci
+         * grafik her zaman yeni bir sayfadan baslar (bkz. index.css .print-page-break,
+         * quote-detail-page.tsx'teki ayni desen). */}
+        <ChartCard
+          title={tr.crm.quoteReports.rejectionReasonsTitle}
+          className={isPrintMode ? 'print-page-break' : undefined}
+        >
+          {hasRejectedQuotes ? (
+            <ChartWithExport
+              option={rejectionReasonsOption}
+              fileName={tr.crm.quoteReports.rejectionReasonsTitle}
+              hideExportButton={isPrintMode}
+            />
+          ) : (
+            <p className="text-sm text-app-muted">{tr.crm.quoteReports.rejectionReasonsEmpty}</p>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          title={tr.crm.quoteReports.valueByStatusTitle}
+          className={isPrintMode ? 'print-page-break' : undefined}
+          headerAction={
+            !isPrintMode && (
+              <Select
+                label={tr.crm.quoteReports.valueByStatusCurrencyLabel}
+                hideLabel
+                options={QUOTE_CURRENCY_OPTIONS}
+                value={valueByStatusCurrency}
+                onChange={(event) => setValueByStatusCurrency(event.target.value)}
+                className="py-1.5 text-xs"
+              />
+            )
+          }
+        >
+          {hasQuoteValue ? (
+            <>
+              <ChartWithExport
+                option={valueByStatusOption}
+                fileName={tr.crm.quoteReports.valueByStatusTitle}
+                hideExportButton={isPrintMode}
+                onEvents={{
+                  click: (params) => goToQuotes(valueByStatusPoints[params.dataIndex]?.status),
+                }}
+              />
+              {valueByStatusMissingRates.length > 0 && (
+                <p className="mt-1 text-xs text-app-danger">
+                  {tr.crm.quoteReports.valueByStatusMissingRateWarning(
+                    valueByStatusMissingRates.join(', '),
+                  )}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-app-muted">{tr.crm.quoteReports.valueByStatusEmpty}</p>
+          )}
+        </ChartCard>
+      </div>
 
       {!isPrintMode && (
         <CollapsibleSection

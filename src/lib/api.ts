@@ -3239,6 +3239,26 @@ export interface QuoteRejectionReasonSummaryRow {
   count: number;
 }
 
+export interface QuoteValueByStatusResult {
+  displayCurrency: string;
+  asOf: string;
+  totals: { status: QuoteStatus; amount: number }[];
+  missingRateCurrencies: string[];
+}
+
+/** /teklifler?tab=reports "Durum Bazlı Toplam Değer" pasta grafigi. */
+export function getQuoteValueByStatus(
+  params: { from?: string; to?: string; createdById?: string; displayCurrency?: string } = {},
+): Promise<QuoteValueByStatusResult> {
+  const query = new URLSearchParams();
+  if (params.from) query.set('from', params.from);
+  if (params.to) query.set('to', params.to);
+  if (params.createdById) query.set('createdById', params.createdById);
+  if (params.displayCurrency) query.set('displayCurrency', params.displayCurrency);
+  const qs = query.toString();
+  return request(`/quotes/value-by-status${qs ? `?${qs}` : ''}`);
+}
+
 /** /teklifler?tab=reports "Reddedilme Sebepleri" pasta grafigi. */
 export function getQuoteRejectionReasonsSummary(
   params: { from?: string; to?: string; createdById?: string } = {},

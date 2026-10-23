@@ -3125,6 +3125,11 @@ export const tr = {
       rejectionReasonsTitle: 'Teklif Reddedilme Sebepleri',
       rejectionReasonUnspecified: 'Belirtilmemiş',
       rejectionReasonsEmpty: 'Henüz reddedilmiş teklif yok.',
+      valueByStatusTitle: 'Durum Bazlı Toplam Değer',
+      valueByStatusEmpty: 'Henüz teklif yok.',
+      valueByStatusCurrencyLabel: 'Para birimi:',
+      valueByStatusMissingRateWarning: (currencies: string) =>
+        `${currencies} için güncel kur alınamadığından bu tutarlar grafiğe dahil edilmedi.`,
       rejectionNotesSectionTitle: 'Reddedilme Notları',
       rejectionNotesSectionSubtitle: 'Reddedilen tekliflerin sebep ve notlarını görüntüleyin.',
       filterButton: 'Filtrele',

@@ -129,7 +129,17 @@ export function buildPieOptionFromPoints(
   theme: ChartTheme,
   data: { name: string; value: number }[],
   tooltipValueFormatter?: (value: number) => string,
+  legendPosition: 'right' | 'bottom' = 'right',
 ): EChartsOption {
+  const legendFormatter = (name: string) => {
+    const point = data.find((item) => item.name === name);
+    if (!point) return name;
+    const formattedValue = tooltipValueFormatter
+      ? tooltipValueFormatter(point.value)
+      : numberFormatter.format(point.value);
+    return `${name}: ${formattedValue}`;
+  };
+
   return {
     color: theme.seriesColors,
     tooltip: {
@@ -141,25 +151,27 @@ export function buildPieOptionFromPoints(
           }
         : undefined,
     },
-    legend: {
-      orient: 'vertical',
-      right: '22%',
-      top: 'middle',
-      textStyle: { color: theme.muted },
-      formatter: (name: string) => {
-        const point = data.find((item) => item.name === name);
-        if (!point) return name;
-        const formattedValue = tooltipValueFormatter
-          ? tooltipValueFormatter(point.value)
-          : numberFormatter.format(point.value);
-        return `${name}: ${formattedValue}`;
-      },
-    },
+    legend:
+      legendPosition === 'bottom'
+        ? {
+            orient: 'vertical',
+            bottom: 0,
+            left: 'center',
+            textStyle: { color: theme.muted },
+            formatter: legendFormatter,
+          }
+        : {
+            orient: 'vertical',
+            right: '22%',
+            top: 'middle',
+            textStyle: { color: theme.muted },
+            formatter: legendFormatter,
+          },
     series: [
       {
         type: 'pie',
-        center: ['28%', '50%'],
-        radius: ['45%', '70%'],
+        center: legendPosition === 'bottom' ? ['50%', '34%'] : ['28%', '50%'],
+        radius: legendPosition === 'bottom' ? ['34%', '52%'] : ['45%', '70%'],
         itemStyle: { borderColor: theme.grid, borderWidth: 2, borderRadius: 4 },
         label: { color: theme.muted, formatter: '{b}: {d}%' },
         data,
