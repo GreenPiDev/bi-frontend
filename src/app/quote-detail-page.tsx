@@ -379,10 +379,22 @@ export function QuoteContentBody({
    * gorunmuyor - bu yuzden gruplu kalem tablosunda fiyatla ilgili kolonlar
    * (birim fiyat/KDV/tutar) hic gosterilmez, sadece urun kodu/ad/marka/miktar kalir.
    * Grup bazinda toplam tutar, ayri "Gruplar" ozet tablosunda gosterilir (bkz.
-   * formatGroupAmount). */
-  const groupedItemColumns = itemColumns.filter(
-    (column) => !['unitPrice', 'vatPct', 'lineTotal'].includes(column.key),
-  );
+   * formatGroupAmount). itemColumns'un dar/genis width class'lari (w-[1%], w-24,
+   * break-words...) auto-layout + "Ürün" kolonunun bosta kalan tum genisligi
+   * yutmasi icin tasarlanmisti - fiyat kolonlari kalkinca kalan 4 kolon bu
+   * yuzden cok orantisiz dagiliyordu (bkz. kullanici ekran goruntusu). Bu
+   * yuzden width/whitespace class'lari burada atilip asagidaki tabloya
+   * `table-fixed` verilir - esit genislikte 4 kolon. */
+  const groupedItemColumns = itemColumns
+    .filter((column) => !['unitPrice', 'vatPct', 'lineTotal'].includes(column.key))
+    .map((column) => ({
+      ...column,
+      className: clsx(
+        'break-words',
+        column.key !== 'product' && 'text-app-muted',
+        column.key === 'quantity' && 'text-right',
+      ),
+    }));
 
   /** Yazdirma disindaki (web) gorunumde banka hesaplari tablosu - PDF/yazdirma
    * cikisi degismemesi icin sadece !isPrintMode'da kullanilir, asagidaki ham
@@ -668,7 +680,7 @@ export function QuoteContentBody({
             )}
           >
             <div className="border border-app-border bg-app-surface overflow-hidden">
-              <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+              <table className="w-full table-fixed text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
                 <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
                   <tr>
                     {groupedItemColumns.map((column) => (
