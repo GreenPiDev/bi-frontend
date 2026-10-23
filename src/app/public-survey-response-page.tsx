@@ -182,7 +182,9 @@ export function PublicSurveyResponsePage() {
         <div className="flex flex-col items-center gap-3 py-6 text-center">
           <CircleCheck className="h-10 w-10 text-app-success" />
           <h1 className="text-lg font-bold text-app-text">{survey.surveyName}</h1>
-          <p className="text-sm text-app-muted">{tr.publicSurvey.alreadyRespondedMessage}</p>
+          <p className="text-sm text-app-muted">
+            {submitted ? tr.publicSurvey.submittedMessage : tr.publicSurvey.alreadyRespondedMessage}
+          </p>
         </div>
       </PublicSurveyShell>
     );

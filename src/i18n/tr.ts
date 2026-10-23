@@ -354,6 +354,7 @@ export const tr = {
   publicSurvey: {
     invalidTokenMessage: 'Bu anket linki geçersiz veya süresi dolmuş.',
     alreadyRespondedMessage: 'Bu anketi daha önce yanıtladınız, ilginiz için teşekkür ederiz.',
+    submittedMessage: 'Yanıtınız başarıyla kaydedildi. Değerli görüşleriniz için teşekkür ederiz!',
     requiredQuestionError: 'Bu soru zorunludur.',
     submitButton: 'Gönder',
     poweredByFooter: 'PiLens altyapısı ile gönderilmiştir.',
