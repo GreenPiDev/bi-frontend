@@ -356,6 +356,7 @@ export const tr = {
     alreadyRespondedMessage: 'Bu anketi daha önce yanıtladınız, ilginiz için teşekkür ederiz.',
     requiredQuestionError: 'Bu soru zorunludur.',
     submitButton: 'Gönder',
+    poweredByFooter: 'PiLens altyapısı ile gönderilmiştir.',
   },
   postSaleManagement: {
     title: 'Satış Sonrası Destek',

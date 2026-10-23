@@ -3739,6 +3739,8 @@ export interface PublicSurveyView {
   surveyName: string;
   surveyDescription: string | null;
   alreadyResponded: boolean;
+  tenantName: string;
+  tenantLogoDataUrl: string | null;
   questions: PublicSurveyQuestion[];
 }
 

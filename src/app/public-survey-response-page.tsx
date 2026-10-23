@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import { CircleAlert, CircleCheck } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { AuthLayout } from '../components/ui/auth-layout';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { TextareaField } from '../components/ui/textarea-field';
@@ -15,6 +16,46 @@ import {
 import { tr } from '../i18n/tr';
 
 const LIKERT_SCALE = [1, 2, 3, 4, 5] as const;
+
+/** Musterinin kimlik dogrulamasiz girdigi public yanit sayfasi icin bagimsiz,
+ * markasiz bir kabuk - AuthLayout'un login ekranina ait pazarlama gorseli burada
+ * uygun degil (bkz. kullanici geri bildirimi). Ust kisimda, veri geldiyse (tenant
+ * logo setlediyse) sirket logosu, yoksa "PiLens" yazisi gosterilir. */
+function PublicSurveyShell({
+  children,
+  logoUrl,
+  tenantName,
+}: {
+  children: ReactNode;
+  logoUrl?: string | null;
+  tenantName?: string | null;
+}) {
+  return (
+    <div className="flex min-h-screen flex-col items-center bg-app-bg-muted px-4 py-10 sm:py-16">
+      <div className="mb-6 flex items-center justify-center">
+        {logoUrl ? (
+          <img src={logoUrl} alt={tenantName ?? ''} className="h-10 max-w-[220px] object-contain" />
+        ) : (
+          <span className="text-lg font-bold tracking-tight text-app-brand">PiLens</span>
+        )}
+      </div>
+      <div className="w-full max-w-xl rounded-2xl border border-app-border bg-app-surface p-6 shadow-sm sm:p-10">
+        {children}
+      </div>
+      <p className="mt-6 text-center text-xs text-app-muted">
+        {tr.publicSurvey.poweredByFooter}{' '}
+        <a
+          href="https://www.pilens.com.tr"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-app-brand"
+        >
+          www.pilens.com.tr
+        </a>
+      </p>
+    </div>
+  );
+}
 
 type AnswerState = {
   answerText?: string;
@@ -115,17 +156,20 @@ export function PublicSurveyResponsePage() {
 
   if (surveyQuery.isPending) {
     return (
-      <AuthLayout>
+      <PublicSurveyShell>
         <p className="text-center text-sm text-app-muted">{tr.common.loading}</p>
-      </AuthLayout>
+      </PublicSurveyShell>
     );
   }
 
   if (surveyQuery.isError) {
     return (
-      <AuthLayout>
-        <p className="text-center text-sm text-app-danger">{tr.publicSurvey.invalidTokenMessage}</p>
-      </AuthLayout>
+      <PublicSurveyShell>
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <CircleAlert className="h-10 w-10 text-app-danger" />
+          <p className="text-sm text-app-muted">{tr.publicSurvey.invalidTokenMessage}</p>
+        </div>
+      </PublicSurveyShell>
     );
   }
 
@@ -134,12 +178,13 @@ export function PublicSurveyResponsePage() {
 
   if (survey.alreadyResponded || submitted) {
     return (
-      <AuthLayout>
-        <h1 className="mb-3 text-center text-xl font-bold text-app-text">{survey.surveyName}</h1>
-        <p className="text-center text-sm text-app-muted">
-          {tr.publicSurvey.alreadyRespondedMessage}
-        </p>
-      </AuthLayout>
+      <PublicSurveyShell logoUrl={survey.tenantLogoDataUrl} tenantName={survey.tenantName}>
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <CircleCheck className="h-10 w-10 text-app-success" />
+          <h1 className="text-lg font-bold text-app-text">{survey.surveyName}</h1>
+          <p className="text-sm text-app-muted">{tr.publicSurvey.alreadyRespondedMessage}</p>
+        </div>
+      </PublicSurveyShell>
     );
   }
 
@@ -176,13 +221,15 @@ export function PublicSurveyResponsePage() {
   }
 
   return (
-    <AuthLayout>
-      <h1 className="mb-1 text-center text-xl font-bold text-app-text">{survey.surveyName}</h1>
-      {survey.surveyDescription && (
-        <p className="mb-5 text-center text-sm text-app-muted">{survey.surveyDescription}</p>
-      )}
+    <PublicSurveyShell logoUrl={survey.tenantLogoDataUrl} tenantName={survey.tenantName}>
+      <div className="mb-6 border-b border-app-border pb-6 text-center">
+        <h1 className="text-xl font-bold text-app-text">{survey.surveyName}</h1>
+        {survey.surveyDescription && (
+          <p className="mt-2 text-sm text-app-muted">{survey.surveyDescription}</p>
+        )}
+      </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-6">
         <FormError message={submitError} />
         {survey.questions.map((question) => (
           <QuestionField
@@ -197,6 +244,6 @@ export function PublicSurveyResponsePage() {
           {tr.publicSurvey.submitButton}
         </Button>
       </div>
-    </AuthLayout>
+    </PublicSurveyShell>
   );
 }
