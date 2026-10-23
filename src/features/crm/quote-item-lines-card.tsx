@@ -437,15 +437,17 @@ export function QuoteItemLinesCard({
 
       <FormError message={itemsError} />
 
-      {!productListId ? (
-        <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
-          {tr.crm.quotes.form.pickerSelectProductListFirst}
-        </p>
-      ) : isGroupedMode ? (
+      {isGroupedMode ? (
         <div className="flex flex-col gap-4">
           <Button type="button" className="w-full" onClick={onAddGroup}>
             {tr.crm.quotes.form.addGroupButton}
           </Button>
+
+          {!productListId && (
+            <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
+              {tr.crm.quotes.form.pickerSelectProductListFirst}
+            </p>
+          )}
 
           {(productGroups ?? []).length === 0 ? (
             <p className="text-sm text-app-muted">{tr.crm.quotes.form.noGroupsYet}</p>
@@ -458,13 +460,15 @@ export function QuoteItemLinesCard({
                   className="flex flex-col gap-3 rounded-lg border border-app-border p-3"
                 >
                   <div className="flex items-center gap-2">
-                    <TextField
-                      label={tr.crm.quotes.form.groupNameLabel}
-                      hideLabel
-                      placeholder={tr.crm.quotes.form.groupNamePlaceholder}
-                      value={group.name}
-                      onChange={(event) => onGroupNameChange?.(group.id, event.target.value)}
-                    />
+                    <div className="flex-1">
+                      <TextField
+                        label={tr.crm.quotes.form.groupNameLabel}
+                        hideLabel
+                        placeholder={tr.crm.quotes.form.groupNamePlaceholder}
+                        value={group.name}
+                        onChange={(event) => onGroupNameChange?.(group.id, event.target.value)}
+                      />
+                    </div>
                     <IconActionButton
                       icon={X}
                       tooltip={tr.crm.quotes.form.removeGroup}
@@ -484,7 +488,11 @@ export function QuoteItemLinesCard({
                     />
                   )}
 
-                  <Button type="button" onClick={() => onAddItem(group.id)}>
+                  <Button
+                    type="button"
+                    disabled={!productListId}
+                    onClick={() => onAddItem(group.id)}
+                  >
                     {tr.crm.quotes.form.addLineButton}
                   </Button>
                 </div>
@@ -492,6 +500,10 @@ export function QuoteItemLinesCard({
             })
           )}
         </div>
+      ) : !productListId ? (
+        <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
+          {tr.crm.quotes.form.pickerSelectProductListFirst}
+        </p>
       ) : (
         <>
           <div>

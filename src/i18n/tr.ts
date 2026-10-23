@@ -3127,7 +3127,7 @@ export const tr = {
         addGroupButton: '+ Grup Ekle',
         noGroupsYet: 'Henüz grup eklenmedi. Yukarıdan grup ekleyin.',
         groupNameLabel: 'Grup Adı',
-        groupNamePlaceholder: 'Örn. Kompanzasyon Panosu',
+        groupNamePlaceholder: 'Grup Adı',
         removeGroup: 'Grubu kaldır',
       },
       edit: {
