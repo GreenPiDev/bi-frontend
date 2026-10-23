@@ -683,6 +683,9 @@ export function QuoteContentBody({
               <table className="w-full table-fixed text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
                 <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
                   <tr>
+                    <th className="w-12 px-4 py-3 !text-white">
+                      {tr.crm.quotes.detail.groupNoColumn}
+                    </th>
                     {groupedItemColumns.map((column) => (
                       <th
                         key={column.key}
@@ -697,7 +700,7 @@ export function QuoteContentBody({
                   {quote.items.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={groupedItemColumns.length}
+                        colSpan={groupedItemColumns.length + 1}
                         className="px-4 py-8 text-center text-app-muted"
                       >
                         {quote.itemsEntryMode === 'MANUAL_TOTAL'
@@ -712,7 +715,10 @@ export function QuoteContentBody({
                           key={row.key}
                           className="border-b border-app-border bg-[#e3f2fd] last:border-0"
                         >
-                          <td colSpan={groupedItemColumns.length} className="px-4 py-2 font-bold">
+                          <td
+                            colSpan={groupedItemColumns.length + 1}
+                            className="px-4 py-2 font-bold"
+                          >
                             {row.groupName}
                           </td>
                         </tr>
@@ -728,6 +734,7 @@ export function QuoteContentBody({
                               : 'bg-app-surface',
                           )}
                         >
+                          <td className="w-12 px-4 py-3 !text-app-text">{row.zebraIndex + 1}</td>
                           {groupedItemColumns.map((column) => (
                             <td
                               key={column.key}
