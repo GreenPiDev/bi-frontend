@@ -15,6 +15,8 @@ export const tr = {
     selectedCount: (n: number) => `${n} öge seçildi`,
     previous: 'Önceki',
     next: 'Sonraki',
+    previousPageTooltip: 'Önceki sayfa',
+    nextPageTooltip: 'Sonraki sayfa',
     search: 'Ara',
     reset: 'Sıfırla',
     pageOf: (page: number, totalPages: number) => `Sayfa ${page} / ${Math.max(totalPages, 1)}`,

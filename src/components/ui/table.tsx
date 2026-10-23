@@ -1,9 +1,15 @@
 import { clsx } from 'clsx';
-import { ArrowRight, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { tr } from '../../i18n/tr';
-import { Button } from './button';
 import { IconActionButton } from './icon-action-button';
 import { Tooltip } from './tooltip';
 
@@ -334,8 +340,14 @@ export function Pagination({
     onPageChange?.(parsedInputPage);
   }
 
+  const pagerButtonClassName = (enabled: boolean) =>
+    clsx(
+      'inline-flex h-5 items-center justify-center self-center rounded border border-[#1e2a4a] px-1.5 text-[#1e2a4a] transition-colors',
+      enabled ? 'cursor-pointer hover:bg-[#1e2a4a]/10' : 'cursor-not-allowed opacity-40',
+    );
+
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-app-muted">
+    <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm text-app-muted">
       {onPageChange ? (
         <div className="flex items-center gap-2">
           <span>{tr.common.pageInputLabel}</span>
@@ -364,12 +376,7 @@ export function Pagination({
               onClick={goToTypedPage}
               disabled={!canGoToTypedPage}
               aria-label={tr.common.goToPage}
-              className={clsx(
-                'inline-flex h-5 items-center justify-center self-center rounded border border-[#1e2a4a] px-1.5 text-[#1e2a4a] transition-colors',
-                canGoToTypedPage
-                  ? 'cursor-pointer hover:bg-[#1e2a4a]/10'
-                  : 'cursor-not-allowed opacity-40',
-              )}
+              className={pagerButtonClassName(canGoToTypedPage)}
             >
               <ArrowRight size={14} />
             </button>
@@ -382,14 +389,31 @@ export function Pagination({
             : tr.common.pageOfWithTotal(page, totalPages, total)}
         </span>
       )}
-      <div className="flex gap-2">
-        <Button type="button" variant="secondary" disabled={page <= 1} onClick={onPrevious}>
-          {tr.common.previous}
-        </Button>
-        <Button type="button" variant="secondary" disabled={page >= totalPages} onClick={onNext}>
-          {tr.common.next}
-        </Button>
+      <div className="flex items-center gap-2 justify-self-center">
+        <Tooltip content={tr.common.previousPageTooltip}>
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={onPrevious}
+            aria-label={tr.common.previousPageTooltip}
+            className={pagerButtonClassName(page > 1)}
+          >
+            <ChevronLeft size={14} />
+          </button>
+        </Tooltip>
+        <Tooltip content={tr.common.nextPageTooltip}>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={onNext}
+            aria-label={tr.common.nextPageTooltip}
+            className={pagerButtonClassName(page < totalPages)}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </Tooltip>
       </div>
+      <div />
     </div>
   );
 }
