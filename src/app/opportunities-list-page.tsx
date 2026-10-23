@@ -3,10 +3,12 @@ import { Filter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { OpportunityReportsContent } from './opportunity-reports-content';
 import { Button } from '../components/ui/button';
 import { ColumnVisibilityPicker } from '../components/ui/column-visibility-picker';
 import { Drawer } from '../components/ui/drawer';
 import { FilterButtonGroup } from '../components/ui/filter-button-group';
+import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
 import { InlineSelect } from '../components/ui/inline-select';
 import { Modal } from '../components/ui/modal';
 import { Pagination, Table, type TableColumn, type TableSort } from '../components/ui/table';
@@ -100,7 +102,7 @@ function OpportunityStageSelect({ opportunity }: { opportunity: Opportunity }) {
   );
 }
 
-export function OpportunitiesListPage() {
+function OpportunitiesListTabContent() {
   const navigate = useNavigate();
   const toast = useToast();
   const deleteMutation = useDeleteOpportunityMutation();
@@ -263,15 +265,8 @@ export function OpportunitiesListPage() {
   }
 
   return (
-    <AppShell>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{tr.crm.opportunities.title}</h1>
-            <PageHelp text={tr.help.opportunities} />
-          </div>
-          <p className="mt-1 text-sm text-app-muted">{tr.crm.opportunities.subtitle}</p>
-        </div>
+    <>
+      <div className="flex flex-wrap items-start justify-end gap-4">
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
             icon={Filter}
@@ -292,7 +287,7 @@ export function OpportunitiesListPage() {
         </div>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <FilterButtonGroup
           label={tr.crm.opportunities.stageFilterLabel}
           value={stage}
@@ -424,6 +419,35 @@ export function OpportunitiesListPage() {
           <p className="whitespace-pre-wrap text-sm text-app-text">{descriptionModal}</p>
         </Modal>
       )}
+    </>
+  );
+}
+
+export function OpportunitiesListPage() {
+  const tabs: HorizontalTabItem[] = [
+    {
+      key: 'list',
+      label: tr.crm.opportunities.tabs.list,
+      content: <OpportunitiesListTabContent />,
+    },
+    {
+      key: 'reports',
+      label: tr.crm.opportunities.tabs.reports,
+      content: <OpportunityReportsContent />,
+    },
+  ];
+
+  return (
+    <AppShell>
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold text-app-text">{tr.crm.opportunities.title}</h1>
+        <PageHelp text={tr.help.opportunities} />
+      </div>
+      <p className="mt-1 text-sm text-app-muted">{tr.crm.opportunities.subtitle}</p>
+
+      <div className="mt-6">
+        <HorizontalTabPanel tabs={tabs} queryParam="tab" defaultTabKey="list" />
+      </div>
     </AppShell>
   );
 }

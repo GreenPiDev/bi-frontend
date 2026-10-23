@@ -1924,6 +1924,10 @@ export const tr = {
     opportunities: {
       title: 'Fırsatlar',
       subtitle: 'Açık satış fırsatlarını aşamalarına göre takip edin.',
+      tabs: {
+        list: 'Fırsatlar',
+        reports: 'Raporlar',
+      },
       newButton: 'Yeni Fırsat',
       loading: 'Fırsatlar yükleniyor...',
       empty: 'Henüz fırsat kaydı yok.',
