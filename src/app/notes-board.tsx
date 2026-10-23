@@ -63,7 +63,7 @@ export function NotesBoard() {
       {notes.length === 0 ? (
         <p className="mt-6 text-sm text-app-muted">{t.empty}</p>
       ) : (
-        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {notes.map((note) => (
             <NoteCard
               key={note.id}

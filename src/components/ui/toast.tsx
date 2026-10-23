@@ -123,7 +123,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-[120] flex w-full max-w-sm flex-col gap-3">
+      <div className="pointer-events-none fixed inset-x-4 top-4 z-[120] flex flex-col items-end gap-3">
         {toasts.map((toast) => {
           const Icon = VARIANT_ICON[toast.variant];
           const styles = VARIANT_CLASSES[toast.variant];
@@ -134,7 +134,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               onMouseEnter={() => pauseTimer(toast.id)}
               onMouseLeave={() => resumeTimer(toast.id)}
               className={clsx(
-                'group pointer-events-auto relative flex min-h-[4.5rem] items-center gap-3 overflow-hidden rounded-md',
+                'group pointer-events-auto relative flex w-full max-w-sm min-h-[4.5rem] items-center gap-3 overflow-hidden rounded-md',
                 'px-4 py-5 pr-9 text-sm text-white shadow-xl ring-1 ring-white/15 backdrop-blur-sm',
                 styles.bg,
                 styles.glow,

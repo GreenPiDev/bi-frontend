@@ -1,4 +1,17 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api/v1';
+// Prod'da (Vercel) VITE_API_BASE_URL her zaman acikca set edilir, bu yuzden asagidaki
+// otomatik-algilama hic devreye girmez. Yerel gelistirmede ise .env'de bu degiskeni BOS
+// birakmak, sayfanin hangi host'tan acildigini (localhost ya da bir LAN IP'si) otomatik
+// algilayip backend'e ayni host uzerinden baglanmayi saglar - boylece hem masaustunden
+// hem telefondan (ayni Wi-Fi) .env'e dokunmadan calisir. Farkli bir host/porttan calisan
+// bir backend'e kasten baglanmak gerekiyorsa VITE_API_BASE_URL'i yine acikca set edin.
+function resolveApiBaseUrl(): string {
+  const configured = import.meta.env.VITE_API_BASE_URL;
+  if (configured) return configured;
+  const host = typeof window === 'undefined' ? 'localhost' : window.location.hostname;
+  return `http://${host}:3011/api/v1`;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export type PermissionAction =
   'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE' | 'IMPORT' | 'EXPORT' | 'APPROVE';

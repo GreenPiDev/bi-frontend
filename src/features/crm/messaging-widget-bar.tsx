@@ -6,6 +6,7 @@ import type { MessagesFilterState } from './use-messages-filter-state';
 import { useMeQuery } from '../auth/use-auth';
 import { tr } from '../../i18n/tr';
 import type { ConversationSummary } from '../../lib/api';
+import { useIsMobilePortrait } from '../../lib/use-mobile-portrait';
 
 interface MessagingWidgetBarProps {
   expanded: boolean;
@@ -44,6 +45,7 @@ export function MessagingWidgetBar({
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const isMobilePortrait = useIsMobilePortrait();
 
   function displayCounterpart(conversation: ConversationSummary): string {
     const { lastMessage } = conversation;
@@ -57,9 +59,22 @@ export function MessagingWidgetBar({
   }
 
   const showExpandedContent = expanded || closing;
+  // Kapaliyken (sadece baslik cubugu) kucuk - chatbot ikonuyla ayni satira sigar.
+  // Genisleyince (liste gorunur) telefon dikey konumda ekrana sigmadigi icin tam
+  // genislikte bir fixed overlay'e donusur (bkz. use-mobile-portrait.ts).
+  const isMobileOverlay = isMobilePortrait && showExpandedContent;
 
   return (
-    <div className="flex w-80 flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl">
+    <div
+      className={clsx(
+        'flex flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl',
+        isMobileOverlay
+          ? 'fixed inset-x-3 bottom-20 z-[115]'
+          : isMobilePortrait
+            ? 'w-auto'
+            : 'w-80',
+      )}
+    >
       <div
         role="button"
         tabIndex={0}

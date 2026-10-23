@@ -1,15 +1,18 @@
+import { clsx } from 'clsx';
 import { MessageCircle, Send, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMeQuery } from '../auth/use-auth';
 import { tr } from '../../i18n/tr';
 import type { ChatHistoryItem } from '../../lib/api';
+import { useIsMobilePortrait } from '../../lib/use-mobile-portrait';
 import { loadChatHistory, saveChatHistory } from './chatbot-storage';
 import { useSendChatMessageMutation } from './use-chatbot';
 
 export function ChatbotWidget() {
   const meQuery = useMeQuery();
   const userId = meQuery.data?.id;
+  const isMobilePortrait = useIsMobilePortrait();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatHistoryItem[]>([]);
   const [input, setInput] = useState('');
@@ -65,7 +68,12 @@ export function ChatbotWidget() {
   return (
     <div className="flex flex-col items-end gap-3">
       {open && (
-        <div className="flex h-[28rem] w-80 flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl">
+        <div
+          className={clsx(
+            'flex flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl',
+            isMobilePortrait ? 'fixed inset-x-3 bottom-20 z-[115] h-[70vh]' : 'h-[28rem] w-80',
+          )}
+        >
           <div className="flex items-center justify-between border-b border-app-border px-4 py-3">
             <span className="text-sm font-semibold text-app-text">{tr.chatbot.title}</span>
             <button
@@ -128,7 +136,7 @@ export function ChatbotWidget() {
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-label={open ? tr.chatbot.closeButtonLabel : tr.chatbot.openButtonLabel}
-        className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-app-brand text-white shadow-lg hover:bg-app-brand-dark"
+        className="inline-flex h-14 w-14 shrink-0 items-center justify-center self-end rounded-full bg-app-brand text-white shadow-lg hover:bg-app-brand-dark"
       >
         {open ? <X size={24} /> : <MessageCircle size={24} />}
       </button>

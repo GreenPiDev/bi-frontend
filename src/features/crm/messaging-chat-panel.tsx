@@ -12,6 +12,7 @@ import {
 } from './use-messages';
 import { useMeQuery } from '../auth/use-auth';
 import { tr } from '../../i18n/tr';
+import { useIsMobilePortrait } from '../../lib/use-mobile-portrait';
 
 interface MessagingChatPanelProps {
   conversationId: string;
@@ -31,6 +32,7 @@ export function MessagingChatPanel({
   const navigate = useNavigate();
   const meQuery = useMeQuery();
   const currentUserId = meQuery.data?.id;
+  const isMobilePortrait = useIsMobilePortrait();
   const conversationQuery = useConversationQuery(conversationId);
   const readMutation = useSetConversationReadMutation();
   const starMutation = useSetConversationStarMutation();
@@ -97,7 +99,8 @@ export function MessagingChatPanel({
   return (
     <div
       className={clsx(
-        'flex h-[28rem] w-80 flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl',
+        'flex flex-col overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-xl',
+        isMobilePortrait ? 'fixed inset-x-3 bottom-20 z-[115] h-[70vh]' : 'h-[28rem] w-80',
         closing ? 'animate-widget-panel-out' : 'animate-widget-panel-in',
       )}
     >

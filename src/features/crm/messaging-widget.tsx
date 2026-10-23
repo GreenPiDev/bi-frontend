@@ -9,6 +9,7 @@ import {
 } from './use-messages';
 import { useMessagesFilterState } from './use-messages-filter-state';
 import { useDebouncedValue } from '../../lib/use-debounced-value';
+import { useIsMobilePortrait } from '../../lib/use-mobile-portrait';
 
 const EXIT_ANIMATION_MS = 160;
 
@@ -17,6 +18,7 @@ const EXIT_ANIMATION_MS = 160;
  * (bkz. components/ui/floating-widgets-dock.tsx, app-shell.tsx onu ChatbotWidget'in
  * yaninda dock'a yerlestiriyor); burada sadece kendi ic genisleme/animasyon state'i var. */
 export function MessagingWidget() {
+  const isMobilePortrait = useIsMobilePortrait();
   const [expanded, setExpanded] = useState(false);
   const [barClosing, setBarClosing] = useState(false);
   const [openConversationId, setOpenConversationId] = useState<string | null>(null);
@@ -71,6 +73,21 @@ export function MessagingWidget() {
     }, EXIT_ANIMATION_MS);
   }
 
+  // Telefon dikey konumda liste paneli ve sohbet penceresi aynı anda ekrana sigmiyor
+  // (ikisi de tam genislikte fixed overlay'e donusuyor, bkz. messaging-widget-bar.tsx /
+  // messaging-chat-panel.tsx) - bir konusma secilince liste geri kapanir, masaustunde
+  // (yan yana yer var) bu davranis gerekmiyor.
+  function handleSelectConversation(id: string) {
+    setOpenConversationId(id);
+    if (isMobilePortrait && expanded) {
+      setBarClosing(true);
+      window.setTimeout(() => {
+        setExpanded(false);
+        setBarClosing(false);
+      }, EXIT_ANIMATION_MS);
+    }
+  }
+
   return (
     <div className="flex flex-row items-end gap-3">
       {openConversationId && (
@@ -90,7 +107,7 @@ export function MessagingWidget() {
         conversations={conversations}
         isLoading={messagesQuery.isPending}
         userNameById={userNameById}
-        onSelectConversation={setOpenConversationId}
+        onSelectConversation={handleSelectConversation}
         selectedConversationId={openConversationId}
         q={q}
         onQChange={setQ}
