@@ -130,6 +130,35 @@ function computeTotals(quote: Quote) {
   return getQuoteCurrencyTotals(quote);
 }
 
+/** Ad-hoc "Ürünleri Gruplayarak Ekle" (bkz. Quote.groupItemsByProduct) - bir grubun
+ * toplam tutarini, genel "Genel Toplam" (quoteGrandTotalDisplay, lib/quote-totals.ts)
+ * ile AYNI kur-cevrim/coklu-para-birimi mantigiyla hesaplar, sadece TUM teklif yerine
+ * tek bir grubun kalemleriyle. */
+function formatGroupAmount(items: QuoteItem[], quote: Quote): string {
+  const totals = groupQuoteItemTotals(
+    items.map((item) => ({
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      discountPct: Number(item.discountPct),
+      vatPct: Number(item.vatPct),
+      currency: item.currency,
+    })),
+  );
+  const foreignTotals = totals.filter((t) => t.currency !== quote.quoteCurrency);
+  if (foreignTotals.length === 0) {
+    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  const conversion = convertTotalsToQuoteCurrency(
+    totals,
+    quote.quoteCurrency,
+    quote.exchangeRates?.rates ?? {},
+  );
+  if (conversion.missingRateCurrencies.length > 0) {
+    return totals.map((t) => formatCurrencyAmount(t.grandTotal, t.currency)).join(' + ');
+  }
+  return formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency);
+}
+
 function formatOldTotalFromSnapshot(snapshot: QuoteRevisionSnapshot): string {
   const oldTotals = groupQuoteItemTotals(snapshot.items);
   const foreignOldTotals = oldTotals.filter((t) => t.currency !== snapshot.quoteCurrency);
@@ -345,6 +374,16 @@ export function QuoteContentBody({
     },
   ];
 
+  /** Ad-hoc "Ürünleri Gruplayarak Ekle" (bkz. Quote.groupItemsByProduct) - pano
+   * ureticileri fiyati PANO (grup) bazinda veriyor, tek tek urun fiyati listede
+   * gorunmuyor - bu yuzden gruplu kalem tablosunda fiyatla ilgili kolonlar
+   * (birim fiyat/KDV/tutar) hic gosterilmez, sadece urun kodu/ad/marka/miktar kalir.
+   * Grup bazinda toplam tutar, ayri "Gruplar" ozet tablosunda gosterilir (bkz.
+   * formatGroupAmount). */
+  const groupedItemColumns = itemColumns.filter(
+    (column) => !['unitPrice', 'vatPct', 'lineTotal'].includes(column.key),
+  );
+
   /** Yazdirma disindaki (web) gorunumde banka hesaplari tablosu - PDF/yazdirma
    * cikisi degismemesi icin sadece !isPrintMode'da kullanilir, asagidaki ham
    * <table>'in yerini almaz (bkz. kullanici istegi: "pdf'i bozma"). Grup logosu
@@ -549,16 +588,13 @@ export function QuoteContentBody({
         </div>
       )}
 
-      <div className="mt-8">
-        {!isPrintMode && <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>}
-        {quote.groupItemsByProduct ? (
-          // Gruplu teklif: grupsuz tablonun (asagidaki else kolu, Table bileseni)
-          // birebir AYNI gorunumu - sadece grup baslik satirlari acik mavi arkaplanla
-          // araya girer. Grupsuz tablo nasil `isPrintMode`da CSS descendant selector'lariyle
-          // (header beyaz+mavi yazi, satir kenarliklari kalkar) donusuyorsa burada da
-          // AYNI mekanizma kullanilir - sadece zebra (beyaz/acik yesil) deseni CSS
-          // `nth-child` yerine JS'te hesaplanir (bkz. buildQuoteItemPrintRows doc
-          // comment'i) - grup baslik satirlari araya girince nth-child sirasi bozulurdu.
+      {quote.groupItemsByProduct && (
+        // Gruplu teklifte, asagidaki detayli kalem tablosundan ONCE pano
+        // ureticilerinin istedigi ozet: her grubun (pano) tek bir toplam tutari -
+        // fiyat gruplar arasinda bu tabloda gorunur, asagidaki kalem tablosunda
+        // artik hic gosterilmez (bkz. groupedItemColumns doc comment'i).
+        <div className="mt-8">
+          {!isPrintMode && <SectionHeader>{tr.crm.quotes.detail.groupsSummaryTitle}</SectionHeader>}
           <div
             className={clsx(
               '[&_tbody_td]:text-xs',
@@ -570,7 +606,72 @@ export function QuoteContentBody({
               <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
                 <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
                   <tr>
-                    {itemColumns.map((column) => (
+                    <th className="w-16 px-4 py-3 !text-white">
+                      {tr.crm.quotes.detail.groupNoColumn}
+                    </th>
+                    <th className="px-4 py-3 !text-white">
+                      {tr.crm.quotes.detail.groupNameColumn}
+                    </th>
+                    <th className="w-32 px-4 py-3 text-right !text-white">
+                      {tr.crm.quotes.detail.groupAmountColumn}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groupQuoteItemsByGroupName(quote.items)
+                    .filter((group): group is { groupName: string; items: QuoteItem[] } =>
+                      Boolean(group.groupName),
+                    )
+                    .map((group, index) => (
+                      <tr
+                        key={group.groupName}
+                        className={clsx(
+                          'border-b border-app-border last:border-0',
+                          isPrintMode
+                            ? index % 2 === 0
+                              ? '!bg-white'
+                              : '!bg-[#e8f5e9]'
+                            : 'bg-app-surface',
+                        )}
+                      >
+                        <td className="px-4 py-3 !text-app-text">{index + 1}</td>
+                        <td className="px-4 py-3 !text-app-text">{group.groupName}</td>
+                        <td className="px-4 py-3 text-right font-semibold !text-app-text">
+                          {formatGroupAmount(group.items, quote)}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-8">
+        {!isPrintMode && <SectionHeader>{tr.crm.quotes.detail.itemsTitle}</SectionHeader>}
+        {quote.groupItemsByProduct ? (
+          // Gruplu teklif: grupsuz tablonun (asagidaki else kolu, Table bileseni)
+          // birebir AYNI gorunumu - sadece grup baslik satirlari acik mavi arkaplanla
+          // araya girer. Grupsuz tablo nasil `isPrintMode`da CSS descendant selector'lariyle
+          // (header beyaz+mavi yazi, satir kenarliklari kalkar) donusuyorsa burada da
+          // AYNI mekanizma kullanilir - sadece zebra (beyaz/acik yesil) deseni CSS
+          // `nth-child` yerine JS'te hesaplanir (bkz. buildQuoteItemPrintRows doc
+          // comment'i) - grup baslik satirlari araya girince nth-child sirasi bozulurdu.
+          // Fiyatla ilgili kolonlar (birim fiyat/KDV/tutar) bu tabloda yok (bkz.
+          // groupedItemColumns doc comment'i) - toplam yukaridaki "Gruplar" ozetinde.
+          <div
+            className={clsx(
+              '[&_tbody_td]:text-xs',
+              isPrintMode &&
+                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0',
+            )}
+          >
+            <div className="border border-app-border bg-app-surface overflow-hidden">
+              <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+                <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
+                  <tr>
+                    {groupedItemColumns.map((column) => (
                       <th
                         key={column.key}
                         className={clsx('px-4 py-3 !text-white', column.className)}
@@ -584,7 +685,7 @@ export function QuoteContentBody({
                   {quote.items.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={itemColumns.length}
+                        colSpan={groupedItemColumns.length}
                         className="px-4 py-8 text-center text-app-muted"
                       >
                         {quote.itemsEntryMode === 'MANUAL_TOTAL'
@@ -599,7 +700,7 @@ export function QuoteContentBody({
                           key={row.key}
                           className="border-b border-app-border bg-[#e3f2fd] last:border-0"
                         >
-                          <td colSpan={itemColumns.length} className="px-4 py-2 font-bold">
+                          <td colSpan={groupedItemColumns.length} className="px-4 py-2 font-bold">
                             {row.groupName}
                           </td>
                         </tr>
@@ -615,7 +716,7 @@ export function QuoteContentBody({
                               : 'bg-app-surface',
                           )}
                         >
-                          {itemColumns.map((column) => (
+                          {groupedItemColumns.map((column) => (
                             <td
                               key={column.key}
                               className={clsx('px-4 py-3 !text-app-text', column.className)}

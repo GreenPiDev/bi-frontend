@@ -2868,6 +2868,10 @@ export const tr = {
         rejectConfirmButton: 'Reddet',
         sendForApprovalSuccess: 'Teklif onaya gönderildi.',
         itemsTitle: 'Ürünler',
+        groupsSummaryTitle: 'Gruplar',
+        groupNoColumn: 'No',
+        groupNameColumn: 'İsim',
+        groupAmountColumn: 'Tutar',
         manualTotalItemsEmpty:
           'İçe aktarılan teklif — kalem detayı yok, sadece toplam tutar kaydedildi.',
         attributesTitle: 'Özel Alanlar',
