@@ -3887,4 +3887,74 @@ export const tr = {
       },
     },
   },
+  landing: {
+    nav: {
+      login: 'Giriş Yap',
+      demoCta: 'Demo İste',
+    },
+    hero: {
+      eyebrow: 'İş Zekâsı + CRM, Tek Platformda',
+      title: "Excel'den 10 dakikada dashboard'a, satış sürecinden tek ekranda yönetime",
+      subtitle:
+        'PiLens, SQL bilmeyen küçük ve orta ölçekli şirketlerin elindeki Excel/CSV dosyalarından ' +
+        "anlamlı dashboard'lar çıkarmasını; cari, görüşme, teklif, proje ve stok süreçlerini tek " +
+        'bir ekranda yönetmesini sağlar. Kurulum yok, danışmanlık yok.',
+      primaryCta: 'Demo İste',
+      secondaryCta: 'Giriş Yap',
+    },
+    features: {
+      title: 'Neler Yapabilirsiniz?',
+      items: [
+        {
+          title: "Excel/CSV'den Anında Dashboard",
+          description:
+            "Dosyanızı yükleyin, kolonlarınızı onaylayın, sürükle-bırak ızgara ile kendi dashboard'unuzu oluşturun.",
+        },
+        {
+          title: 'Cari ve Kontak Yönetimi',
+          description:
+            'Müşteri/tedarikçi kartları, iletişim geçmişi, eksik bilgi uyarıları ile tüm cari verisi tek yerde.',
+        },
+        {
+          title: 'Görüşme → Fırsat → Teklif',
+          description:
+            'Satış sürecinizi görüşme kaydından teklif onayına, oradan projeye kadar tek akışta takip edin.',
+        },
+        {
+          title: 'Teklif, Sipariş ve Stok',
+          description:
+            'Onaylanan teklifden otomatik satın alma siparişi, stok seviyesi takibi ve düşük stok uyarısı.',
+        },
+        {
+          title: 'Ajanda ve Hatırlatmalar',
+          description:
+            'Google Takvim benzeri ajanda, ekip içi görev atama ve satış sonrası memnuniyet takibi.',
+        },
+        {
+          title: "Raporlama ve KPI'lar",
+          description:
+            'Toplam satış, satışçı bazlı kırılım ve daha fazlası — aynı dashboard altyapısı üzerinde.',
+        },
+      ],
+    },
+    demoForm: {
+      title: 'Demo İsteyin',
+      subtitle: 'Bilgilerinizi bırakın, size kısa sürede dönüş yapalım.',
+      fields: {
+        name: 'Ad Soyad',
+        company: 'Firma Adı',
+        email: 'E-posta',
+        phone: 'Telefon',
+        message: 'Mesajınız (opsiyonel)',
+      },
+      submit: 'Gönder',
+      submitting: 'Gönderiliyor...',
+      successTitle: 'Talebiniz alındı',
+      successMessage: 'Demo talebiniz bize ulaştı, en kısa sürede sizinle iletişime geçeceğiz.',
+      errorToast: 'Demo talebi gönderilemedi, lütfen daha sonra tekrar deneyin.',
+    },
+    footer: {
+      rights: (year: number) => `© ${year} PiLens. Tüm hakları saklıdır.`,
+    },
+  },
 } as const;

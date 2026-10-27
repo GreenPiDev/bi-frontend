@@ -24,6 +24,7 @@ import { DrawingPanelTemplateFormPage } from './app/drawing-panel-template-form-
 import { DrawingPanelTemplatePreviewPage } from './app/drawing-panel-template-preview-page';
 import { DrawingSettingsPage } from './app/drawing-settings-page';
 import { HomePage } from './app/home-page';
+import { LandingPage } from './app/landing-page';
 import { InteractionDetailPage } from './app/interaction-detail-page';
 import { InteractionEditPage } from './app/interaction-edit-page';
 import { InteractionFormPage } from './app/interaction-form-page';
@@ -79,6 +80,7 @@ import { WarehouseDetailPage } from './app/warehouse-detail-page';
 import { WarehouseFormPage } from './app/warehouse-form-page';
 import { WarehousesListPage } from './app/warehouses-list-page';
 import { useMeQuery } from './features/auth/use-auth';
+import { isRootDomainHost } from './lib/root-domain';
 import { tr } from './i18n/tr';
 
 function DashboardEditRoute() {
@@ -108,11 +110,19 @@ function TenantPageRoute({ pageKey, children }: { pageKey: string; children: Rea
 
 /** /anasayfa artik her rol icin alwaysVisible oldugundan (bkz. page-registry.ts),
  * kok rota eskideki "kullanicinin erisebildigi ilk sayfayi bul" mantigina artik
- * gerek kalmadan dogrudan oraya yonlendirir. */
+ * gerek kalmadan dogrudan oraya yonlendirir.
+ *
+ * www.pilens.com.tr (root domain) uzerinde oturum yoksa /login'e atmak yerine tanitim
+ * sayfasi (LandingPage) gosterilir - bkz. isRootDomainHost. Bu salt bir UX karari,
+ * gercek yetki siniri zaten backend'de login istegindeki Origin header'i uzerinden
+ * uygulaniyor (core/http/tenant-subdomain.ts). Tenant subdomain'lerinde (sirketAdi.
+ * pilens.com.tr) davranis degismez - oturum yoksa direkt /login. */
 function RootRedirect() {
   const meQuery = useMeQuery();
+  const isRootHost = isRootDomainHost();
 
   if (meQuery.isPending) {
+    if (isRootHost) return <LandingPage />;
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-app-muted">
         {tr.common.loading}
@@ -121,6 +131,7 @@ function RootRedirect() {
   }
 
   if (!meQuery.data) {
+    if (isRootHost) return <LandingPage />;
     return <Navigate to="/login" replace />;
   }
 
