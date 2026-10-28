@@ -3891,6 +3891,8 @@ export const tr = {
     nav: {
       login: 'Giriş Yap',
       demoCta: 'Demo İste',
+      features: 'Özellikler',
+      howItWorks: 'Nasıl Çalışır',
     },
     hero: {
       eyebrow: 'İş Zekâsı + CRM, Tek Platformda',
@@ -3901,8 +3903,45 @@ export const tr = {
         'bir ekranda yönetmesini sağlar. Kurulum yok, danışmanlık yok.',
       primaryCta: 'Demo İste',
       secondaryCta: 'Giriş Yap',
+      trust: 'Kurulum yok · Danışmanlık yok · Dakikalar içinde ilk dashboard',
+    },
+    preview: {
+      label: 'Canlı Önizleme',
+      title: 'Satış Panosu',
+      kpis: [
+        { label: 'Toplam Satış', value: '₺4,82M', delta: '+%18' },
+        { label: 'Açık Fırsat', value: '37', delta: '+%6' },
+        { label: 'Onaylı Teklif', value: '128', delta: '+%24' },
+      ],
+      chartTitle: 'Aylık Ciro',
+      chartMonths: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
+      pillStock: 'Düşük stok uyarısı',
+      pillQuote: 'Yeni teklif onaylandı',
+    },
+    steps: {
+      eyebrow: 'Nasıl Çalışır',
+      title: 'Üç adımda çalışır hale gelin',
+      subtitle: 'IT departmanı, danışman ya da uzun kurulum süreçleri olmadan.',
+      items: [
+        {
+          title: 'Dosyanı Yükle',
+          description:
+            'Elindeki Excel/CSV dosyasını sürükle-bırak ile yükle; kolon tipleri otomatik algılanır.',
+        },
+        {
+          title: 'Kolonları Onayla',
+          description:
+            'Yanlış algılanan alanları tek tıkla düzelt. SQL ya da teknik bilgi gerekmez.',
+        },
+        {
+          title: 'Yönet ve Raporla',
+          description:
+            "Dashboard'ını oluştur; cari, teklif, proje ve stok süreçlerini tek ekranda yönet.",
+        },
+      ],
     },
     features: {
+      eyebrow: 'Özellikler',
       title: 'Neler Yapabilirsiniz?',
       items: [
         {
@@ -3952,8 +3991,20 @@ export const tr = {
       successTitle: 'Talebiniz alındı',
       successMessage: 'Demo talebiniz bize ulaştı, en kısa sürede sizinle iletişime geçeceğiz.',
       errorToast: 'Demo talebi gönderilemedi, lütfen daha sonra tekrar deneyin.',
+      benefits: [
+        'Size özel, baskısız bir demo',
+        '24 saat içinde dönüş',
+        'Hiçbir taahhüt gerektirmez',
+      ],
+    },
+    ctaBand: {
+      title: 'İşinizi tek platformda yönetmeye hazır mısınız?',
+      subtitle:
+        "Size özel bir demo planlayalım, PiLens'in şirketinize nasıl uyduğunu birlikte görelim.",
+      button: 'Demo İste',
     },
     footer: {
+      tagline: 'Dijitalleşmemiş şirketler için iş zekâsı ve CRM platformu.',
       rights: (year: number) => `© ${year} PiLens. Tüm hakları saklıdır.`,
     },
   },

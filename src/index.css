@@ -427,3 +427,92 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-brand-dark);
 }
+
+/* Tanitim sayfasi (landing-page.tsx) animasyonlari - sadece bu sayfada kullanilir,
+   .landing- onekiyle diger stillerden ayristirilir. */
+@keyframes landing-blob-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(30px, -20px) scale(1.08);
+  }
+}
+
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes landing-gradient-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes landing-bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes landing-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.landing-blob {
+  animation: landing-blob-drift 14s ease-in-out infinite;
+}
+
+.landing-blob-delayed {
+  animation: landing-blob-drift 16s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+.landing-float {
+  animation: landing-float 6s ease-in-out infinite;
+}
+
+.landing-gradient-text {
+  background: linear-gradient(90deg, #7fb3ff, #a78bfa, #7fb3ff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: landing-gradient-pan 6s ease-in-out infinite;
+}
+
+.landing-bar-grow {
+  transform-origin: bottom;
+  animation: landing-bar-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-blob,
+  .landing-blob-delayed,
+  .landing-float,
+  .landing-gradient-text,
+  .landing-bar-grow {
+    animation: none;
+  }
+}
