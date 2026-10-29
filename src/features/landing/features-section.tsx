@@ -1,8 +1,11 @@
 import {
   BarChart3,
-  CalendarClock,
-  LineChart,
+  Briefcase,
+  HeartHandshake,
+  MessageSquare,
   Package,
+  ShieldCheck,
+  Tag,
   Users,
   Workflow,
   type LucideIcon,
@@ -10,7 +13,17 @@ import {
 import { Reveal } from '../../components/ui/reveal';
 import { tr } from '../../i18n/tr';
 
-const FEATURE_ICONS: LucideIcon[] = [BarChart3, Users, Workflow, Package, CalendarClock, LineChart];
+const FEATURE_ICONS: LucideIcon[] = [
+  Users,
+  Workflow,
+  Briefcase,
+  Tag,
+  Package,
+  MessageSquare,
+  HeartHandshake,
+  ShieldCheck,
+  BarChart3,
+];
 
 export function FeaturesSection() {
   const { features } = tr.landing;

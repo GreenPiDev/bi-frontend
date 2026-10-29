@@ -3894,12 +3894,13 @@ export const tr = {
       howItWorks: 'Nasıl Çalışır',
     },
     hero: {
-      title: "Excel'den 10 dakikada dashboard'a, satış sürecinden tek ekranda yönetime",
+      title: 'Şirketinizin Tüm İş Süreçlerini Tek Platformdan Yönetin',
       subtitle:
-        'PiLens, SQL bilmeyen küçük ve orta ölçekli şirketlerin elindeki Excel/CSV dosyalarından ' +
-        "anlamlı dashboard'lar çıkarmasını; cari, görüşme, teklif, proje ve stok süreçlerini tek " +
-        'bir ekranda yönetmesini sağlar. Kurulum yok, danışmanlık yok.',
-      trust: 'Kurulum yok · Danışmanlık yok · Dakikalar içinde ilk dashboard',
+        'PiLens; cari ve müşteri ilişkilerinden teklif ve proje yönetimine, stok ve maliyet ' +
+        'takibinden şirket içi iletişime ve satış sonrası desteğe kadar şirketinizin tüm ' +
+        'operasyonunu tek ekranda birleştirir. Excel, e-posta ve not defteri arasında ' +
+        'koşmak yerine, kim ne yapıyor, hangi süreç nerede — hepsini tek yerden görün.',
+      trust: 'Tek platform · Tüm süreçler bir arada · Anlık raporlama',
     },
     preview: {
       label: 'Canlı Önizleme',
@@ -3913,36 +3914,31 @@ export const tr = {
       chartMonths: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
     },
     steps: {
-      title: 'Üç adımda çalışır hale gelin',
+      title: 'Üç adımda işinizin merkezine geçin',
       subtitle: 'IT departmanı, danışman ya da uzun kurulum süreçleri olmadan.',
       items: [
         {
-          title: 'Dosyanı Yükle',
+          title: 'Cari ve Ekibinizi Tanımlayın',
           description:
-            'Elindeki Excel/CSV dosyasını sürükle-bırak ile yükle; kolon tipleri otomatik algılanır.',
+            'Müşteri/tedarikçi kartlarınızı, kullanıcılarınızı ve rollerinizi dakikalar içinde kurun.',
         },
         {
-          title: 'Kolonları Onayla',
+          title: 'Süreçlerinizi Platforma Taşıyın',
           description:
-            'Yanlış algılanan alanları tek tıkla düzelt. SQL ya da teknik bilgi gerekmez.',
+            'Teklif, proje, stok ve satış sonrası süreçlerinizi Excel/e-posta yerine tek sistemde yürütün.',
         },
         {
-          title: 'Yönet ve Raporla',
+          title: 'Tüm İşinizi Tek Ekranda Görün',
           description:
-            "Dashboard'ını oluştur; cari, teklif, proje ve stok süreçlerini tek ekranda yönet.",
+            'Kim ne yapıyor, hangi teklif nerede, stok durumu ne — anlık raporlarla her şeyi tek yerden takip edin.',
         },
       ],
     },
     features: {
-      title: 'Neler Yapabilirsiniz?',
+      title: 'Tüm İş Süreçleriniz Tek Çatı Altında',
       items: [
         {
-          title: "Excel/CSV'den Anında Dashboard",
-          description:
-            "Dosyanızı yükleyin, kolonlarınızı onaylayın, sürükle-bırak ızgara ile kendi dashboard'unuzu oluşturun.",
-        },
-        {
-          title: 'Cari ve Kontak Yönetimi',
+          title: 'Cari ve Kontak Yönetimi (CRM)',
           description:
             'Müşteri/tedarikçi kartları, iletişim geçmişi, eksik bilgi uyarıları ile tüm cari verisi tek yerde.',
         },
@@ -3952,19 +3948,39 @@ export const tr = {
             'Satış sürecinizi görüşme kaydından teklif onayına, oradan projeye kadar tek akışta takip edin.',
         },
         {
-          title: 'Teklif, Sipariş ve Stok',
+          title: 'Proje Takibi',
           description:
-            'Onaylanan teklifden otomatik satın alma siparişi, stok seviyesi takibi ve düşük stok uyarısı.',
+            'Teklifle ilişkili projelerinizi, tahmini bütçe ve gerçekleşen maliyetle birlikte yönetin.',
         },
         {
-          title: 'Ajanda ve Hatırlatmalar',
+          title: 'Ürün Kataloğu ve Fiyatlandırma',
           description:
-            'Google Takvim benzeri ajanda, ekip içi görev atama ve satış sonrası memnuniyet takibi.',
+            'Ürünlerinizi görselleriyle kataloglayın, listeler halinde gruplayın ve fiyatlandırın.',
         },
         {
-          title: "Raporlama ve KPI'lar",
+          title: 'Sipariş, Stok ve Maliyet Takibi',
           description:
-            'Toplam satış, satışçı bazlı kırılım ve daha fazlası — aynı dashboard altyapısı üzerinde.',
+            'Onaylanan teklifden otomatik satın alma siparişi, hareketli ortalama maliyet ve düşük stok uyarısı.',
+        },
+        {
+          title: 'Şirket İçi İletişim ve Ajanda',
+          description:
+            'Projeye/teklife bağlı mesajlaşma, Google Takvim benzeri ajanda ve ekip içi görev atama.',
+        },
+        {
+          title: 'Satış Sonrası Destek',
+          description:
+            'Onaylanan her teklif otomatik satış sonrası sürece düşer; memnuniyet anketi ve hatırlatmalarla takip edilir.',
+        },
+        {
+          title: 'Kullanıcı ve Yetki Yönetimi',
+          description:
+            'Şirketinize özel roller tanımlayın, her kullanıcıya sadece gerekli sayfa ve aksiyonlara erişim verin.',
+        },
+        {
+          title: 'Raporlama ve Veri Analitiği',
+          description:
+            "Hazır KPI'lar yetmediğinde kendi Excel/CSV dosyanızı yükleyip dakikalar içinde ek dashboard oluşturun.",
         },
       ],
     },
