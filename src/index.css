@@ -450,18 +450,6 @@ body {
   }
 }
 
-@keyframes landing-gradient-pan {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 @keyframes landing-bar-grow {
   from {
     transform: scaleY(0);
@@ -493,15 +481,6 @@ body {
   animation: landing-float 6s ease-in-out infinite;
 }
 
-.landing-gradient-text {
-  background: linear-gradient(90deg, #7fb3ff, #a78bfa, #7fb3ff);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: landing-gradient-pan 6s ease-in-out infinite;
-}
-
 .landing-bar-grow {
   transform-origin: bottom;
   animation: landing-bar-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
@@ -511,7 +490,6 @@ body {
   .landing-blob,
   .landing-blob-delayed,
   .landing-float,
-  .landing-gradient-text,
   .landing-bar-grow {
     animation: none;
   }

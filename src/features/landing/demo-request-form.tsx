@@ -42,34 +42,29 @@ export function DemoRequestForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       <FormError message={apiErrorMessage} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label={tr.landing.demoForm.fields.name}
-          required
-          error={errors.name?.message}
-          {...registerField('name')}
-        />
-        <TextField
-          label={tr.landing.demoForm.fields.company}
-          required
-          error={errors.company?.message}
-          {...registerField('company')}
-        />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label={tr.landing.demoForm.fields.email}
-          type="email"
-          required
-          error={errors.email?.message}
-          {...registerField('email')}
-        />
-        <TextField
-          label={tr.landing.demoForm.fields.phone}
-          error={errors.phone?.message}
-          {...registerField('phone')}
-        />
-      </div>
+      <TextField
+        label={tr.landing.demoForm.fields.name}
+        required
+        error={errors.name?.message}
+        {...registerField('name')}
+      />
+      <TextField
+        label={tr.landing.demoForm.fields.email}
+        type="email"
+        required
+        error={errors.email?.message}
+        {...registerField('email')}
+      />
+      <TextField
+        label={tr.landing.demoForm.fields.company}
+        error={errors.company?.message}
+        {...registerField('company')}
+      />
+      <TextField
+        label={tr.landing.demoForm.fields.phone}
+        error={errors.phone?.message}
+        {...registerField('phone')}
+      />
       <TextareaField
         label={tr.landing.demoForm.fields.message}
         rows={3}

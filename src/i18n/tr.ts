@@ -3895,14 +3895,11 @@ export const tr = {
       howItWorks: 'Nasıl Çalışır',
     },
     hero: {
-      eyebrow: 'İş Zekâsı + CRM, Tek Platformda',
       title: "Excel'den 10 dakikada dashboard'a, satış sürecinden tek ekranda yönetime",
       subtitle:
         'PiLens, SQL bilmeyen küçük ve orta ölçekli şirketlerin elindeki Excel/CSV dosyalarından ' +
         "anlamlı dashboard'lar çıkarmasını; cari, görüşme, teklif, proje ve stok süreçlerini tek " +
         'bir ekranda yönetmesini sağlar. Kurulum yok, danışmanlık yok.',
-      primaryCta: 'Demo İste',
-      secondaryCta: 'Giriş Yap',
       trust: 'Kurulum yok · Danışmanlık yok · Dakikalar içinde ilk dashboard',
     },
     preview: {
@@ -3915,11 +3912,8 @@ export const tr = {
       ],
       chartTitle: 'Aylık Ciro',
       chartMonths: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
-      pillStock: 'Düşük stok uyarısı',
-      pillQuote: 'Yeni teklif onaylandı',
     },
     steps: {
-      eyebrow: 'Nasıl Çalışır',
       title: 'Üç adımda çalışır hale gelin',
       subtitle: 'IT departmanı, danışman ya da uzun kurulum süreçleri olmadan.',
       items: [
@@ -3941,7 +3935,6 @@ export const tr = {
       ],
     },
     features: {
-      eyebrow: 'Özellikler',
       title: 'Neler Yapabilirsiniz?',
       items: [
         {
@@ -3977,8 +3970,11 @@ export const tr = {
       ],
     },
     demoForm: {
-      title: 'Demo İsteyin',
-      subtitle: 'Bilgilerinizi bırakın, size kısa sürede dönüş yapalım.',
+      eyebrow: 'Demo İsteyin',
+      title: 'İşinizi tek platformda yönetmeye hazır mısınız?',
+      subtitle:
+        "Size özel, ücretsiz bir demo planlayalım; PiLens'in şirketinize nasıl uyduğunu birlikte " +
+        'görelim ve 24 saat içinde size dönüş yapalım.',
       fields: {
         name: 'Ad Soyad',
         company: 'Firma Adı',
@@ -3991,20 +3987,8 @@ export const tr = {
       successTitle: 'Talebiniz alındı',
       successMessage: 'Demo talebiniz bize ulaştı, en kısa sürede sizinle iletişime geçeceğiz.',
       errorToast: 'Demo talebi gönderilemedi, lütfen daha sonra tekrar deneyin.',
-      benefits: [
-        'Size özel, baskısız bir demo',
-        '24 saat içinde dönüş',
-        'Hiçbir taahhüt gerektirmez',
-      ],
-    },
-    ctaBand: {
-      title: 'İşinizi tek platformda yönetmeye hazır mısınız?',
-      subtitle:
-        "Size özel bir demo planlayalım, PiLens'in şirketinize nasıl uyduğunu birlikte görelim.",
-      button: 'Demo İste',
     },
     footer: {
-      tagline: 'Dijitalleşmemiş şirketler için iş zekâsı ve CRM platformu.',
       rights: (year: number) => `© ${year} PiLens. Tüm hakları saklıdır.`,
     },
   },
