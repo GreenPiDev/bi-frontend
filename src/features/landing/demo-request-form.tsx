@@ -2,8 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '../../components/ui/button';
 import { tr } from '../../i18n/tr';
+import { CtaButton } from './cta-button';
 import { DarkTextareaField, DarkTextField } from './dark-field';
 import { demoRequestFormSchema, type DemoRequestFormValues } from './schemas';
 import { useDemoRequestMutation } from './use-demo-request';
@@ -71,15 +71,15 @@ export function DemoRequestForm() {
         error={errors.message?.message}
         {...registerField('message')}
       />
-      <Button
+      <CtaButton
         type="submit"
         disabled={demoRequestMutation.isPending}
-        className="mt-1 w-full py-3 text-base"
+        className="mt-2 w-full py-3.5 text-base"
       >
         {demoRequestMutation.isPending
           ? tr.landing.demoForm.submitting
           : tr.landing.demoForm.submit}
-      </Button>
+      </CtaButton>
     </form>
   );
 }

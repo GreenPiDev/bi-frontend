@@ -3903,18 +3903,36 @@ export const tr = {
       trust: 'Tek platform · Tüm süreçler bir arada · Anlık raporlama',
     },
     preview: {
-      label: 'Canlı Önizleme',
-      title: 'Satış Panosu',
+      title: 'Ana Sayfa',
       kpis: [
-        { label: 'Toplam Satış', value: '₺4,82M', delta: '+%18' },
-        { label: 'Açık Fırsat', value: '37', delta: '+%6' },
-        { label: 'Onaylı Teklif', value: '128', delta: '+%24' },
+        { label: 'Toplam Teklif', value: '181' },
+        { label: 'Toplam Görüşme', value: '258' },
+        { label: 'Toplam Fırsat', value: '171' },
+        { label: 'Toplam Proje', value: '139' },
+        { label: 'Okunmamış Mesaj', value: '3' },
+        { label: 'Kritik Stok Seviyesindeki Ürün', value: '8' },
       ],
-      chartTitle: 'Aylık Ciro',
-      chartMonths: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz'],
+      chartTitle: 'Mevcut Durum Dağılımı',
+      statuses: [
+        { label: 'Taslak', count: 166 },
+        { label: 'Gönderildi', count: 2 },
+        { label: 'Onaylandı', count: 10 },
+        { label: 'Reddedildi', count: 3 },
+      ],
+      notesTitle: 'Not Defteri',
+      notes: [
+        {
+          date: '23 Eki 2026',
+          text: 'Yeni teklifte ürün fiyatına nakliye dahil edilecek. Teknik ekipten teslim süresi teyidi alınmadan teklif gönderilmeyecek.',
+        },
+        {
+          date: '23 Eki 2026',
+          text: 'XYZ Elektrik: Teklif gönderildi. Müşteri fiyatı ve teslim süresini değerlendiriyor.',
+        },
+      ],
     },
     steps: {
-      title: 'Üç adımda işinizin merkezine geçin',
+      title: 'Üç adımda tek platforma geçin',
       subtitle: 'IT departmanı, danışman ya da uzun kurulum süreçleri olmadan.',
       items: [
         {
