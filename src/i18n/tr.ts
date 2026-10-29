@@ -3889,7 +3889,6 @@ export const tr = {
   },
   landing: {
     nav: {
-      login: 'Giriş Yap',
       demoCta: 'Demo İste',
       features: 'Özellikler',
       howItWorks: 'Nasıl Çalışır',

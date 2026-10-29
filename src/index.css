@@ -450,6 +450,16 @@ body {
   }
 }
 
+@keyframes landing-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes landing-bar-grow {
   from {
     transform: scaleY(0);
@@ -486,11 +496,16 @@ body {
   animation: landing-bar-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
+.landing-bob {
+  animation: landing-bob 2s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-blob,
   .landing-blob-delayed,
   .landing-float,
-  .landing-bar-grow {
+  .landing-bar-grow,
+  .landing-bob {
     animation: none;
   }
 }

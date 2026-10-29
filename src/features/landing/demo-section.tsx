@@ -19,7 +19,7 @@ export function DemoSection() {
         <Reveal
           direction="right"
           delay={100}
-          className="rounded-3xl bg-white p-8 shadow-[0_30px_80px_-20px_rgba(10,20,60,0.5)]"
+          className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_30px_80px_-20px_rgba(10,20,60,0.5)] backdrop-blur-sm"
         >
           <DemoRequestForm />
         </Reveal>

@@ -3,10 +3,8 @@ import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '../../components/ui/button';
-import { FormError } from '../../components/ui/form-error';
-import { TextareaField } from '../../components/ui/textarea-field';
-import { TextField } from '../../components/ui/text-field';
 import { tr } from '../../i18n/tr';
+import { DarkTextareaField, DarkTextField } from './dark-field';
 import { demoRequestFormSchema, type DemoRequestFormValues } from './schemas';
 import { useDemoRequestMutation } from './use-demo-request';
 
@@ -27,12 +25,10 @@ export function DemoRequestForm() {
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center rounded-2xl bg-emerald-50 p-10 text-center">
-        <CheckCircle2 className="h-12 w-12 text-emerald-500" />
-        <h3 className="mt-4 text-lg font-bold text-slate-900">
-          {tr.landing.demoForm.successTitle}
-        </h3>
-        <p className="mt-2 max-w-sm text-sm text-slate-600">{tr.landing.demoForm.successMessage}</p>
+      <div className="flex flex-col items-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-10 text-center">
+        <CheckCircle2 className="h-12 w-12 text-emerald-400" />
+        <h3 className="mt-4 text-lg font-bold text-white">{tr.landing.demoForm.successTitle}</h3>
+        <p className="mt-2 max-w-sm text-sm text-slate-300">{tr.landing.demoForm.successMessage}</p>
       </div>
     );
   }
@@ -41,31 +37,35 @@ export function DemoRequestForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-      <FormError message={apiErrorMessage} />
-      <TextField
+      {apiErrorMessage && (
+        <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3.5 py-2.5 text-sm font-medium text-red-400">
+          {apiErrorMessage}
+        </p>
+      )}
+      <DarkTextField
         label={tr.landing.demoForm.fields.name}
         required
         error={errors.name?.message}
         {...registerField('name')}
       />
-      <TextField
+      <DarkTextField
         label={tr.landing.demoForm.fields.email}
         type="email"
         required
         error={errors.email?.message}
         {...registerField('email')}
       />
-      <TextField
+      <DarkTextField
         label={tr.landing.demoForm.fields.company}
         error={errors.company?.message}
         {...registerField('company')}
       />
-      <TextField
+      <DarkTextField
         label={tr.landing.demoForm.fields.phone}
         error={errors.phone?.message}
         {...registerField('phone')}
       />
-      <TextareaField
+      <DarkTextareaField
         label={tr.landing.demoForm.fields.message}
         rows={3}
         error={errors.message?.message}

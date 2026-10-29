@@ -1,5 +1,4 @@
 import { clsx } from 'clsx';
-import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { useScrolledPast } from '../../lib/use-scrolled-past';
 import { tr } from '../../i18n/tr';
@@ -35,13 +34,7 @@ export function SiteHeader() {
           >
             {nav.howItWorks}
           </a>
-          <Link
-            to="/login"
-            className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 transition-colors hover:text-white"
-          >
-            {nav.login}
-          </Link>
-          <a href="#demo">
+          <a href="#demo" className="landing-bob inline-block">
             <Button className="shadow-lg shadow-blue-500/20">{nav.demoCta}</Button>
           </a>
         </div>
