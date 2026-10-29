@@ -3900,10 +3900,8 @@ export const tr = {
         'takibinden şirket içi iletişime ve satış sonrası desteğe kadar şirketinizin tüm ' +
         'operasyonunu tek ekranda birleştirir. Excel, e-posta ve not defteri arasında ' +
         'koşmak yerine, kim ne yapıyor, hangi süreç nerede — hepsini tek yerden görün.',
-      trust: 'Tek platform · Tüm süreçler bir arada · Anlık raporlama',
     },
     preview: {
-      title: 'Ana Sayfa',
       kpis: [
         { label: 'Toplam Teklif', value: '181' },
         { label: 'Toplam Görüşme', value: '258' },
