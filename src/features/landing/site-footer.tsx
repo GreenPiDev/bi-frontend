@@ -7,9 +7,11 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-6 text-center sm:flex-row sm:justify-between sm:text-left">
         <div className="flex items-center gap-2">
           <img src="/minik-logo.png" alt="" className="h-7 w-auto" />
-          <span className="text-lg font-bold tracking-tight text-white">{tr.common.appName}</span>
+          <span className="landing-display text-lg font-semibold text-white">
+            {tr.common.appName}
+          </span>
         </div>
-        <p className="text-xs text-slate-500">{footer.rights(new Date().getFullYear())}</p>
+        <p className="text-xs text-slate-600">{footer.rights(new Date().getFullYear())}</p>
       </div>
     </footer>
   );
