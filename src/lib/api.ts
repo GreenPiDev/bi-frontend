@@ -38,6 +38,10 @@ export interface SafeUser {
   phone: string | null;
   defaultPageSize: number;
   columnPreferences: Record<string, string[]> | null;
+  /** Tanitim sayfasindan acilan 1 gunluk deneme kullanicisi (bkz. features/demo-account). */
+  isDemoUser?: boolean;
+  /** ISO; ilk login'de setlenir, oncesinde null. */
+  demoExpiresAt?: string | null;
 }
 
 export interface EffectivePermission {
@@ -169,6 +173,21 @@ export function logout(): Promise<{ ok: true }> {
 
 export function me(): Promise<AuthenticatedUser> {
   return request('/auth/me');
+}
+
+export interface CreateDemoAccountInput {
+  name: string;
+  email: string;
+  password: string;
+}
+
+export interface CreatedDemoAccount {
+  email: string;
+  tenantSlug: string;
+}
+
+export function createDemoAccount(input: CreateDemoAccountInput): Promise<CreatedDemoAccount> {
+  return request('/demo-accounts', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export function getProfile(): Promise<UserProfile> {

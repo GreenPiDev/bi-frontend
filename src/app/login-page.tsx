@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '../components/ui/auth-layout';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -16,11 +16,16 @@ export function LoginPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const loginMutation = useLoginMutation();
+  // Tanitim sayfasindaki demo hesabi akisi buraya ?email=... ile yonlendirir.
+  const [searchParams] = useSearchParams();
   const {
     register: registerField,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginFormSchema) });
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: { email: searchParams.get('email') ?? '' },
+  });
 
   const onSubmit = handleSubmit((values) => {
     loginMutation.mutate(values, {

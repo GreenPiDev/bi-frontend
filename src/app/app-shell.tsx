@@ -34,6 +34,9 @@ import { Link, useLocation } from 'react-router-dom';
 import { FloatingWidgetsDock } from '../components/ui/floating-widgets-dock';
 import { ChatbotWidget } from '../features/chatbot/chatbot-widget';
 import { useMeQuery, useLogoutMutation } from '../features/auth/use-auth';
+import { DemoCountdown } from '../features/demo-account/demo-countdown';
+import { DemoExpiredModal } from '../features/demo-account/demo-expired-modal';
+import { useDemoTrial } from '../features/demo-account/use-demo-trial';
 import { hasPermission } from '../features/auth/permissions';
 import { MessagingWidget } from '../features/crm/messaging-widget';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
@@ -93,6 +96,7 @@ export function AppShell({
 }: AppShellProps) {
   const meQuery = useMeQuery();
   const logoutMutation = useLogoutMutation();
+  const demoTrial = useDemoTrial(meQuery.data);
   const [sidebarOpen, setSidebarOpenState] = useState(persistedSidebarOpen);
   const setSidebarOpen = (value: boolean) => {
     persistedSidebarOpen = value;
@@ -383,7 +387,7 @@ export function AppShell({
             <img src="/pilens-logo.png" alt={tr.common.appName} className="h-11 w-auto" />
           </Link>
           <div className="flex items-center gap-4">
-            <NotificationBell />
+            {!demoTrial.expired && <NotificationBell />}
             {meQuery.data && (
               <Link
                 to="/profile?tab=general"
@@ -415,6 +419,11 @@ export function AppShell({
             </button>
           </div>
         </div>
+        {demoTrial.remainingMs !== null && !demoTrial.expired && (
+          <div className="pointer-events-none absolute left-1/2 -translate-x-1/2">
+            <DemoCountdown remainingMs={demoTrial.remainingMs} />
+          </div>
+        )}
       </header>
 
       {/* Mobilde sidebar acikken icerigin ustune koyulan yari saydam arka plan -
@@ -594,13 +603,19 @@ export function AppShell({
       </div>
 
       <main className="pt-16 md:pl-16">
-        <div className="p-6 pb-24 md:p-8 md:pb-24">{children}</div>
+        {/* Suresi dolan demo kullanicisi login olabilir ama sayfa icerigi hic render
+         * edilmez (backend zaten DEMO_EXPIRED donuyor) - sadece uzatma modal'i. */}
+        <div className="p-6 pb-24 md:p-8 md:pb-24">{demoTrial.expired ? null : children}</div>
       </main>
 
-      <FloatingWidgetsDock>
-        <ChatbotWidget />
-        {canAccessPage('messages') && <MessagingWidget />}
-      </FloatingWidgetsDock>
+      {demoTrial.expired && meQuery.data ? (
+        <DemoExpiredModal user={meQuery.data} onLogout={() => logoutMutation.mutate()} />
+      ) : (
+        <FloatingWidgetsDock>
+          <ChatbotWidget />
+          {canAccessPage('messages') && <MessagingWidget />}
+        </FloatingWidgetsDock>
+      )}
     </div>
   );
 }

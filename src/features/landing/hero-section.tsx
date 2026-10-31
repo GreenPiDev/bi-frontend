@@ -1,10 +1,15 @@
+import { ArrowRight } from 'lucide-react';
+import { useState } from 'react';
 import { tr } from '../../i18n/tr';
+import { CtaButton } from './cta-button';
 import { DashboardPreview } from './dashboard-preview';
+import { DemoAccountDialog } from './demo-account-dialog';
 
 const WORD_STAGGER_MS = 70;
 
 export function HeroSection() {
-  const { hero } = tr.landing;
+  const { hero, demoAccount } = tr.landing;
+  const [demoDialogOpen, setDemoDialogOpen] = useState(false);
   const words = hero.title.split(' ');
 
   return (
@@ -34,6 +39,23 @@ export function HeroSection() {
           >
             {hero.subtitle}
           </p>
+          <div
+            className="landing-rise mt-10 flex flex-col items-start gap-3"
+            style={{ '--d': '1050ms' } as React.CSSProperties}
+          >
+            <CtaButton
+              type="button"
+              onClick={() => setDemoDialogOpen(true)}
+              className="group gap-2 px-7 py-3.5 text-base"
+            >
+              {demoAccount.cta}
+              <ArrowRight
+                size={18}
+                className="transition-transform duration-300 group-hover:translate-x-0.5"
+              />
+            </CtaButton>
+            <span className="text-xs text-zinc-500">{demoAccount.ctaHint}</span>
+          </div>
         </div>
 
         <div className="landing-rise relative" style={{ '--d': '600ms' } as React.CSSProperties}>
@@ -50,6 +72,8 @@ export function HeroSection() {
       >
         <span className="landing-scroll-line block h-full w-full bg-white/70" />
       </a>
+
+      {demoDialogOpen && <DemoAccountDialog onClose={() => setDemoDialogOpen(false)} />}
     </section>
   );
 }

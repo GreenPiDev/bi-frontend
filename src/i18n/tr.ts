@@ -4019,8 +4019,64 @@ export const tr = {
       successMessage: 'Demo talebiniz bize ulaştı, en kısa sürede sizinle iletişime geçeceğiz.',
       errorToast: 'Demo talebi gönderilemedi, lütfen daha sonra tekrar deneyin.',
     },
+    demoAccount: {
+      cta: 'Demo kullanıcı oluştur',
+      ctaHint: 'Kredi kartı gerekmez · 1 gün ücretsiz, tüm özellikler açık',
+      title: 'Demo hesabınızı oluşturun',
+      subtitle:
+        'E-posta adresinizi ve şifrenizi belirleyin, PiLens’i gerçek örnek verilerle ' +
+        'yönetici yetkisiyle deneyin. 1 günlük deneme süreniz ilk girişinizde başlar.',
+      fields: {
+        name: 'Ad Soyad',
+        email: 'E-posta',
+        password: 'Şifre',
+        passwordConfirm: 'Şifre (tekrar)',
+      },
+      submit: 'Hesabımı oluştur',
+      submitting: 'Oluşturuluyor...',
+      close: 'Kapat',
+      errorFallback: 'Demo hesabı oluşturulamadı, lütfen daha sonra tekrar deneyin.',
+      emailTaken: 'Bu e-posta adresiyle zaten bir hesap var.',
+      tooManyRequests: 'Çok fazla deneme yapıldı, lütfen biraz sonra tekrar deneyin.',
+      successTitle: 'Demo hesabınız hazır',
+      successMessage: (email: string) =>
+        `${email} adresi ve belirlediğiniz şifreyle giriş yapabilirsiniz. ` +
+        '1 günlük deneme süreniz ilk girişinizle başlayacak.',
+      goToLogin: 'Giriş yap',
+      validation: {
+        name: 'Ad soyad gerekli.',
+        email: 'Geçerli bir e-posta adresi girin.',
+        password: 'Şifre en az 8 karakter olmalı.',
+        passwordConfirm: 'Şifreyi tekrar girin.',
+        passwordMismatch: 'Şifreler eşleşmiyor.',
+      },
+    },
     footer: {
       rights: (year: number) => `© ${year} PiLens. Tüm hakları saklıdır.`,
+    },
+  },
+  demoTrial: {
+    remainingLabel: 'Deneme süresi',
+    remainingAria: (time: string) => `Deneme hesabınızın kalan süresi: ${time}`,
+    expired: {
+      title: 'Deneme süreniz doldu',
+      message:
+        'PiLens deneme hesabınızın 1 günlük süresi sona erdi. Hesabınızı uzatmak veya ' +
+        'şirketinize özel kurulum için bizimle iletişime geçin.',
+      callUs: 'Bizi arayın',
+      requestTitle: 'Ya da biz sizi arayalım',
+      requestHint: 'Telefon numaranızı bırakın, ekibimiz en kısa sürede size dönsün.',
+      phone: 'Telefon',
+      note: 'Notunuz (opsiyonel)',
+      submit: 'Beni arayın',
+      submitting: 'Gönderiliyor...',
+      successTitle: 'Talebiniz alındı',
+      successMessage: 'Ekibimiz en kısa sürede sizinle iletişime geçecek.',
+      errorMessage: 'Talep gönderilemedi, lütfen daha sonra tekrar deneyin.',
+      logout: 'Çıkış yap',
+      validation: {
+        phone: 'Telefon numarası gerekli.',
+      },
     },
   },
 } as const;
