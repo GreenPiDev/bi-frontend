@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createTenant,
   flushAllTenantCaches,
+  getPlatformDemoUsers,
   getPlatformModuleDefinitions,
   getPlatformPageModules,
   getPlatformTenantModules,
@@ -18,6 +19,13 @@ import {
 } from '../../lib/api';
 
 export const PLATFORM_TENANTS_QUERY_KEY = ['platform-admin', 'tenants'];
+
+export function usePlatformDemoUsersQuery() {
+  return useQuery({
+    queryKey: ['platform-admin', 'demo-users'],
+    queryFn: getPlatformDemoUsers,
+  });
+}
 
 export function usePlatformTenantsQuery() {
   return useQuery({

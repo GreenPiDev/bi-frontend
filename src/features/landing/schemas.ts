@@ -16,7 +16,9 @@ const demoAccountMessages = tr.landing.demoAccount.validation;
 export const demoAccountFormSchema = z
   .object({
     name: z.string().trim().min(1, demoAccountMessages.name).max(120),
+    companyName: z.string().trim().min(1, demoAccountMessages.companyName).max(160),
     email: z.string().trim().email(demoAccountMessages.email).max(255),
+    phone: z.string().trim().min(1, demoAccountMessages.phone).max(50),
     password: z.string().min(8, demoAccountMessages.password).max(72),
     passwordConfirm: z.string().min(1, demoAccountMessages.passwordConfirm),
   })

@@ -43,6 +43,7 @@ import { PermissionRoute } from './app/permission-route';
 import { PlatformAdminPage } from './app/platform-admin-page';
 import { MessageDetailPage } from './app/message-detail-page';
 import { MessagesListPage } from './app/messages-list-page';
+import { PlatformAdminDemoUsersPage } from './app/platform-admin-demo-users-page';
 import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { ProductImportPage } from './app/product-import-page';
@@ -169,6 +170,14 @@ function App() {
           element={
             <PlatformAdminRoute>
               <PlatformAdminPageModulesPage />
+            </PlatformAdminRoute>
+          }
+        />
+        <Route
+          path="/platform-admin/demo-kullanicilari"
+          element={
+            <PlatformAdminRoute>
+              <PlatformAdminDemoUsersPage />
             </PlatformAdminRoute>
           }
         />

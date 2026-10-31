@@ -177,7 +177,9 @@ export function me(): Promise<AuthenticatedUser> {
 
 export interface CreateDemoAccountInput {
   name: string;
+  companyName: string;
   email: string;
+  phone: string;
   password: string;
 }
 
@@ -290,6 +292,25 @@ export interface PageAccessStatus {
 
 export function getMyPageAccess(): Promise<PageAccessStatus[]> {
   return request('/tenants/me/page-modules');
+}
+
+/** Super admin "Demo Kullanicilari" sayfasinin satiri (GET /platform-admin/demo-users). */
+export interface DemoUserSummary {
+  id: string;
+  name: string;
+  companyName: string | null;
+  email: string;
+  phone: string | null;
+  tenantSlug: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+  /** null = hic giris yapmadi (sure ilk login'de baslar). */
+  demoExpiresAt: string | null;
+}
+
+export function getPlatformDemoUsers(): Promise<DemoUserSummary[]> {
+  return request('/platform-admin/demo-users');
 }
 
 export function getPlatformTenants(): Promise<TenantSummary[]> {

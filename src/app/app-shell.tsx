@@ -13,6 +13,7 @@ import {
   Home,
   LayoutDashboard,
   Layers,
+  UserRoundPlus,
   LogOut,
   type LucideIcon,
   Mail,
@@ -313,6 +314,11 @@ export function AppShell({
             label: tr.shell.nav.platformAdminPageModules,
             icon: Layers,
             path: '/platform-admin/sayfa-modulleri',
+          },
+          {
+            label: tr.shell.nav.platformAdminDemoUsers,
+            icon: UserRoundPlus,
+            path: '/platform-admin/demo-kullanicilari',
           },
         ]
       : []),

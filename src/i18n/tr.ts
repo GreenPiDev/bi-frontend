@@ -160,6 +160,8 @@ export const tr = {
       'İlk kurulum sihirbazı: dosyanızı yükleyin, kolonları onaylayın ve ilk panonuzu oluşturun (veya hazır demo veriyle başlayın).',
     platformAdmin:
       'Süper admin ekranı: kiracıları, modüllerini ve yöneticilerini buradan yönetirsiniz.',
+    platformAdminDemoUsers:
+      'Tanıtım sayfasından deneme hesabı açan ziyaretçilerin iletişim bilgileri ve deneme süresi durumları.',
     platformAdminPageModules:
       'Hangi sayfanın hangi modüle bağlı olduğunu buradan eşleyebilir, modülleri kapatılabilir/her zaman açık olarak işaretleyebilirsiniz.',
     messages:
@@ -221,6 +223,7 @@ export const tr = {
       settings: 'Ayarlar',
       platformAdmin: 'Kiracı Yönetimi',
       platformAdminPageModules: 'Sayfa-Modül Eşlemesi',
+      platformAdminDemoUsers: 'Demo Kullanıcıları',
     },
     navGroups: {
       analytics: 'Analitik',
@@ -1279,6 +1282,32 @@ export const tr = {
     empty: 'Henüz kayıtlı kiracı yok.',
     forbidden: 'Bu sayfayı görüntüleme yetkiniz yok.',
     updateError: 'Modül güncellenemedi.',
+    demoUsers: {
+      title: 'Demo Kullanıcıları',
+      subtitle:
+        'Tanıtım sayfasından 1 günlük deneme hesabı oluşturan ziyaretçiler. Bu listeyi ' +
+        'sadece süper admin görür.',
+      loading: 'Demo kullanıcıları yükleniyor...',
+      empty: 'Henüz demo hesabı oluşturulmadı.',
+      error: 'Demo kullanıcıları yüklenemedi.',
+      columns: {
+        name: 'Ad Soyad',
+        company: 'Firma',
+        email: 'E-posta',
+        phone: 'Telefon',
+        tenant: 'Demo Şirketi',
+        createdAt: 'Kayıt Tarihi',
+        lastLoginAt: 'Son Giriş',
+        expiresAt: 'Süre Bitişi',
+        status: 'Durum',
+      },
+      status: {
+        notStarted: 'Giriş yapmadı',
+        active: 'Aktif',
+        expired: 'Süresi doldu',
+        inactive: 'Pasif',
+      },
+    },
     pageModulesTitle: 'Sayfa-Modül Eşlemesi',
     pageModulesSubtitle:
       'Her sayfanın hangi modüle ait olduğunu belirleyin - nav menüsü ve müşteri erişimi buna göre şekillenir.',
@@ -4028,7 +4057,9 @@ export const tr = {
         'yönetici yetkisiyle deneyin. 1 günlük deneme süreniz ilk girişinizde başlar.',
       fields: {
         name: 'Ad Soyad',
+        companyName: 'Firma Adı',
         email: 'E-posta',
+        phone: 'Telefon',
         password: 'Şifre',
         passwordConfirm: 'Şifre (tekrar)',
       },
@@ -4045,7 +4076,9 @@ export const tr = {
       goToLogin: 'Giriş yap',
       validation: {
         name: 'Ad soyad gerekli.',
+        companyName: 'Firma adı gerekli.',
         email: 'Geçerli bir e-posta adresi girin.',
+        phone: 'Telefon numarası gerekli.',
         password: 'Şifre en az 8 karakter olmalı.',
         passwordConfirm: 'Şifreyi tekrar girin.',
         passwordMismatch: 'Şifreler eşleşmiyor.',

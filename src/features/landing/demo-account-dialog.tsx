@@ -44,8 +44,8 @@ export function DemoAccountDialog({ onClose }: DemoAccountDialogProps) {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  const onSubmit = handleSubmit(({ name, email, password }) => {
-    mutation.mutate({ name, email, password });
+  const onSubmit = handleSubmit(({ name, companyName, email, phone, password }) => {
+    mutation.mutate({ name, companyName, email, phone, password });
   });
 
   return (
@@ -89,12 +89,27 @@ export function DemoAccountDialog({ onClose }: DemoAccountDialogProps) {
                 {...registerField('name')}
               />
               <DarkTextField
+                label={copy.fields.companyName}
+                required
+                autoComplete="organization"
+                error={errors.companyName?.message}
+                {...registerField('companyName')}
+              />
+              <DarkTextField
                 label={copy.fields.email}
                 type="email"
                 required
                 autoComplete="email"
                 error={errors.email?.message}
                 {...registerField('email')}
+              />
+              <DarkTextField
+                label={copy.fields.phone}
+                type="tel"
+                required
+                autoComplete="tel"
+                error={errors.phone?.message}
+                {...registerField('phone')}
               />
               <DarkTextField
                 label={copy.fields.password}
