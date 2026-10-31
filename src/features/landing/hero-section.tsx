@@ -9,7 +9,7 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-screen items-center">
-      <div className="mx-auto grid w-full max-w-[96rem] items-center gap-16 px-6 lg:px-12 pt-32 pb-28 lg:grid-cols-[1.05fr_1fr]">
+      <div className="mx-auto grid w-full max-w-[96rem] items-center gap-16 px-6 lg:px-12 pt-32 pb-28 lg:grid-cols-[1.2fr_1fr]">
         <div>
           <h1
             aria-label={hero.title}
@@ -19,7 +19,7 @@ export function HeroSection() {
               <span key={`${word}-${index}`} aria-hidden="true">
                 <span className="landing-word">
                   <span
-                    className="bg-gradient-to-b from-white via-white to-slate-400 bg-clip-text text-transparent"
+                    className="bg-gradient-to-b from-white via-white to-zinc-400 bg-clip-text text-transparent"
                     style={{ '--d': `${index * WORD_STAGGER_MS + 150}ms` } as React.CSSProperties}
                   >
                     {word}
@@ -29,7 +29,7 @@ export function HeroSection() {
             ))}
           </h1>
           <p
-            className="landing-rise mt-8 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg"
+            className="landing-rise mt-8 text-base leading-relaxed text-zinc-400 sm:text-lg"
             style={{ '--d': '900ms' } as React.CSSProperties}
           >
             {hero.subtitle}
@@ -37,7 +37,7 @@ export function HeroSection() {
         </div>
 
         <div className="landing-rise relative" style={{ '--d': '600ms' } as React.CSSProperties}>
-          <div className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(90,120,255,0.25),transparent_65%)] blur-2xl" />
+          <div className="pointer-events-none absolute -inset-10 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.08),transparent_65%)] blur-2xl" />
           <DashboardPreview />
         </div>
       </div>

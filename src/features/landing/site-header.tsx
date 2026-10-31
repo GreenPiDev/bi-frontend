@@ -13,7 +13,7 @@ export function SiteHeader() {
         className={clsx(
           'flex w-full max-w-[88rem] items-center justify-between rounded-full border py-2 pr-2 pl-5 transition-all duration-500',
           scrolled
-            ? 'border-white/10 bg-[#080b16]/70 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)] backdrop-blur-xl'
+            ? 'border-white/10 bg-[#2b2e33]/75 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)] backdrop-blur-xl'
             : 'border-transparent bg-transparent',
         )}
       >
@@ -26,13 +26,13 @@ export function SiteHeader() {
         <div className="flex items-center gap-1 sm:gap-2">
           <a
             href="#features"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-white sm:block"
+            className="hidden rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white sm:block"
           >
             {nav.features}
           </a>
           <a
             href="#how"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:text-white sm:block"
+            className="hidden rounded-full px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white sm:block"
           >
             {nav.howItWorks}
           </a>

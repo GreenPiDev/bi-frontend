@@ -15,7 +15,7 @@ export function StepsSection() {
         <h2 className="landing-display max-w-3xl text-4xl leading-[1.08] font-semibold text-balance text-white sm:text-5xl">
           {steps.title}
         </h2>
-        <p className="mt-5 max-w-xl text-lg text-slate-400">{steps.subtitle}</p>
+        <p className="mt-5 max-w-xl text-lg text-zinc-400">{steps.subtitle}</p>
       </Reveal>
 
       <div ref={lineRef} className="relative mt-20 grid gap-14 md:grid-cols-3 md:gap-10">
@@ -37,7 +37,7 @@ export function StepsSection() {
                 {step.title}
               </h3>
             </div>
-            <p className="mt-6 max-w-sm text-base leading-relaxed text-slate-400">
+            <p className="mt-6 max-w-sm text-base leading-relaxed text-zinc-400">
               {step.description}
             </p>
           </Reveal>

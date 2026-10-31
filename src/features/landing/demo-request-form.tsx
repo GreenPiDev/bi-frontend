@@ -28,7 +28,7 @@ export function DemoRequestForm() {
       <div className="flex flex-col items-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-10 text-center">
         <CheckCircle2 className="h-12 w-12 text-emerald-400" />
         <h3 className="mt-4 text-lg font-bold text-white">{tr.landing.demoForm.successTitle}</h3>
-        <p className="mt-2 max-w-sm text-sm text-slate-300">{tr.landing.demoForm.successMessage}</p>
+        <p className="mt-2 max-w-sm text-sm text-zinc-300">{tr.landing.demoForm.successMessage}</p>
       </div>
     );
   }

@@ -11,7 +11,7 @@ export function SiteFooter() {
             {tr.common.appName}
           </span>
         </div>
-        <p className="text-xs text-slate-600">{footer.rights(new Date().getFullYear())}</p>
+        <p className="text-xs text-zinc-500">{footer.rights(new Date().getFullYear())}</p>
       </div>
     </footer>
   );

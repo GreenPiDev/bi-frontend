@@ -77,12 +77,12 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="landing-root relative min-h-screen overflow-x-clip text-slate-300 antialiased selection:bg-indigo-400/30 selection:text-white">
+    <div className="landing-root relative min-h-screen overflow-x-clip text-zinc-300 antialiased selection:bg-zinc-400/30 selection:text-white">
       <AmbientEffects />
       {/* Sabit, cok yumusak aurora zemini: sayfa kayarken yerinde durur, derinlik hissi verir. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-1/3 left-1/2 h-[80vh] w-[120vw] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(60,90,220,0.20),transparent_65%)]" />
-        <div className="absolute right-[-20%] bottom-[-30%] h-[70vh] w-[70vw] rounded-full bg-[radial-gradient(ellipse,rgba(120,70,220,0.12),transparent_65%)]" />
+        <div className="absolute -top-1/3 left-1/2 h-[80vh] w-[120vw] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(255,255,255,0.07),transparent_65%)]" />
+        <div className="absolute right-[-20%] bottom-[-30%] h-[70vh] w-[70vw] rounded-full bg-[radial-gradient(ellipse,rgba(255,255,255,0.04),transparent_65%)]" />
         <div
           className="absolute inset-0 opacity-[0.05] [mask-image:radial-gradient(ellipse_at_50%_20%,#000,transparent_70%)]"
           style={{
@@ -94,7 +94,7 @@ export function LandingPage() {
         <div className="landing-grain absolute inset-0 opacity-[0.08]" />
       </div>
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
-        <DotWave shape={dotShape} color="#a5b4fc" opacity={0.08} />
+        <DotWave shape={dotShape} color="#e4e4e7" opacity={0.08} />
       </div>
       <div className="relative z-10">
         <SiteHeader />

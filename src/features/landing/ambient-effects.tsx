@@ -53,7 +53,7 @@ export function AmbientEffects() {
       <div
         ref={glowRef}
         aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-0 z-0 hidden h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(90,120,255,0.13),transparent_65%)] [@media(hover:hover)]:block"
+        className="pointer-events-none fixed top-0 left-0 z-0 hidden h-[400px] w-[400px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.06),transparent_65%)] [@media(hover:hover)]:block"
       />
     </>
   );

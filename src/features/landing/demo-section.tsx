@@ -14,7 +14,7 @@ export function DemoSection() {
           <h2 className="landing-display mt-5 text-4xl leading-[1.08] font-semibold text-balance text-white sm:text-5xl">
             {demoForm.title}
           </h2>
-          <p className="mt-6 max-w-md text-base leading-relaxed text-slate-400">
+          <p className="mt-6 max-w-md text-base leading-relaxed text-zinc-400">
             {demoForm.subtitle}
           </p>
         </div>

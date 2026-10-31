@@ -82,7 +82,7 @@ export function FeaturesSection() {
                     </h3>
                     <p
                       className={clsx(
-                        'mt-2 leading-relaxed text-slate-400',
+                        'mt-2 leading-relaxed text-zinc-400',
                         wide ? 'max-w-md text-sm' : 'text-[0.8rem]',
                       )}
                     >

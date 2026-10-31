@@ -3912,10 +3912,10 @@ export const tr = {
       ],
       chartTitle: 'Mevcut Durum Dağılımı',
       statuses: [
-        { label: 'Taslak', count: 166 },
-        { label: 'Gönderildi', count: 2 },
-        { label: 'Onaylandı', count: 10 },
-        { label: 'Reddedildi', count: 3 },
+        { label: 'Taslak', count: 52 },
+        { label: 'Gönderildi', count: 47 },
+        { label: 'Onaylandı', count: 58 },
+        { label: 'Reddedildi', count: 24 },
       ],
       notesTitle: 'Not Defteri',
       notes: [
