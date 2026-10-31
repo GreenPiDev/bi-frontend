@@ -11,7 +11,7 @@ export function SiteHeader() {
     <header className="fixed top-0 right-0 left-0 z-50 flex justify-center px-4 pt-4">
       <div
         className={clsx(
-          'flex w-full max-w-5xl items-center justify-between rounded-full border py-2 pr-2 pl-5 transition-all duration-500',
+          'flex w-full max-w-[88rem] items-center justify-between rounded-full border py-2 pr-2 pl-5 transition-all duration-500',
           scrolled
             ? 'border-white/10 bg-[#080b16]/70 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.6)] backdrop-blur-xl'
             : 'border-transparent bg-transparent',

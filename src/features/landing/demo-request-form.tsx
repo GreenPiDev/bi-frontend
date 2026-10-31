@@ -36,7 +36,7 @@ export function DemoRequestForm() {
   const apiErrorMessage = demoRequestMutation.isError ? tr.landing.demoForm.errorToast : undefined;
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+    <form onSubmit={onSubmit} className="flex flex-col gap-3" noValidate>
       {apiErrorMessage && (
         <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3.5 py-2.5 text-sm font-medium text-red-400">
           {apiErrorMessage}
@@ -67,14 +67,14 @@ export function DemoRequestForm() {
       />
       <DarkTextareaField
         label={tr.landing.demoForm.fields.message}
-        rows={3}
+        rows={2}
         error={errors.message?.message}
         {...registerField('message')}
       />
       <CtaButton
         type="submit"
         disabled={demoRequestMutation.isPending}
-        className="mt-2 w-full py-3.5 text-base"
+        className="mt-1 w-full py-2.5 text-sm"
       >
         {demoRequestMutation.isPending
           ? tr.landing.demoForm.submitting

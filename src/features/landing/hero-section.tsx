@@ -9,7 +9,7 @@ export function HeroSection() {
 
   return (
     <section className="relative flex min-h-screen items-center">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-16 px-6 pt-32 pb-28 lg:grid-cols-[1.05fr_1fr]">
+      <div className="mx-auto grid w-full max-w-[96rem] items-center gap-16 px-6 lg:px-12 pt-32 pb-28 lg:grid-cols-[1.05fr_1fr]">
         <div>
           <h1
             aria-label={hero.title}

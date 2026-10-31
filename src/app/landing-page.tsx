@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { DotWave, type DotWaveShape } from '../features/landing/dot-wave';
 import { AmbientEffects } from '../features/landing/ambient-effects';
 import { DemoSection } from '../features/landing/demo-section';
 import { FeaturesSection } from '../features/landing/features-section';
@@ -8,6 +9,63 @@ import { SiteHeader } from '../features/landing/site-header';
 import { StepsSection } from '../features/landing/steps-section';
 
 export function LandingPage() {
+  const featuresRef = useRef<HTMLDivElement | null>(null);
+  const stepsRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLDivElement | null>(null);
+  const [dotShape, setDotShape] = useState<DotWaveShape>('terrain');
+
+  // Hero'da noktalar alttaki dalga; ozellikler bolumunde saga kayip pi seklini alir;
+  // sayfanin en altinda (footer) sola gecip donen kureye donusur.
+  useEffect(() => {
+    const features = featuresRef.current;
+    const footer = footerRef.current;
+    const steps = stepsRef.current;
+    if (!features || !footer || !steps) return;
+    // Hero: dalga, ozellikler: pi, adimlar: dalga, demo/footer: kure.
+    const visible = { featuresReached: false, steps: false, footer: false };
+    const update = () =>
+      setDotShape(
+        visible.footer
+          ? 'globe'
+          : visible.steps
+            ? 'terrain'
+            : visible.featuresReached
+              ? 'sphere'
+              : 'terrain',
+      );
+    const featuresObserver = new IntersectionObserver(
+      ([entry]) => {
+        visible.featuresReached = entry.isIntersecting || entry.boundingClientRect.top < 0;
+        update();
+      },
+      { threshold: 0.3 },
+    );
+    const footerObserver = new IntersectionObserver(
+      ([entry]) => {
+        visible.footer = entry.isIntersecting;
+        update();
+      },
+      // Demo bolumunun ustu ekranin alt %40'ina girer girmez (adimlardan demoya gecerken) kureye donusum baslar.
+      { threshold: 0, rootMargin: '0px 0px -40% 0px' },
+    );
+    // Adimlar bolumunde noktalar tekrar varsayilan dalga olur.
+    const stepsObserver = new IntersectionObserver(
+      ([entry]) => {
+        visible.steps = entry.isIntersecting;
+        update();
+      },
+      { threshold: 0.15 },
+    );
+    stepsObserver.observe(steps);
+    featuresObserver.observe(features);
+    footerObserver.observe(footer);
+    return () => {
+      featuresObserver.disconnect();
+      stepsObserver.disconnect();
+      footerObserver.disconnect();
+    };
+  }, []);
+
   // Header'daki "#demo"/"#features"/"#how" linklerinin aninda ziplamak yerine
   // yumusak kaydirmasi icin - sadece bu sayfa acikken aktif, diger ekranlari etkilemez.
   useEffect(() => {
@@ -35,13 +93,22 @@ export function LandingPage() {
         />
         <div className="landing-grain absolute inset-0 opacity-[0.08]" />
       </div>
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
+        <DotWave shape={dotShape} color="#a5b4fc" opacity={0.08} />
+      </div>
       <div className="relative z-10">
         <SiteHeader />
         <HeroSection />
-        <FeaturesSection />
-        <StepsSection />
-        <DemoSection />
-        <SiteFooter />
+        <div ref={featuresRef}>
+          <FeaturesSection />
+        </div>
+        <div ref={stepsRef}>
+          <StepsSection />
+        </div>
+        <div ref={footerRef}>
+          <DemoSection />
+          <SiteFooter />
+        </div>
       </div>
     </div>
   );

@@ -7,7 +7,10 @@ export function StepsSection() {
   const { ref: lineRef, isVisible: lineVisible } = useScrollReveal<HTMLDivElement>(0.4);
 
   return (
-    <section id="how" className="relative mx-auto max-w-6xl scroll-mt-24 px-6 py-28 sm:py-36">
+    <section
+      id="how"
+      className="relative mx-auto max-w-[96rem] scroll-mt-24 px-6 lg:px-12 py-28 sm:py-36"
+    >
       <Reveal>
         <h2 className="landing-display max-w-3xl text-4xl leading-[1.08] font-semibold text-balance text-white sm:text-5xl">
           {steps.title}
@@ -26,7 +29,7 @@ export function StepsSection() {
             <div className="flex items-center gap-4">
               <span
                 aria-hidden="true"
-                className="landing-display shrink-0 text-[7rem] leading-[0.9] font-semibold text-transparent select-none [-webkit-text-stroke:1px_rgba(255,255,255,0.14)] transition-all duration-500 group-hover:[-webkit-text-stroke:1px_rgba(140,170,255,0.5)]"
+                className="landing-display relative z-10 shrink-0 text-[7rem] leading-[0.9] font-semibold text-transparent select-none [-webkit-text-stroke:1px_rgba(255,255,255,0.14)] transition-all duration-500 group-hover:[-webkit-text-stroke:1px_rgba(140,170,255,0.5)]"
               >
                 {String(index + 1).padStart(2, '0')}
               </span>
