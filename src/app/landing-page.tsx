@@ -83,14 +83,6 @@ export function LandingPage() {
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute -top-1/3 left-1/2 h-[80vh] w-[120vw] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(255,255,255,0.07),transparent_65%)]" />
         <div className="absolute right-[-20%] bottom-[-30%] h-[70vh] w-[70vw] rounded-full bg-[radial-gradient(ellipse,rgba(255,255,255,0.04),transparent_65%)]" />
-        <div
-          className="absolute inset-0 opacity-[0.05] [mask-image:radial-gradient(ellipse_at_50%_20%,#000,transparent_70%)]"
-          style={{
-            backgroundImage:
-              'linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)',
-            backgroundSize: '72px 72px',
-          }}
-        />
         <div className="landing-grain absolute inset-0 opacity-[0.08]" />
       </div>
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
