@@ -433,6 +433,12 @@ export function QuoteContentBody({
       render: (item) => item.quantity,
     },
     {
+      key: 'unit',
+      header: tr.crm.quotes.detail.unitColumn,
+      className: 'w-16 whitespace-nowrap text-app-muted',
+      render: (item) => item.unit ?? item.product.unit,
+    },
+    {
       key: 'unitPrice',
       header: tr.crm.quotes.detail.unitPriceColumn,
       className: 'w-28 whitespace-nowrap text-right text-app-muted',

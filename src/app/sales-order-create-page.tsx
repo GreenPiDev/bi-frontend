@@ -235,6 +235,7 @@ export function SalesOrderCreatePage() {
         />
 
         <QuoteItemLinesCard
+          hideUnit
           texts={{
             title: tr.crm.salesOrders.form.summaryTitle,
             productListHint: tr.crm.salesOrders.form.productListHint,

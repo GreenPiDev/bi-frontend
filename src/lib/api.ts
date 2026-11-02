@@ -3039,6 +3039,8 @@ export interface QuoteItem {
    * Product.brand'den kopyalanir, ama bu teklif icin manuel ezilebilir (ayni urun
    * bir teklifte baska bir marka adiyla gorunsun diye) - bkz. backend resolveItems. */
   brand: string | null;
+  /** Satir birimi (Product.unit'ten kopyalanir, manuel ezilebilir); eski kayitlarda null. */
+  unit: string | null;
   /** Ad-hoc kismi sevkiyat takibi (bkz. docs/VARSAYIMLAR.md) - sadece bu teklif bir
    * satis siparisine donustuyse anlamlidir, SalesOrderDetailPage okur. */
   deliveredQuantity: string;
@@ -3159,6 +3161,8 @@ export interface QuoteItemInput {
   /** Verilmezse Product.brand'den alinir, verilirse (bos string dahil) manuel
    * ezme sayilir - currency ile ayni desen. */
   brand?: string;
+  /** Verilmezse Product.unit'ten alinir, verilirse manuel ezme sayilir. */
+  unit?: string;
   /** Ad-hoc "Ürünleri Gruplayarak Ekle" - bu satirin ait oldugu grubun serbest
    * metin adi (bkz. Quote.groupItemsByProduct). */
   groupName?: string;

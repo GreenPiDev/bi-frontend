@@ -2908,6 +2908,7 @@ export const tr = {
         skuColumn: 'Ürün Kodu',
         brandColumn: 'Marka',
         quantityColumn: 'Miktar',
+        unitColumn: 'Birim',
         unitPriceColumn: 'Birim Fiyat',
         discountColumn: 'İskonto',
         vatColumn: 'KDV',
@@ -3102,6 +3103,7 @@ export const tr = {
         quickAddTooltip: 'Hızlı Ekle',
         productLabel: 'Ürün',
         quantityLabel: 'Miktar',
+        unitLabel: 'Birim',
         unitPriceLabel: (currency: string) =>
           `Birim Fiyat (${CURRENCY_SYMBOLS[currency] ?? currency})`,
         unitPriceHint: 'Boş bırakılırsa ürünün kayıtlı fiyatı kullanılır.',

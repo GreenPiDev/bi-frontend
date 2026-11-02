@@ -223,6 +223,7 @@ export function QuoteFormPage() {
       items: quote.items.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
+        unit: item.unit ?? item.product.unit,
         unitPrice: item.unitPrice,
         currency: item.currency,
         discountPct: item.discountPct,
@@ -349,6 +350,7 @@ export function QuoteFormPage() {
     append({
       productId: product.id,
       quantity: '1',
+      unit: product.unit,
       unitPrice: product.price ?? '',
       currency: product.currency,
       discountPct: '0',
@@ -496,6 +498,7 @@ export function QuoteFormPage() {
           discountPct: item.discountPct ? Number(item.discountPct) : 0,
           vatPct: item.vatPct ? Number(item.vatPct) : 0,
           brand: item.brand ?? undefined,
+          unit: item.unit || undefined,
           groupName: resolveGroupName(item.groupId),
         })),
         contactId: values.contactId || null,
@@ -556,6 +559,7 @@ export function QuoteFormPage() {
         discountPct: item.discountPct ? Number(item.discountPct) : 0,
         vatPct: item.vatPct ? Number(item.vatPct) : 0,
         brand: item.brand ?? undefined,
+        unit: item.unit || undefined,
         groupName: resolveGroupName(item.groupId),
       })),
       ...(values.hasOpportunity && values.opportunityName
@@ -795,6 +799,7 @@ export function QuoteFormPage() {
               append({
                 productId: '',
                 quantity: '1',
+                unit: '',
                 unitPrice: '',
                 currency: quoteCurrency || 'TRY',
                 discountPct: '0',

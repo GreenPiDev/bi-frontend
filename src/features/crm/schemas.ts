@@ -405,6 +405,7 @@ export const quoteFormSchema = z
            * resolveQuickAddedProducts). productId doluysa bu alan dikkate alinmaz. */
           productName: z.string().optional(),
           quantity: z.string().min(1, 'Miktar gerekli.'),
+          unit: z.string().max(50).optional(),
           unitPrice: z.string().optional(),
           /** Boş bırakılırsa ürünün kendi para birimi kullanılır (unitPrice ile
            * aynı desen) - aynı ürün bir teklifte USD, başka bir teklifte TRY
@@ -547,6 +548,7 @@ export const salesOrderCreateFormSchema = z
            * quoteFormSchema'daki ayni alan). productId doluysa dikkate alinmaz. */
           productName: z.string().optional(),
           quantity: z.string().min(1, 'Miktar gerekli.'),
+          unit: z.string().max(50).optional(),
           unitPrice: z.string().optional(),
           currency: z.string().optional(),
           discountPct: z.string().optional(),

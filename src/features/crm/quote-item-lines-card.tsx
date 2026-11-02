@@ -14,6 +14,7 @@ import {
 } from '../../lib/quote-totals';
 import { tr } from '../../i18n/tr';
 import { BrandSelect } from './brand-select';
+import { useUnitOptionsQuery } from './use-unit-options';
 import { ProductAutocomplete } from './product-autocomplete';
 import { QUOTE_CURRENCY_OPTIONS } from './quote-meta-fields';
 
@@ -32,6 +33,8 @@ export interface QuoteLineItemValues {
    * ürün ekleme destekleyen çağıranlarda (bkz. onProductFreeTextChange) kullanılır. */
   productName?: string;
   quantity: string;
+  /** Satır birimi - ürün seçilince Product.unit'ten gelir, satır için değiştirilebilir. */
+  unit?: string;
   unitPrice?: string;
   currency?: string;
   discountPct?: string;
@@ -106,6 +109,9 @@ export interface QuoteItemLinesCardProps {
    * bölümü - sadece teklif formu). */
   footer?: ReactNode;
 
+  /** Birim kolonunu gizler - birimi kalıcı tutmayan çağıranlar (satış siparişi) için. */
+  hideUnit?: boolean;
+
   /** "Ürünleri Gruplayarak Ekle" checkbox'ı - Quote entity'sine ozgu bir alan (bkz.
    * CLAUDE.md'ye gore domain terimleri sadece CRM modullerinde yasar), bu yuzden
    * sadece teklif formu (quote-form-page.tsx) geçirir - satış siparişi formu
@@ -150,6 +156,7 @@ export function QuoteItemLinesCard({
   onRequestAddBrand,
   onProductFreeTextChange,
   footer,
+  hideUnit,
   groupItemsByProduct,
   onGroupItemsByProductChange,
   productGroups,
@@ -157,6 +164,8 @@ export function QuoteItemLinesCard({
   onRemoveGroup,
   onGroupNameChange,
 }: QuoteItemLinesCardProps) {
+  const unitOptionsQuery = useUnitOptionsQuery();
+
   // Urun secilince fiyat/para birimi/marka varsayilanlarini o satira uygular -
   // quote-form-page.tsx/sales-order-create-page.tsx'teki eski handleRowProductChange
   // ile ayni mantik, artik tek yerde.
@@ -168,6 +177,7 @@ export function QuoteItemLinesCard({
       onItemChange(index, 'unitPrice', product.price ?? '');
       onItemChange(index, 'currency', product.currency);
       onItemChange(index, 'brand', product.brand ?? '');
+      onItemChange(index, 'unit', product.unit);
       if (!items[index]?.vatPct) {
         onItemChange(index, 'vatPct', defaultVatPct);
       }
@@ -214,11 +224,11 @@ export function QuoteItemLinesCard({
   });
   const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
 
-  const itemColumns: TableColumn<ItemRow>[] = [
+  const allItemColumns: TableColumn<ItemRow>[] = [
     {
       key: 'product',
       header: tr.crm.quotes.form.productLabel,
-      className: 'align-top w-[18%]',
+      className: 'align-top w-[16%]',
       render: (row) => (
         <ProductAutocomplete
           label={tr.crm.quotes.form.productLabel}
@@ -258,6 +268,30 @@ export function QuoteItemLinesCard({
           }
         />
       ),
+    },
+    {
+      key: 'unit',
+      header: tr.crm.quotes.form.unitLabel,
+      className: 'align-top w-[7%]',
+      render: (row) => {
+        const current = items[row.index]?.unit ?? '';
+        const labels = (unitOptionsQuery.data ?? []).map((option) => option.label);
+        // Urunun/satirin birimi tenant listesinde yoksa (eski kayit) yine de secilebilir kalsin.
+        if (current && !labels.includes(current)) labels.unshift(current);
+        return (
+          <Select
+            label={tr.crm.quotes.form.unitLabel}
+            name={`items.${row.index}.unit`}
+            hideLabel
+            options={[
+              ...(current ? [] : [{ value: '', label: '—' }]),
+              ...labels.map((label) => ({ value: label, label })),
+            ]}
+            value={current}
+            onChange={(event) => onItemChange(row.index, 'unit', event.target.value)}
+          />
+        );
+      },
     },
     {
       key: 'unitPrice',
@@ -337,7 +371,7 @@ export function QuoteItemLinesCard({
     {
       key: 'brand',
       header: tr.crm.products.brandColumn,
-      className: 'align-top w-[19%]',
+      className: 'align-top w-[14%]',
       render: (row) => (
         <BrandSelect
           value={items[row.index]?.brand ?? ''}
@@ -391,6 +425,9 @@ export function QuoteItemLinesCard({
       ),
     },
   ];
+  const itemColumns = hideUnit
+    ? allItemColumns.filter((column) => column.key !== 'unit')
+    : allItemColumns;
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
