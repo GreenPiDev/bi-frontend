@@ -1,12 +1,20 @@
+import { RotateCcw, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '../components/ui/badge';
+import { ConfirmModal } from '../components/ui/confirm-modal';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { FormError } from '../components/ui/form-error';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
-import { usePlatformDemoUsersQuery } from '../features/platform-admin/use-platform-admin';
+import {
+  useDeactivateDemoUserMutation,
+  usePlatformDemoUsersQuery,
+} from '../features/platform-admin/use-platform-admin';
 import { tr } from '../i18n/tr';
+import { useToast } from '../components/ui/toast-context';
 import type { DemoUserSummary } from '../lib/api';
 import { AppShell } from './app-shell';
+import { ExtendDemoUserModal } from './extend-demo-user-modal';
 
 const copy = tr.platformAdmin.demoUsers;
 
@@ -30,7 +38,11 @@ function DemoStatusBadge({ user, now }: { user: DemoUserSummary; now: number }) 
 }
 
 /** `now` sayfa acilisinda bir kez alinir (render saf kalsin diye) - durum sutunu icin. */
-function buildColumns(now: number): TableColumn<DemoUserSummary>[] {
+function buildColumns(
+  now: number,
+  onExtend: (user: DemoUserSummary) => void,
+  onDeactivate: (user: DemoUserSummary) => void,
+): TableColumn<DemoUserSummary>[] {
   return [
     { key: 'name', header: copy.columns.name, render: (user) => user.name },
     { key: 'company', header: copy.columns.company, render: (user) => user.companyName ?? '—' },
@@ -79,6 +91,27 @@ function buildColumns(now: number): TableColumn<DemoUserSummary>[] {
       header: copy.columns.status,
       render: (user) => <DemoStatusBadge user={user} now={now} />,
     },
+    {
+      key: 'actions',
+      header: copy.columns.actions,
+      render: (user) => (
+        <div className="flex items-center">
+          <IconActionButton
+            icon={RotateCcw}
+            tooltip={copy.extend.button}
+            onClick={() => onExtend(user)}
+          />
+          {user.isActive && (!user.demoExpiresAt || Date.parse(user.demoExpiresAt) > now) && (
+            <IconActionButton
+              icon={UserX}
+              variant="danger"
+              tooltip={copy.deactivate.button}
+              onClick={() => onDeactivate(user)}
+            />
+          )}
+        </div>
+      ),
+    },
   ];
 }
 
@@ -87,6 +120,19 @@ function buildColumns(now: number): TableColumn<DemoUserSummary>[] {
 export function PlatformAdminDemoUsersPage() {
   const demoUsersQuery = usePlatformDemoUsersQuery();
   const [now] = useState(() => Date.now());
+  const [extending, setExtending] = useState<DemoUserSummary | null>(null);
+  const [deactivating, setDeactivating] = useState<DemoUserSummary | null>(null);
+  const deactivateMutation = useDeactivateDemoUserMutation();
+  const toast = useToast();
+
+  function confirmDeactivate() {
+    if (!deactivating) return;
+    deactivateMutation.mutate(deactivating.id, {
+      onSuccess: () => toast.success(copy.deactivate.success),
+      onError: () => toast.error(copy.deactivate.error),
+      onSettled: () => setDeactivating(null),
+    });
+  }
   return (
     <AppShell>
       <div className="flex items-center gap-2">
@@ -96,7 +142,7 @@ export function PlatformAdminDemoUsersPage() {
       <p className="mt-1 mb-4 text-sm text-app-muted">{copy.subtitle}</p>
       {demoUsersQuery.isError && <FormError message={copy.error} />}
       <Table
-        columns={buildColumns(now)}
+        columns={buildColumns(now, setExtending, setDeactivating)}
         data={demoUsersQuery.data ?? []}
         keyField={(user) => user.id}
         isLoading={demoUsersQuery.isPending}
@@ -104,6 +150,17 @@ export function PlatformAdminDemoUsersPage() {
         emptyMessage={copy.empty}
         scrollX
       />
+      {extending && <ExtendDemoUserModal user={extending} onClose={() => setExtending(null)} />}
+      {deactivating && (
+        <ConfirmModal
+          title={copy.deactivate.title}
+          message={copy.deactivate.message(deactivating.name)}
+          confirmLabel={copy.deactivate.confirm}
+          isPending={deactivateMutation.isPending}
+          onConfirm={confirmDeactivate}
+          onCancel={() => setDeactivating(null)}
+        />
+      )}
     </AppShell>
   );
 }

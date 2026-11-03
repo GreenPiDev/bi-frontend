@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { CheckCircle2, Hourglass, LogOut, Phone } from 'lucide-react';
+import { CheckCircle2, LogOut } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '../../components/ui/button';
@@ -38,21 +38,14 @@ export function DemoExpiredModal({ user, onLogout }: DemoExpiredModalProps) {
         className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-app-surface p-7 shadow-2xl"
       >
         <div className="flex flex-col items-center text-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-            <Hourglass size={22} />
-          </span>
-          <h2 id="demo-expired-title" className="mt-4 text-xl font-bold text-app-text">
+          <h2 id="demo-expired-title" className="text-xl font-bold text-app-text">
             {copy.title}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-app-muted">{copy.message}</p>
           {contactPhone && (
-            <a
-              href={`tel:${contactPhone.replace(/\s/g, '')}`}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-app-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-app-brand-dark"
-            >
-              <Phone size={16} />
+            <p className="mt-4 text-sm font-semibold text-app-text">
               {copy.callUs}: {contactPhone}
-            </a>
+            </p>
           )}
         </div>
         <CallbackRequestForm user={user} />

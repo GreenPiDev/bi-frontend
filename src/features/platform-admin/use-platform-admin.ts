@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createTenant,
+  deactivateDemoUser,
+  extendDemoUser,
   flushAllTenantCaches,
   getPlatformDemoUsers,
   getPlatformModuleDefinitions,
@@ -12,6 +14,7 @@ import {
   setPlatformTenantModule,
   updateTenantSlug,
   type CreateTenantInput,
+  type ExtendDemoUserInput,
   type ModuleDefinition,
   type PageModuleAssignment,
   type TenantModuleStatus,
@@ -24,6 +27,27 @@ export function usePlatformDemoUsersQuery() {
   return useQuery({
     queryKey: ['platform-admin', 'demo-users'],
     queryFn: getPlatformDemoUsers,
+  });
+}
+
+export function useExtendDemoUserMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...input }: ExtendDemoUserInput & { id: string }) =>
+      extendDemoUser(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['platform-admin', 'demo-users'] });
+    },
+  });
+}
+
+export function useDeactivateDemoUserMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deactivateDemoUser(id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['platform-admin', 'demo-users'] });
+    },
   });
 }
 

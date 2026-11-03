@@ -313,6 +313,23 @@ export function getPlatformDemoUsers(): Promise<DemoUserSummary[]> {
   return request('/platform-admin/demo-users');
 }
 
+export interface ExtendDemoUserInput {
+  days: number;
+  hours: number;
+  minutes: number;
+}
+
+export function extendDemoUser(id: string, input: ExtendDemoUserInput): Promise<DemoUserSummary> {
+  return request(`/platform-admin/demo-users/${id}/extend`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deactivateDemoUser(id: string): Promise<DemoUserSummary> {
+  return request(`/platform-admin/demo-users/${id}/deactivate`, { method: 'POST' });
+}
+
 export function getPlatformTenants(): Promise<TenantSummary[]> {
   return request('/platform-admin/tenants');
 }

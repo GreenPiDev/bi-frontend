@@ -1,5 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import type { AuthenticatedUser } from '../../lib/api';
+import { useRealtimeEvent } from '../../lib/realtime';
+import { AUTH_QUERY_KEY } from '../auth/use-auth';
 
 const TICK_MS = 1000;
 
@@ -16,6 +19,15 @@ export interface DemoTrialState {
 export function useDemoTrial(user: AuthenticatedUser | null | undefined): DemoTrialState {
   const expiresAt = user?.isDemoUser && user.demoExpiresAt ? Date.parse(user.demoExpiresAt) : null;
   const [now, setNow] = useState(() => Date.now());
+  const queryClient = useQueryClient();
+
+  // Super admin ended/extended this trial: refetch /auth/me so the expired modal (or the
+  // countdown) updates without a page refresh.
+  useRealtimeEvent<{ userId: string }>('demo-user.updated', ({ userId }) => {
+    if (user?.isDemoUser && userId === user.id) {
+      void queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
+    }
+  });
 
   useEffect(() => {
     if (expiresAt === null) return;

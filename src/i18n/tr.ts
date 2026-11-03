@@ -1300,6 +1300,37 @@ export const tr = {
         lastLoginAt: 'Son Giriş',
         expiresAt: 'Süre Bitişi',
         status: 'Durum',
+        actions: 'İşlemler',
+      },
+      deactivate: {
+        button: 'Pasife al',
+        title: 'Demo hesabını pasife al',
+        message: (name: string) =>
+          `${name} hesabının deneme süresi hemen sonlandırılacak. Kullanıcı giriş yapabilir ` +
+          'ancak "deneme süreniz doldu" ekranını görür. Devam edilsin mi?',
+        confirm: 'Pasife al',
+        success: 'Demo hesabının süresi sonlandırıldı.',
+        error: 'Demo hesabı pasife alınamadı.',
+      },
+      extend: {
+        button: 'Yeniden aktif et',
+        title: 'Demo hesabını yeniden aktif et',
+        subtitle: (name: string) =>
+          `${name} hesabı, aşağıda belirlediğiniz süre kadar şu andan itibaren kullanılabilir olacak.`,
+        days: 'Gün',
+        hours: 'Saat',
+        minutes: 'Dakika',
+        submit: 'Aktif et',
+        submitting: 'Kaydediliyor...',
+        cancel: 'Vazgeç',
+        success: 'Demo hesabı yeniden aktif edildi.',
+        error: 'Demo hesabı güncellenemedi.',
+        validation: {
+          number: 'Geçerli bir sayı girin.',
+          hours: 'Saat 0-23 arasında olmalı.',
+          minutes: 'Dakika 0-59 arasında olmalı.',
+          positive: 'En az bir süre değeri girmelisiniz.',
+        },
       },
       status: {
         notStarted: 'Giriş yapmadı',
@@ -4096,8 +4127,8 @@ export const tr = {
     expired: {
       title: 'Deneme süreniz doldu',
       message:
-        'PiLens deneme hesabınızın 1 günlük süresi sona erdi. Hesabınızı uzatmak veya ' +
-        'şirketinize özel kurulum için bizimle iletişime geçin.',
+        'PiLens deneme hesabınızın 1 günlük süresi sona erdi. Demo hesabınızın kullanım ' +
+        'süresini uzatmak veya şirketinize özel kurulum için bizimle iletişime geçin.',
       callUs: 'Bizi arayın',
       requestTitle: 'Ya da biz sizi arayalım',
       requestHint: 'Telefon numaranızı bırakın, ekibimiz en kısa sürede size dönsün.',
