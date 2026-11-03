@@ -2951,6 +2951,7 @@ export const tr = {
          * kullanilir, bu sadece o para biriminin kendi toplamidir. */
         totalLabel: 'Toplam',
         grandTotalLabel: 'Genel Toplam',
+        vatIncludedHint: 'KDV dahil',
         opportunityTitle: 'İlişkili Fırsat',
         companyInfoTitle: 'Şirket Bilgileri',
         senderInfoTitle: 'Gönderen Bilgileri',

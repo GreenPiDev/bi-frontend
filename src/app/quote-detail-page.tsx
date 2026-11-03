@@ -124,7 +124,7 @@ function lineTotal(item: QuoteItem): number {
     unitPrice: Number(item.unitPrice),
     discountPct: Number(item.discountPct),
     vatPct: Number(item.vatPct),
-  }).lineTotal;
+  }).lineSubtotal;
 }
 
 function computeTotals(quote: Quote) {
@@ -292,6 +292,11 @@ export function QuoteContentBody({
                 {formatCurrencyAmount(t.grandTotal, t.currency)}
               </span>
             </div>
+            {!conversion && (
+              <span className="text-right text-[11px] text-app-muted">
+                {tr.crm.quotes.detail.vatIncludedHint}
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -300,7 +305,7 @@ export function QuoteContentBody({
         <div className="mt-4 flex flex-col items-end gap-1">
           {conversion.missingRateCurrencies.length === 0 ? (
             <>
-              <div className="flex w-44 justify-between border-t border-app-border pt-1 text-sm font-bold">
+              <div className="flex w-max justify-between gap-4 border-t border-app-border pt-1 text-sm font-bold whitespace-nowrap">
                 <span className="text-app-text">
                   {tr.crm.quotes.form.convertedGrandTotalLabel(quote.quoteCurrency)}
                 </span>
@@ -308,7 +313,10 @@ export function QuoteContentBody({
                   {formatCurrencyAmount(conversion.grandTotal, quote.quoteCurrency)}
                 </span>
               </div>
-              <p className="text-right text-[11px] whitespace-nowrap text-app-muted">
+              <span className="text-[11px] text-app-muted">
+                {tr.crm.quotes.detail.vatIncludedHint}
+              </span>
+              <p className="w-full text-center text-[11px] whitespace-nowrap text-app-muted">
                 {tr.crm.quotes.form.exchangeRateNote(
                   foreignCurrencyTotals.map(
                     (t) =>
@@ -333,11 +341,12 @@ export function QuoteContentBody({
    * teklif para birimine çevrilmiş kümülatif "Genel Toplam" (quoteGrandTotalDisplay ile
    * aynı mantık - meta grid'deki grandTotalLabel hücresiyle birebir aynı değer). */
   const groupedTotalsSection = (
-    <div className="mt-4 flex justify-end text-xs">
-      <div className="flex w-44 justify-between border-t border-app-border pt-1 text-sm font-bold">
+    <div className="mt-4 flex flex-col items-end gap-1 text-xs">
+      <div className="flex w-max justify-between gap-4 border-t border-app-border pt-1 text-sm font-bold whitespace-nowrap">
         <span className="text-app-text">{tr.crm.quotes.detail.grandTotalLabel}</span>
         <span className="text-app-text">{quoteGrandTotalDisplay(quote)}</span>
       </div>
+      <span className="text-[11px] text-app-muted">{tr.crm.quotes.detail.vatIncludedHint}</span>
     </div>
   );
 
@@ -445,12 +454,6 @@ export function QuoteContentBody({
       render: (item) => formatCurrencyAmount(Number(item.unitPrice), item.currency),
     },
     {
-      key: 'vatPct',
-      header: tr.crm.quotes.detail.vatColumn,
-      className: 'w-16 whitespace-nowrap text-right text-app-muted',
-      render: (item) => `%${item.vatPct}`,
-    },
-    {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
       className: 'w-28 whitespace-nowrap text-right',
@@ -470,7 +473,7 @@ export function QuoteContentBody({
    * yuzden width/whitespace class'lari burada atilip asagidaki tabloya
    * `table-fixed` verilir - esit genislikte 4 kolon. */
   const groupedItemColumns = itemColumns
-    .filter((column) => !['unitPrice', 'vatPct', 'lineTotal'].includes(column.key))
+    .filter((column) => !['unitPrice', 'lineTotal'].includes(column.key))
     .map((column) => ({
       ...column,
       className: clsx(
