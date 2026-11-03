@@ -69,6 +69,7 @@ import {
 } from '../lib/api';
 import { groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
+import { SETTINGS_TARGETS } from '../lib/settings-targets';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
   ['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST'] as const
@@ -80,7 +81,7 @@ const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
 function TermsDefaultLink() {
   return (
     <p className="text-xs text-app-muted">
-      <SettingsNavigateLink tab="crm" highlightKey="defaultQuoteTerms">
+      <SettingsNavigateLink target={SETTINGS_TARGETS.defaultQuoteTerms}>
         {tr.crm.quotes.form.termsSetDefaultLink}
       </SettingsNavigateLink>
     </p>

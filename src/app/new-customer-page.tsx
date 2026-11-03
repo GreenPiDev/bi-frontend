@@ -14,6 +14,7 @@ import {
 } from '../features/platform-admin/schemas';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { AppShell } from './app-shell';
 
 export function NewCustomerPage() {
@@ -49,8 +50,8 @@ export function NewCustomerPage() {
 
   async function handleCopy() {
     if (!result) return;
-    await navigator.clipboard.writeText(result.password);
-    toast.success(strings.copiedToast);
+    if (await copyToClipboard(result.password)) toast.success(strings.copiedToast);
+    else toast.error(tr.common.copyFailed);
   }
 
   const apiErrorMessage =

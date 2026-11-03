@@ -1,9 +1,11 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  deletePostSaleFeedbackNote,
   getPostSaleCase,
   listPostSaleCases,
   markPostSaleFeedback,
   sendPostSaleSurvey,
+  updatePostSaleFeedbackNote,
   type PostSaleCaseStatus,
   type SendPostSaleSurveyInput,
 } from '../../lib/api';
@@ -84,6 +86,27 @@ export function useMarkPostSaleFeedbackMutation(id: string) {
       void queryClient.invalidateQueries({
         queryKey: POST_SALE_CASES_QUERY_KEY,
       });
+      void queryClient.invalidateQueries({ queryKey: ['post-sale-cases', id] });
+    },
+  });
+}
+
+export function useUpdatePostSaleFeedbackNoteMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ noteId, text }: { noteId: string; text: string }) =>
+      updatePostSaleFeedbackNote(id, noteId, { text }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['post-sale-cases', id] });
+    },
+  });
+}
+
+export function useDeletePostSaleFeedbackNoteMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (noteId: string) => deletePostSaleFeedbackNote(id, noteId),
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['post-sale-cases', id] });
     },
   });

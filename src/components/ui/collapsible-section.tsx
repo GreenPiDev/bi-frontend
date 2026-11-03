@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import type { SettingsHighlightKey } from '../../lib/settings-targets';
 import { useSectionHighlight } from './use-section-highlight';
 
 interface CollapsibleSectionProps {
@@ -10,7 +11,7 @@ interface CollapsibleSectionProps {
   /** Baska bir sayfadaki "...tanimlamak icin ayarlara git" linki `?highlight=<key>`
    * ile buraya yonlendirdiginde bu bolume scroll edip (ACMADAN) arka planini bir
    * kere mavi yanip-sondurur - bkz. `useSectionHighlight`. */
-  highlightKey?: string;
+  highlightKey?: SettingsHighlightKey;
   children: ReactNode;
 }
 

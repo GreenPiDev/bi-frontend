@@ -6,6 +6,7 @@ import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link
 import { tr } from '../../i18n/tr';
 import { QuickAddReminderTypeModal } from './quick-add-reminder-type-modal';
 import { useReminderTypeOptionsQuery } from './use-reminder-type-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface ReminderTypeSelectProps {
   label: string;
@@ -30,7 +31,7 @@ export function ReminderTypeSelect({ label, value, onChange, error }: ReminderTy
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.calendar.form.reminderTypeEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="reminderTypeOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.reminderType}>
             {tr.crm.calendar.form.reminderTypeEmptyLink}
           </SettingsNavigateLink>
         </div>

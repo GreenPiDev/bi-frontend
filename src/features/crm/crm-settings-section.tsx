@@ -107,6 +107,7 @@ import {
   useTitleOptionsQuery,
   useUpdateTitleOptionMutation,
 } from './use-title-options';
+import { SETTINGS_TARGETS, type SettingsHighlightKey } from '../../lib/settings-targets';
 
 const POST_SALE_FOLLOW_UP_DAYS_KEY = 'crm.postSaleFollowUpDays';
 
@@ -189,7 +190,7 @@ function CompanyInfoSection() {
     <CollapsibleSection
       title={strings.title}
       subtitle={strings.subtitle}
-      highlightKey="companyInfo"
+      highlightKey={SETTINGS_TARGETS.companyInfo.highlightKey}
     >
       <div className="flex items-center gap-4">
         {logoUrl ? (
@@ -333,7 +334,7 @@ function OptionListManager({
   /** Baska bir sayfadaki "...tanimlamak icin ayarlara git" linki buraya
    * `?highlight=<key>` ile yonlendirdiginde bu bolumu acmadan scroll edip
    * mavi yanip-sondurur - bkz. `CollapsibleSection`in `highlightKey` prop'u. */
-  highlightKey?: string;
+  highlightKey?: SettingsHighlightKey;
   /** Sadece Birimler (UnitOption) icin: varsayilan birim secme yildizi. Verilmezse
    * chip'lerde yildiz hic gosterilmez - diger option tipleri (sektor, departman…)
    * etkilenmez. */
@@ -542,7 +543,7 @@ function SectorOptionsManager() {
       createMutation={useCreateSectorOptionMutation()}
       updateMutation={useUpdateSectorOptionMutation()}
       deleteMutation={useDeleteSectorOptionMutation()}
-      highlightKey="sectorOptions"
+      highlightKey={SETTINGS_TARGETS.sector.highlightKey}
     />
   );
 }
@@ -566,7 +567,7 @@ function DepartmentOptionsManager() {
       createMutation={useCreateDepartmentOptionMutation()}
       updateMutation={useUpdateDepartmentOptionMutation()}
       deleteMutation={useDeleteDepartmentOptionMutation()}
-      highlightKey="departmentOptions"
+      highlightKey={SETTINGS_TARGETS.department.highlightKey}
     />
   );
 }
@@ -590,7 +591,7 @@ function TitleOptionsManager() {
       createMutation={useCreateTitleOptionMutation()}
       updateMutation={useUpdateTitleOptionMutation()}
       deleteMutation={useDeleteTitleOptionMutation()}
-      highlightKey="titleOptions"
+      highlightKey={SETTINGS_TARGETS.title.highlightKey}
     />
   );
 }
@@ -614,7 +615,7 @@ function ProductCategoryOptionsManager() {
       createMutation={useCreateProductCategoryOptionMutation()}
       updateMutation={useUpdateProductCategoryOptionMutation()}
       deleteMutation={useDeleteProductCategoryOptionMutation()}
-      highlightKey="productCategoryOptions"
+      highlightKey={SETTINGS_TARGETS.productCategory.highlightKey}
     />
   );
 }
@@ -638,7 +639,7 @@ function BrandOptionsManager() {
       createMutation={useCreateBrandOptionMutation()}
       updateMutation={useUpdateBrandOptionMutation()}
       deleteMutation={useDeleteBrandOptionMutation()}
-      highlightKey="brandOptions"
+      highlightKey={SETTINGS_TARGETS.brand.highlightKey}
     />
   );
 }
@@ -664,7 +665,7 @@ function UnitOptionsManager() {
       deleteMutation={useDeleteUnitOptionMutation()}
       setDefaultMutation={useSetDefaultUnitOptionMutation()}
       setDefaultButtonLabel={tr.settings.crm.unitOptions.setDefaultButton}
-      highlightKey="unitOptions"
+      highlightKey={SETTINGS_TARGETS.unit.highlightKey}
     />
   );
 }
@@ -688,7 +689,7 @@ function PaymentMethodOptionsManager() {
       createMutation={useCreatePaymentMethodOptionMutation()}
       updateMutation={useUpdatePaymentMethodOptionMutation()}
       deleteMutation={useDeletePaymentMethodOptionMutation()}
-      highlightKey="paymentMethodOptions"
+      highlightKey={SETTINGS_TARGETS.paymentMethod.highlightKey}
     />
   );
 }
@@ -712,7 +713,7 @@ function QuoteRejectionReasonOptionsManager() {
       createMutation={useCreateQuoteRejectionReasonOptionMutation()}
       updateMutation={useUpdateQuoteRejectionReasonOptionMutation()}
       deleteMutation={useDeleteQuoteRejectionReasonOptionMutation()}
-      highlightKey="quoteRejectionReasonOptions"
+      highlightKey={SETTINGS_TARGETS.quoteRejectionReason.highlightKey}
     />
   );
 }
@@ -736,7 +737,7 @@ function InteractionTypeOptionsManager() {
       createMutation={useCreateInteractionTypeOptionMutation()}
       updateMutation={useUpdateInteractionTypeOptionMutation()}
       deleteMutation={useDeleteInteractionTypeOptionMutation()}
-      highlightKey="interactionTypeOptions"
+      highlightKey={SETTINGS_TARGETS.interactionType.highlightKey}
     />
   );
 }
@@ -760,7 +761,7 @@ function ReminderTypeOptionsManager() {
       createMutation={useCreateReminderTypeOptionMutation()}
       updateMutation={useUpdateReminderTypeOptionMutation()}
       deleteMutation={useDeleteReminderTypeOptionMutation()}
-      highlightKey="reminderTypeOptions"
+      highlightKey={SETTINGS_TARGETS.reminderType.highlightKey}
     />
   );
 }
@@ -1189,7 +1190,7 @@ function IbanOptionsManager() {
     <CollapsibleSection
       title={tr.settings.crm.ibanOptions.title}
       subtitle={tr.settings.crm.ibanOptions.subtitle}
-      highlightKey="ibanOptions"
+      highlightKey={SETTINGS_TARGETS.iban.highlightKey}
     >
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
         <TextField
@@ -1535,7 +1536,7 @@ function DefaultQuoteVatPctSetting() {
 
 /** Teklif formundaki (/teklifler/yeni) dort kosul metni alaninin varsayilan
  * degerleri - 4 metin alani tek "Kaydet" ile ayni anda kaydedilir (Promise.all
- * ile dort mutateAsync cagrisi). `highlightKey="defaultQuoteTerms"` ile
+ * ile dort mutateAsync cagrisi). `highlightKey={SETTINGS_TARGETS.defaultQuoteTerms.highlightKey}` ile
  * `/teklifler/yeni`deki her 4 alanin altindaki "ayarlara git" linki buraya
  * scroll+flash ile yonlendirir - bkz. `CollapsibleSection`in `highlightKey`
  * prop'u. */
@@ -1592,7 +1593,7 @@ function DefaultQuoteTermsSettings() {
       <CollapsibleSection
         title={strings.title}
         subtitle={strings.subtitle}
-        highlightKey="defaultQuoteTerms"
+        highlightKey={SETTINGS_TARGETS.defaultQuoteTerms.highlightKey}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <TextareaField

@@ -6,6 +6,7 @@ import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link
 import { tr } from '../../i18n/tr';
 import { QuickAddRejectReasonModal } from './quick-add-reject-reason-modal';
 import { useQuoteRejectionReasonOptionsQuery } from './use-quote-rejection-reason-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface QuoteRejectReasonSelectProps {
   value: string;
@@ -29,7 +30,7 @@ export function QuoteRejectReasonSelect({ value, onChange, error }: QuoteRejectR
         </span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.settings.crm.quoteRejectionReasonOptions.empty}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="quoteRejectionReasonOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.quoteRejectionReason}>
             {tr.crm.calendar.form.reminderTypeEmptyLink}
           </SettingsNavigateLink>
         </div>

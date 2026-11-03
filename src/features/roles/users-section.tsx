@@ -15,6 +15,7 @@ import { useToast } from '../../components/ui/toast-context';
 import { ApiError, type RoleView, type SafeUser } from '../../lib/api';
 import { buildUserSlug } from './user-slug';
 import { tr } from '../../i18n/tr';
+import { copyToClipboard } from '../../lib/copy-to-clipboard';
 import {
   useCreateUserMutation,
   useResetUserPasswordMutation,
@@ -47,8 +48,8 @@ function CredentialsResultModal({
   const strings = tr.settings.roles.users.credentialsResult;
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(password);
-    toast.success(strings.copiedToast);
+    if (await copyToClipboard(password)) toast.success(strings.copiedToast);
+    else toast.error(tr.common.copyFailed);
   }
 
   return (
@@ -239,8 +240,8 @@ export function UsersSection({ roles, isCompanyAdmin, currentUserId }: UsersSect
   const [resetResult, setResetResult] = useState<{ email: string; password: string } | null>(null);
 
   async function handleCopyEmail(email: string) {
-    await navigator.clipboard.writeText(email);
-    toast.success(tr.settings.roles.users.emailCopiedToast);
+    if (await copyToClipboard(email)) toast.success(tr.settings.roles.users.emailCopiedToast);
+    else toast.error(tr.common.copyFailed);
   }
 
   function handleResetPassword(user: SafeUser) {

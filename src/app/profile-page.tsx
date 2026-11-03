@@ -1,10 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Trash2 } from 'lucide-react';
+import { Mail, MailOpen, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
+import { IconActionButton } from '../components/ui/icon-action-button';
+import { FilterButtonGroup, type FilterButtonOption } from '../components/ui/filter-button-group';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { FormError } from '../components/ui/form-error';
 import { HorizontalTabPanel, type HorizontalTabItem } from '../components/ui/horizontal-tab-panel';
@@ -18,6 +20,7 @@ import { useToast } from '../components/ui/toast-context';
 import {
   useChangePasswordMutation,
   useDeleteAvatarMutation,
+  useMeQuery,
   useProfileQuery,
   useUpdateProfileMutation,
   useUploadAvatarMutation,
@@ -39,7 +42,12 @@ import {
   useNotificationsQuery,
   useSetNotificationReadMutation,
 } from '../features/notifications/use-notifications';
-import { ApiError, type CalendarShareUser, type Notification } from '../lib/api';
+import {
+  ApiError,
+  type CalendarShareUser,
+  type Notification,
+  type NotificationReadStatus,
+} from '../lib/api';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -527,6 +535,11 @@ function CalendarSharingSection({ currentUserId }: { currentUserId: string }) {
   );
 }
 
+const NOTIFICATION_STATUS_OPTIONS: FilterButtonOption<NotificationReadStatus>[] = [
+  { value: 'READ', label: tr.notifications.read },
+  { value: 'UNREAD', label: tr.notifications.unread },
+];
+
 const notificationDateFormatter = new Intl.DateTimeFormat('tr-TR', {
   dateStyle: 'long',
   timeStyle: 'short',
@@ -536,10 +549,16 @@ const notificationDateFormatter = new Intl.DateTimeFormat('tr-TR', {
  * listesi (bkz. header'daki zil ikonu, ki o sadece okunmamislari gosterir). */
 function NotificationsSection() {
   const [page, setPage] = useState(1);
-  const pageSize = 25;
+  const meQuery = useMeQuery();
+  const pageSize = meQuery.data?.defaultPageSize ?? 25;
   const navigate = useNavigate();
   const toast = useToast();
-  const notificationsQuery = useNotificationsQuery({ page, pageSize });
+  const [status, setStatus] = useState<NotificationReadStatus | ''>('');
+  const notificationsQuery = useNotificationsQuery({
+    page,
+    pageSize,
+    status: status || undefined,
+  });
   const setReadMutation = useSetNotificationReadMutation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkPending, setBulkPending] = useState(false);
@@ -620,48 +639,37 @@ function NotificationsSection() {
     },
     {
       key: 'title',
-      header: tr.profile.tabs.notifications,
+      header: tr.notifications.titleColumn,
       render: (row) => (
-        <div>
-          <p className={row.readAt ? 'text-app-muted' : 'font-semibold text-app-text'}>
-            {row.title}
-          </p>
-          <p className="text-xs text-app-muted">
-            {notificationDateFormatter.format(new Date(row.createdAt))}
-          </p>
-        </div>
+        <p className={row.readAt ? 'text-app-muted' : 'font-semibold text-app-text'}>{row.title}</p>
       ),
     },
     {
+      key: 'createdAt',
+      header: tr.notifications.createdAtColumn,
+      className: 'whitespace-nowrap text-app-muted',
+      render: (row) => notificationDateFormatter.format(new Date(row.createdAt)),
+    },
+    {
       key: 'actions',
-      header: '',
-      className: 'text-right',
+      header: tr.notifications.actionsColumn,
+      className: 'w-px',
       render: (row) => {
         const isPending = setReadMutation.isPending && setReadMutation.variables?.id === row.id;
         return row.readAt ? (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleSetRead(row.id, false);
-            }}
+          <IconActionButton
+            icon={Mail}
+            tooltip={tr.notifications.markAsUnread}
+            onClick={() => handleSetRead(row.id, false)}
             disabled={isPending}
-            className="text-xs font-semibold text-app-primary hover:underline disabled:opacity-50"
-          >
-            {tr.notifications.markAsUnread}
-          </button>
+          />
         ) : (
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleSetRead(row.id, true);
-            }}
+          <IconActionButton
+            icon={MailOpen}
+            tooltip={tr.notifications.markAsRead}
+            onClick={() => handleSetRead(row.id, true)}
             disabled={isPending}
-            className="text-xs font-semibold text-app-primary hover:underline disabled:opacity-50"
-          >
-            {tr.notifications.markAsRead}
-          </button>
+          />
         );
       },
     },
@@ -669,7 +677,34 @@ function NotificationsSection() {
 
   return (
     <section className="p-4">
-      <h2 className="mb-4 text-base font-bold text-app-text">{tr.notifications.fullListTitle}</h2>
+      <h2 className="mb-4 text-base font-bold text-app-text">
+        {tr.notifications.fullListTitle}
+        {notificationsQuery.data && (
+          <span className="ml-1 font-normal text-app-muted">
+            ({tr.notifications.unreadCountLabel(notificationsQuery.data.unreadCount)})
+          </span>
+        )}
+      </h2>
+
+      <div className="mb-4">
+        <FilterButtonGroup
+          label={tr.notifications.statusFilterLabel}
+          value={status}
+          onChange={(next) => {
+            goToPage(1);
+            setStatus(next);
+          }}
+          allLabel={tr.notifications.allStatuses}
+          options={NOTIFICATION_STATUS_OPTIONS}
+          counts={
+            notificationsQuery.data && {
+              '': notificationsQuery.data.unreadCount + notificationsQuery.data.readCount,
+              READ: notificationsQuery.data.readCount,
+              UNREAD: notificationsQuery.data.unreadCount,
+            }
+          }
+        />
+      </div>
 
       {rows.length > 0 && (
         <label className="mb-2 flex items-center gap-2 text-sm text-app-muted">
@@ -684,41 +719,32 @@ function NotificationsSection() {
         </label>
       )}
 
-      {selectedIds.size > 0 && (
-        <div className="mb-3 flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-4 py-2.5">
-          <span className="text-sm text-app-text">
-            {tr.notifications.bulkBar.selectedCount(selectedIds.size)}
-          </span>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => handleBulkSetRead(true)}
-              disabled={bulkPending}
-            >
-              {tr.notifications.bulkBar.markRead}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => handleBulkSetRead(false)}
-              disabled={bulkPending}
-            >
-              {tr.notifications.bulkBar.markUnread}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setSelectedIds(new Set())}
-              disabled={bulkPending}
-            >
-              {tr.notifications.bulkBar.clearSelection}
-            </Button>
-          </div>
-        </div>
-      )}
-
       <Table
+        bulkActionsVisible={selectedIds.size > 0}
+        selectedCount={selectedIds.size}
+        bulkActions={[
+          {
+            key: 'mark-read',
+            icon: MailOpen,
+            tooltip: tr.notifications.bulkBar.markRead,
+            onClick: () => handleBulkSetRead(true),
+            disabled: bulkPending,
+          },
+          {
+            key: 'mark-unread',
+            icon: Mail,
+            tooltip: tr.notifications.bulkBar.markUnread,
+            onClick: () => handleBulkSetRead(false),
+            disabled: bulkPending,
+          },
+          {
+            key: 'clear-selection',
+            icon: X,
+            tooltip: tr.notifications.bulkBar.clearSelection,
+            onClick: () => setSelectedIds(new Set()),
+            disabled: bulkPending,
+          },
+        ]}
         columns={columns}
         data={rows}
         keyField={(row) => row.id}
@@ -727,6 +753,7 @@ function NotificationsSection() {
         emptyMessage={tr.notifications.fullListEmpty}
         onRowClick={handleRowClick}
         getRowHref={(row) => resolveNotificationRoute(row)}
+        rowClassName={(row) => (row.readAt ? undefined : 'bg-yellow-50')}
       />
       {notificationsQuery.data && notificationsQuery.data.meta.totalPages > 1 && (
         <Pagination

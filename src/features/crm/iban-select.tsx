@@ -5,6 +5,7 @@ import { tr } from '../../i18n/tr';
 import { encodeIbanGroupSelection, encodeIbanOptionSelection } from './iban-selection';
 import { useIbanOptionGroupsQuery } from './use-iban-option-groups';
 import { useIbanOptionsQuery } from './use-iban-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface IbanSelectProps {
   label: string;
@@ -48,7 +49,7 @@ export function IbanSelect({ label, value, onChange, error, onRequestAddNew }: I
         <span className="text-sm font-semibold text-app-muted">{label}</span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.quotes.form.ibanEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="ibanOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.iban}>
             {tr.crm.quotes.form.ibanEmptyLink}
           </SettingsNavigateLink>
         </div>

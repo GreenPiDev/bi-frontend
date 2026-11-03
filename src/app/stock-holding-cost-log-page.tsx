@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { SettingsNavigateLink } from '../components/ui/settings-navigate-link';
+import { SETTINGS_TARGETS } from '../lib/settings-targets';
 import { AppShell } from './app-shell';
 import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -55,12 +56,9 @@ export function StockHoldingCostLogContent() {
       <p className="text-sm text-app-muted">{tr.crm.stock.holdingCostLog.subtitle}</p>
       <p className="mt-1 text-sm text-app-muted">
         {tr.crm.stock.holdingCostLog.subtitleSettingsPrefix}{' '}
-        <Link
-          to="/settings?tab=general&highlight=stockHoldingCost"
-          className="font-semibold text-app-brand hover:underline"
-        >
+        <SettingsNavigateLink target={SETTINGS_TARGETS.stockHoldingCost}>
           {tr.crm.stock.holdingCostLog.subtitleSettingsLinkText}
-        </Link>{' '}
+        </SettingsNavigateLink>{' '}
         {tr.crm.stock.holdingCostLog.subtitleSettingsSuffix}
       </p>
       <div className="mt-4">

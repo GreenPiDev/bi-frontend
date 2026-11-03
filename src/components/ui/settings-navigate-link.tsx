@@ -1,12 +1,10 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import type { SettingsTarget } from '../../lib/settings-targets';
 
 interface SettingsNavigateLinkProps {
-  /** `/settings` sayfasindaki hedef tab (`?tab=<tab>`). */
-  tab: string;
-  /** Verilirse, hedef `CollapsibleSection`in `highlightKey` prop'uyla eslesen
-   * `?highlight=<highlightKey>` eklenir - bkz. `useSectionHighlight`. */
-  highlightKey?: string;
+  /** Hedef `/settings` tab'i + bolum - bkz. `SETTINGS_TARGETS`. */
+  target: SettingsTarget;
   className?: string;
   children: ReactNode;
 }
@@ -17,16 +15,8 @@ interface SettingsNavigateLinkProps {
  * birim/kategori/marka/... secicilerindeki ayni desenin tekrarini onlemek icin.
  * Form doldururken veriyi kaybetmemek icin daima yeni sekmede acilir.
  */
-export function SettingsNavigateLink({
-  tab,
-  highlightKey,
-  className,
-  children,
-}: SettingsNavigateLinkProps) {
-  const query = new URLSearchParams({ tab });
-  if (highlightKey) {
-    query.set('highlight', highlightKey);
-  }
+export function SettingsNavigateLink({ target, className, children }: SettingsNavigateLinkProps) {
+  const query = new URLSearchParams({ tab: target.tab, highlight: target.highlightKey });
 
   return (
     <Link

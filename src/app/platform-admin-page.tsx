@@ -1,7 +1,9 @@
+import { Copy } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
+import { IconActionButton } from '../components/ui/icon-action-button';
 import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
@@ -11,6 +13,7 @@ import {
 } from '../features/platform-admin/use-platform-admin';
 import { ApiError, type TenantSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { AppShell } from './app-shell';
 import { PlatformAdminTenantActions } from './platform-admin-tenant-actions';
 import { PlatformAdminTenantModules } from './platform-admin-tenant-modules';
@@ -37,6 +40,11 @@ export function PlatformAdminPage() {
     });
   }
 
+  async function handleCopyEmail(email: string) {
+    if (await copyToClipboard(email)) toast.success(tr.platformAdmin.emailCopiedToast);
+    else toast.error(tr.common.copyFailed);
+  }
+
   const columns: TableColumn<TenantSummary>[] = [
     {
       key: 'name',
@@ -47,7 +55,21 @@ export function PlatformAdminPage() {
       key: 'adminEmail',
       header: tr.platformAdmin.adminEmailColumn,
       className: 'text-app-muted',
-      render: (tenant) => tenant.adminEmail ?? '—',
+      render: (tenant) => {
+        const email = tenant.adminEmail;
+        if (!email) return '—';
+        return (
+          <div className="flex items-center gap-1">
+            <span>{email}</span>
+            <IconActionButton
+              icon={Copy}
+              tooltip={tr.platformAdmin.copyEmailButton}
+              iconSize={14}
+              onClick={() => void handleCopyEmail(email)}
+            />
+          </div>
+        );
+      },
     },
     {
       key: 'plan',

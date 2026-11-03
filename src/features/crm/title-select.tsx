@@ -3,6 +3,7 @@ import { Select } from '../../components/ui/select';
 import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { useTitleOptionsQuery } from './use-title-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface TitleSelectProps {
   value: string;
@@ -30,7 +31,7 @@ export function TitleSelect({ value, onChange, error, onRequestAddNew }: TitleSe
         </span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.contacts.form.titleEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="titleOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.title}>
             {tr.crm.contacts.form.titleEmptyLink}
           </SettingsNavigateLink>
         </div>

@@ -3,6 +3,7 @@ import { Select } from '../../components/ui/select';
 import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { useUnitOptionsQuery } from './use-unit-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface UnitSelectProps {
   value: string;
@@ -36,7 +37,7 @@ export function UnitSelect({ value, onChange, error, onRequestAddNew }: UnitSele
         </label>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.products.form.unitEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="unitOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.unit}>
             {tr.crm.products.form.unitEmptyLink}
           </SettingsNavigateLink>
         </div>

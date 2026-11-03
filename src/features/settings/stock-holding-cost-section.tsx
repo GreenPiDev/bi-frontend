@@ -11,6 +11,7 @@ import {
   type StockHoldingCostSetting,
 } from '../crm/tenant-settings.constants';
 import { useTenantSettingsQuery, useUpdateTenantSettingMutation } from '../crm/use-tenant-settings';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 function isStockHoldingCostSetting(value: unknown): value is StockHoldingCostSetting {
   return (
@@ -71,7 +72,7 @@ export function StockHoldingCostSection() {
     <CollapsibleSection
       title={tr.settings.stockHoldingCost.title}
       subtitle={tr.settings.stockHoldingCost.subtitle}
-      highlightKey="stockHoldingCost"
+      highlightKey={SETTINGS_TARGETS.stockHoldingCost.highlightKey}
     >
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2.5">

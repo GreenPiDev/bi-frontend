@@ -3,6 +3,7 @@ import { MultiSelect } from '../../components/ui/multi-select';
 import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { useSectorOptionsQuery } from './use-sector-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface SectorMultiSelectProps {
   value: string[];
@@ -36,7 +37,7 @@ export function SectorMultiSelect({
         </span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.accounts.form.sectorEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="sectorOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.sector}>
             {tr.crm.accounts.form.sectorEmptyLink}
           </SettingsNavigateLink>
         </div>

@@ -5,6 +5,7 @@ import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link
 import { Tooltip } from '../../components/ui/tooltip';
 import { tr } from '../../i18n/tr';
 import { useBrandOptionsQuery } from './use-brand-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface BrandSelectProps {
   value: string;
@@ -50,7 +51,7 @@ export function BrandSelect({
         </span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.products.form.brandEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="brandOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.brand}>
             {tr.crm.products.form.brandEmptyLink}
           </SettingsNavigateLink>
         </div>

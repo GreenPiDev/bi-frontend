@@ -1,6 +1,15 @@
+import { clsx } from 'clsx';
+import { HeartHandshake, Mail, Send, UserRound, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
+import { PostSaleFeedbackCard } from './post-sale-feedback-card';
+import {
+  PostSaleOverview,
+  PostSaleSurveyResponses,
+  PostSaleTimeline,
+  SectionCard,
+} from './post-sale-case-detail-sections';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -9,16 +18,17 @@ import { Select } from '../components/ui/select';
 import { SettingsNavigateLink } from '../components/ui/settings-navigate-link';
 import { TextField } from '../components/ui/text-field';
 import { useToast } from '../components/ui/toast-context';
+import { formatPostSaleDate } from '../features/crm/format-post-sale-date';
 import { useActiveSurveysQuery } from '../features/crm/use-surveys';
 import { useContactsQuery } from '../features/crm/use-contacts';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import {
-  useMarkPostSaleFeedbackMutation,
   usePostSaleCaseQuery,
   useSendPostSaleSurveyMutation,
 } from '../features/crm/use-post-sale-cases';
 import { ApiError, type PostSaleCaseStatus, type SurveyRecipientKind } from '../lib/api';
 import { tr } from '../i18n/tr';
+import { SETTINGS_TARGETS } from '../lib/settings-targets';
 
 const STATUS_BADGE_VARIANT: Record<PostSaleCaseStatus, 'success' | 'warning' | 'neutral'> = {
   BEKLEMEDE: 'neutral',
@@ -26,14 +36,12 @@ const STATUS_BADGE_VARIANT: Record<PostSaleCaseStatus, 'success' | 'warning' | '
   GERI_BILDIRIM_ALINDI: 'success',
 };
 
-const dateFormat = new Intl.DateTimeFormat('tr-TR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
+const t = tr.crm.postSaleCases.detail;
 
-function formatDate(value: string | null): string {
-  return value ? dateFormat.format(new Date(value)) : '—';
-}
+const RECIPIENT_KINDS: { kind: SurveyRecipientKind; icon: LucideIcon; label: string }[] = [
+  { kind: 'CONTACT', icon: UserRound, label: t.recipientKindContact },
+  { kind: 'EMAIL', icon: Mail, label: t.recipientKindEmail },
+];
 
 export function PostSaleCaseDetailPage() {
   const { id = '' } = useParams();
@@ -43,7 +51,6 @@ export function PostSaleCaseDetailPage() {
   const activeSurveysQuery = useActiveSurveysQuery();
   const tenantProfileQuery = useTenantProfileQuery();
   const sendSurveyMutation = useSendPostSaleSurveyMutation(id);
-  const markFeedbackMutation = useMarkPostSaleFeedbackMutation(id);
 
   const [selectedSurveyId, setSelectedSurveyId] = useState('');
   // Sistemde kayitli sirket maili (Tenant.email) varsayilan deger olarak gosterilir,
@@ -55,7 +62,6 @@ export function PostSaleCaseDetailPage() {
   const [selectedContactId, setSelectedContactId] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [recipientEmail, setRecipientEmail] = useState('');
-  const [responseNote, setResponseNote] = useState('');
 
   if (caseQuery.isPending) {
     return (
@@ -91,19 +97,7 @@ export function PostSaleCaseDetailPage() {
         recipientEmail,
       },
       {
-        onSuccess: () => toast.success(tr.crm.postSaleCases.detail.sendSurveySuccess),
-        onError: (error) => {
-          toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
-        },
-      },
-    );
-  }
-
-  function handleMarkFeedback() {
-    markFeedbackMutation.mutate(
-      { responseNote: responseNote || undefined },
-      {
-        onSuccess: () => toast.success(tr.crm.postSaleCases.detail.markFeedbackSuccess),
+        onSuccess: () => toast.success(t.sendSurveySuccess),
         onError: (error) => {
           toast.error(error instanceof ApiError ? error.message : tr.common.unexpectedError);
         },
@@ -120,6 +114,13 @@ export function PostSaleCaseDetailPage() {
     }
   }
 
+  function handleRecipientKindChange(kind: SurveyRecipientKind) {
+    setRecipientKind(kind);
+    setRecipientName('');
+    setRecipientEmail('');
+    setSelectedContactId('');
+  }
+
   const canSendSurvey = Boolean(
     selectedSurveyId &&
     recipientName &&
@@ -131,189 +132,159 @@ export function PostSaleCaseDetailPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/satis-sonrasi'} label={tr.crm.postSaleCases.detail.back} />
+      <BackLink to={'/satis-sonrasi'} label={t.back} />
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <h1 className="text-xl font-bold text-app-text">{postSaleCase.salesOrder.orderNumber}</h1>
-        <PageHelp text={tr.help.postSaleCaseDetail} />
-        <Badge variant={STATUS_BADGE_VARIANT[postSaleCase.status]}>
-          {tr.crm.postSaleCases.statusOptions[postSaleCase.status]}
-        </Badge>
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center text-app-primary">
+          <HeartHandshake className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl font-bold text-app-text">
+              {postSaleCase.salesOrder.orderNumber}
+            </h1>
+            <PageHelp text={tr.help.postSaleCaseDetail} />
+            <Badge variant={STATUS_BADGE_VARIANT[postSaleCase.status]}>
+              {tr.crm.postSaleCases.statusOptions[postSaleCase.status]}
+            </Badge>
+          </div>
+          <p className="mt-0.5 text-sm text-app-muted">{postSaleCase.account.name}</p>
+        </div>
       </div>
-      <p className="mt-1 text-sm text-app-muted">
-        {postSaleCase.account.name}
-        {postSaleCase.contact &&
-          ` · ${postSaleCase.contact.firstName} ${postSaleCase.contact.lastName}`}
-        {postSaleCase.quote &&
-          ` · ${tr.crm.postSaleCases.quoteColumn}: ${postSaleCase.quote.quoteNumber}`}
-      </p>
 
-      <div className="mt-6 flex flex-col gap-6">
-        <section className="rounded-lg border border-app-border p-5">
-          <h2 className="text-sm font-bold text-app-text">
-            {tr.crm.postSaleCases.detail.reminderAtLabel}
-          </h2>
-          <p className="mt-2 text-sm text-app-muted">{formatDate(postSaleCase.reminderAt)}</p>
-          <p className="mt-1 text-sm text-app-muted">
-            {postSaleCase.reminderSentAt
-              ? `${tr.crm.postSaleCases.detail.reminderSentLabel}: ${formatDate(postSaleCase.reminderSentAt)}`
-              : tr.crm.postSaleCases.detail.reminderPendingLabel}
-          </p>
-        </section>
+      <PostSaleOverview postSaleCase={postSaleCase} />
 
-        <section className="rounded-lg border border-app-border p-5">
-          <h2 className="text-sm font-bold text-app-text">
-            {tr.crm.postSaleCases.detail.surveyTitle}
-          </h2>
-          <p className="mt-2 text-sm text-app-muted">
-            {feedbackSurvey
-              ? `${tr.crm.postSaleCases.detail.surveySentAt}: ${formatDate(feedbackSurvey.sentAt)}` +
-                (feedbackSurvey.respondedAt
-                  ? ` · ${tr.crm.postSaleCases.detail.surveyRespondedAt}: ${formatDate(feedbackSurvey.respondedAt)}`
-                  : '')
-              : tr.crm.postSaleCases.detail.surveyNotSent}
-          </p>
-
-          <div className="mt-4 grid max-w-xl grid-cols-1 gap-4">
-            <Select
-              label={tr.crm.postSaleCases.detail.surveySelectLabel}
-              placeholder={tr.crm.postSaleCases.detail.surveySelectPlaceholder}
-              options={surveyOptions}
-              value={selectedSurveyId}
-              onChange={(event) => setSelectedSurveyId(event.target.value)}
-            />
-
-            <div>
-              <TextField
-                label={tr.crm.postSaleCases.detail.fromEmailLabel}
-                hint={tr.crm.postSaleCases.detail.fromEmailHint}
-                type="email"
-                value={fromEmail}
-                onChange={(event) => setFromEmailOverride(event.target.value)}
-              />
-              <p className="mt-1 text-xs text-app-muted">
-                <SettingsNavigateLink tab="crm" highlightKey="companyInfo">
-                  {tr.crm.postSaleCases.detail.fromEmailSettingsLink}
-                </SettingsNavigateLink>
-              </p>
-            </div>
-
-            <div>
-              <span className="text-sm font-semibold text-app-muted">
-                {tr.crm.postSaleCases.detail.recipientKindLabel}
-              </span>
-              <div className="mt-1.5 flex gap-2">
-                <Button
-                  type="button"
-                  variant={recipientKind === 'CONTACT' ? 'primary' : 'secondary'}
-                  onClick={() => {
-                    setRecipientKind('CONTACT');
-                    setRecipientName('');
-                    setRecipientEmail('');
-                    setSelectedContactId('');
-                  }}
-                >
-                  {tr.crm.postSaleCases.detail.recipientKindContact}
-                </Button>
-                <Button
-                  type="button"
-                  variant={recipientKind === 'EMAIL' ? 'primary' : 'secondary'}
-                  onClick={() => {
-                    setRecipientKind('EMAIL');
-                    setRecipientName('');
-                    setRecipientEmail('');
-                    setSelectedContactId('');
-                  }}
-                >
-                  {tr.crm.postSaleCases.detail.recipientKindEmail}
-                </Button>
-              </div>
-            </div>
-
-            {recipientKind === 'CONTACT' && (
-              <Select
-                label={tr.crm.postSaleCases.detail.contactRequiredLabel}
-                placeholder={tr.crm.postSaleCases.detail.recipientContactPlaceholder}
-                options={contactOptions}
-                value={selectedContactId}
-                onChange={(event) => handleContactSelect(event.target.value)}
-              />
-            )}
-
-            <TextField
-              label={tr.crm.postSaleCases.detail.recipientNameLabel}
-              value={recipientName}
-              onChange={(event) => setRecipientName(event.target.value)}
-            />
-            <TextField
-              label={tr.crm.postSaleCases.detail.recipientEmailLabel}
-              type="email"
-              value={recipientEmail}
-              onChange={(event) => setRecipientEmail(event.target.value)}
-            />
-
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={!canSendSurvey || sendSurveyMutation.isPending}
-              onClick={handleSendSurvey}
-            >
-              {feedbackSurvey
-                ? tr.crm.postSaleCases.detail.resendSurveyButton
-                : tr.crm.postSaleCases.detail.sendSurveyButton}
-            </Button>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-app-border p-5">
-          <h2 className="text-sm font-bold text-app-text">
-            {tr.crm.postSaleCases.detail.feedbackTitle}
-          </h2>
-          {postSaleCase.feedbackReceivedAt && (
-            <p className="mt-2 text-sm text-app-muted">
-              {tr.crm.postSaleCases.detail.alreadyReceivedLabel} (
-              {formatDate(postSaleCase.feedbackReceivedAt)})
-            </p>
-          )}
-          <div className="mt-3 max-w-lg">
-            <TextField
-              label={tr.crm.postSaleCases.detail.feedbackNoteLabel}
-              value={responseNote || postSaleCase.feedbackNote || ''}
-              onChange={(event) => setResponseNote(event.target.value)}
-            />
-          </div>
-          <Button
-            type="button"
-            className="mt-3"
-            disabled={markFeedbackMutation.isPending}
-            onClick={handleMarkFeedback}
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <SectionCard
+            icon={Send}
+            title={t.surveyTitle}
+            description={
+              feedbackSurvey
+                ? `${t.surveySentAt}: ${formatPostSaleDate(feedbackSurvey.sentAt)}` +
+                  (feedbackSurvey.respondedAt
+                    ? ` · ${t.surveyRespondedAt}: ${formatPostSaleDate(feedbackSurvey.respondedAt)}`
+                    : '')
+                : t.surveyNotSent
+            }
           >
-            {tr.crm.postSaleCases.detail.markFeedbackButton}
-          </Button>
-        </section>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                {activeSurveysQuery.isSuccess && surveyOptions.length === 0 ? (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-semibold text-app-muted">
+                      {t.surveySelectLabel}
+                    </span>
+                    <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
+                      {t.surveyEmptyMessage}{' '}
+                      <Link
+                        to="/anketler/yeni"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-app-brand hover:underline"
+                      >
+                        {t.surveyEmptyLink}
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <Select
+                    label={t.surveySelectLabel}
+                    placeholder={t.surveySelectPlaceholder}
+                    options={surveyOptions}
+                    value={selectedSurveyId}
+                    onChange={(event) => setSelectedSurveyId(event.target.value)}
+                  />
+                )}
+              </div>
 
-        {feedbackSurvey && feedbackSurvey.responses.length > 0 && (
-          <section className="rounded-lg border border-app-border p-5">
-            <h2 className="text-sm font-bold text-app-text">
-              {tr.crm.postSaleCases.detail.surveyResponsesTitle}
-            </h2>
-            <div className="mt-4 flex flex-col gap-4">
-              {feedbackSurvey.responses.map((response) => (
-                <div key={response.id}>
-                  <p className="text-sm font-semibold text-app-text">{response.question.text}</p>
-                  <p className="mt-0.5 text-sm text-app-muted">
-                    {response.question.type === 'LIKERT' &&
-                      response.answerLikertValue != null &&
-                      `${response.answerLikertValue} / 5`}
-                    {response.question.type === 'MULTIPLE_CHOICE' &&
-                      (response.answerOption?.label ?? '—')}
-                    {response.question.type === 'OPEN_ENDED' && (response.answerText || '—')}
-                  </p>
+              <div className="md:col-span-2">
+                <TextField
+                  label={t.fromEmailLabel}
+                  hint={t.fromEmailHint}
+                  type="email"
+                  value={fromEmail}
+                  onChange={(event) => setFromEmailOverride(event.target.value)}
+                />
+                <p className="mt-1 text-xs text-app-muted">
+                  <SettingsNavigateLink target={SETTINGS_TARGETS.companyInfo}>
+                    {t.fromEmailSettingsLink}
+                  </SettingsNavigateLink>
+                </p>
+              </div>
+
+              <div className="md:col-span-2">
+                <span className="text-sm font-semibold text-app-muted">{t.recipientKindLabel}</span>
+                <div
+                  role="radiogroup"
+                  aria-label={t.recipientKindLabel}
+                  className="mt-1.5 flex flex-wrap gap-2"
+                >
+                  {RECIPIENT_KINDS.map(({ kind, icon: Icon, label }) => (
+                    <button
+                      key={kind}
+                      type="button"
+                      role="radio"
+                      aria-checked={recipientKind === kind}
+                      onClick={() => handleRecipientKindChange(kind)}
+                      className={clsx(
+                        'flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-colors',
+                        recipientKind === kind
+                          ? 'border-app-brand bg-app-brand text-white'
+                          : 'border-app-border text-app-muted hover:bg-app-bg hover:text-app-text',
+                      )}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                      {label}
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {recipientKind === 'CONTACT' && (
+                <div className="md:col-span-2">
+                  <Select
+                    label={t.contactRequiredLabel}
+                    placeholder={t.recipientContactPlaceholder}
+                    options={contactOptions}
+                    value={selectedContactId}
+                    onChange={(event) => handleContactSelect(event.target.value)}
+                  />
+                </div>
+              )}
+
+              <TextField
+                label={t.recipientNameLabel}
+                value={recipientName}
+                onChange={(event) => setRecipientName(event.target.value)}
+              />
+              <TextField
+                label={t.recipientEmailLabel}
+                type="email"
+                value={recipientEmail}
+                onChange={(event) => setRecipientEmail(event.target.value)}
+              />
             </div>
-          </section>
-        )}
+
+            <div className="mt-5 flex justify-end border-t border-app-border pt-4">
+              <Button
+                type="button"
+                disabled={!canSendSurvey || sendSurveyMutation.isPending}
+                onClick={handleSendSurvey}
+              >
+                {feedbackSurvey ? t.resendSurveyButton : t.sendSurveyButton}
+              </Button>
+            </div>
+          </SectionCard>
+
+          <PostSaleSurveyResponses postSaleCase={postSaleCase} />
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <PostSaleTimeline postSaleCase={postSaleCase} />
+
+          <PostSaleFeedbackCard postSaleCase={postSaleCase} />
+        </div>
       </div>
     </AppShell>
   );

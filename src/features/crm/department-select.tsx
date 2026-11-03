@@ -3,6 +3,7 @@ import { Select } from '../../components/ui/select';
 import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { tr } from '../../i18n/tr';
 import { useDepartmentOptionsQuery } from './use-department-options';
+import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface DepartmentSelectProps {
   value: string;
@@ -35,7 +36,7 @@ export function DepartmentSelect({
         </span>
         <div className="rounded-lg border border-dashed border-app-border bg-app-surface px-3.5 py-2.5 text-sm text-app-muted">
           {tr.crm.contacts.form.departmentEmptyMessage}{' '}
-          <SettingsNavigateLink tab="crm" highlightKey="departmentOptions">
+          <SettingsNavigateLink target={SETTINGS_TARGETS.department}>
             {tr.crm.contacts.form.departmentEmptyLink}
           </SettingsNavigateLink>
         </div>

@@ -11,6 +11,7 @@ import {
 } from '../features/platform-admin/use-platform-admin';
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 
 const TENANT_ROOT_DOMAIN = 'pilens.com.tr';
 
@@ -85,8 +86,8 @@ function ResetPasswordResultModal({
   const strings = tr.platformAdmin.resetAdminPasswordResult;
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(password);
-    toast.success(strings.copiedToast);
+    if (await copyToClipboard(password)) toast.success(strings.copiedToast);
+    else toast.error(tr.common.copyFailed);
   }
 
   return (

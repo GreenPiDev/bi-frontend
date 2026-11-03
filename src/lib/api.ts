@@ -1,3 +1,5 @@
+import { parseJsonWithRebasedFileUrls } from './file-url';
+
 // Prod'da (Vercel) VITE_API_BASE_URL her zaman acikca set edilir, bu yuzden asagidaki
 // otomatik-algilama hic devreye girmez. Yerel gelistirmede ise .env'de bu degiskeni BOS
 // birakmak, sayfanin hangi host'tan acildigini (localhost ya da bir LAN IP'si) otomatik
@@ -154,7 +156,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (response.status === 204) {
     return undefined as T;
   }
-  return response.json() as Promise<T>;
+  return parseJsonWithRebasedFileUrls(await response.text(), API_BASE_URL) as T;
 }
 
 export async function getHealth(): Promise<{ status: string; timestamp: string }> {
@@ -3732,6 +3734,14 @@ export interface FeedbackSurvey {
   responses: SurveyResponseView[];
 }
 
+export interface PostSaleFeedbackNote {
+  id: string;
+  postSaleCaseId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PostSaleCase {
   id: string;
   salesOrderId: string;
@@ -3747,6 +3757,7 @@ export interface PostSaleCase {
   reminderSentAt: string | null;
   feedbackReceivedAt: string | null;
   feedbackNote: string | null;
+  feedbackNotes: PostSaleFeedbackNote[];
   feedbackSurvey: FeedbackSurvey | null;
   status: PostSaleCaseStatus;
   createdAt: string;
@@ -3809,6 +3820,21 @@ export function markPostSaleFeedback(
     method: 'PATCH',
     body: JSON.stringify(input),
   });
+}
+
+export function updatePostSaleFeedbackNote(
+  id: string,
+  noteId: string,
+  input: { text: string },
+): Promise<PostSaleCase> {
+  return request(`/post-sale-cases/${id}/feedback-notes/${noteId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deletePostSaleFeedbackNote(id: string, noteId: string): Promise<PostSaleCase> {
+  return request(`/post-sale-cases/${id}/feedback-notes/${noteId}`, { method: 'DELETE' });
 }
 
 // Anket sablonlari (Survey) - /satis-sonrasi?tab=surveys (2026-10-20 genislemesi)
@@ -4621,12 +4647,22 @@ export function listUnreadNotifications(): Promise<Notification[]> {
   return request('/notifications/unread');
 }
 
+/** Sayfalanmis liste + sayfadan bagimsiz toplam okunmamis bildirim sayisi. */
+export type NotificationListResult = PagedResult<Notification> & {
+  unreadCount: number;
+  /** Filtre butonlarindaki sayilar icin - status filtresinden bagimsiz. */
+  readCount: number;
+};
+
+export type NotificationReadStatus = 'READ' | 'UNREAD';
+
 export function listNotifications(
-  params: { page?: number; pageSize?: number } = {},
-): Promise<PagedResult<Notification>> {
+  params: { page?: number; pageSize?: number; status?: NotificationReadStatus } = {},
+): Promise<NotificationListResult> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.status) query.set('status', params.status);
   const qs = query.toString();
   return request(`/notifications${qs ? `?${qs}` : ''}`);
 }
