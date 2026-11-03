@@ -9,6 +9,9 @@ export interface SelectOption {
   /** MultiSelect'in secili degerler icin alttaki (showChips) etiketinde label yerine
    * gosterilecek daha kisa metin - verilmezse label kullanilir. */
   chipLabel?: string;
+  /** MultiSelect: secenek listede gorunur ama isaretlenip kaldirilamaz (or. her zaman
+   * acik bir modul). */
+  disabled?: boolean;
 }
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {

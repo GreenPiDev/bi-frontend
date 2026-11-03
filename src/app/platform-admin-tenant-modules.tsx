@@ -1,4 +1,4 @@
-import { clsx } from 'clsx';
+import { MultiSelect } from '../components/ui/multi-select';
 import {
   usePlatformTenantModulesQuery,
   useSetPlatformTenantModuleMutation,
@@ -13,28 +13,34 @@ export function PlatformAdminTenantModules({ tenantId }: { tenantId: string }) {
     return <p className="text-sm text-app-muted">{tr.common.loading}</p>;
   }
 
+  const modules = modulesQuery.data ?? [];
+  const enabledKeys = modules.filter((module) => module.enabled).map((module) => module.key);
+  const options = modules.map((module) => ({
+    value: module.key,
+    label: module.alwaysOn ? `${module.label} (${tr.platformAdmin.alwaysOnBadge})` : module.label,
+    disabled: module.alwaysOn || toggleMutation.isPending,
+  }));
+
+  // MultiSelect reports the full new selection; the API toggles one module at a time, so
+  // diff against the current state to find the single module that changed.
+  function handleChange(nextKeys: string[]) {
+    const changed = modules.find(
+      (module) => nextKeys.includes(module.key) !== enabledKeys.includes(module.key),
+    );
+    if (!changed || changed.alwaysOn) return;
+    toggleMutation.mutate({ moduleKey: changed.key, enabled: !changed.enabled });
+  }
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {modulesQuery.data?.map((module) => (
-        <button
-          key={module.key}
-          type="button"
-          disabled={module.alwaysOn || toggleMutation.isPending}
-          onClick={() => toggleMutation.mutate({ moduleKey: module.key, enabled: !module.enabled })}
-          className={clsx(
-            'rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed',
-            module.enabled
-              ? 'border-app-brand bg-app-brand/10 text-app-brand'
-              : 'border-app-border bg-app-bg text-app-muted',
-          )}
-        >
-          {module.label}
-          {module.alwaysOn ? ` (${tr.platformAdmin.alwaysOnBadge})` : null}
-        </button>
-      ))}
-      {toggleMutation.isError && (
-        <p className="w-full text-xs text-app-danger">{tr.platformAdmin.updateError}</p>
-      )}
+    // Fixed width so the button truncates selected labels instead of widening the column.
+    <div className="w-44">
+      <MultiSelect
+        value={enabledKeys}
+        onChange={handleChange}
+        options={options}
+        placeholder={tr.platformAdmin.modulesPlaceholder}
+        error={toggleMutation.isError ? tr.platformAdmin.updateError : undefined}
+      />
     </div>
   );
 }

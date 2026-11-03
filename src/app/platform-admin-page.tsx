@@ -1,4 +1,4 @@
-import { Copy } from 'lucide-react';
+import { Copy, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -14,6 +14,7 @@ import {
 import { ApiError, type TenantSummary } from '../lib/api';
 import { tr } from '../i18n/tr';
 import { copyToClipboard } from '../lib/copy-to-clipboard';
+import { useDebouncedValue } from '../lib/use-debounced-value';
 import { AppShell } from './app-shell';
 import { PlatformAdminTenantActions } from './platform-admin-tenant-actions';
 import { PlatformAdminTenantModules } from './platform-admin-tenant-modules';
@@ -21,7 +22,9 @@ import { PlatformAdminTenantModules } from './platform-admin-tenant-modules';
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 
 export function PlatformAdminPage() {
-  const tenantsQuery = usePlatformTenantsQuery();
+  const [qInput, setQInput] = useState('');
+  const q = useDebouncedValue(qInput.trim());
+  const tenantsQuery = usePlatformTenantsQuery(q || undefined);
   const toast = useToast();
   const flushCachesMutation = useFlushAllTenantCachesMutation();
   const [confirmingFlush, setConfirmingFlush] = useState(false);
@@ -45,11 +48,33 @@ export function PlatformAdminPage() {
     else toast.error(tr.common.copyFailed);
   }
 
+  async function handleCopyTenantId(id: string) {
+    if (await copyToClipboard(id)) toast.success(tr.platformAdmin.tenantIdCopiedToast);
+    else toast.error(tr.common.copyFailed);
+  }
+
   const columns: TableColumn<TenantSummary>[] = [
     {
       key: 'name',
       header: tr.platformAdmin.tenantColumn,
       render: (tenant) => <span className="font-semibold text-app-text">{tenant.name}</span>,
+    },
+    {
+      key: 'id',
+      header: tr.platformAdmin.tenantIdColumn,
+      className: 'font-mono text-app-muted',
+      render: (tenant) => (
+        <div className="flex items-center gap-1">
+          {/* Short prefix keeps the table narrow; full id is in the title + copy action. */}
+          <span title={tenant.id}>{tenant.id.slice(0, 8)}…</span>
+          <IconActionButton
+            icon={Copy}
+            tooltip={tr.platformAdmin.copyTenantIdButton}
+            iconSize={14}
+            onClick={() => void handleCopyTenantId(tenant.id)}
+          />
+        </div>
+      ),
     },
     {
       key: 'adminEmail',
@@ -125,6 +150,20 @@ export function PlatformAdminPage() {
             <Button type="button">{tr.platformAdmin.addTenantButton}</Button>
           </Link>
         </div>
+      </div>
+
+      <div className="relative mt-6 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => setQInput(event.target.value)}
+          placeholder={tr.platformAdmin.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
       </div>
 
       <Table

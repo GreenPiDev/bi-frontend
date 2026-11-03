@@ -1267,6 +1267,11 @@ export const tr = {
   platformAdmin: {
     copyEmailButton: 'E-postayı Kopyala',
     emailCopiedToast: 'E-posta panoya kopyalandı.',
+    tenantIdColumn: 'Şirket ID',
+    copyTenantIdButton: 'ID’yi Kopyala',
+    tenantIdCopiedToast: 'Şirket ID’si panoya kopyalandı.',
+    searchPlaceholder: 'Şirket adı veya ID ile ara...',
+    modulesPlaceholder: 'Modül seçin',
     title: 'Kiracı Modül Yönetimi',
     subtitle: 'Kiracıların hangi modüllere erişebildiğini buradan yönetin.',
     addTenantButton: 'Şirket Ekle',

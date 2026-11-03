@@ -51,10 +51,14 @@ export function useDeactivateDemoUserMutation() {
   });
 }
 
-export function usePlatformTenantsQuery() {
+// List queries live under this prefix (one cache entry per search term); the shorter
+// PLATFORM_TENANTS_QUERY_KEY prefix is still what mutations invalidate.
+const PLATFORM_TENANTS_LIST_QUERY_KEY = [...PLATFORM_TENANTS_QUERY_KEY, 'list'];
+
+export function usePlatformTenantsQuery(q?: string) {
   return useQuery({
-    queryKey: PLATFORM_TENANTS_QUERY_KEY,
-    queryFn: getPlatformTenants,
+    queryKey: [...PLATFORM_TENANTS_LIST_QUERY_KEY, q ?? ''],
+    queryFn: () => getPlatformTenants(q),
   });
 }
 
@@ -80,8 +84,9 @@ export function useUpdateTenantSlugMutation() {
     mutationFn: ({ tenantId, slug }: { tenantId: string; slug: string }) =>
       updateTenantSlug(tenantId, slug),
     onSuccess: (updated: TenantSummary) => {
-      queryClient.setQueryData<TenantSummary[]>(PLATFORM_TENANTS_QUERY_KEY, (current) =>
-        current?.map((tenant) => (tenant.id === updated.id ? updated : tenant)),
+      queryClient.setQueriesData<TenantSummary[]>(
+        { queryKey: PLATFORM_TENANTS_LIST_QUERY_KEY },
+        (current) => current?.map((tenant) => (tenant.id === updated.id ? updated : tenant)),
       );
     },
   });

@@ -347,8 +347,9 @@ export function deactivateDemoUser(id: string): Promise<DemoUserSummary> {
   return request(`/platform-admin/demo-users/${id}/deactivate`, { method: 'POST' });
 }
 
-export function getPlatformTenants(): Promise<TenantSummary[]> {
-  return request('/platform-admin/tenants');
+export function getPlatformTenants(q?: string): Promise<TenantSummary[]> {
+  const query = q ? `?${new URLSearchParams({ q }).toString()}` : '';
+  return request(`/platform-admin/tenants${query}`);
 }
 
 export interface CreateTenantInput {

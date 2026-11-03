@@ -5,7 +5,8 @@ import { tr } from '../../i18n/tr';
 import type { SelectOption } from './select';
 
 interface MultiSelectProps {
-  label: string;
+  /** Verilmezse ust etiket hic render edilmez (or. tablo hucresi icinde kullanim). */
+  label?: string;
   value: string[];
   onChange: (value: string[]) => void;
   options: SelectOption[];
@@ -115,14 +116,16 @@ export function MultiSelect({
 
   return (
     <div className="relative flex flex-col gap-1.5" ref={containerRef}>
-      <span className="text-sm font-semibold text-app-muted">
-        {label}
-        {required && (
-          <span className="ml-0.5 text-app-danger" aria-hidden="true">
-            *
-          </span>
-        )}
-      </span>
+      {label && (
+        <span className="text-sm font-semibold text-app-muted">
+          {label}
+          {required && (
+            <span className="ml-0.5 text-app-danger" aria-hidden="true">
+              *
+            </span>
+          )}
+        </span>
+      )}
       <div className="flex items-center gap-2">
         <button
           ref={buttonRef}
@@ -181,11 +184,17 @@ export function MultiSelect({
             filteredOptions.map((option) => (
               <label
                 key={option.value}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm text-app-text hover:bg-app-bg"
+                className={clsx(
+                  'flex items-center gap-2 rounded-md px-2.5 py-2 text-sm',
+                  option.disabled
+                    ? 'cursor-not-allowed text-app-muted'
+                    : 'cursor-pointer text-app-text hover:bg-app-bg',
+                )}
               >
                 <input
                   type="checkbox"
                   checked={value.includes(option.value)}
+                  disabled={option.disabled}
                   onChange={() => toggleValue(option.value)}
                   className="accent-app-primary"
                 />
