@@ -1,4 +1,5 @@
 import { parseJsonWithRebasedFileUrls } from './file-url';
+import { noteBackendVersion } from '@/features/app-update/backend-version';
 
 // Prod'da (Vercel) VITE_API_BASE_URL her zaman acikca set edilir, bu yuzden asagidaki
 // otomatik-algilama hic devreye girmez. Yerel gelistirmede ise .env'de bu degiskeni BOS
@@ -114,7 +115,7 @@ async function silentRefresh(): Promise<boolean> {
 
 async function doFetch(path: string, init?: RequestInit): Promise<Response> {
   const isFormData = init?.body instanceof FormData;
-  return fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: 'include',
     headers: {
@@ -122,6 +123,8 @@ async function doFetch(path: string, init?: RequestInit): Promise<Response> {
       ...init?.headers,
     },
   });
+  noteBackendVersion(response.headers.get('X-App-Version'));
+  return response;
 }
 
 async function throwApiError(response: Response): Promise<never> {

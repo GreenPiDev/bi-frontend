@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import { AppUpdateBanner } from './features/app-update/app-update-banner';
 import { GlobalLoadingProvider } from './components/ui/global-loading';
 import { ToastProvider } from './components/ui/toast';
 import '@fontsource/plus-jakarta-sans/400.css';
@@ -24,6 +25,7 @@ createRoot(rootElement).render(
       <ToastProvider>
         <GlobalLoadingProvider>
           <App />
+          <AppUpdateBanner />
         </GlobalLoadingProvider>
       </ToastProvider>
     </QueryClientProvider>

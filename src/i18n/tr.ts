@@ -7,6 +7,11 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 
 export const tr = {
+  appUpdate: {
+    message: 'PiLens’in yeni bir sürümü hazır.',
+    reload: 'Yenile',
+    dismiss: 'Sonra',
+  },
   common: {
     copyFailed: 'Panoya kopyalanamadı. Lütfen metni elle seçip kopyalayın.',
     appName: 'PiLens',
