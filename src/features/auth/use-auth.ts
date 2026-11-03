@@ -3,10 +3,12 @@ import {
   ApiError,
   changePassword,
   deleteAvatar,
+  forgotPassword,
   getProfile,
   login,
   logout,
   me,
+  resetPassword,
   updateProfile,
   uploadAvatar,
   type AuthenticatedUser,
@@ -112,4 +114,12 @@ export function useLogoutMutation() {
       void queryClient.removeQueries({ queryKey: ['chatbot'] });
     },
   });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({ mutationFn: forgotPassword });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({ mutationFn: resetPassword });
 }

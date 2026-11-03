@@ -198,6 +198,29 @@ export const tr = {
     invitationExpired: 'Bu davetin süresi dolmuş. Lütfen yeni bir davet isteyin.',
     invitationNotFound: 'Davet bulunamadı ya da geçersiz.',
     invitationLoading: 'Davet bilgileri kontrol ediliyor...',
+    forgotPasswordLink: 'Şifremi unuttum',
+    backToLogin: 'Giriş sayfasına dön',
+    forgotPasswordTitle: 'Şifrenizi mi unuttunuz?',
+    forgotPasswordIntro:
+      'E-posta adresinizi girin, kayıtlıysa size şifre sıfırlama bağlantısı gönderelim.',
+    forgotPasswordSubmit: 'Sıfırlama bağlantısı gönder',
+    forgotPasswordSubmitting: 'Gönderiliyor...',
+    forgotPasswordSentTitle: 'E-postanızı kontrol edin',
+    forgotPasswordSent:
+      'Bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderdik. Bağlantı 60 dakika geçerlidir.',
+    forgotPasswordErrorToast: 'İstek gönderilemedi. Lütfen daha sonra tekrar deneyin.',
+    resetPasswordTitle: 'Yeni şifre belirleyin',
+    resetPasswordSubmit: 'Şifreyi güncelle',
+    resetPasswordSubmitting: 'Güncelleniyor...',
+    resetPasswordSuccessToast: 'Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz.',
+    resetPasswordInvalidTitle: 'Bağlantı geçersiz',
+    resetPasswordInvalid:
+      'Şifre sıfırlama bağlantısı geçersiz, süresi dolmuş veya daha önce kullanılmış.',
+    resetPasswordRequestNew: 'Yeni bağlantı iste',
+    resetPasswordFields: {
+      password: 'Yeni şifre',
+      passwordConfirm: 'Yeni şifre (tekrar)',
+    },
   },
   shell: {
     logout: 'Çıkış yap',

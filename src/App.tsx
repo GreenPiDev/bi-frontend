@@ -5,6 +5,8 @@ import { AccountFormPage } from './app/account-form-page';
 import { AccountImportPage } from './app/account-import-page';
 import { AccountsListPage } from './app/accounts-list-page';
 import { CalendarPage } from './app/calendar-page';
+import { ForgotPasswordPage } from './app/forgot-password-page';
+import { ResetPasswordPage } from './app/reset-password-page';
 import { ContactDetailPage } from './app/contact-detail-page';
 import { ContactFormPage } from './app/contact-form-page';
 import { ContactImportPage } from './app/contact-import-page';
@@ -148,6 +150,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
+        <Route path="/sifre-sifirla/:token" element={<ResetPasswordPage />} />
         <Route path="/anket/:token" element={<PublicSurveyResponsePage />} />
         <Route
           path="/platform-admin"

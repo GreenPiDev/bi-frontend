@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthLayout } from '../components/ui/auth-layout';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -63,6 +63,14 @@ export function LoginPage() {
             toggleLabels={tr.common.passwordToggle}
             {...registerField('password')}
           />
+          <div className="-mt-2 text-right">
+            <Link
+              to="/sifremi-unuttum"
+              className="text-sm font-medium text-app-primary hover:underline"
+            >
+              {tr.auth.forgotPasswordLink}
+            </Link>
+          </div>
           <Button type="submit" disabled={loginMutation.isPending} className="mt-1">
             {loginMutation.isPending ? tr.auth.loginSubmitting : tr.auth.loginSubmit}
           </Button>

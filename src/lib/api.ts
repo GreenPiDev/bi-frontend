@@ -84,7 +84,14 @@ interface ApiErrorBody {
   error: { code: string; message: string; details?: unknown };
 }
 
-const NO_SILENT_REFRESH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
+const NO_SILENT_REFRESH_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/logout',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -161,6 +168,14 @@ export interface LoginInput {
 
 export function login(input: LoginInput): Promise<{ user: AuthenticatedUser }> {
   return request('/auth/login', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function forgotPassword(input: { email: string }): Promise<{ ok: true }> {
+  return request('/auth/forgot-password', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function resetPassword(input: { token: string; password: string }): Promise<{ ok: true }> {
+  return request('/auth/reset-password', { method: 'POST', body: JSON.stringify(input) });
 }
 
 export function refresh(): Promise<{ user: AuthenticatedUser }> {
