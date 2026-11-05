@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { hasBackendChanged, subscribeBackendVersion } from './backend-version';
 
-const CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const CHECK_INTERVAL_MS = 60 * 1000;
 
 async function fetchLatestVersion(): Promise<string | null> {
   try {

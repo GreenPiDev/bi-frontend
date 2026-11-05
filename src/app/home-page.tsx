@@ -170,7 +170,7 @@ export function HomePage() {
               <p className="text-sm text-app-muted">{tenantProfileQuery.data.name}</p>
             )}
           </div>
-          <p className="text-lg font-semibold text-app-brand">{dateTimeFormatter.format(now)}</p>
+          <p className="text-lg font-semibold text-app-text">{dateTimeFormatter.format(now)}</p>
         </div>
       )}
 
