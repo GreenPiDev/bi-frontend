@@ -378,6 +378,7 @@ export function QuoteItemLinesCard({
           onChange={(value) => onItemChange(row.index, 'brand', value)}
           hideLabel
           compactAddButton
+          paginated
           onRequestAddNew={() => onRequestAddBrand(row.index)}
         />
       ),

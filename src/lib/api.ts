@@ -1250,6 +1250,19 @@ export function listBrandOptions(): Promise<BrandOption[]> {
   return request('/brand-options');
 }
 
+export function browseBrandOptions(params: {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+}): Promise<PagedResult<BrandOption>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/brand-options/browse${qs ? `?${qs}` : ''}`);
+}
+
 export function createBrandOption(label: string): Promise<BrandOption> {
   return request('/brand-options', {
     method: 'POST',

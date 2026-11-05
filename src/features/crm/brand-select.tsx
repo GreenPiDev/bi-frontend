@@ -1,10 +1,13 @@
 import { Plus } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { AsyncAutocomplete } from '../../components/ui/async-autocomplete';
 import { Button } from '../../components/ui/button';
 import { Select } from '../../components/ui/select';
 import { SettingsNavigateLink } from '../../components/ui/settings-navigate-link';
 import { Tooltip } from '../../components/ui/tooltip';
 import { tr } from '../../i18n/tr';
-import { useBrandOptionsQuery } from './use-brand-options';
+import { useDebouncedValue } from '../../lib/use-debounced-value';
+import { useBrandOptionsBrowseQuery, useBrandOptionsQuery } from './use-brand-options';
 import { SETTINGS_TARGETS } from '../../lib/settings-targets';
 
 interface BrandSelectProps {
@@ -26,13 +29,94 @@ interface BrandSelectProps {
    * kazanmak icin opt-in; diger kullanim yerlerinde (urun formu vb.) metinli buton
    * degismez. */
   compactAddButton?: boolean;
+  /** true ise tüm markalar tek seferde yüklenmez: liste sayfa sayfa (aşağı kaydırdıkça
+   * otomatik, infinite scroll) gelir ve kutuya yazarak sunucu tarafında arama yapılır
+   * (bkz. `AccountAutocomplete`). Opt-in; varsayılan davranış (düz `<select>`) ürün formu
+   * gibi diğer kullanım yerlerinde değişmez. */
+  paginated?: boolean;
+}
+
+const BROWSE_PAGE_SIZE = 20;
+
+function renderAddButton(
+  onRequestAddNew: (() => void) | undefined,
+  compactAddButton: boolean | undefined,
+): ReactNode {
+  if (!onRequestAddNew) return undefined;
+  return compactAddButton ? (
+    <Tooltip content={tr.crm.products.form.brandNewButton} className="self-stretch">
+      <Button
+        type="button"
+        variant="navy"
+        className="inline-flex shrink-0 items-center justify-center self-stretch px-2.5"
+        aria-label={tr.crm.products.form.brandNewButton}
+        onClick={onRequestAddNew}
+      >
+        <Plus size={16} className="text-app-success" />
+      </Button>
+    </Tooltip>
+  ) : (
+    <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
+      {tr.crm.products.form.brandNewButton}
+    </Button>
+  );
 }
 
 /** Departman/Ünvan alanlarıyla (`DepartmentSelect`/`TitleSelect`) aynı desen: tenant
  * henüz marka tanımlamadıysa dropdown yerine ayarlara (yeni sekmede) yönlendiren bir
  * mesaj/link gösterilir. Marka oradan eklenince `useBrandOptionsRealtimeSync` bu
  * sorguyu invalidate eder ve dropdown sayfa yenilenmeden otomatik güncellenir. */
-export function BrandSelect({
+export function BrandSelect(props: BrandSelectProps) {
+  return props.paginated ? <PaginatedBrandSelect {...props} /> : <PlainBrandSelect {...props} />;
+}
+
+function PaginatedBrandSelect({
+  value,
+  onChange,
+  error,
+  onRequestAddNew,
+  hideLabel,
+  compactAddButton,
+}: BrandSelectProps) {
+  const [typedQuery, setTypedQuery] = useState<string | null>(null);
+  const debouncedQuery = useDebouncedValue(typedQuery ?? '');
+  const browseQuery = useBrandOptionsBrowseQuery(debouncedQuery, BROWSE_PAGE_SIZE);
+
+  const options = (browseQuery.data?.pages ?? [])
+    .flatMap((page) => page.data)
+    .map((brand) => ({ id: brand.id, label: brand.label }));
+
+  return (
+    <AsyncAutocomplete
+      label={tr.crm.products.form.brandLabel}
+      hideLabel={hideLabel}
+      // Seçili değer varsa o, yoksa kullanıcının yazdığı arama metni gösterilir (dışarıdan,
+      // ör. ürün seçimiyle gelen değer eski arama metninin önüne geçer).
+      value={value || (typedQuery ?? '')}
+      onInputChange={(text) => {
+        setTypedQuery(text);
+        if (value) onChange('');
+      }}
+      options={options}
+      onSelectOption={(option) => {
+        onChange(option.label);
+        setTypedQuery(null);
+      }}
+      placeholder={tr.crm.products.form.brandPlaceholder}
+      error={error}
+      isLoadingOptions={browseQuery.isLoading}
+      onMenuScrollEnd={
+        browseQuery.hasNextPage && !browseQuery.isFetchingNextPage
+          ? () => void browseQuery.fetchNextPage()
+          : undefined
+      }
+      isLoadingMore={browseQuery.isFetchingNextPage}
+      trailingAction={renderAddButton(onRequestAddNew, compactAddButton)}
+    />
+  );
+}
+
+function PlainBrandSelect({
   value,
   onChange,
   error,
@@ -69,26 +153,7 @@ export function BrandSelect({
       value={value}
       onChange={(event) => onChange(event.target.value)}
       options={options.map((option) => ({ value: option.label, label: option.label }))}
-      trailingAction={
-        onRequestAddNew &&
-        (compactAddButton ? (
-          <Tooltip content={tr.crm.products.form.brandNewButton} className="self-stretch">
-            <Button
-              type="button"
-              variant="navy"
-              className="inline-flex shrink-0 items-center justify-center self-stretch px-2.5"
-              aria-label={tr.crm.products.form.brandNewButton}
-              onClick={onRequestAddNew}
-            >
-              <Plus size={16} className="text-app-success" />
-            </Button>
-          </Tooltip>
-        ) : (
-          <Button type="button" variant="navy" className="shrink-0" onClick={onRequestAddNew}>
-            {tr.crm.products.form.brandNewButton}
-          </Button>
-        ))
-      }
+      trailingAction={renderAddButton(onRequestAddNew, compactAddButton)}
     />
   );
 }

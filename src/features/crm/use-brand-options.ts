@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  browseBrandOptions,
   createBrandOption,
   deleteBrandOption,
   listBrandOptions,
@@ -12,6 +13,20 @@ export function useBrandOptionsQuery() {
   return useQuery({
     queryKey: BRAND_OPTIONS_QUERY_KEY,
     queryFn: () => listBrandOptions(),
+  });
+}
+
+/** Infinite-scroll dropdown'ı için sayfalı + aramalı marka listesi. Sorgu anahtarı
+ * `BRAND_OPTIONS_QUERY_KEY` ile başladığından, marka ekleme/güncelleme/silme ve
+ * realtime invalidasyonu bunu da otomatik yeniler. */
+export function useBrandOptionsBrowseQuery(q: string, pageSize: number) {
+  return useInfiniteQuery({
+    queryKey: [...BRAND_OPTIONS_QUERY_KEY, 'browse', q, pageSize],
+    queryFn: ({ pageParam }) =>
+      browseBrandOptions({ page: pageParam, pageSize, q: q || undefined }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined,
   });
 }
 
