@@ -1,4 +1,10 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   createContact,
   deleteContact,
@@ -69,6 +75,20 @@ export function useContactsQuery(
     queryKey: [...CONTACTS_QUERY_KEY, params],
     queryFn: () => listContacts(params),
     enabled: options.enabled ?? true,
+  });
+}
+
+/** Arama metni bosken kisileri sayfa sayfa (infinite scroll) yukler; `accountId`
+ * verilirse filtre SUNUCUDA uygulanir (istemcide ilk sayfa uzerinden suzmek, kisi sayisi
+ * pageSize'i asinca firmanin kisilerini kacirir). */
+export function useContactsBrowseQuery(enabled: boolean, pageSize: number, accountId?: string) {
+  return useInfiniteQuery({
+    queryKey: [...CONTACTS_QUERY_KEY, 'browse-all', pageSize, accountId ?? null],
+    queryFn: ({ pageParam }) => listContacts({ page: pageParam, pageSize, accountId }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined,
+    enabled,
   });
 }
 

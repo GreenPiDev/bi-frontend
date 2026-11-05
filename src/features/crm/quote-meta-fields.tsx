@@ -3,6 +3,7 @@ import { DateField } from '../../components/ui/date-field';
 import { Select } from '../../components/ui/select';
 import { TextField } from '../../components/ui/text-field';
 import { tr } from '../../i18n/tr';
+import { ContactAutocomplete } from './contact-autocomplete';
 import { IbanSelect } from './iban-select';
 import { PaymentMethodSelect } from './payment-method-select';
 import { QuoteTemplateSelect } from './quote-template-select';
@@ -49,7 +50,8 @@ interface QuoteMetaFieldsProps {
   /** Firma alani ekranlar arasi farklilasiyor (yeni: duzenlenebilir Autocomplete,
    * duzenle: salt-okunur metin) - cagiran bu hucreyi kendisi render eder. */
   accountSlot: ReactNode;
-  contactOptions: { value: string; label: string }[];
+  /** Secili firma; muhatap kisi listesi sunucuda bu firmaya gore filtrelenir. */
+  accountId?: string;
   /** `/teklifler/yeni`de firma seçilince gösterilen "+ Yeni Kişi" butonu - seçili
    * firmaya bağlı yeni bir kişi oluşturup teklife atar (bkz. `QuoteNewContactModal`).
    * `/teklifler/duzenle` bu callback'i geçmez, eski davranışında kalır. */
@@ -80,7 +82,7 @@ interface QuoteMetaFieldsProps {
  * bu yuzden hem react-hook-form (Controller) hem duz useState ile calisir. */
 export function QuoteMetaFields({
   accountSlot,
-  contactOptions,
+  accountId,
   contactTrailingAction,
   senderOptions,
   values,
@@ -93,14 +95,16 @@ export function QuoteMetaFields({
   return (
     <div className="grid grid-cols-1 gap-4 border-t border-app-border pt-6 sm:grid-cols-2 lg:grid-cols-3">
       {accountSlot}
-      <Select
+      <ContactAutocomplete
+        key={accountId ?? 'no-account'}
         label={tr.crm.quotes.form.contactLabel}
         placeholder={tr.crm.quotes.form.contactPlaceholder}
         hint={tr.crm.quotes.form.contactHint}
-        options={contactOptions}
         error={errors?.contactId}
-        value={values.contactId}
-        onChange={(event) => onChange('contactId', event.target.value)}
+        value={values.contactId || undefined}
+        onChange={(contactId) => onChange('contactId', contactId ?? '')}
+        accountId={accountId}
+        loadAllWhenEmpty
         trailingAction={contactTrailingAction}
       />
       <Select

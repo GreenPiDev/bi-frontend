@@ -35,7 +35,6 @@ import {
   type QuoteExchangeRatesValue,
 } from '../features/crm/quote-exchange-rates';
 import { QuoteMetaFields } from '../features/crm/quote-meta-fields';
-import { useContactsQuery } from '../features/crm/use-contacts';
 import { useCreateBrandOptionMutation } from '../features/crm/use-brand-options';
 import { useCreatePaymentMethodOptionMutation } from '../features/crm/use-payment-method-options';
 import { useProductListsQuery } from '../features/crm/use-product-lists';
@@ -115,7 +114,6 @@ export function QuoteFormPage() {
   const [searchParams] = useSearchParams();
   const prefillAccountId = searchParams.get('accountId') ?? undefined;
   const toast = useToast();
-  const contactsQuery = useContactsQuery();
   const meQuery = useMeQuery();
   const assignableUsersQuery = useQuoteAssignableUsersQuery();
   const productListsQuery = useProductListsQuery();
@@ -381,13 +379,6 @@ export function QuoteFormPage() {
     setValue('contactId', contact.id, { shouldValidate: true });
     setIsNewContactModalOpen(false);
   }
-
-  const contactOptions = (contactsQuery.data?.data ?? [])
-    .filter((contact) => !selectedAccountId || contact.accountId === selectedAccountId)
-    .map((contact) => ({
-      value: contact.id,
-      label: `${contact.firstName} ${contact.lastName}`,
-    }));
 
   const senderOptions = (assignableUsersQuery.data ?? []).map((user) => ({
     value: user.id,
@@ -713,7 +704,7 @@ export function QuoteFormPage() {
                 </div>
               )
             }
-            contactOptions={contactOptions}
+            accountId={selectedAccountId || undefined}
             contactTrailingAction={
               !isEdit ? (
                 <Button
