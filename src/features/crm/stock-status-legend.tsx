@@ -5,9 +5,11 @@ import { tr } from '../../i18n/tr';
  * aciklayan bilgi kutusu - renkler stock-status.ts'teki STOCK_STATUS_ROW_CLASS ile
  * birebir eslenir, buradan bagimsiz sabit renk kullanma.
  */
-export function StockStatusLegend() {
+export function StockStatusLegend({ className = 'mt-4' }: { className?: string }) {
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-app-border bg-app-surface px-4 py-2.5 text-sm">
+    <div
+      className={`${className} flex flex-wrap items-center justify-center gap-x-5 gap-y-2 rounded-lg border border-app-border bg-app-surface px-4 py-2.5 text-sm`}
+    >
       <span className="flex items-center gap-1.5 text-app-muted">
         <span className="h-3 w-3 rounded-sm bg-red-50 ring-1 ring-inset ring-red-200" />
         {tr.crm.stockStatusLegend.low}

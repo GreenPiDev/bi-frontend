@@ -1,4 +1,14 @@
-import { AlertTriangle, Filter, FolderInput, Pencil, Search, Trash2, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  Download,
+  Filter,
+  FolderInput,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -38,15 +48,28 @@ import { ApiError, type ProductWithStock } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
-export function ProductsListContent() {
+interface ProductsListContentProps {
+  /** Verilirse tablo yalnızca bu ürün listesinin ürünlerini gösterir (/urun-listeleri/:id). */
+  productList?: { id: string; name: string };
+}
+
+export function ProductsListContent({ productList }: ProductsListContentProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const backState = { from: `${location.pathname}${location.search}` };
+  // Ürün listesi detayından gidilen sayfalar (/urunler/yeni, /urunler/:id...) geri dönüşte
+  // bu sayfanın kendi "nereden geldim" bilgisini ve productListId'yi korumalı.
+  const backState = productList
+    ? {
+        from: `${location.pathname}${location.search}`,
+        productListId: productList.id,
+        parentFrom: (location.state as { from?: string } | null)?.from ?? '/urun-listeleri',
+      }
+    : { from: `${location.pathname}${location.search}` };
   const toast = useToast();
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput.trim());
-  const [filterListId, setFilterListId] = useState('');
+  const [filterListId, setFilterListId] = useState(productList?.id ?? '');
   const [filterBrand, setFilterBrand] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [attrFilters, setAttrFilters] = useState<Record<string, string>>({});
@@ -67,7 +90,7 @@ export function ProductsListContent() {
     page,
     pageSize,
     q: q || undefined,
-    productListId: filterListId || undefined,
+    productListId: productList?.id ?? (filterListId || undefined),
     brand: filterBrand || undefined,
     category: filterCategory || undefined,
     attr: Object.keys(activeAttrFilters).length > 0 ? activeAttrFilters : undefined,
@@ -82,14 +105,14 @@ export function ProductsListContent() {
   const bulkMoveMutation = useBulkMoveProductsMutation();
   const bulkDeleteMutation = useBulkDeleteProductsMutation();
   const hasActiveFilter =
-    Boolean(filterListId) ||
+    (!productList && Boolean(filterListId)) ||
     Boolean(filterBrand) ||
     Boolean(filterCategory) ||
     Object.keys(activeAttrFilters).length > 0;
 
   function resetFilters() {
     setPage(1);
-    setFilterListId('');
+    if (!productList) setFilterListId('');
     setFilterBrand('');
     setFilterCategory('');
     setAttrFilters({});
@@ -204,12 +227,16 @@ export function ProductsListContent() {
         </span>
       ),
     },
-    {
-      key: 'productList',
-      header: tr.crm.products.productListColumn,
-      className: 'text-app-muted',
-      render: (p) => <ProductListInlineSelect product={p} />,
-    },
+    ...(productList
+      ? []
+      : [
+          {
+            key: 'productList',
+            header: tr.crm.products.productListColumn,
+            className: 'text-app-muted',
+            render: (p: ProductWithStock) => <ProductListInlineSelect product={p} />,
+          },
+        ]),
     {
       key: 'sku',
       header: tr.crm.products.skuColumn,
@@ -330,11 +357,19 @@ export function ProductsListContent() {
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{tr.crm.products.title}</h1>
-            <PageHelp text={tr.help.products} />
-          </div>
-          <p className="mt-1 text-sm text-app-muted">{tr.crm.products.subtitle}</p>
+          {productList ? (
+            <h2 className="text-base font-bold text-app-text">
+              {tr.crm.productLists.productsSection.title(productList.name)}
+            </h2>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-bold text-app-text">{tr.crm.products.title}</h1>
+                <PageHelp text={tr.help.products} />
+              </div>
+              <p className="mt-1 text-sm text-app-muted">{tr.crm.products.subtitle}</p>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2 pt-1">
           <CircleIconButton
@@ -346,28 +381,24 @@ export function ProductsListContent() {
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-app-surface" />
             )}
           </CircleIconButton>
-          <Button type="button" onClick={() => navigate('/urunler/yeni', { state: backState })}>
-            {tr.crm.products.newButton}
-          </Button>
+          {productList && (
+            <CircleIconButton
+              icon={Download}
+              tooltip={tr.crm.productLists.productsSection.importButton}
+              onClick={() => navigate(`/urun-listeleri/${productList.id}/ice-aktar`)}
+            />
+          )}
+          <CircleIconButton
+            icon={Plus}
+            tooltip={tr.crm.productLists.productsSection.addButton}
+            variant="success"
+            strokeWidth={3}
+            onClick={() => navigate('/urunler/yeni', { state: backState })}
+          />
         </div>
       </div>
 
-      <div className="relative mt-6 w-full">
-        <Search
-          size={16}
-          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
-        />
-        <input
-          type="search"
-          value={qInput}
-          onChange={(event) => {
-            setPage(1);
-            setQInput(event.target.value);
-          }}
-          placeholder={tr.crm.products.searchPlaceholder}
-          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
-        />
-      </div>
+      <StockStatusLegend className={productList ? 'mt-3' : 'mt-6'} />
 
       <div className="mt-4 flex flex-wrap items-end justify-end gap-3">
         <div className="flex flex-col gap-1.5">
@@ -403,7 +434,22 @@ export function ProductsListContent() {
         />
       </div>
 
-      <StockStatusLegend />
+      <div className="relative mt-4 w-full">
+        <Search
+          size={16}
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-app-muted"
+        />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(event) => {
+            setPage(1);
+            setQInput(event.target.value);
+          }}
+          placeholder={tr.crm.products.searchPlaceholder}
+          className="w-full rounded-lg border border-app-border bg-app-surface py-2.5 pr-3 pl-9 text-sm text-app-text outline-none focus:border-app-primary"
+        />
+      </div>
 
       <Table
         bulkActionsVisible={selectedIds.size > 0}
@@ -454,9 +500,9 @@ export function ProductsListContent() {
               placeholder={tr.crm.products.movePlaceholder}
               value={moveTargetListId}
               onChange={(event) => setMoveTargetListId(event.target.value)}
-              options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                value: productList.id,
-                label: productList.name,
+              options={(productListsQuery.data?.data ?? []).map((list) => ({
+                value: list.id,
+                label: list.name,
               }))}
             />
             <div className="flex justify-end gap-2">
@@ -489,24 +535,26 @@ export function ProductsListContent() {
       {drawerOpen && (
         <Drawer title={tr.crm.products.filterDrawer.title} onClose={() => setDrawerOpen(false)}>
           <div className="flex flex-col gap-4">
-            <Select
-              label={tr.crm.products.filterListLabel}
-              placeholder={tr.crm.products.filterListPlaceholder}
-              clearable
-              value={filterListId}
-              onChange={(event) => {
-                setPage(1);
-                setFilterListId(event.target.value);
-              }}
-              onClear={() => {
-                setPage(1);
-                setFilterListId('');
-              }}
-              options={(productListsQuery.data?.data ?? []).map((productList) => ({
-                value: productList.id,
-                label: productList.name,
-              }))}
-            />
+            {!productList && (
+              <Select
+                label={tr.crm.products.filterListLabel}
+                placeholder={tr.crm.products.filterListPlaceholder}
+                clearable
+                value={filterListId}
+                onChange={(event) => {
+                  setPage(1);
+                  setFilterListId(event.target.value);
+                }}
+                onClear={() => {
+                  setPage(1);
+                  setFilterListId('');
+                }}
+                options={(productListsQuery.data?.data ?? []).map((list) => ({
+                  value: list.id,
+                  label: list.name,
+                }))}
+              />
+            )}
             <Select
               label={tr.crm.products.filterDrawer.brandLabel}
               placeholder={tr.crm.products.filterDrawer.brandPlaceholder}
