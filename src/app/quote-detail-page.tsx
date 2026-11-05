@@ -1411,22 +1411,11 @@ export function QuoteDetailPage() {
   }
 
   const quote = quoteQuery.data;
-  // Backend'deki QUOTE_EXPORTABLE_STATUSES (exports.service.ts) ile ayni liste -
-  // bu durumlarin disinda export ucu 409 QUOTE_NOT_READY doner. PDF butonu artik
-  // blob fetch yerine dogrudan backend URL'ine yonlendirdigi icin (bkz. asagidaki
-  // not) bu kontrol burada ON CE yapiliyor, aksi halde kullanici onay bekleyen bir
-  // teklifte "PDF Goruntule"ye basinca yeni sekmede ham bir hata metni gorurdu.
-  const canExportQuotePdf =
-    quote.status === 'DRAFT' || quote.status === 'SENT' || quote.status === 'APPROVED';
   // Chrome'un PDF goruntuleyicisi blob: URL'lerde "kaydet" tiklaninca dosya adini
   // blob'un kendi rastgele UUID'sinden aliyor (PDF Title metadata'sini es geciyor,
   // denendi) - bu yuzden artik fetch+blob yerine dogrudan backend'in gercek GET
   // ucuna yonlendiriyoruz, Content-Disposition'daki dosya adi boylece korunuyor.
   function exportQuotePdfInNewTab(path: string) {
-    if (!canExportQuotePdf) {
-      toast.error(tr.crm.quotes.detail.exportPdfError);
-      return;
-    }
     openUrlInNewTab(`${API_BASE_URL}${path}`);
   }
   const canApprove = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
@@ -1590,17 +1579,11 @@ export function QuoteDetailPage() {
                 onClick={() => navigate(`/siparisler/yeni?quoteId=${quote.id}`)}
               />
             )}
-            {(quote.status === 'DRAFT' ||
-              quote.status === 'SENT' ||
-              quote.status === 'PENDING_APPROVAL' ||
-              quote.status === 'APPROVED' ||
-              quote.status === 'UNSPECIFIED') && (
-              <CircleIconButton
-                icon={FileDown}
-                tooltip={tr.crm.quotes.detail.exportPdfButton}
-                onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/pdf`)}
-              />
-            )}
+            <CircleIconButton
+              icon={FileDown}
+              tooltip={tr.crm.quotes.detail.exportPdfButton}
+              onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/pdf`)}
+            />
             {quote.status === 'PENDING_APPROVAL' && canApprove && (
               <>
                 <CircleIconButton

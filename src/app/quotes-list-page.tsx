@@ -206,19 +206,10 @@ export function QuotesListContent() {
     'purchase-orders',
     'CREATE',
   );
-  // Backend'deki QUOTE_EXPORTABLE_STATUSES (exports.service.ts) ile ayni liste.
-  // PDF butonu artik blob fetch yerine dogrudan backend URL'ine yonlendirdigi
-  // icin (bkz. lib/download.ts openUrlInNewTab doc comment'i - Chrome'un PDF
-  // goruntuleyicisi blob: URL'lerde dosya adini korumuyor) bu kontrol burada
-  // ONCE yapiliyor, aksi halde export edilemeyen bir teklifte yeni sekmede ham
-  // bir hata metni gorulurdu.
+  // PDF butonu blob fetch yerine dogrudan backend URL'ine yonlendirir (bkz.
+  // lib/download.ts openUrlInNewTab - Chrome'un PDF goruntuleyicisi blob: URL'lerde
+  // dosya adini korumuyor). Teklif durumundan bagimsiz olarak her teklif icin acilir.
   function exportQuotePdfInNewTab(quote: Quote) {
-    const canExport =
-      quote.status === 'DRAFT' || quote.status === 'SENT' || quote.status === 'APPROVED';
-    if (!canExport) {
-      toast.error(tr.crm.quotes.detail.exportPdfError);
-      return;
-    }
     openUrlInNewTab(`${API_BASE_URL}/exports/quote/${quote.id}/pdf`);
   }
 
