@@ -25,6 +25,7 @@ import {
 import { useIbanOptionGroupsQuery } from '../features/crm/use-iban-option-groups';
 import { useIbanOptionsQuery } from '../features/crm/use-iban-options';
 import { NewAccountModal } from '../features/crm/new-account-modal';
+import { AddProductListModal } from '../features/crm/add-product-list-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { QuoteItemLinesCard, type QuoteProductGroup } from '../features/crm/quote-item-lines-card';
 import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
@@ -144,6 +145,7 @@ export function QuoteFormPage() {
   // etiketi o satirin brand alanina yazilir (bkz. AddOptionModal onCreated).
   const [brandTargetIndex, setBrandTargetIndex] = useState<number | null>(null);
   const [isNewProductModalOpen, setIsNewProductModalOpen] = useState(false);
+  const [isNewProductListModalOpen, setIsNewProductListModalOpen] = useState(false);
   const [isNewAccountModalOpen, setIsNewAccountModalOpen] = useState(false);
   const [isNewContactModalOpen, setIsNewContactModalOpen] = useState(false);
   // Sadece duzenleme + REVIZE durumunda kullanilir (bkz. asagidaki isRevisionMode).
@@ -335,6 +337,23 @@ export function QuoteFormPage() {
       .map((item, index) => (item.groupId === groupId ? index : -1))
       .filter((index) => index !== -1);
     if (indexesToRemove.length > 0) remove(indexesToRemove);
+  }
+  // "Ürünleri Gruplayarak Ekle" açılırken, henüz hiçbir gruba bağlı olmayan satırlar
+  // (checkbox kapalıyken eklenenler) gruplu görünümde hiçbir grubun altında
+  // listelenmez ve kaybolmuş gibi görünür. Bu yüzden böyle satırlar varsa adı boş yeni
+  // bir grup otomatik oluşturulur ve satırlar o gruba bağlanır.
+  function handleGroupItemsByProductChange(enabled: boolean) {
+    setValue('groupItemsByProduct', enabled, { shouldDirty: true });
+    if (!enabled) return;
+    const ungroupedIndexes = (watchedItems ?? [])
+      .map((item, index) => (item.groupId ? -1 : index))
+      .filter((index) => index !== -1);
+    if (ungroupedIndexes.length === 0) return;
+    const groupId = generateClientId();
+    setProductGroups((prev) => [...prev, { id: groupId, name: '' }]);
+    for (const index of ungroupedIndexes) {
+      setValue(`items.${index}.groupId`, groupId, { shouldDirty: true });
+    }
   }
   function handleGroupNameChange(groupId: string, name: string) {
     setProductGroups((prev) =>
@@ -769,8 +788,7 @@ export function QuoteFormPage() {
           <QuoteItemLinesCard
             texts={{
               title: tr.crm.quotes.form.summaryTitle,
-              productListHint: tr.crm.quotes.form.productListHint,
-              emptyState: tr.crm.quotes.form.summaryEmpty,
+              emptyState: tr.crm.quotes.form.summaryFormEmpty,
             }}
             productListId={selectedProductListId}
             productListOptions={(productListsQuery.data?.data ?? []).map((productList) => ({
@@ -782,6 +800,7 @@ export function QuoteFormPage() {
               setValue('productListId', value, { shouldValidate: true })
             }
             onRequestAddProductList={() => setIsNewProductModalOpen(true)}
+            onRequestCreateProductList={() => setIsNewProductListModalOpen(true)}
             itemKeys={fields.map((field) => field.id)}
             items={watchedItems ?? []}
             itemErrors={itemRowErrors}
@@ -813,9 +832,7 @@ export function QuoteFormPage() {
             }}
             onProductFreeTextChange={(index, text) => setValue(`items.${index}.productName`, text)}
             groupItemsByProduct={watch('groupItemsByProduct') ?? false}
-            onGroupItemsByProductChange={(value) =>
-              setValue('groupItemsByProduct', value, { shouldDirty: true })
-            }
+            onGroupItemsByProductChange={handleGroupItemsByProductChange}
             productGroups={productGroups}
             onAddGroup={handleAddGroup}
             onRemoveGroup={handleRemoveGroup}
@@ -1017,6 +1034,15 @@ export function QuoteFormPage() {
             }
             setActiveOptionModal(null);
             setBrandTargetIndex(null);
+          }}
+        />
+      )}
+      {isNewProductListModalOpen && (
+        <AddProductListModal
+          onClose={() => setIsNewProductListModalOpen(false)}
+          onCreated={(productList) => {
+            setValue('productListId', productList.id, { shouldValidate: true });
+            setIsNewProductListModalOpen(false);
           }}
         />
       )}

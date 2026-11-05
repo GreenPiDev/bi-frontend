@@ -65,7 +65,7 @@ export interface QuoteItemLinesCardTexts {
   /** "Teklif Özeti" | "Sipariş Özeti" */
   title: string;
   /** Ürün listesi seçicisinin altındaki ipucu metni - caller'a göre değişir. */
-  productListHint: string;
+  productListHint?: string;
   /** Hiç satır eklenmemişken gösterilen bos durum metni. */
   emptyState: string;
 }
@@ -78,6 +78,9 @@ export interface QuoteItemLinesCardProps {
   productListError?: string;
   onProductListChange: (productListId: string) => void;
   onRequestAddProductList: () => void;
+  /** Verilirse, "Yeni Ürün" butonunun soluna "Yeni Ürün Listesi" butonu eklenir
+   * (modal'ın kendisi çağıranda, dış `<form>`'un dışında render edilir). */
+  onRequestCreateProductList?: () => void;
 
   /** Satır key'leri icin - useFieldArray'in fields[].id'si (React key stabilitesi). */
   itemKeys: string[];
@@ -144,6 +147,7 @@ export function QuoteItemLinesCard({
   productListError,
   onProductListChange,
   onRequestAddProductList,
+  onRequestCreateProductList,
   itemKeys,
   items,
   itemErrors,
@@ -243,6 +247,7 @@ export function QuoteItemLinesCard({
           onFreeTextChange={
             onProductFreeTextChange ? (text) => onProductFreeTextChange(row.index, text) : undefined
           }
+          freeText={items[row.index]?.productName}
           productListId={productListId || undefined}
           disabled={!productListId}
           error={itemErrors?.[row.index]?.productId}
@@ -462,14 +467,26 @@ export function QuoteItemLinesCard({
         value={productListId ?? ''}
         onChange={(event) => onProductListChange(event.target.value)}
         trailingAction={
-          <Button
-            type="button"
-            variant="navy"
-            className="shrink-0"
-            onClick={onRequestAddProductList}
-          >
-            {tr.crm.quotes.form.newProductButton}
-          </Button>
+          <>
+            {onRequestCreateProductList && (
+              <Button
+                type="button"
+                variant="navy"
+                className="shrink-0"
+                onClick={onRequestCreateProductList}
+              >
+                {tr.crm.quotes.form.newProductListButton}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="navy"
+              className="shrink-0"
+              onClick={onRequestAddProductList}
+            >
+              {tr.crm.quotes.form.newProductButton}
+            </Button>
+          </>
         }
       />
 
@@ -480,6 +497,10 @@ export function QuoteItemLinesCard({
           <Button type="button" className="w-full" onClick={onAddGroup}>
             {tr.crm.quotes.form.addGroupButton}
           </Button>
+
+          {onProductFreeTextChange && (
+            <p className="text-sm text-app-muted">{tr.crm.quotes.form.freeTextProductHint}</p>
+          )}
 
           {!productListId && (
             <p className="rounded-lg border border-dashed border-app-border p-4 text-center text-sm text-app-muted">
@@ -531,7 +552,9 @@ export function QuoteItemLinesCard({
                     disabled={!productListId}
                     onClick={() => onAddItem(group.id)}
                   >
-                    {tr.crm.quotes.form.addLineButton}
+                    {group.name.trim()
+                      ? tr.crm.quotes.form.addLineToGroupButton(group.name.trim())
+                      : tr.crm.quotes.form.addLineButton}
                   </Button>
                 </div>
               );
@@ -555,10 +578,22 @@ export function QuoteItemLinesCard({
             </Button>
           </div>
 
+          {onProductFreeTextChange && (
+            <p className="text-sm text-app-muted">{tr.crm.quotes.form.freeTextProductHint}</p>
+          )}
+
           {summaryRows.length === 0 ? (
             <p className="text-sm text-app-muted">{texts.emptyState}</p>
           ) : (
-            <Table columns={itemColumns} data={itemRows} keyField={(row) => row.key} fixedLayout />
+            <Table
+              columns={itemColumns}
+              data={itemRows}
+              keyField={(row) => row.key}
+              fixedLayout
+              // Tablonun varsayilan `mt-6` ust boslugu, ipucu gorunurken ipucunun ustundeki
+              // (buton-ipucu) bosluktan buyuk kalir; ipucu yoksa varsayilan korunur.
+              className={onProductFreeTextChange ? 'mt-0' : undefined}
+            />
           )}
         </>
       )}

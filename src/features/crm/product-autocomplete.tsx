@@ -22,6 +22,12 @@ interface ProductAutocompleteProps {
    * secili bir urun yoksa parent bu metni saklayip submit'te yeni bir urun olarak
    * olusturabilir. Gercek bir urun secilince/temizlenince de bos string ile cagrilir. */
   onFreeTextChange?: (text: string) => void;
+  /** Parent'ın (form state'inde) sakladığı serbest metin. Kutuda görünen yazılmış metin
+   * bu bileşenin yerel `typedQuery` state'inde tutulur ve bileşen yeniden kurulunca
+   * (ör. "Ürünleri Gruplayarak Ekle" açılıp kapanırken satırlar başka bir tabloya
+   * taşınınca) sıfırlanır; bu değer verilirse kutu o durumda da yazılan metni göstermeye
+   * devam eder, yazılan ürün adı kaybolmaz. */
+  freeText?: string;
 }
 
 const PAGE_SIZE = 20;
@@ -47,6 +53,7 @@ export function ProductAutocomplete({
   disabled,
   hideLabel,
   onFreeTextChange,
+  freeText,
 }: ProductAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
@@ -60,7 +67,7 @@ export function ProductAutocomplete({
   );
   const selectedProductQuery = useProductQuery(value ?? '');
 
-  const displayValue = typedQuery ?? selectedProductQuery.data?.name ?? '';
+  const displayValue = typedQuery ?? selectedProductQuery.data?.name ?? freeText ?? '';
   const options = shouldSearch
     ? (searchQuery.data?.data ?? []).map((product) => ({
         id: product.id,
