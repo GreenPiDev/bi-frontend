@@ -1,18 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMeQuery } from '../auth/use-auth';
 import {
+  archiveConversation,
   createMessage,
   deleteUnattachedMessageFile,
   getConversation,
   listAssignableMessageUsers,
   listMessages,
+  restoreConversation,
   setConversationRead,
   setConversationStar,
+  trashConversation,
   uploadMessageAttachment,
   type ConversationDetail,
   type ConversationSummary,
   type CreateMessageInput,
   type Message,
+  type MessageBox,
   type MessageRelatedEntity,
   type PagedResult,
 } from '../../lib/api';
@@ -21,6 +25,7 @@ export const MESSAGES_QUERY_KEY = ['messages'];
 
 export function useMessagesQuery(
   params: {
+    box?: MessageBox;
     page?: number;
     pageSize?: number;
     q?: string;
@@ -167,6 +172,34 @@ export function useSetConversationStarMutation() {
       void queryClient.invalidateQueries({
         queryKey: ['messages', 'conversation', conversationId],
       });
+    },
+  });
+}
+
+/** Konuşmaları kişisel çöp kutusuna taşır (`trash`/`restore`) ya da arşivler (`archive`/`unarchive`) -
+ * birden fazla konuşmayı tek seferde işler, sonunda liste cache'ini tazeler. */
+export function useTrashConversationsMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      conversationIds,
+      action,
+      box,
+    }: {
+      conversationIds: string[];
+      action: 'trash' | 'restore' | 'archive' | 'unarchive';
+      box?: 'inbox' | 'sent';
+    }) => {
+      await Promise.all(
+        conversationIds.map((conversationId) => {
+          if (action === 'trash') return trashConversation(conversationId, box);
+          if (action === 'restore') return restoreConversation(conversationId);
+          return archiveConversation(conversationId, action === 'archive', box);
+        }),
+      );
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: MESSAGES_QUERY_KEY });
     },
   });
 }

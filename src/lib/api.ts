@@ -4496,6 +4496,8 @@ export interface MessageRecipient {
   userId: string;
   kind: MessageRecipientKind;
   readAt: string | null;
+  /** Bu alicinin mesaji kisisel cop kutusuna tasidigi an (yumusak silme). */
+  deletedAt?: string | null;
 }
 
 export interface MessageAttachment {
@@ -4516,6 +4518,8 @@ export interface Message {
   relatedEntity: MessageRelatedEntity | null;
   relatedEntityId: string | null;
   isMeetingReport: boolean;
+  /** Gonderenin mesaji kisisel cop kutusuna tasidigi an (yumusak silme). */
+  senderDeletedAt?: string | null;
   recipients: MessageRecipient[];
   attachments: MessageAttachment[];
   createdAt: string;
@@ -4567,8 +4571,12 @@ export interface CreateMessageInput {
   meetingEventId?: string;
 }
 
+/** /mesajlar kutu filtresi - undefined = "Tümü" (çöp kutusundakiler hariç). */
+export type MessageBox = 'inbox' | 'sent' | 'starred' | 'trash' | 'archive';
+
 export function listMessages(
   params: {
+    box?: MessageBox;
     page?: number;
     pageSize?: number;
     q?: string;
@@ -4584,6 +4592,7 @@ export function listMessages(
   if (params.page) query.set('page', String(params.page));
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.q) query.set('q', params.q);
+  if (params.box) query.set('box', params.box);
   for (const type of params.relatedEntity ?? []) query.append('relatedEntity', type);
   for (const id of params.quoteIds ?? []) query.append('quoteIds', id);
   for (const id of params.projectIds ?? []) query.append('projectIds', id);
@@ -4628,6 +4637,31 @@ export function setConversationStar(conversationId: string, starred: boolean): P
     method: 'PATCH',
     body: JSON.stringify({ starred }),
   });
+}
+
+/** Konuşmayı kişisel çöp kutusuna taşır; `box` verilirse sadece o taraftaki
+ * (gelen/gönderilen) mesajlar silinir. Diğer katılımcıları etkilemez. */
+export function trashConversation(conversationId: string, box?: 'inbox' | 'sent'): Promise<void> {
+  return request(`/messages/${conversationId}/trash`, {
+    method: 'POST',
+    body: JSON.stringify(box ? { box } : {}),
+  });
+}
+
+/** Konuşmayı kişisel arşive alır / arşivden çıkarır; `box` verilirse sadece o taraf. */
+export function archiveConversation(
+  conversationId: string,
+  archive: boolean,
+  box?: 'inbox' | 'sent',
+): Promise<void> {
+  return request(`/messages/${conversationId}/${archive ? 'archive' : 'unarchive'}`, {
+    method: 'POST',
+    body: JSON.stringify(box ? { box } : {}),
+  });
+}
+
+export function restoreConversation(conversationId: string): Promise<void> {
+  return request(`/messages/${conversationId}/restore`, { method: 'POST' });
 }
 
 export function listAssignableMessageUsers(): Promise<AssignableUser[]> {

@@ -6,7 +6,8 @@ export interface FilterButtonOption<T extends string> {
 }
 
 interface FilterButtonGroupProps<T extends string> {
-  label: string;
+  /** Verilmezse butonların üstünde başlık gösterilmez. */
+  label?: string;
   value: T | '';
   onChange: (value: T | '') => void;
   options: FilterButtonOption<T>[];
@@ -36,7 +37,7 @@ export function FilterButtonGroup<T extends string>({
 }: FilterButtonGroupProps<T>) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-app-muted">{label}</p>
+      {label && <p className="mb-2 text-sm font-semibold text-app-muted">{label}</p>}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

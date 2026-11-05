@@ -345,7 +345,7 @@ describe('MessagesListPage', () => {
     renderMessagesListPage();
 
     await screen.findByText('Birinci konu');
-    await user.click(screen.getByRole('checkbox', { name: 'Sayfadaki tüm mesajları seç' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Tümünü Seç' }));
 
     expect(screen.getByRole('button', { name: 'Okundu olarak işaretle' })).toBeInTheDocument();
   });

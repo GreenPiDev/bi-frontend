@@ -171,7 +171,7 @@ export const tr = {
     platformAdminPageModules:
       'Hangi sayfanın hangi modüle bağlı olduğunu buradan eşleyebilir, modülleri kapatılabilir/her zaman açık olarak işaretleyebilirsiniz.',
     messages:
-      'Şirket içi mesajlarınızın gelen/gönderilen kutusu. Bir mesajı bir projeye, teklife veya görüşmeye bağlayabilirsiniz.',
+      "Şirket içi mesajlarınızın gelen/gönderilen kutusu. Bir mesajı bir projeye, teklife veya görüşmeye bağlayabilirsiniz. Sildiğiniz konuşmalar sadece sizin için Çöp Kutusu'na taşınır, oradan geri alabilirsiniz.",
     userStats:
       'Bu kullanıcının sistemde oluşturduğu firma, kişi, görüşme, fırsat, teklif, proje ve sipariş sayılarını görüntüleyin. Salt okunur bir özet ekranıdır.',
     home: 'Sisteme girdiğinizde ilk bilmeniz gerekenler burada: bekleyen davetleriniz, bugünün hatırlatıcıları ve genel rakamlar. Her kart sizi ilgili sayfaya yönlendirir.',
@@ -3919,14 +3919,55 @@ export const tr = {
       unreadCountAria: (count: number) => `${count} okunmamış mesaj`,
       markReadAria: 'Okundu yap',
       selectRowAria: 'Mesajı seç',
-      selectAllAria: 'Sayfadaki tüm mesajları seç',
+      selectAllAria: 'Tümünü Seç',
       you: 'Sen',
       filterButton: 'Filtrele',
       bulkBar: {
         markRead: 'Okundu olarak işaretle',
         markUnread: 'Okunmadı olarak işaretle',
         clearSelection: 'Seçimi temizle',
+        archive: 'Arşivle',
+        unarchive: 'Arşivden çıkar',
+        moveToTrash: 'Çöp kutusuna taşı',
+        restore: 'Çöp kutusundan geri al',
       },
+      boxOptions: {
+        all: 'Tümü',
+        inbox: 'Gelen',
+        sent: 'Gönderilen',
+        starred: 'Yıldızlananlar',
+        archive: 'Arşiv',
+        trash: 'Çöp Kutusu',
+      },
+      emptyByBox: {
+        starred: 'Yıldızladığınız konuşma yok.',
+        archive: 'Arşivinizde konuşma yok.',
+        inbox: 'Gelen kutunuzda mesaj yok.',
+        sent: 'Henüz gönderdiğiniz bir mesaj yok.',
+        trash: 'Çöp kutusu boş.',
+      },
+      actionsColumn: 'İşlemler',
+      trashConfirm: {
+        title: 'Çöp kutusuna taşınsın mı?',
+        message: (count: number) =>
+          count > 1
+            ? `Seçili ${count} konuşma çöp kutusuna taşınacak. Bu işlem sadece sizin kutunuzu etkiler, Çöp Kutusu sekmesinden geri alabilirsiniz.`
+            : 'Bu konuşma çöp kutusuna taşınacak. Bu işlem sadece sizin kutunuzu etkiler, Çöp Kutusu sekmesinden geri alabilirsiniz.',
+        confirm: 'Çöp Kutusuna Taşı',
+      },
+      archiveRowAria: 'Arşivle',
+      unarchiveRowAria: 'Arşivden çıkar',
+      archiveSuccess: (count: number) =>
+        count > 1 ? `${count} konuşma arşivlendi.` : 'Konuşma arşivlendi.',
+      unarchiveSuccess: (count: number) =>
+        count > 1 ? `${count} konuşma arşivden çıkarıldı.` : 'Konuşma arşivden çıkarıldı.',
+      trashRowAria: 'Çöp kutusuna taşı',
+      restoreRowAria: 'Geri al',
+      trashSuccess: (count: number) =>
+        count > 1 ? `${count} konuşma çöp kutusuna taşındı.` : 'Konuşma çöp kutusuna taşındı.',
+      restoreSuccess: (count: number) =>
+        count > 1 ? `${count} konuşma geri alındı.` : 'Konuşma geri alındı.',
+      trashError: 'İşlem tamamlanamadı, lütfen tekrar deneyin.',
       relatedEntityOptions: {
         PROJECT: 'Proje',
         QUOTE: 'Teklif',
