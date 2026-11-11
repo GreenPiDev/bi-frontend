@@ -135,7 +135,12 @@ function computeTotals(quote: Quote) {
  * toplam tutarini, genel "Genel Toplam" (quoteGrandTotalDisplay, lib/quote-totals.ts)
  * ile AYNI kur-cevrim/coklu-para-birimi mantigiyla hesaplar, sadece TUM teklif yerine
  * tek bir grubun kalemleriyle. */
-function formatGroupAmount(items: QuoteItem[], quote: Quote): string {
+function formatGroupAmount(items: QuoteItem[], quote: Quote, groupName?: string): string {
+  // "Gruba fiyat ataması yap" açıksa tutar kalemlerden değil, elle girilen KDV dahil
+  // grup fiyatından gelir (bkz. Quote.groupPricingEnabled).
+  if (quote.groupPricingEnabled && groupName) {
+    return formatCurrencyAmount(Number(quote.groupPrices?.[groupName] ?? 0), quote.quoteCurrency);
+  }
   const totals = groupQuoteItemTotals(
     items.map((item) => ({
       quantity: Number(item.quantity),
@@ -736,7 +741,7 @@ export function QuoteContentBody({
                         <td className="px-4 py-3 !text-app-text">{index + 1}</td>
                         <td className="px-4 py-3 !text-app-text">{group.groupName}</td>
                         <td className="px-4 py-3 text-right font-semibold !text-app-text">
-                          {formatGroupAmount(group.items, quote)}
+                          {formatGroupAmount(group.items, quote, group.groupName)}
                         </td>
                       </tr>
                     ))}

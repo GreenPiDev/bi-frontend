@@ -123,12 +123,18 @@ export interface QuoteForTotals {
   manualSubtotal: string | null;
   manualVatAmount: string | null;
   manualCurrency: string | null;
+  /** Opsiyonel - "Gruba fiyat ataması yap" (bkz. Quote.groupPricingEnabled). */
+  groupItemsByProduct?: boolean;
+  groupPricingEnabled?: boolean;
+  groupPrices?: Record<string, number> | null;
+  quoteCurrency?: string;
   items: {
     quantity: string;
     unitPrice: string;
     discountPct: string;
     vatPct: string;
     currency: string;
+    groupName?: string | null;
   }[];
 }
 
@@ -148,8 +154,10 @@ export function getQuoteCurrencyTotals(quote: QuoteForTotals): QuoteCurrencyTota
       },
     ];
   }
-  return groupQuoteItemTotals(
-    quote.items.map((item) => ({
+  const useGroupPrices = Boolean(quote.groupItemsByProduct && quote.groupPricingEnabled);
+  const regularItems = useGroupPrices ? quote.items.filter((item) => !item.groupName) : quote.items;
+  const totals = groupQuoteItemTotals(
+    regularItems.map((item) => ({
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
       discountPct: Number(item.discountPct),
@@ -157,6 +165,27 @@ export function getQuoteCurrencyTotals(quote: QuoteForTotals): QuoteCurrencyTota
       currency: item.currency,
     })),
   );
+  if (!useGroupPrices) return totals;
+  // Elle fiyatlanan gruplar: KDV dahil tutar, teklif para biriminde. Alt toplam/KDV
+  // ayrimi bilinmez (gruplu teklifte zaten sadece genel toplam gosterilir).
+  const groupNames = new Set(
+    quote.items.map((item) => item.groupName).filter((name): name is string => Boolean(name)),
+  );
+  const groupSum = [...groupNames].reduce(
+    (sum, name) => sum + Number(quote.groupPrices?.[name] ?? 0),
+    0,
+  );
+  if (groupNames.size === 0) return totals;
+  const currency = quote.quoteCurrency || 'TRY';
+  const existing = totals.find((t) => t.currency === currency);
+  if (existing) {
+    existing.subtotal += groupSum;
+    existing.grandTotal += groupSum;
+  } else {
+    totals.push({ currency, subtotal: groupSum, vatTotal: 0, grandTotal: groupSum });
+    totals.sort((a, b) => compareCurrenciesForDisplay(a.currency, b.currency));
+  }
+  return totals;
 }
 
 export function convertTotalsToQuoteCurrency(

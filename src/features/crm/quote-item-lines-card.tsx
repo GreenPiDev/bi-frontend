@@ -51,6 +51,9 @@ export interface QuoteLineItemValues {
 export interface QuoteProductGroup {
   id: string;
   name: string;
+  /** "Gruba fiyat ataması yap" açıkken kullanıcının girdiği KDV dahil grup fiyatı
+   * (form girdisi olduğu için string). */
+  price?: string;
 }
 
 export interface QuoteItemRowError {
@@ -129,6 +132,12 @@ export interface QuoteItemLinesCardProps {
   onAddGroup?: () => void;
   onRemoveGroup?: (groupId: string) => void;
   onGroupNameChange?: (groupId: string, name: string) => void;
+  /** "Gruba fiyat ataması yap" checkbox'ı - sadece groupItemsByProduct açıkken görünür. */
+  groupPricingEnabled?: boolean;
+  onGroupPricingEnabledChange?: (value: boolean) => void;
+  onGroupPriceChange?: (groupId: string, price: string) => void;
+  /** Grup fiyatlari bu para biriminde girilir (teklif para birimi). */
+  quoteCurrency?: string;
 }
 
 function sanitizeDecimalInput(value: string): string {
@@ -167,6 +176,10 @@ export function QuoteItemLinesCard({
   onAddGroup,
   onRemoveGroup,
   onGroupNameChange,
+  groupPricingEnabled,
+  onGroupPricingEnabledChange,
+  onGroupPriceChange,
+  quoteCurrency,
 }: QuoteItemLinesCardProps) {
   const unitOptionsQuery = useUnitOptionsQuery();
 
@@ -226,7 +239,39 @@ export function QuoteItemLinesCard({
     });
     return { index, quantity, unitPrice, currency, discountPct, vatPct, lineSubtotal, lineTotal };
   });
-  const summaryTotalsByCurrency = groupQuoteItemTotals(summaryRows);
+  const baseTotalsByCurrency = groupQuoteItemTotals(
+    isGroupedMode && groupPricingEnabled
+      ? summaryRows.filter((row) => !items[row.index]?.groupId)
+      : summaryRows,
+  );
+  // "Gruba fiyat ataması yap": gruplu kalemler yerine elle girilen KDV dahil grup
+  // fiyatlari toplama eklenir (para birimi karisik oldugundan kalem bazli ozet
+  // bu modda sadece kalem para birimine ait toplamlari + grup fiyatlarini gosterir).
+  const groupPriceSum =
+    isGroupedMode && groupPricingEnabled
+      ? (productGroups ?? [])
+          .filter((group) => items.some((item) => item.groupId === group.id))
+          .reduce((sum, group) => sum + (Number(group.price) || 0), 0)
+      : 0;
+  const summaryTotalsByCurrency = [...baseTotalsByCurrency];
+  if (groupPriceSum > 0) {
+    const currency = quoteCurrency || 'TRY';
+    const existing = summaryTotalsByCurrency.find((t) => t.currency === currency);
+    if (existing) {
+      summaryTotalsByCurrency[summaryTotalsByCurrency.indexOf(existing)] = {
+        ...existing,
+        subtotal: existing.subtotal + groupPriceSum,
+        grandTotal: existing.grandTotal + groupPriceSum,
+      };
+    } else {
+      summaryTotalsByCurrency.push({
+        currency,
+        subtotal: groupPriceSum,
+        vatTotal: 0,
+        grandTotal: groupPriceSum,
+      });
+    }
+  }
 
   const allItemColumns: TableColumn<ItemRow>[] = [
     {
@@ -456,6 +501,18 @@ export function QuoteItemLinesCard({
         </label>
       )}
 
+      {onGroupPricingEnabledChange && groupItemsByProduct && (
+        <label className="flex items-center gap-2 text-sm font-semibold text-app-text">
+          <input
+            type="checkbox"
+            className="accent-app-primary"
+            checked={groupPricingEnabled ?? false}
+            onChange={(event) => onGroupPricingEnabledChange(event.target.checked)}
+          />
+          {tr.crm.quotes.form.groupPricingCheckboxLabel}
+        </label>
+      )}
+
       <Select
         label={tr.crm.quotes.form.productListLabel}
         name="productListId"
@@ -535,6 +592,18 @@ export function QuoteItemLinesCard({
                       onClick={() => onRemoveGroup?.(group.id)}
                     />
                   </div>
+
+                  {groupPricingEnabled && (
+                    <TextField
+                      label={tr.crm.quotes.form.groupPriceLabel}
+                      hint={tr.crm.quotes.form.groupPriceHint}
+                      inputMode="decimal"
+                      value={group.price ?? ''}
+                      onChange={(event) =>
+                        onGroupPriceChange?.(group.id, sanitizeDecimalInput(event.target.value))
+                      }
+                    />
+                  )}
 
                   {groupRows.length === 0 ? (
                     <p className="text-sm text-app-muted">{texts.emptyState}</p>

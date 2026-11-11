@@ -3184,6 +3184,10 @@ export interface Quote {
    * `QuoteItem.groupName`e gore gruplanir (bkz. quote-detail-page.tsx grouped render,
    * QuotePdfService). */
   groupItemsByProduct: boolean;
+  /** "Gruba fiyat ataması yap" - true ise grup fiyatı elle girilen groupPrices'tan
+   * gelir (KDV dahil, quoteCurrency cinsinden), kalem toplamından değil. */
+  groupPricingEnabled?: boolean;
+  groupPrices?: Record<string, number> | null;
   /** Ad-hoc /teklifler Excel ice aktarma - Product.attributes ile ayni "bilinen alana
    * eslenmeyen ama kaybedilmek istenmeyen kolon" catch-all deseni. quote-imports
    * disinda hic yazilmaz. */
@@ -3248,6 +3252,9 @@ export interface CreateQuoteInput {
   senderId: string;
   /** "Ürünleri Gruplayarak Ekle" checkbox'ı - bkz. Quote.groupItemsByProduct. */
   groupItemsByProduct?: boolean;
+  /** "Gruba fiyat ataması yap" - bkz. Quote.groupPricingEnabled. */
+  groupPricingEnabled?: boolean;
+  groupPrices?: Record<string, number> | null;
 }
 
 export interface UpdateQuoteInput {
@@ -3281,6 +3288,9 @@ export interface UpdateQuoteInput {
   senderId?: string;
   /** "Ürünleri Gruplayarak Ekle" checkbox'ı - bkz. Quote.groupItemsByProduct. */
   groupItemsByProduct?: boolean;
+  /** "Gruba fiyat ataması yap" - bkz. Quote.groupPricingEnabled. */
+  groupPricingEnabled?: boolean;
+  groupPrices?: Record<string, number> | null;
   /** status 'REJECTED' ise zorunlu - kullanicinin sectigi red sebebi (bkz.
    * crm_quote_rejection_reason_options). */
   rejectionReason?: string;

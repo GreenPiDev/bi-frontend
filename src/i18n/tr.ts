@@ -3233,6 +3233,10 @@ export const tr = {
         moveItemUp: 'Yukarı taşı',
         moveItemDown: 'Aşağı taşı',
         groupItemsByProductCheckboxLabel: 'Ürünleri Gruplayarak Ekle',
+        groupPricingCheckboxLabel: 'Gruba fiyat ataması yap',
+        groupPriceLabel: 'Grup Fiyatı (KDV Dahil)',
+        groupPriceHint:
+          'Bu tutar, gruptaki ürünlerin miktar x fiyat toplamı yerine teklifte bu grubun fiyatı olarak kullanılır.',
         addGroupButton: 'Yeni Grup Ekle',
         noGroupsYet:
           "Henüz grup eklenmedi. 'Yeni Grup Ekle' butonuna basarak yeni ürün grubu ekleyin.",

@@ -447,6 +447,8 @@ export const quoteFormSchema = z
     /** "Ürünleri Gruplayarak Ekle" checkbox'ı - isaretlenince urun satirlari gruplar
      * halinde girilir (bkz. productGroups state'i, quote-form-page.tsx). */
     groupItemsByProduct: z.boolean().optional(),
+    /** "Gruba fiyat ataması yap" - sadece groupItemsByProduct işaretliyken geçerli. */
+    groupPricingEnabled: z.boolean().optional(),
   })
   .superRefine((values, ctx) => {
     if (values.hasOpportunity && (values.opportunityName ?? '').length < 2) {

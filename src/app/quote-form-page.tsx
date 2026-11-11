@@ -213,7 +213,12 @@ export function QuoteFormPage() {
       if (!name || groupNameToId.has(name)) continue;
       const groupId = generateClientId();
       groupNameToId.set(name, groupId);
-      reconstructedGroups.push({ id: groupId, name });
+      const savedPrice = quote.groupPrices?.[name];
+      reconstructedGroups.push({
+        id: groupId,
+        name,
+        price: savedPrice !== undefined ? String(savedPrice) : '',
+      });
     }
     setProductGroups(reconstructedGroups);
     reset({
@@ -245,6 +250,7 @@ export function QuoteFormPage() {
       quoteCurrency: quote.quoteCurrency,
       hasOpportunity: false,
       groupItemsByProduct: quote.groupItemsByProduct,
+      groupPricingEnabled: quote.groupPricingEnabled,
     });
     const savedRates = quote.exchangeRates;
     setExchangeRates({
@@ -354,6 +360,14 @@ export function QuoteFormPage() {
     for (const index of ungroupedIndexes) {
       setValue(`items.${index}.groupId`, groupId, { shouldDirty: true });
     }
+  }
+  function handleGroupPriceChange(groupId: string, price: string) {
+    setProductGroups((prev) =>
+      prev.map((group) => (group.id === groupId ? { ...group, price } : group)),
+    );
+  }
+  function handleGroupPricingEnabledChange(enabled: boolean) {
+    setValue('groupPricingEnabled', enabled, { shouldDirty: true });
   }
   function handleGroupNameChange(groupId: string, name: string) {
     setProductGroups((prev) =>
@@ -479,6 +493,20 @@ export function QuoteFormPage() {
     return productGroups.find((group) => group.id === groupId)?.name || undefined;
   }
 
+  // "Gruba fiyat ataması yap" - grup adı -> KDV dahil tutar. Sadece gruplu mod ve
+  // checkbox birlikte açıkken gönderilir, aksi halde fiyatlar temizlenir.
+  function buildGroupPricingPayload(values: QuoteFormValues) {
+    const enabled = Boolean(values.groupItemsByProduct && values.groupPricingEnabled);
+    const prices: Record<string, number> = {};
+    if (enabled) {
+      for (const group of productGroups) {
+        const name = group.name.trim();
+        if (name) prices[name] = Number(group.price) || 0;
+      }
+    }
+    return { groupPricingEnabled: enabled, groupPrices: enabled ? prices : null };
+  }
+
   const onSubmit = handleSubmit(async (values) => {
     let resolvedItems: QuoteFormValues['items'];
     try {
@@ -534,6 +562,7 @@ export function QuoteFormPage() {
         senderId: values.senderId || undefined,
         quoteCurrency: values.quoteCurrency,
         groupItemsByProduct: values.groupItemsByProduct,
+        ...buildGroupPricingPayload(values),
         exchangeRates:
           Object.keys(exchangeRates.rates).length > 0
             ? {
@@ -594,6 +623,7 @@ export function QuoteFormPage() {
       ...decodeIbanSelections(values.ibanSelections ?? []),
       quoteCurrency: values.quoteCurrency,
       groupItemsByProduct: values.groupItemsByProduct,
+      ...buildGroupPricingPayload(values),
       // Bos birakilirsa backend tenant'in varsayilan sablonunu otomatik atar
       // (bkz. QuotesService.resolveTemplateId) - bu yuzden burada undefined.
       templateId: values.templateId || undefined,
@@ -837,6 +867,10 @@ export function QuoteFormPage() {
             onAddGroup={handleAddGroup}
             onRemoveGroup={handleRemoveGroup}
             onGroupNameChange={handleGroupNameChange}
+            groupPricingEnabled={watch('groupPricingEnabled') ?? false}
+            onGroupPricingEnabledChange={handleGroupPricingEnabledChange}
+            onGroupPriceChange={handleGroupPriceChange}
+            quoteCurrency={quoteCurrency}
             footer={
               <QuoteExchangeRatesSection
                 quoteCurrency={quoteCurrency}
