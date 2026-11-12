@@ -39,6 +39,7 @@ import {
 } from '../lib/api';
 import { downloadBlob, openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const STATUS_SELECT_OPTIONS: { value: InteractionStatus; label: string }[] = [
@@ -47,6 +48,7 @@ const STATUS_SELECT_OPTIONS: { value: InteractionStatus; label: string }[] = [
 ];
 
 export function InteractionsListPage() {
+  usePageTitle(tr.crm.interactions.title);
   const navigate = useNavigate();
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();

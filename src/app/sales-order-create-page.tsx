@@ -161,6 +161,7 @@ export function SalesOrderCreatePage() {
       const product = await createProductMutation.mutateAsync({
         productListId: selectedProductListId!,
         name: quickAddName,
+        sku: item.productSku?.trim() || undefined,
         unit: defaultUnit,
         price: Number(item.unitPrice),
         currency: item.currency || 'TRY',

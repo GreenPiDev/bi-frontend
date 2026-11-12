@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Mail, MailOpen, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { IconActionButton } from '../components/ui/icon-action-button';
@@ -48,6 +48,7 @@ import {
   type Notification,
   type NotificationReadStatus,
 } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -58,8 +59,17 @@ const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
 const MAX_AVATAR_SIZE_BYTES = 1.5 * 1024 * 1024;
 const ACCEPTED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+const PROFILE_TAB_KEYS = ['general', 'listSettings', 'security', 'notifications'] as const;
+
 export function ProfilePage() {
   const profileQuery = useProfileQuery();
+  const [searchParams] = useSearchParams();
+
+  // Sekmeler profil yuklenince cizildigi icin basligi yuklemeden bagimsiz cozuyoruz;
+  // HorizontalTabPanel ile ayni kural: gecersiz ?tab= ise ilk sekme.
+  const tabParam = searchParams.get('tab');
+  const activeTabKey = PROFILE_TAB_KEYS.find((key) => key === tabParam) ?? PROFILE_TAB_KEYS[0];
+  usePageTitle(`${tr.profile.tabs[activeTabKey]} · ${tr.profile.title}`);
 
   return (
     <AppShell>

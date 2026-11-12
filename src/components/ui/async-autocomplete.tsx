@@ -56,6 +56,10 @@ interface AsyncAutocompleteProps {
   /** Etiketi gorsel olarak gizler (erisilebilirlik icin DOM'da `sr-only` ile kalir) -
    * TextField'daki ayni desen, bkz. o dosyadaki doc comment. */
   hideLabel?: boolean;
+  /** true ise acilan liste input genisligiyle sinirli kalmaz, en uzun secenek kadar
+   * genisler (en az input genisligi, en fazla ekranin sag kenarina kadar) - dar tablo
+   * hucrelerinde (orn. teklif satirindaki SKU/Urun) secenekler sikismasin diye. */
+  menuFitContent?: boolean;
 }
 
 /**
@@ -90,6 +94,7 @@ export function AsyncAutocomplete({
   onMenuScrollEnd,
   isLoadingMore,
   hideLabel,
+  menuFitContent = false,
 }: AsyncAutocompleteProps) {
   const showClear = clearable && Boolean(onClear) && Boolean(value);
   const [open, setOpen] = useState(false);
@@ -217,7 +222,13 @@ export function AsyncAutocomplete({
                   position: 'fixed',
                   top: menuRect.top,
                   left: menuRect.left,
-                  width: menuRect.width,
+                  ...(menuFitContent
+                    ? {
+                        width: 'max-content',
+                        minWidth: menuRect.width,
+                        maxWidth: Math.max(menuRect.width, window.innerWidth - menuRect.left - 16),
+                      }
+                    : { width: menuRect.width }),
                 }}
                 onScroll={
                   onMenuScrollEnd
@@ -243,6 +254,7 @@ export function AsyncAutocomplete({
                         onClick={() => selectOption(option)}
                         className={clsx(
                           'block w-full cursor-pointer rounded-md px-2.5 py-2 text-left text-sm text-app-text hover:bg-app-bg',
+                          menuFitContent && 'truncate whitespace-nowrap',
                           index === highlighted && 'bg-app-bg',
                         )}
                       >

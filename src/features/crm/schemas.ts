@@ -404,6 +404,9 @@ export const quoteFormSchema = z
            * ProductAutocomplete onFreeTextChange, quote-form-page.tsx
            * resolveQuickAddedProducts). productId doluysa bu alan dikkate alinmaz. */
           productName: z.string().optional(),
+          /** Hizli urun eklemede SKU hucresine yazilan serbest metin - yeni olusturulan
+           * urunun SKU'su olur. productId doluysa dikkate alinmaz. */
+          productSku: z.string().optional(),
           quantity: z.string().min(1, 'Miktar gerekli.'),
           unit: z.string().max(50).optional(),
           unitPrice: z.string().optional(),
@@ -549,6 +552,9 @@ export const salesOrderCreateFormSchema = z
            * yazilan serbest metin ad - hizli urun ekleme icin (bkz.
            * quoteFormSchema'daki ayni alan). productId doluysa dikkate alinmaz. */
           productName: z.string().optional(),
+          /** Hizli urun eklemede SKU hucresine yazilan serbest metin - yeni olusturulan
+           * urunun SKU'su olur. productId doluysa dikkate alinmaz. */
+          productSku: z.string().optional(),
           quantity: z.string().min(1, 'Miktar gerekli.'),
           unit: z.string().max(50).optional(),
           unitPrice: z.string().optional(),

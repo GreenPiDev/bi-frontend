@@ -33,6 +33,8 @@ export interface QuoteLineItemValues {
   /** Seçili ürün listesinde eşleşen bir ürün yoksa serbest metin ad - sadece hızlı
    * ürün ekleme destekleyen çağıranlarda (bkz. onProductFreeTextChange) kullanılır. */
   productName?: string;
+  /** Hızlı ürün eklemede SKU hücresine yazılan serbest metin - yeni ürünün SKU'su olur. */
+  productSku?: string;
   quantity: string;
   /** Satır birimi - ürün seçilince Product.unit'ten gelir, satır için değiştirilebilir. */
   unit?: string;
@@ -190,6 +192,7 @@ export function QuoteItemLinesCard({
   async function handleProductChange(index: number, productId: string) {
     onItemChange(index, 'productId', productId);
     if (!productId) return;
+    onItemChange(index, 'productSku', '');
     try {
       const product = await getProduct(productId);
       onItemChange(index, 'unitPrice', product.price ?? '');
@@ -346,6 +349,41 @@ export function QuoteItemLinesCard({
   const allItemColumns: TableColumn<ItemRow>[] = [
     ...(onMoveItem ? [dragHandleColumn] : []),
     {
+      key: 'sku',
+      header: tr.crm.quotes.form.skuLabel,
+      className: 'align-top w-[10%]',
+      // Urun adi hucresiyle ayni secici, SKU ile arar/gosterir - ikisi ayni
+      // productId'ye bagli, birinden secim digerini de gunceller.
+      render: (row) => (
+        <ProductAutocomplete
+          label={tr.crm.quotes.form.skuLabel}
+          hideLabel
+          displayField="sku"
+          menuFitContent
+          placeholder={
+            productListId
+              ? tr.crm.quotes.form.skuSearchPlaceholder
+              : tr.crm.quotes.form.pickerSelectProductListFirst
+          }
+          value={items[row.index]?.productId}
+          onChange={(productId) => {
+            onProductFreeTextChange?.(row.index, '');
+            void handleProductChange(row.index, productId ?? '');
+          }}
+          // Hizli urun ekleme destekleniyorsa, eslesmeyen SKU metni saklanir ve
+          // submit'te olusturulan yeni urunun SKU'su olur (bkz. resolveQuickAddedProducts).
+          onFreeTextChange={
+            onProductFreeTextChange
+              ? (text) => onItemChange(row.index, 'productSku', text)
+              : undefined
+          }
+          freeText={items[row.index]?.productSku}
+          productListId={productListId || undefined}
+          disabled={!productListId}
+        />
+      ),
+    },
+    {
       key: 'product',
       header: tr.crm.quotes.form.productLabel,
       className: 'align-top w-[16%]',
@@ -353,6 +391,7 @@ export function QuoteItemLinesCard({
         <ProductAutocomplete
           label={tr.crm.quotes.form.productLabel}
           hideLabel
+          menuFitContent
           placeholder={
             productListId
               ? tr.crm.quotes.form.pickerSearchPlaceholder

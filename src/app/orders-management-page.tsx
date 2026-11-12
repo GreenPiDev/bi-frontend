@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { PurchaseOrdersListContent } from './purchase-order-list-page';
 import { SalesOrdersListContent } from './sales-order-list-page';
@@ -6,12 +7,14 @@ import { PageHelp } from '../components/ui/page-help';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 /** /siparisler - kullanici istegiyle (bkz. CLAUDE.md, Satis Siparisi genislemesi)
  * Satis Siparisleri + Satin Alma Siparisleri'ni ayni sayfada iki sekme olarak
  * birlestirir - inventory-management-page.tsx ile ayni *ListContent deseni. */
 export function OrdersManagementPage() {
+  const [searchParams] = useSearchParams();
   const meQuery = useMeQuery();
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -43,6 +46,12 @@ export function OrdersManagementPage() {
         ]
       : []),
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(
+    activeTab ? `${activeTab.label} · ${tr.ordersManagement.title}` : tr.ordersManagement.title,
+  );
 
   return (
     <AppShell>

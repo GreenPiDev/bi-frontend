@@ -31,6 +31,7 @@ import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Contact, type ContactStatus } from '../lib/api';
 import { downloadBlob, openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const CONTACT_STATUS_TEXT_CLASS: Record<ContactStatus, string> = {
@@ -73,6 +74,7 @@ function ContactStatusSelect({ contact }: { contact: Contact }) {
 }
 
 export function ContactsListPage() {
+  usePageTitle(tr.crm.contacts.title);
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);

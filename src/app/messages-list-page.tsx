@@ -37,6 +37,7 @@ import {
 import { useMessagesFilterState } from '../features/crm/use-messages-filter-state';
 import type { ConversationSummary, MessageBox } from '../lib/api';
 import { useDebouncedValue } from '../lib/use-debounced-value';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 function UnreadCountBadge({ count }: { count: number }) {
@@ -60,6 +61,7 @@ const BOX_OPTIONS: FilterButtonOption<MessageBox>[] = [
 ];
 
 export function MessagesListPage() {
+  usePageTitle(tr.crm.messages.title);
   const navigate = useNavigate();
   const toast = useToast();
   // '' = "Tümü" (gelen + gönderilen, çöp kutusundakiler hariç) - varsayılan.

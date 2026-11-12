@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { PostSaleCasesListContent } from './post-sale-case-list-page';
 import { SurveysListContent } from './survey-list-page';
@@ -6,12 +7,14 @@ import { PageHelp } from '../components/ui/page-help';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 /** /satis-sonrasi - kullanici istegiyle (2026-10-20 genislemesi) "Kayitlar" (mevcut
  * PostSaleCase listesi) + "Anketler" (yeni Survey sablon yonetimi) sekmelerini
  * birlestirir - orders-management-page.tsx ile ayni *ListContent deseni. */
 export function PostSaleManagementPage() {
+  const [searchParams] = useSearchParams();
   const meQuery = useMeQuery();
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -43,6 +46,12 @@ export function PostSaleManagementPage() {
         ]
       : []),
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(
+    activeTab ? `${activeTab.label} · ${tr.postSaleManagement.title}` : tr.postSaleManagement.title,
+  );
 
   return (
     <AppShell>

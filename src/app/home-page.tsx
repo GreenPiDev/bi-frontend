@@ -31,6 +31,7 @@ import {
   useTotalProjectsCount,
   useTotalQuotesCount,
 } from '../features/home/use-home-summary';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const dateTimeFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -94,6 +95,7 @@ function StatCard({
 }
 
 export function HomePage() {
+  usePageTitle(tr.home.title);
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery(!meQuery.data?.isPlatformAdmin);
   const now = useNow();

@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { QuoteReportsContent } from './quote-reports-content';
 import { QuoteTemplateListContent } from './quote-template-list-page';
@@ -7,9 +8,11 @@ import { PageHelp } from '../components/ui/page-help';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 export function QuoteManagementPage() {
+  const [searchParams] = useSearchParams();
   const meQuery = useMeQuery();
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -43,6 +46,12 @@ export function QuoteManagementPage() {
         ]
       : []),
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(
+    activeTab ? `${activeTab.label} · ${tr.quoteManagement.title}` : tr.quoteManagement.title,
+  );
 
   return (
     <AppShell>

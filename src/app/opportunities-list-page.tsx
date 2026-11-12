@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import { Filter, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { OpportunityReportsContent } from './opportunity-reports-content';
 import { Button } from '../components/ui/button';
@@ -29,6 +29,7 @@ import {
 } from '../features/crm/use-opportunities';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { ApiError, type Opportunity, type OpportunityStage } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const STAGE_OPTIONS: { value: OpportunityStage; label: string }[] = (
@@ -424,6 +425,7 @@ function OpportunitiesListTabContent() {
 }
 
 export function OpportunitiesListPage() {
+  const [searchParams] = useSearchParams();
   const tabs: HorizontalTabItem[] = [
     {
       key: 'list',
@@ -436,6 +438,10 @@ export function OpportunitiesListPage() {
       content: <OpportunityReportsContent />,
     },
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(`${activeTab.label} · ${tr.crm.opportunities.title}`);
 
   return (
     <AppShell>

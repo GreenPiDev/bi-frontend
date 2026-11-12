@@ -38,6 +38,7 @@ import {
 } from '../lib/api';
 import { displayEventTitle } from '../lib/calendar-event-title';
 import { getCalendarEventVisibility } from '../lib/calendar-event-visibility';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<CalendarAttendeeStatus, 'warning' | 'success' | 'danger'> = {
@@ -718,6 +719,7 @@ export function PendingInvitesTabContent() {
 }
 
 export function CalendarPage() {
+  const [searchParams] = useSearchParams();
   const tabs: HorizontalTabItem[] = [
     { key: 'calendar', label: tr.crm.calendar.tabs.calendar, content: <CalendarTabContent /> },
     {
@@ -731,6 +733,10 @@ export function CalendarPage() {
       content: <PendingInvitesTabContent />,
     },
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(`${activeTab.label} · ${tr.crm.calendar.title}`);
 
   return (
     <AppShell>

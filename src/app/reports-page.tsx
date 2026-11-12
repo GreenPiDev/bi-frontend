@@ -15,6 +15,7 @@ import { PageHelp } from '../components/ui/page-help';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
 import { ApiError, exportReportsPdf } from '../lib/api';
 import { loadBlobIntoTabHandle, openBlobInNewTabHandle } from '../lib/download';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const TAB_KEYS = [
@@ -60,6 +61,11 @@ export function ReportsPage() {
     onMutate: () => ({ tabHandle: openBlobInNewTabHandle() }),
     onSuccess: (blob, _tabKey, context) => loadBlobIntoTabHandle(context.tabHandle, blob),
   });
+
+  // Hook, baski modundaki erken return'den ONCE cagrilmali (Rules of Hooks).
+  // HorizontalTabPanel ile ayni cozumleme: gecersiz ?tab= ise varsayilan 'accounts'.
+  const resolvedTab: ReportTabKey = TAB_KEYS.includes(activeTab) ? activeTab : 'accounts';
+  usePageTitle(`${tr.reports.tabs[resolvedTab]} · ${tr.reports.title}`);
 
   if (isPrintMode) {
     return (

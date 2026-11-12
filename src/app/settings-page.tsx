@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronRight, Filter } from 'lucide-react';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { CircleIconButton } from '../components/ui/circle-icon-button';
@@ -24,6 +25,7 @@ import { useUsersQuery } from '../features/roles/use-users';
 import { ReportsSection } from '../features/reports/reports-section';
 import { CacheSection } from '../features/settings/cache-section';
 import { StockHoldingCostSection } from '../features/settings/stock-holding-cost-section';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
@@ -372,6 +374,7 @@ function AuditLogTab() {
 }
 
 export function SettingsPage() {
+  const [searchParams] = useSearchParams();
   const meQuery = useMeQuery();
   const crmEnabled = useIsModuleEnabled('crm');
   const permissions = meQuery.data?.permissions;
@@ -419,6 +422,10 @@ export function SettingsPage() {
         ]
       : []),
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(activeTab ? `${activeTab.label} · ${tr.settings.title}` : tr.settings.title);
 
   return (
     <AppShell>

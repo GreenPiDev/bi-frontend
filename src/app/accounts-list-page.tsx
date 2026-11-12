@@ -30,6 +30,7 @@ import { useUsersQuery } from '../features/roles/use-users';
 import { ApiError, type Account } from '../lib/api';
 import { downloadBlob, openExportPreviewTab, resolveExportResult } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const CRITICAL_FIELD_LABELS: Record<string, string> = tr.crm.accounts.criticalFieldLabels;
@@ -41,6 +42,7 @@ function daysAgoIsoDate(days: number): string {
 }
 
 export function AccountsListPage() {
+  usePageTitle(tr.crm.accounts.title);
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);

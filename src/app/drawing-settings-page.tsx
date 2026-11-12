@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { DrawingListContent } from './drawing-list-page';
 import { DrawingLibraryListContent } from './drawing-library-list-page';
@@ -7,9 +8,11 @@ import { PageHelp } from '../components/ui/page-help';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 export function DrawingSettingsPage() {
+  const [searchParams] = useSearchParams();
   const meQuery = useMeQuery();
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -51,6 +54,12 @@ export function DrawingSettingsPage() {
         ]
       : []),
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(
+    activeTab ? `${activeTab.label} · ${tr.drawingSettings.title}` : tr.drawingSettings.title,
+  );
 
   return (
     <AppShell>

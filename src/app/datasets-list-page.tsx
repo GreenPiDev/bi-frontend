@@ -10,12 +10,14 @@ import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { useDatasetsQuery, useDeleteDatasetMutation } from '../features/datasets/use-datasets';
 import { ApiError, type DatasetSummary } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 const numberFormatter = new Intl.NumberFormat('tr-TR');
 
 export function DatasetsListPage() {
+  usePageTitle(tr.datasets.title);
   const navigate = useNavigate();
   const toast = useToast();
   const datasetsQuery = useDatasetsQuery();

@@ -69,6 +69,7 @@ import {
   groupQuoteItemTotals,
   quoteGrandTotalDisplay,
 } from '../lib/quote-totals';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const STATUS_BADGE_VARIANT: Record<
@@ -1379,6 +1380,8 @@ export function QuoteDetailPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isReviseConfirmOpen, setIsReviseConfirmOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
+  // Teklifin muhatabi olan firmanin adi; veri yuklenene kadar bos (= sade "PiLens").
+  usePageTitle(quoteQuery.data?.account.name ?? '');
   const meQuery = useMeQuery();
   const tenantProfileQuery = useTenantProfileQuery();
   // Sirket adresi/telefonu/e-postasi + gonderen bilgisi (bkz. docs/VARSAYIMLAR.md

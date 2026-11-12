@@ -19,6 +19,7 @@ import {
   useInteractionsQuery,
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short' });
@@ -28,6 +29,10 @@ export function ContactDetailPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const contactQuery = useContactQuery(id);
+  // Kisinin adi; veri yuklenene kadar bos (= sade "PiLens").
+  usePageTitle(
+    contactQuery.data ? `${contactQuery.data.firstName} ${contactQuery.data.lastName}`.trim() : '',
+  );
   const deleteMutation = useDeleteContactMutation();
   const meQuery = useMeQuery();
   const interactionsQuery = useInteractionsQuery({ contactId: id }, { enabled: Boolean(id) });

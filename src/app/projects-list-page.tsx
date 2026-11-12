@@ -15,6 +15,7 @@ import { useMeQuery } from '../features/auth/use-auth';
 import { useDeleteProjectMutation, useProjectsQuery } from '../features/crm/use-projects';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { ApiError, type Project } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 function formatCurrency(value: string | null): string {
@@ -25,6 +26,7 @@ function formatCurrency(value: string | null): string {
 }
 
 export function ProjectsListPage() {
+  usePageTitle(tr.crm.projects.title);
   const navigate = useNavigate();
   const toast = useToast();
   const [page, setPage] = useState(1);

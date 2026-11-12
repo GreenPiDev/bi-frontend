@@ -18,6 +18,7 @@ import { useReminderTypeOptionsRealtimeSync } from '../features/crm/use-reminder
 import { useSectorOptionsRealtimeSync } from '../features/crm/use-sector-options-realtime-sync';
 import { useTitleOptionsRealtimeSync } from '../features/crm/use-title-options-realtime-sync';
 import { useUnitOptionsRealtimeSync } from '../features/crm/use-unit-options-realtime-sync';
+import { useUnreadTitleBadge } from '../features/notifications/use-unread-title-badge';
 import { useNotificationsRealtimeSync } from '../features/notifications/use-notifications-realtime-sync';
 import { useModuleAccessRealtimeSync } from '../features/platform-admin/use-module-access-realtime-sync';
 import { tr } from '../i18n/tr';
@@ -56,6 +57,7 @@ export function ProtectedRoute({
   useIbanOptionsRealtimeSync();
   useInteractionTypeOptionsRealtimeSync();
   useNotificationsRealtimeSync();
+  useUnreadTitleBadge(isAuthenticated);
 
   if (meQuery.isPending) {
     return (

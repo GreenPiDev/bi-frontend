@@ -28,6 +28,12 @@ interface ProductAutocompleteProps {
    * taşınınca) sıfırlanır; bu değer verilirse kutu o durumda da yazılan metni göstermeye
    * devam eder, yazılan ürün adı kaybolmaz. */
   freeText?: string;
+  /** 'sku' verilirse kutuda/seceneklerde urun adi yerine SKU gosterilir,
+   * SKU'su olmayan urunler listelenmez - teklif satirindaki "SKU"
+   * hucresi icin. Arama backend'de zaten hem ad hem SKU uzerinden yapiliyor. */
+  displayField?: 'name' | 'sku';
+  /** AsyncAutocomplete'e aynen gecer - liste en uzun secenek kadar genisler. */
+  menuFitContent?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -54,8 +60,25 @@ export function ProductAutocomplete({
   hideLabel,
   onFreeTextChange,
   freeText,
+  displayField = 'name',
+  menuFitContent,
 }: ProductAutocompleteProps) {
   const [typedQuery, setTypedQuery] = useState<string | null>(null);
+  // Ayni satirdaki baska bir secici (ad <-> SKU) urunu degistirince/temizleyince bu
+  // kutuda kalan eski yazili metin temizlensin diye: kendi sectigimiz urunu hatirlar,
+  // value disaridan degisirse typedQuery'yi sifirlar (render sirasinda state ayarlama).
+  const [selfSelectedId, setSelfSelectedId] = useState<string | null>(null);
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    const changedExternally = value
+      ? value !== selfSelectedId
+      : Boolean(prevValue) && prevValue === selfSelectedId;
+    if (changedExternally) {
+      setTypedQuery(null);
+      setSelfSelectedId(null);
+    }
+  }
   const debouncedQuery = useDebouncedValue(typedQuery ?? '');
   // productListId zaten secilmisse (bu bilesen o durumda cagrilir), bos arama da
   // listenin ilk sayfasini gosterir - kullanici her seferinde yazmaya basmak zorunda
@@ -67,13 +90,17 @@ export function ProductAutocomplete({
   );
   const selectedProductQuery = useProductQuery(value ?? '');
 
-  const displayValue = typedQuery ?? selectedProductQuery.data?.name ?? freeText ?? '';
-  const options = shouldSearch
-    ? (searchQuery.data?.data ?? []).map((product) => ({
-        id: product.id,
-        label: product.name,
-      }))
-    : [];
+  const isSkuMode = displayField === 'sku';
+  const selectedLabel = isSkuMode
+    ? selectedProductQuery.data?.sku
+    : selectedProductQuery.data?.name;
+  const displayValue = typedQuery ?? selectedLabel ?? freeText ?? '';
+  const products = shouldSearch ? (searchQuery.data?.data ?? []) : [];
+  const options = isSkuMode
+    ? products
+        .filter((product) => product.sku)
+        .map((product) => ({ id: product.id, label: product.sku ?? '' }))
+    : products.map((product) => ({ id: product.id, label: product.name }));
 
   return (
     <AsyncAutocomplete
@@ -81,6 +108,7 @@ export function ProductAutocomplete({
       value={displayValue}
       onInputChange={(text) => {
         setTypedQuery(text);
+        setSelfSelectedId(null);
         onFreeTextChange?.(text);
         if (value) {
           onChange(undefined);
@@ -88,6 +116,7 @@ export function ProductAutocomplete({
       }}
       options={options}
       onSelectOption={(option) => {
+        setSelfSelectedId(option.id);
         onChange(option.id);
         setTypedQuery(option.label);
         onFreeTextChange?.('');
@@ -99,10 +128,12 @@ export function ProductAutocomplete({
       clearable={clearable}
       disabled={disabled}
       hideLabel={hideLabel}
+      menuFitContent={menuFitContent}
       onClear={
         clearable
           ? () => {
               setTypedQuery(null);
+              setSelfSelectedId(null);
               onChange(undefined);
               onFreeTextChange?.('');
             }

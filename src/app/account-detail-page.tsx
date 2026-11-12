@@ -34,6 +34,7 @@ import type {
   SalesOrder,
   SalesOrderStatus,
 } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const SALES_ORDER_STATUS_OPTIONS: { value: SalesOrderStatus; label: string }[] = (
@@ -388,6 +389,8 @@ export function AccountDetailPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const accountQuery = useAccountQuery(id);
+  // Firmanin adi; veri yuklenene kadar bos (= sade "PiLens").
+  usePageTitle(accountQuery.data?.name ?? '');
   const interactionsQuery = useInteractionsQuery({ accountId: id });
   const opportunitiesQuery = useOpportunitiesQuery({ accountId: id });
   const quotesQuery = useQuotesQuery({ accountId: id });

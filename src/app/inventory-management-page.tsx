@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { PriceHistoryContent } from './product-price-history-page';
 import { ProductListsListContent } from './product-lists-list-page';
@@ -11,9 +12,11 @@ import { PageHelp } from '../components/ui/page-help';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useIsPageModuleAccessible } from '../features/crm/use-page-access';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 export function InventoryManagementPage() {
+  const [searchParams] = useSearchParams();
   const meQuery = useMeQuery();
   const permissions = meQuery.data?.permissions;
   const canView = (pageKey: string) => hasPermission(permissions, pageKey, 'VIEW');
@@ -88,6 +91,10 @@ export function InventoryManagementPage() {
         ]
       : []),
   ];
+
+  // HorizontalTabPanel ile ayni cozumleme: URL'deki ?tab= gecerli degilse ilk sekme.
+  const activeTab = tabs.find((tab) => tab.key === searchParams.get('tab')) ?? tabs[0];
+  usePageTitle(activeTab ? `${activeTab.label} · ${tr.inventory.title}` : tr.inventory.title);
 
   return (
     <AppShell>

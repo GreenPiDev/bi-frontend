@@ -38,6 +38,7 @@ import {
   useUpdateInteractionMutation,
 } from '../features/crm/use-interactions';
 import { ApiError, type Interaction, type InteractionParticipant } from '../lib/api';
+import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 /** Gorusme sekli artik dinamik/serbest metin oldugundan (bkz. schema.prisma
@@ -178,6 +179,7 @@ function ParticipantColumn({
 }
 
 export function InteractionDetailPage() {
+  usePageTitle(tr.crm.interactions.title);
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const toast = useToast();

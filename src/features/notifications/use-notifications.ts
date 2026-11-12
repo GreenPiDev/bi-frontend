@@ -11,10 +11,11 @@ import {
 export const UNREAD_NOTIFICATIONS_QUERY_KEY = ['notifications', 'unread'];
 export const NOTIFICATIONS_QUERY_KEY = ['notifications', 'all'];
 
-export function useUnreadNotificationsQuery() {
+export function useUnreadNotificationsQuery(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY,
     queryFn: listUnreadNotifications,
+    enabled: options.enabled ?? true,
   });
 }
 
