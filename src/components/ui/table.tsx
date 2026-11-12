@@ -8,7 +8,7 @@ import {
   ChevronsUpDown,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Fragment, type ReactNode, useEffect, useState } from 'react';
+import { Fragment, type HTMLAttributes, type ReactNode, useEffect, useState } from 'react';
 import { tr } from '../../i18n/tr';
 import { IconActionButton } from './icon-action-button';
 import { Tooltip } from './tooltip';
@@ -77,6 +77,13 @@ interface TableProps<T> {
   /** Satira ek class eklemek icin (orn. genisletilmis/secili satiri kalici olarak
    * vurgulamak) - hover haricinde bir vurgu gerekmiyorsa gerek yok. */
   rowClassName?: (row: T, index: number) => string | undefined;
+  /** Satir bazli surukle-birak hedefi olay isleyicileri (onDragOver/onDrop) - satirlari
+   * surukleyerek siralama gibi desenler icin (bkz. quote-item-lines-card.tsx). Table
+   * surukleme durumunu kendisi tutmaz, cagiran bilesen yonetir. */
+  rowDropHandlers?: (
+    row: T,
+    index: number,
+  ) => Pick<HTMLAttributes<HTMLTableRowElement>, 'onDragOver' | 'onDrop'>;
   /** Kolon sayisi ekrana sigmayabilecek tablolar icin (orn. dataset onizlemesi): tabloyu
    * konteynir genisligine sikistirmak yerine dogal genisliginde birakip yatay scroll
    * verir. Varsayilan false - mevcut sabit genislikli liste sayfalarinin davranisi
@@ -120,6 +127,7 @@ export function Table<T>({
   isRowExpanded,
   renderExpandedRow,
   rowClassName,
+  rowDropHandlers,
   scrollX = false,
   fixedLayout = false,
   className,
@@ -242,6 +250,7 @@ export function Table<T>({
             return (
               <Fragment key={keyField(row, index)}>
                 <tr
+                  {...rowDropHandlers?.(row, index)}
                   onClick={(event) => {
                     if (href && (event.metaKey || event.ctrlKey)) {
                       event.preventDefault();

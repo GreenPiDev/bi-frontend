@@ -1,5 +1,6 @@
-import { ArrowDown, ArrowUp, X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { clsx } from 'clsx';
+import { ArrowDown, ArrowUp, GripVertical, X } from 'lucide-react';
+import { type DragEvent, type ReactNode, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { FormError } from '../../components/ui/form-error';
 import { IconActionButton } from '../../components/ui/icon-action-button';
@@ -273,7 +274,77 @@ export function QuoteItemLinesCard({
     }
   }
 
+  // Satirlari tutamactan (GripVertical) surukleyerek siralama - native HTML5 DnD.
+  // Gruplu modda sadece ayni grup icindeki satirlar arasinda birakilabilir (move()
+  // global indeksle calisir; ayni gruptaki iki satir arasinda tasima diger gruplarin
+  // kendi ic sirasini bozmaz).
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  function resetDrag() {
+    setDragIndex(null);
+    setDropIndex(null);
+  }
+  function canDropOn(index: number): boolean {
+    if (dragIndex === null || dragIndex === index) return false;
+    if (!isGroupedMode) return true;
+    return items[dragIndex]?.groupId === items[index]?.groupId;
+  }
+  function handleDragStart(event: DragEvent<HTMLElement>, index: number) {
+    setDragIndex(index);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(index));
+    const rowElement = event.currentTarget.closest('tr');
+    if (rowElement) event.dataTransfer.setDragImage(rowElement, 16, 16);
+  }
+  const dragTableProps = onMoveItem
+    ? {
+        rowDropHandlers: (row: ItemRow) => ({
+          onDragOver: (event: DragEvent<HTMLTableRowElement>) => {
+            if (!canDropOn(row.index)) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            if (dropIndex !== row.index) setDropIndex(row.index);
+          },
+          onDrop: (event: DragEvent<HTMLTableRowElement>) => {
+            if (dragIndex === null || !canDropOn(row.index)) return;
+            event.preventDefault();
+            onMoveItem(dragIndex, row.index);
+            resetDrag();
+          },
+        }),
+        rowClassName: (row: ItemRow) =>
+          clsx(
+            row.index === dragIndex && 'opacity-50',
+            dragIndex !== null &&
+              row.index === dropIndex &&
+              (dragIndex < row.index
+                ? '[&>td]:shadow-[inset_0_-4px_0_0_var(--color-app-primary)]'
+                : '[&>td]:shadow-[inset_0_4px_0_0_var(--color-app-primary)]'),
+          ),
+      }
+    : {};
+
+  const dragHandleColumn: TableColumn<ItemRow> = {
+    key: 'drag',
+    header: '',
+    className: 'align-middle w-[3%] !px-1',
+    render: (row) => (
+      <span
+        draggable
+        role="button"
+        aria-label={tr.crm.quotes.form.dragItem}
+        title={tr.crm.quotes.form.dragItem}
+        className="flex cursor-grab justify-center text-app-muted hover:text-app-text active:cursor-grabbing"
+        onDragStart={(event) => handleDragStart(event, row.index)}
+        onDragEnd={resetDrag}
+      >
+        <GripVertical size={16} />
+      </span>
+    ),
+  };
+
   const allItemColumns: TableColumn<ItemRow>[] = [
+    ...(onMoveItem ? [dragHandleColumn] : []),
     {
       key: 'product',
       header: tr.crm.quotes.form.productLabel,
@@ -613,6 +684,7 @@ export function QuoteItemLinesCard({
                       data={groupRows}
                       keyField={(row) => row.key}
                       fixedLayout
+                      {...dragTableProps}
                     />
                   )}
 
@@ -659,6 +731,7 @@ export function QuoteItemLinesCard({
               data={itemRows}
               keyField={(row) => row.key}
               fixedLayout
+              {...dragTableProps}
               // Tablonun varsayilan `mt-6` ust boslugu, ipucu gorunurken ipucunun ustundeki
               // (buton-ipucu) bosluktan buyuk kalir; ipucu yoksa varsayilan korunur.
               className={onProductFreeTextChange ? 'mt-0' : undefined}

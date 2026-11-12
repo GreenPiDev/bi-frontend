@@ -3232,6 +3232,7 @@ export const tr = {
         addLineToGroupButton: (groupName: string) => `${groupName} Grubuna Satır Ekle`,
         moveItemUp: 'Yukarı taşı',
         moveItemDown: 'Aşağı taşı',
+        dragItem: 'Sürükleyerek sırala',
         groupItemsByProductCheckboxLabel: 'Ürünleri Gruplayarak Ekle',
         groupPricingCheckboxLabel: 'Gruba fiyat ataması yap',
         groupPriceLabel: 'Grup Fiyatı (KDV Dahil)',
