@@ -840,7 +840,8 @@ export function QuoteFormPage() {
               append({
                 productId: '',
                 quantity: '1',
-                unit: '',
+                // Urun secilene kadar tenant'in varsayilan birimi (UnitOption.isDefault) on-secili gelir.
+                unit: unitOptionsQuery.data?.find((option) => option.isDefault)?.label ?? '',
                 unitPrice: '',
                 currency: quoteCurrency || 'TRY',
                 discountPct: '0',
