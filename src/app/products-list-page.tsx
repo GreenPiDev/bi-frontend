@@ -303,6 +303,15 @@ export function ProductsListContent({ productList }: ProductsListContentProps = 
       className: 'text-app-muted',
       render: (p) => p.description ?? '—',
     },
+    {
+      key: 'createdAt',
+      header: tr.crm.products.createdAtColumn,
+      className: 'text-app-muted',
+      render: (p) =>
+        new Intl.DateTimeFormat('tr-TR', { dateStyle: 'short', timeStyle: 'short' }).format(
+          new Date(p.createdAt),
+        ),
+    },
     ...attributeColumns,
     {
       key: 'actions',
@@ -351,6 +360,8 @@ export function ProductsListContent({ productList }: ProductsListContentProps = 
       direction: 'desc',
       label: tr.crm.products.sortOptions.stockQuantityDesc,
     },
+    { key: 'createdAt', direction: 'desc', label: tr.crm.products.sortOptions.createdAtDesc },
+    { key: 'createdAt', direction: 'asc', label: tr.crm.products.sortOptions.createdAtAsc },
   ];
 
   return (
