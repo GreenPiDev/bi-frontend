@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, MailOpen, Trash2, X } from 'lucide-react';
+import { Copy, Mail, MailOpen, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -50,6 +50,7 @@ import {
 } from '../lib/api';
 import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
   dateStyle: 'long',
@@ -108,6 +109,7 @@ export function ProfilePage() {
                               {profileQuery.data.roles.map((role) => role.name).join(', ')}
                             </dd>
                           </div>
+                          <TenantIdRow tenantId={profileQuery.data.tenantId} />
                           <div>
                             <dt className="text-app-muted">{tr.profile.infoSection.statusLabel}</dt>
                             <dd className="font-semibold text-app-text">
@@ -776,5 +778,33 @@ function NotificationsSection() {
         />
       )}
     </section>
+  );
+}
+
+/** Read-only tenant id with a copy-to-clipboard button (profile "general" tab). */
+function TenantIdRow({ tenantId }: { tenantId: string }) {
+  const toast = useToast();
+  const strings = tr.profile.infoSection;
+
+  async function handleCopy() {
+    if (await copyToClipboard(tenantId)) toast.success(strings.tenantIdCopiedToast);
+    else toast.error(tr.common.copyFailed);
+  }
+
+  return (
+    <div className="sm:col-span-2">
+      <dt className="text-app-muted">{strings.tenantIdLabel}</dt>
+      <dd className="flex items-center gap-1">
+        <span className="select-all break-all font-mono text-xs font-semibold text-app-text">
+          {tenantId}
+        </span>
+        <IconActionButton
+          icon={Copy}
+          iconSize={16}
+          tooltip={strings.copyTenantIdButton}
+          onClick={() => void handleCopy()}
+        />
+      </dd>
+    </div>
   );
 }

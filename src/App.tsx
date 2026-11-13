@@ -74,6 +74,8 @@ import { QuoteTemplateFormPage } from './app/quote-template-form-page';
 import { QuoteTemplateListPage } from './app/quote-template-list-page';
 import { QuoteTemplatePrintPage } from './app/quote-template-print-page';
 import { ReportsPage } from './app/reports-page';
+import { KanbanBoardsPage } from './app/kanban-boards-page';
+import { KanbanBoardPage } from './app/kanban-board-page';
 import { SalesOrderCreatePage } from './app/sales-order-create-page';
 import { SalesOrderDetailPage } from './app/sales-order-detail-page';
 import { SettingsPage } from './app/settings-page';
@@ -495,6 +497,22 @@ function App() {
           element={
             <TenantPageRoute pageKey="reports">
               <ReportsPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/kanban"
+          element={
+            <TenantPageRoute pageKey="kanban">
+              <KanbanBoardsPage />
+            </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/kanban/:id"
+          element={
+            <TenantPageRoute pageKey="kanban">
+              <KanbanBoardPage />
             </TenantPageRoute>
           }
         />

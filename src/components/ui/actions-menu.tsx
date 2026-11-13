@@ -14,6 +14,8 @@ interface ActionsMenuProps {
   /** Tetikleyici butonun erisilebilirlik etiketi (ör. "Not işlemleri"). */
   ariaLabel: string;
   className?: string;
+  /** Tetikleyici ikon - verilmezse "uc nokta" (EllipsisVertical). */
+  icon?: LucideIcon;
 }
 
 // animate-export-menu-out'un (index.css) suresiyle esit olmali.
@@ -22,7 +24,12 @@ const EXIT_ANIMATION_MS = 140;
 /** Kart/satir sag-ust kosesinde "uc nokta" ikonuyla acilan genel amacli mini aksiyon
  * menusu (Duzenle/Sil gibi). export-menu-button.tsx ile ayni disari-tiklama-ile-kapat +
  * ertelemeli-cikis animasyonu desenini kullanir; secenekler `items` ile verilir. */
-export function ActionsMenu({ items, ariaLabel, className }: ActionsMenuProps) {
+export function ActionsMenu({
+  items,
+  ariaLabel,
+  className,
+  icon: TriggerIcon = EllipsisVertical,
+}: ActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,7 +69,7 @@ export function ActionsMenu({ items, ariaLabel, className }: ActionsMenuProps) {
         onClick={() => (isOpen ? requestClose() : setIsOpen(true))}
         className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-app-muted transition-colors hover:bg-app-bg-muted hover:text-app-text"
       >
-        <EllipsisVertical size={16} />
+        <TriggerIcon size={16} />
       </button>
 
       {isOpen && (

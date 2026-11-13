@@ -20,6 +20,7 @@ import {
   MessageCircle,
   PanelLeft,
   PenTool,
+  Columns3,
   Search,
   Settings,
   Table2,
@@ -232,6 +233,7 @@ export function AppShell({
     'drawing-templates': useIsPageModuleAccessible('drawing-templates'),
     messages: useIsPageModuleAccessible('messages'),
     reports: useIsPageModuleAccessible('reports'),
+    kanban: useIsPageModuleAccessible('kanban'),
     settings: useIsPageModuleAccessible('settings'),
   };
   /* Superadmin (isPlatformAdmin) icin route guard (protected-route.tsx) zaten tum
@@ -293,6 +295,9 @@ export function AppShell({
       : []),
     ...(canAccessPage('reports')
       ? [{ label: tr.shell.nav.reports, icon: BarChart3, path: '/raporlar' }]
+      : []),
+    ...(canAccessPage('kanban')
+      ? [{ label: tr.shell.nav.kanban, icon: Columns3, path: '/kanban' }]
       : []),
     ...(canAccessPage('drawing-library') || canAccessPage('drawing-templates')
       ? [{ label: tr.shell.nav.drawingSettings, icon: PenTool, path: '/cizim-ayarlari' }]

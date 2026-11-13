@@ -2236,6 +2236,151 @@ export function deleteNote(id: string): Promise<void> {
   return request(`/notes/${id}`, { method: 'DELETE' });
 }
 
+// --- Kanban -----------------------------------------------------------------
+
+export type KanbanColumn = 'TODO' | 'IN_PROGRESS' | 'IN_REVIEW' | 'DONE';
+export type KanbanPriority = 'LOW' | 'MEDIUM' | 'HIGH';
+
+export interface KanbanTenantRef {
+  id: string;
+  name: string;
+}
+
+export interface KanbanBoardSummary {
+  id: string;
+  name: string;
+  /** false: pano ortak (diger) sirket tarafindan olusturulmus. */
+  isOwner: boolean;
+  ownerTenant: KanbanTenantRef;
+  partnerTenant: KanbanTenantRef | null;
+  cardCounts: Record<KanbanColumn, number>;
+  createdAt: string;
+}
+
+export interface KanbanAssignee {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  /** true: atanan kisi ortak sirketin kullanicisi (avatari gosterilemez). */
+  isExternal: boolean;
+}
+
+/** Karta eklenen gecmis notu (revize veya ilerleme). */
+export interface KanbanCardNote {
+  id: string;
+  note: string;
+  /** null = notu yazan kullanici silinmis. */
+  authorName: string | null;
+  createdAt: string;
+}
+
+export interface KanbanCard {
+  id: string;
+  title: string;
+  description: string | null;
+  column: KanbanColumn;
+  position: number;
+  priority: KanbanPriority;
+  /** YYYY-MM-DD */
+  dueDate: string | null;
+  /** null = karta kimse atanmamis. */
+  assignee: KanbanAssignee | null;
+  completedAt: string | null;
+  /** Revize gecmisi, en yeni once (Incelemede -> Devam Ediyor geri cekilisinde zorunlu
+   * not alinir). Kartta yalnizca revisions[0] gosterilir. */
+  revisions: KanbanCardNote[];
+  /** Ilerleme notlari, en yeni once (Devam Ediyor -> Incelemede tasimasinda opsiyonel).
+   * Incelemede kartinda yalnizca progressNotes[0] gosterilir. */
+  progressNotes: KanbanCardNote[];
+  createdAt: string;
+}
+
+export interface KanbanBoardDetail {
+  id: string;
+  name: string;
+  isOwner: boolean;
+  ownerTenant: KanbanTenantRef;
+  partnerTenant: KanbanTenantRef | null;
+  cards: KanbanCard[];
+}
+
+export interface CreateKanbanBoardInput {
+  name: string;
+  partnerTenantId?: string;
+}
+
+export interface KanbanCardInput {
+  title: string;
+  description?: string | null;
+  /** null = atanmamis. */
+  assigneeUserId: string | null;
+  priority: KanbanPriority;
+  dueDate?: string | null;
+}
+
+export interface KanbanAssignableUser {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+export function listKanbanBoards(): Promise<KanbanBoardSummary[]> {
+  return request('/kanban/boards');
+}
+
+export function getKanbanBoard(id: string): Promise<KanbanBoardDetail> {
+  return request(`/kanban/boards/${id}`);
+}
+
+export function createKanbanBoard(input: CreateKanbanBoardInput): Promise<KanbanBoardSummary> {
+  return request('/kanban/boards', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function renameKanbanBoard(id: string, name: string): Promise<void> {
+  return request(`/kanban/boards/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+}
+
+export function deleteKanbanBoard(id: string): Promise<void> {
+  return request(`/kanban/boards/${id}`, { method: 'DELETE' });
+}
+
+export function listKanbanAssignableUsers(): Promise<KanbanAssignableUser[]> {
+  return request('/kanban/assignable-users');
+}
+
+export function createKanbanCard(boardId: string, input: KanbanCardInput): Promise<KanbanCard> {
+  return request(`/kanban/boards/${boardId}/cards`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateKanbanCard(
+  boardId: string,
+  cardId: string,
+  input: Partial<KanbanCardInput>,
+): Promise<KanbanCard> {
+  return request(`/kanban/boards/${boardId}/cards/${cardId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+}
+
+export function moveKanbanCard(
+  boardId: string,
+  cardId: string,
+  input: { column: KanbanColumn; index: number; revisionNote?: string; progressNote?: string },
+): Promise<void> {
+  return request(`/kanban/boards/${boardId}/cards/${cardId}/move`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteKanbanCard(boardId: string, cardId: string): Promise<void> {
+  return request(`/kanban/boards/${boardId}/cards/${cardId}`, { method: 'DELETE' });
+}
+
 /** Eskiden 5 sabit degerli bir union'du - artik tenant'in /settings?tab=crm'de yonettigi
  * dinamik InteractionTypeOption listesine karsi dogrulanan serbest metin (bkz.
  * schema.prisma Interaction.type yorumu, InteractionTypeSelect). */
@@ -4698,7 +4843,8 @@ export type NotificationType =
   | 'CALENDAR_EVENT_UPDATED'
   | 'MEETING_REPORT_SENT'
   | 'QUOTE_REVISION_REQUESTED'
-  | 'POST_SALE_SURVEY_REMINDER';
+  | 'POST_SALE_SURVEY_REMINDER'
+  | 'KANBAN_CARD_ASSIGNED';
 
 export interface Notification {
   id: string;

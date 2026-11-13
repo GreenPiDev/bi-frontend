@@ -26,6 +26,8 @@ export function resolveNotificationRoute(notification: Notification): string | n
       return notification.relatedEntityId
         ? `/satis-sonrasi/${notification.relatedEntityId}`
         : '/satis-sonrasi';
+    case 'KanbanBoard':
+      return notification.relatedEntityId ? `/kanban/${notification.relatedEntityId}` : '/kanban';
     default:
       return null;
   }
