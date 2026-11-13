@@ -380,6 +380,13 @@ export function updateTenantSlug(tenantId: string, slug: string): Promise<Tenant
   });
 }
 
+export function updateTenantAdminEmail(tenantId: string, email: string): Promise<TenantSummary> {
+  return request(`/platform-admin/tenants/${tenantId}/admin-email`, {
+    method: 'PATCH',
+    body: JSON.stringify({ email }),
+  });
+}
+
 export interface ModuleDefinition {
   key: string;
   label: string;

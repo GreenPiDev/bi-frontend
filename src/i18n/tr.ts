@@ -1288,6 +1288,18 @@ export const tr = {
     subdomainColumn: 'Subdomain',
     actionsColumn: 'Aksiyonlar',
     resetAdminPasswordTooltip: 'Parola sıfırla',
+    editAdminEmailTooltip: 'Yetkili e-postasını düzenle',
+    editAdminEmailModal: {
+      title: 'Yetkili E-postasını Düzenle',
+      description:
+        'Bu e-posta yetkilinin giriş adresidir; değiştirdiğinizde yetkili artık yeni adresle giriş yapar.',
+      emailLabel: 'Yetkili E-posta',
+      submit: 'Kaydet',
+      submitting: 'Kaydediliyor...',
+      successToast: 'Yetkili e-postası güncellendi.',
+      cancelButton: 'Vazgeç',
+      invalidEmail: 'Geçerli bir e-posta adresi girin.',
+    },
     editSlugTooltip: 'Subdomain düzenle',
     editSlugModal: {
       title: 'Subdomain Düzenle',

@@ -12,6 +12,7 @@ import {
   resetTenantAdminPassword,
   setPlatformPageModule,
   setPlatformTenantModule,
+  updateTenantAdminEmail,
   updateTenantSlug,
   type CreateTenantInput,
   type ExtendDemoUserInput,
@@ -83,6 +84,20 @@ export function useUpdateTenantSlugMutation() {
   return useMutation({
     mutationFn: ({ tenantId, slug }: { tenantId: string; slug: string }) =>
       updateTenantSlug(tenantId, slug),
+    onSuccess: (updated: TenantSummary) => {
+      queryClient.setQueriesData<TenantSummary[]>(
+        { queryKey: PLATFORM_TENANTS_LIST_QUERY_KEY },
+        (current) => current?.map((tenant) => (tenant.id === updated.id ? updated : tenant)),
+      );
+    },
+  });
+}
+
+export function useUpdateTenantAdminEmailMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tenantId, email }: { tenantId: string; email: string }) =>
+      updateTenantAdminEmail(tenantId, email),
     onSuccess: (updated: TenantSummary) => {
       queryClient.setQueriesData<TenantSummary[]>(
         { queryKey: PLATFORM_TENANTS_LIST_QUERY_KEY },
