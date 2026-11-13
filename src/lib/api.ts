@@ -1746,6 +1746,45 @@ export function runQuoteImport(
   return request('/quote-imports', { method: 'POST', body: formData });
 }
 
+// --- Teklif Kalemi İçe Aktarma (/teklifler/yeni "Ürün Listesi" kartı, sabit şablon) ----
+
+export interface QuoteItemImportLine {
+  productId: string;
+  productListId: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  currency: string;
+  discountPct: number;
+  /** Dosyada boşsa null - form tenant varsayılan KDV'sini uygular. */
+  vatPct: number | null;
+  brand: string | null;
+}
+
+export interface QuoteItemImportResult {
+  items: QuoteItemImportLine[];
+  /** Sistemde bulunamayan ürünler için oluşturulan yeni ürün listesi (yoksa null). */
+  productList: { id: string; name: string } | null;
+  matchedCount: number;
+  createdProductCount: number;
+}
+
+/** 400 IMPORT_ROWS_INVALID hatasının `details.errors` alanı. */
+export interface QuoteItemImportRowError {
+  row: number;
+  messages: string[];
+}
+
+export function importQuoteItems(file: File): Promise<QuoteItemImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request('/quote-imports/items', { method: 'POST', body: formData });
+}
+
+export function downloadQuoteItemImportTemplate(): Promise<Blob> {
+  return requestBlob('/quote-imports/items/template', 'GET');
+}
+
 // --- Görüşme İçe Aktarma (marka/kaynak-bağımsız, accounts/product-imports ile aynı sihirbaz) --
 
 export interface InteractionImportRawPreview {

@@ -141,6 +141,12 @@ export interface QuoteItemLinesCardProps {
   onGroupPriceChange?: (groupId: string, price: string) => void;
   /** Grup fiyatlari bu para biriminde girilir (teklif para birimi). */
   quoteCurrency?: string;
+
+  /** Kart başlığının sağ üstünde, ürün sayısı rozetinin yanında gösterilecek ek
+   * aksiyonlar (örn. teklif formundaki Excel içe aktarma butonları). Kasıtlı olarak
+   * SADECE grupsuz modda render edilir - içe aktarılan satırların hangi gruba
+   * gideceği belirsiz olurdu (kullanıcı talebi: "sadece grupsuz teklifler için"). */
+  headerActions?: ReactNode;
 }
 
 function sanitizeDecimalInput(value: string): string {
@@ -183,6 +189,7 @@ export function QuoteItemLinesCard({
   onGroupPricingEnabledChange,
   onGroupPriceChange,
   quoteCurrency,
+  headerActions,
 }: QuoteItemLinesCardProps) {
   const unitOptionsQuery = useUnitOptionsQuery();
 
@@ -592,11 +599,14 @@ export function QuoteItemLinesCard({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-app-text">{texts.title}</h2>
-        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
-          {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
-        </span>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
+            {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
+          </span>
+          {!isGroupedMode && headerActions}
+        </div>
       </div>
 
       {onGroupItemsByProductChange && (

@@ -28,6 +28,7 @@ import { NewAccountModal } from '../features/crm/new-account-modal';
 import { AddProductListModal } from '../features/crm/add-product-list-modal';
 import { NewProductModal } from '../features/crm/new-product-modal';
 import { QuoteItemLinesCard, type QuoteProductGroup } from '../features/crm/quote-item-lines-card';
+import { QuoteItemsExcelImport } from '../features/crm/quote-items-excel-import';
 import { QuoteNewContactModal } from '../features/crm/quote-new-contact-modal';
 import { useAccountQuery } from '../features/crm/use-accounts';
 import { useMeQuery } from '../features/auth/use-auth';
@@ -65,6 +66,7 @@ import {
   type CreateQuoteInput,
   type OpportunityStage,
   type Product,
+  type QuoteItemImportResult,
   type UpdateQuoteInput,
 } from '../lib/api';
 import { groupQuoteItemTotals } from '../lib/quote-totals';
@@ -394,6 +396,37 @@ export function QuoteFormPage() {
       groupId: watch('groupItemsByProduct') ? productGroups[0]?.id : undefined,
     });
     setIsNewProductModalOpen(false);
+  }
+
+  // "Excel'den İçe Aktar" (sadece yeni + grupsuz teklif, bkz. QuoteItemsExcelImport):
+  // backend kalemleri ürünlere çözümleyip döner, satırlar forma eklenir. Henüz ürün
+  // seçilmemiş boş satırlar (sadece "Satır Ekle"ye basılmış) atılır ki içe aktarma
+  // sonrası doğrulama hatası vermesinler. Sistemde olmayan ürünler için yeni bir ürün
+  // listesi oluşturulduysa o liste seçilir; aksi halde liste henüz seçilmemişse ilk
+  // kalemin listesi seçilir (kalem tablosu liste seçilmeden görünmüyor).
+  function handleItemsImported(result: QuoteItemImportResult) {
+    const emptyRowIndexes = (watchedItems ?? [])
+      .map((item, index) => (!item.productId && !item.productName?.trim() ? index : -1))
+      .filter((index) => index !== -1);
+    if (emptyRowIndexes.length > 0) remove(emptyRowIndexes);
+    append(
+      result.items.map((item) => ({
+        productId: item.productId,
+        quantity: String(item.quantity),
+        unit: item.unit,
+        unitPrice: String(item.unitPrice),
+        currency: item.currency,
+        discountPct: String(item.discountPct),
+        vatPct: item.vatPct === null ? defaultVatPct : String(item.vatPct),
+        brand: item.brand ?? '',
+      })),
+    );
+    const nextProductListId =
+      result.productList?.id ??
+      (selectedProductListId ? undefined : result.items[0]?.productListId);
+    if (nextProductListId) {
+      setValue('productListId', nextProductListId, { shouldValidate: true });
+    }
   }
 
   // "+ Yeni Firma" ile sistemde hiç kayıtlı olmayan bir firma oluşturulunca, doğrudan
@@ -873,6 +906,9 @@ export function QuoteFormPage() {
             onGroupPricingEnabledChange={handleGroupPricingEnabledChange}
             onGroupPriceChange={handleGroupPriceChange}
             quoteCurrency={quoteCurrency}
+            headerActions={
+              isEdit ? undefined : <QuoteItemsExcelImport onImported={handleItemsImported} />
+            }
             footer={
               <QuoteExchangeRatesSection
                 quoteCurrency={quoteCurrency}

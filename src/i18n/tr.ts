@@ -3384,6 +3384,25 @@ export const tr = {
         summaryIncompleteRow: 'Ürün seçilmedi',
         summaryPriceFromList: 'ürün fiyatından',
         addLineButton: 'Satır Ekle',
+        excelImport: {
+          importButton: "Excel'den İçe Aktar",
+          templateButton: 'Örnek Excel',
+          importing: 'İçe aktarılıyor...',
+          importTooltip:
+            'Örnek Excel formatındaki dosyanızdaki ürünleri bu teklife satır olarak ekler. Sistemde kayıtlı olmayan ürünler, dosya adı ve yükleme tarihiyle adlandırılan yeni bir ürün listesine kaydedilir.',
+          templateTooltip:
+            'İçe aktarma için kullanılması gereken Excel şablonunu indirir. Başlık satırını değiştirmeden ürünlerinizi bu dosyaya girin.',
+          templateFileName: 'teklif-urun-listesi-ornek.xlsx',
+          templateDownloadFailed: 'Örnek Excel indirilemedi.',
+          success: (count: number) => `${count} ürün satırı teklife eklendi.`,
+          successWithNewList: (count: number, created: number, listName: string) =>
+            `${count} ürün satırı teklife eklendi. Sistemde bulunmayan ${created} ürün "${listName}" adlı yeni ürün listesine kaydedildi.`,
+          failed: 'Excel içe aktarılamadı.',
+          rowErrorsTitle: 'Dosyadaki hatalı satırlar',
+          rowErrorsHint: 'Dosya hiç içe aktarılmadı. Aşağıdaki satırları düzeltip tekrar yükleyin.',
+          rowLabel: (row: number) => `Satır ${row}`,
+          close: 'Kapat',
+        },
         freeTextProductHint:
           'Sistemde kayıtlı olmayan bir ürünü eklemek için ürün alanına adını yazmanız yeterli. Teklifi kaydettiğinizde bu ürün, seçili ürün listesinde yeni ürün olarak da oluşturulur.',
         addLineToGroupButton: (groupName: string) => `${groupName} Grubuna Satır Ekle`,
