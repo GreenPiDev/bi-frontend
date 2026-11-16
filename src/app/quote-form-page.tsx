@@ -165,7 +165,7 @@ export function QuoteFormPage() {
     watch,
     setValue,
     reset,
-    formState: { errors, dirtyFields },
+    formState: { errors, dirtyFields, isSubmitting },
   } = useForm<QuoteFormValues>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
@@ -1044,8 +1044,8 @@ export function QuoteFormPage() {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <Button type="submit" className="w-full" disabled={mutation.isPending}>
-              {mutation.isPending
+            <Button type="submit" className="w-full" disabled={isSubmitting || mutation.isPending}>
+              {isSubmitting || mutation.isPending
                 ? isEdit
                   ? tr.crm.quotes.edit.submitting
                   : tr.crm.quotes.form.submitting

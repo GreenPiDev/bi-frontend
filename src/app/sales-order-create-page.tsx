@@ -79,7 +79,7 @@ export function SalesOrderCreatePage() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<SalesOrderCreateFormValues>({
     resolver: zodResolver(salesOrderCreateFormSchema),
     defaultValues: {
@@ -269,8 +269,8 @@ export function SalesOrderCreatePage() {
         />
 
         <div>
-          <Button type="submit" disabled={createMutation.isPending}>
-            {createMutation.isPending
+          <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
+            {isSubmitting || createMutation.isPending
               ? tr.crm.salesOrders.form.creating
               : tr.crm.salesOrders.form.create}
           </Button>
