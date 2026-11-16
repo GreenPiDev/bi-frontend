@@ -172,6 +172,10 @@ export const tr = {
       'Süper admin ekranı: kiracıları, modüllerini ve yöneticilerini buradan yönetirsiniz.',
     platformAdminDemoUsers:
       'Tanıtım sayfasından deneme hesabı açan ziyaretçilerin iletişim bilgileri ve deneme süresi durumları.',
+    support:
+      'Platformla ilgili yaşadığınız bir problemi veya bir öneriyi bize buradan iletebilirsiniz. Gönderdiğiniz taleplerin durumunu ve size verdiğimiz cevapları aşağıdaki tabloda takip edebilirsiniz; satıra tıklayınca mesajın tamamı açılır.',
+    platformAdminSupport:
+      'Tüm şirketlerden gelen problem/öneri talepleri. Satıra tıklayınca mesajın tamamı açılır; buradan durumu değiştirip cevap yazabilirsiniz, cevabınızı talebi gönderen şirket kendi Teknik Destek sayfasında görür.',
     platformAdminPageModules:
       'Hangi sayfanın hangi modüle bağlı olduğunu buradan eşleyebilir, modülleri kapatılabilir/her zaman açık olarak işaretleyebilirsiniz.',
     messages:
@@ -258,6 +262,8 @@ export const tr = {
       platformAdmin: 'Kiracı Yönetimi',
       platformAdminPageModules: 'Sayfa-Modül Eşlemesi',
       platformAdminDemoUsers: 'Demo Kullanıcıları',
+      support: 'Teknik Destek',
+      platformAdminSupport: 'Destek Talepleri',
     },
     navGroups: {
       analytics: 'Analitik',
@@ -1407,6 +1413,76 @@ export const tr = {
       creating: 'Panon hazırlanıyor...',
       createError: 'Pano oluşturulamadı.',
       skipToManual: 'Panolarıma git, kendim oluşturayım',
+    },
+  },
+  support: {
+    title: 'Teknik Destek',
+    subtitle: 'Bir problem mi yaşıyorsunuz ya da bir öneriniz mi var? Bize yazın.',
+    contact: {
+      title: 'İletişim Bilgilerimiz',
+      subtitle: 'Bize doğrudan e-posta veya telefonla da ulaşabilirsiniz.',
+      email: 'E-posta',
+      phone: 'Telefon',
+      copy: 'Kopyala',
+      emailCopied: 'E-posta adresi panoya kopyalandı.',
+      phoneCopied: 'Telefon numarası panoya kopyalandı.',
+    },
+    kinds: { PROBLEM: 'Problem', SUGGESTION: 'Öneri' },
+    statuses: {
+      OPEN: 'Açık',
+      IN_PROGRESS: 'İnceleniyor',
+      RESOLVED: 'Çözüldü',
+      CLOSED: 'Kapatıldı',
+    },
+    form: {
+      title: 'Yeni Talep',
+      kindLabel: 'Talep türü',
+      messageLabel: 'Mesajınız',
+      messagePlaceholder: 'Yaşadığınız problemi veya önerinizi olabildiğince ayrıntılı anlatın.',
+      submit: 'Gönder',
+      success: 'Talebiniz iletildi. En kısa sürede dönüş yapacağız.',
+    },
+    validation: {
+      kindRequired: 'Talep türünü seçin.',
+      messageRequired: 'Mesaj metni gerekli.',
+      messageTooLong: 'Mesaj en fazla 5000 karakter olabilir.',
+    },
+    list: {
+      title: 'Taleplerim',
+      empty: 'Henüz bir talep göndermediniz.',
+      loading: 'Talepler yükleniyor...',
+      error: 'Talepler yüklenemedi.',
+    },
+    conversation: {
+      supportTeam: 'Green Pi Works Destek Ekibi',
+      unknownSender: 'Bilinmeyen kullanıcı',
+      waitingForSupport: 'Talebiniz bize ulaştı, en kısa sürede dönüş yapacağız.',
+      waitingForSupportAdmin: 'Henüz cevap yazılmadı.',
+      composerLabel: 'Mesajınız',
+      composerPlaceholder: 'Mesajınızı yazın... (göndermek için Ctrl/⌘ + Enter)',
+      send: 'Gönder',
+      sendError: 'Mesaj gönderilemedi.',
+      closedNote: 'Bu talep kapatıldığı için yeni mesaj yazılamaz. Yeni bir talep açabilirsiniz.',
+    },
+    columns: {
+      createdAt: 'Tarih',
+      kind: 'Tür',
+      sender: 'Gönderen',
+      status: 'Durum',
+      reply: 'Cevap',
+      tenant: 'Şirket',
+    },
+    replied: 'Cevaplandı',
+    awaitingReply: 'Yanıt bekleniyor',
+    notReplied: '—',
+    admin: {
+      title: 'Destek Talepleri',
+      subtitle: 'Tüm şirketlerden gelen problem ve öneriler.',
+      statusFilterLabel: 'Durum',
+      allStatuses: 'Tümü',
+      empty: 'Gösterilecek talep yok.',
+      statusSuccess: 'Talep durumu güncellendi.',
+      statusError: 'Talep durumu güncellenemedi.',
     },
   },
   platformAdmin: {

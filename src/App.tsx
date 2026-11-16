@@ -46,6 +46,8 @@ import { PlatformAdminPage } from './app/platform-admin-page';
 import { MessageDetailPage } from './app/message-detail-page';
 import { MessagesListPage } from './app/messages-list-page';
 import { PlatformAdminDemoUsersPage } from './app/platform-admin-demo-users-page';
+import { PlatformAdminSupportPage } from './app/platform-admin-support-page';
+import { SupportPage } from './app/support-page';
 import { PlatformAdminPageModulesPage } from './app/platform-admin-page-modules-page';
 import { PlatformAdminRoute } from './app/platform-admin-route';
 import { ProductImportPage } from './app/product-import-page';
@@ -184,6 +186,14 @@ function App() {
           element={
             <PlatformAdminRoute>
               <PlatformAdminDemoUsersPage />
+            </PlatformAdminRoute>
+          }
+        />
+        <Route
+          path="/platform-admin/destek-talepleri"
+          element={
+            <PlatformAdminRoute>
+              <PlatformAdminSupportPage />
             </PlatformAdminRoute>
           }
         />
@@ -802,6 +812,14 @@ function App() {
             <TenantPageRoute pageKey="products">
               <ProductDetailPage />
             </TenantPageRoute>
+          }
+        />
+        <Route
+          path="/teknik-destek"
+          element={
+            <ProtectedRoute>
+              <SupportPage />
+            </ProtectedRoute>
           }
         />
         <Route

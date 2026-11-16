@@ -98,7 +98,9 @@ const NO_SILENT_REFRESH_PATHS = [
 
 let refreshPromise: Promise<boolean> | null = null;
 
-async function silentRefresh(): Promise<boolean> {
+/** Exported for the realtime socket: it re-authenticates via the same refresh flow
+ * before reconnecting (see lib/realtime.ts). */
+export async function silentRefresh(): Promise<boolean> {
   if (!refreshPromise) {
     refreshPromise = fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
@@ -4883,7 +4885,10 @@ export type NotificationType =
   | 'MEETING_REPORT_SENT'
   | 'QUOTE_REVISION_REQUESTED'
   | 'POST_SALE_SURVEY_REMINDER'
-  | 'KANBAN_CARD_ASSIGNED';
+  | 'KANBAN_CARD_ASSIGNED'
+  | 'SUPPORT_TICKET_CREATED'
+  | 'SUPPORT_TICKET_REPLIED'
+  | 'SUPPORT_TICKET_USER_MESSAGE';
 
 export interface Notification {
   id: string;
@@ -4931,4 +4936,82 @@ export function setNotificationRead(id: string, read = true): Promise<void> {
 
 export function clearCache(): Promise<void> {
   return request('/cache/clear', { method: 'POST' });
+}
+
+// --- Teknik Destek (bkz. docs/VARSAYIMLAR.md V84) ---
+
+export type SupportTicketKind = 'PROBLEM' | 'SUGGESTION';
+export type SupportTicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type SupportTicketAuthorType = 'USER' | 'ADMIN';
+
+export interface SupportTicketMessage {
+  id: string;
+  authorType: SupportTicketAuthorType;
+  body: string;
+  createdAt: string;
+  author: { id: string; name: string } | null;
+}
+
+export interface SupportTicket {
+  id: string;
+  kind: SupportTicketKind;
+  /** Talebin ilk mesaji (yazismanin basi). */
+  message: string;
+  status: SupportTicketStatus;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: { id: string; name: string; email: string } | null;
+  /** Ilk mesajdan sonraki yazisma, eskiden yeniye. */
+  messages: SupportTicketMessage[];
+}
+
+export interface AdminSupportTicket extends SupportTicket {
+  tenant: { id: string; name: string; slug: string };
+}
+
+export interface CreateSupportTicketInput {
+  kind: SupportTicketKind;
+  message: string;
+}
+
+export function getSupportTickets(): Promise<SupportTicket[]> {
+  return request('/support-tickets');
+}
+
+export function createSupportTicket(input: CreateSupportTicketInput): Promise<SupportTicket> {
+  return request('/support-tickets', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function getPlatformSupportTickets(
+  status?: SupportTicketStatus,
+): Promise<AdminSupportTicket[]> {
+  const query = status ? `?${new URLSearchParams({ status }).toString()}` : '';
+  return request(`/platform-admin/support-tickets${query}`);
+}
+
+export function addSupportTicketMessage(id: string, body: string): Promise<SupportTicket> {
+  return request(`/support-tickets/${id}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  });
+}
+
+export function updatePlatformSupportTicketStatus(
+  id: string,
+  status: SupportTicketStatus,
+): Promise<AdminSupportTicket> {
+  return request(`/platform-admin/support-tickets/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+export function addPlatformSupportTicketMessage(
+  id: string,
+  body: string,
+): Promise<AdminSupportTicket> {
+  return request(`/platform-admin/support-tickets/${id}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  });
 }

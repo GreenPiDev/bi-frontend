@@ -14,6 +14,8 @@ import {
   LayoutDashboard,
   Layers,
   UserRoundPlus,
+  LifeBuoy,
+  Headset,
   LogOut,
   type LucideIcon,
   Mail,
@@ -308,6 +310,9 @@ export function AppShell({
     ...(canAccessPage('dashboards')
       ? [{ label: tr.shell.nav.dashboards, icon: LayoutDashboard, path: '/dashboards' }]
       : []),
+    ...(!isPlatformAdmin
+      ? [{ label: tr.shell.nav.support, icon: LifeBuoy, path: '/teknik-destek' }]
+      : []),
     { label: tr.shell.nav.profile, icon: User, path: '/profile' },
     ...(canAccessPage('settings')
       ? [{ label: tr.shell.nav.settings, icon: Settings, path: '/settings' }]
@@ -324,6 +329,11 @@ export function AppShell({
             label: tr.shell.nav.platformAdminDemoUsers,
             icon: UserRoundPlus,
             path: '/platform-admin/demo-kullanicilari',
+          },
+          {
+            label: tr.shell.nav.platformAdminSupport,
+            icon: Headset,
+            path: '/platform-admin/destek-talepleri',
           },
         ]
       : []),
