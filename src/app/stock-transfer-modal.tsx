@@ -14,8 +14,12 @@ import { tr } from '../i18n/tr';
 
 const transferFormSchema = z
   .object({
-    fromWarehouseId: z.string().min(1, 'Kaynak depo seçimi gerekli.'),
-    toWarehouseId: z.string().min(1, 'Hedef depo seçimi gerekli.'),
+    fromWarehouseId: z
+      .string({ message: 'Kaynak depo seçimi gerekli.' })
+      .min(1, 'Kaynak depo seçimi gerekli.'),
+    toWarehouseId: z
+      .string({ message: 'Hedef depo seçimi gerekli.' })
+      .min(1, 'Hedef depo seçimi gerekli.'),
     quantity: z
       .string()
       .min(1, 'Miktar gerekli.')

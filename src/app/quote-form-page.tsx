@@ -463,7 +463,10 @@ export function QuoteFormPage() {
       currency: item.currency || 'TRY',
     })),
   );
-  const rawItemErrors = errors.items as
+  // errors.items is an object ({ message, type, root }) when the array-level rule fails
+  // (e.g. "at least 1 item"), and only an array when individual rows have field errors.
+  // Calling .map on the object form crashed the page on an empty submit.
+  const rawItemErrors = (Array.isArray(errors.items) ? errors.items : undefined) as
     | Array<
         | {
             productId?: { message?: string };

@@ -180,7 +180,9 @@ export type InteractionEditFormValues = z.infer<typeof interactionEditFormSchema
 export const linkedInteractionFormSchema = z
   .object({
     contactId: z.string().optional(),
-    performedByUserId: z.string().min(1, 'Görüşmeyi yapan kişi seçilmelidir.'),
+    performedByUserId: z
+      .string({ message: 'Görüşmeyi yapan kişi seçilmelidir.' })
+      .min(1, 'Görüşmeyi yapan kişi seçilmelidir.'),
     type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
     notes: z.string().max(5000).optional(),
     occurredAt: z.string().min(1, 'Tarih gerekli.'),
@@ -211,7 +213,9 @@ export type LinkedInteractionFormValues = z.infer<typeof linkedInteractionFormSc
 // linkedInteractionFormSchema'nın hatırlatma bölümü olmayan alt kümesi.
 export const linkedInteractionEditFormSchema = z.object({
   contactId: z.string().optional(),
-  performedByUserId: z.string().min(1, 'Görüşmeyi yapan kişi seçilmelidir.'),
+  performedByUserId: z
+    .string({ message: 'Görüşmeyi yapan kişi seçilmelidir.' })
+    .min(1, 'Görüşmeyi yapan kişi seçilmelidir.'),
   type: z.string().min(1, 'Görüşme şekli seçilmelidir.').max(200),
   notes: z.string().max(5000).optional(),
   occurredAt: z.string().min(1, 'Tarih gerekli.'),
@@ -221,7 +225,7 @@ export type LinkedInteractionEditFormValues = z.infer<typeof linkedInteractionEd
 
 export const opportunityFormSchema = z
   .object({
-    accountId: z.string().min(1, 'Firma gerekli.'),
+    accountId: z.string({ message: 'Firma gerekli.' }).min(1, 'Firma gerekli.'),
     name: z.string().min(2, 'Fırsat adı en az 2 karakter olmalı.').max(200),
     stage: z.enum(['NEW', 'QUALIFIED', 'PROPOSAL', 'WON', 'LOST']).optional(),
     estimatedValue: z.string().optional(),
@@ -245,7 +249,7 @@ export const opportunityFormSchema = z
 export type OpportunityFormValues = z.infer<typeof opportunityFormSchema>;
 
 export const projectFormSchema = z.object({
-  accountId: z.string().min(1, 'Firma gerekli.'),
+  accountId: z.string({ message: 'Firma gerekli.' }).min(1, 'Firma gerekli.'),
   name: z.string().min(2, 'Proje adı en az 2 karakter olmalı.').max(200),
   estimatedBudget: z.string().min(1, 'Tahmini bütçe gerekli.'),
   actualCost: z.string().optional(),
@@ -328,8 +332,8 @@ export const drawingPreviewFormSchema = z.object({
 export type DrawingPreviewFormValues = z.infer<typeof drawingPreviewFormSchema>;
 
 export const drawingCreateFormSchema = z.object({
-  quoteId: z.string().min(1, 'Teklif seçin.'),
-  templateId: z.string().min(1, 'Şablon seçin.'),
+  quoteId: z.string({ message: 'Teklif seçin.' }).min(1, 'Teklif seçin.'),
+  templateId: z.string({ message: 'Şablon seçin.' }).min(1, 'Şablon seçin.'),
   name: z.string().min(1, 'Ad gerekli.').max(200),
   panelGroupLabel: z.string().max(200).optional(),
   items: z
@@ -366,7 +370,7 @@ export const quoteTemplateFormSchema = z.object({
 export type QuoteTemplateFormValues = z.infer<typeof quoteTemplateFormSchema>;
 
 export const productFormSchema = z.object({
-  productListId: z.string().min(1, 'Ürün listesi gerekli.'),
+  productListId: z.string({ message: 'Ürün listesi gerekli.' }).min(1, 'Ürün listesi gerekli.'),
   name: z.string().min(2, 'Ürün adı en az 2 karakter olmalı.').max(200),
   sku: z.string().max(100).optional(),
   unit: z.string().min(1, 'Birim gerekli.').max(50),
@@ -394,7 +398,12 @@ export const quoteFormSchema = z
     accountId: z.string({ message: 'Firma gerekli.' }).min(1, 'Firma gerekli.'),
     contactId: z.string().optional(),
     quoteDate: z.string().min(1, 'Teklif tarihi gerekli.'),
-    productListId: z.string().min(1, 'Ürün listesi gerekli.'),
+    // Zod v4 reports "Invalid input: expected string, received undefined" when the
+    // select was never touched (value is undefined, not ''), so the base string
+    // check needs its own message too — same pattern as accountId above.
+    productListId: z
+      .string({ message: 'Lütfen teklifte kullanılacak ürün listesini seçin.' })
+      .min(1, 'Lütfen teklifte kullanılacak ürün listesini seçin.'),
     items: z
       .array(
         z.object({
@@ -535,11 +544,13 @@ export type PurchaseOrderCreateFormValues = z.infer<typeof purchaseOrderCreateFo
  * backend SalesOrderItem modeli). */
 export const salesOrderCreateFormSchema = z
   .object({
-    accountId: z.string().min(1, 'Firma secilmelidir.'),
+    accountId: z.string({ message: 'Firma seçilmelidir.' }).min(1, 'Firma seçilmelidir.'),
     // quoteFormSchema ile ayni desen (bkz. quote-form-page.tsx): urun listesi her kalem
     // icin tek tek degil, sayfa basina BIR kere secilir; tum kalemler o listeyle
     // filtrelenir. UI-only, backend'e gonderilmez.
-    productListId: z.string().min(1, 'Urun listesi secilmelidir.'),
+    productListId: z
+      .string({ message: 'Lütfen ürün listesini seçin.' })
+      .min(1, 'Lütfen ürün listesini seçin.'),
     // quoteFormSchema'nin items semasiyla ayni alanlar (currency/discountPct/vatPct/
     // brand/productName) - 2026-10-19 kullanici istegiyle teklif formuyla esitlendi,
     // 2026-10-21'de hizli urun ekleme (productName + asagidaki superRefine) de eklendi
@@ -615,7 +626,7 @@ export const messageComposeSchema = z
 export type MessageComposeFormValues = z.infer<typeof messageComposeSchema>;
 
 export const stockUpdateFormSchema = z.object({
-  warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
+  warehouseId: z.string({ message: 'Depo seçimi gerekli.' }).min(1, 'Depo seçimi gerekli.'),
   quantity: z
     .string()
     .min(1, 'Miktar gerekli.')
@@ -630,7 +641,7 @@ export type StockUpdateFormValues = z.infer<typeof stockUpdateFormSchema>;
  * Faz 6). */
 export function createStockAdjustFormSchema(mode: 'increase' | 'decrease') {
   return z.object({
-    warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
+    warehouseId: z.string({ message: 'Depo seçimi gerekli.' }).min(1, 'Depo seçimi gerekli.'),
     amount: z
       .string()
       .min(1, 'Miktar gerekli.')
@@ -653,7 +664,7 @@ export type StockAdjustFormValues = z.infer<ReturnType<typeof createStockAdjustF
 
 /** Teklif onayinda depo secimi - bkz. docs/PLAN_STOK_MALIYET.md Faz 5. */
 export const approveQuoteFormSchema = z.object({
-  warehouseId: z.string().min(1, 'Depo seçimi gerekli.'),
+  warehouseId: z.string({ message: 'Depo seçimi gerekli.' }).min(1, 'Depo seçimi gerekli.'),
 });
 
 export type ApproveQuoteFormValues = z.infer<typeof approveQuoteFormSchema>;
