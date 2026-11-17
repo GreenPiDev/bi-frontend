@@ -678,6 +678,35 @@ export const rejectQuoteFormSchema = z.object({
 
 export type RejectQuoteFormValues = z.infer<typeof rejectQuoteFormSchema>;
 
+/** Kilitli (Onaylandi/Reddedildi) teklifin durumunu degistirme modali - gerekce
+ * her zaman zorunlu; hedef Onaylandi ise depo, Reddedildi ise red sebebi zorunlu
+ * (bkz. bi-backend ReopenQuoteSchema). */
+export const reopenQuoteFormSchema = z
+  .object({
+    status: z.string().min(1, 'Yeni durum seçimi gerekli.'),
+    note: z
+      .string()
+      .trim()
+      .min(1, 'Gerekçe zorunludur.')
+      .max(2000, 'Gerekçe en fazla 2000 karakter olabilir.'),
+    warehouseId: z.string().optional(),
+    rejectionReason: z.string().optional(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.status === 'APPROVED' && !values.warehouseId) {
+      ctx.addIssue({ code: 'custom', path: ['warehouseId'], message: 'Depo seçimi gerekli.' });
+    }
+    if (values.status === 'REJECTED' && !values.rejectionReason) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['rejectionReason'],
+        message: 'Red sebebi seçimi gerekli.',
+      });
+    }
+  });
+
+export type ReopenQuoteFormValues = z.infer<typeof reopenQuoteFormSchema>;
+
 /** Bos string alanlari undefined'a cevirir - backend "gonderilmedi" ile "bos"
  * degerini boyle ayirt ediyor (PATCH'te sadece degisen alanlar gonderilmeli). */
 export function cleanEmptyStrings<T extends Record<string, unknown>>(values: T): T {

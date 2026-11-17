@@ -14,6 +14,8 @@ import {
   listQuoteAssignableUsers,
   listQuotes,
   rejectQuote,
+  reopenQuote,
+  type ReopenQuoteInput,
   updateQuote,
   type CreateQuoteInput,
   type QuoteStatus,
@@ -174,6 +176,22 @@ export function useApproveQuoteMutation(id: string) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+    },
+  });
+}
+
+/** Kilitli teklifin durumunu degistirme (bkz. lib/api.ts reopenQuote). Stok, satis
+ * siparisi ve satis sonrasi listeleri de etkilendigi icin genis invalidate. */
+export function useReopenQuoteMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: ReopenQuoteInput) => reopenQuote(id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: QUOTES_QUERY_KEY });
+      void queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+      void queryClient.invalidateQueries({ queryKey: ['stock-items'] });
+      void queryClient.invalidateQueries({ queryKey: ['sales-orders'] });
+      void queryClient.invalidateQueries({ queryKey: ['post-sale-cases'] });
     },
   });
 }

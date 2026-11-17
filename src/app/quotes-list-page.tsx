@@ -33,6 +33,7 @@ import { useToast } from '../components/ui/toast-context';
 import { IconActionButton } from '../components/ui/icon-action-button';
 import { UserLink } from '../components/ui/user-link';
 import { hasPermission } from '../features/auth/permissions';
+import { ReopenQuoteModal } from './reopen-quote-modal';
 import { useColumnVisibility } from '../features/auth/use-column-visibility';
 import { useMeQuery } from '../features/auth/use-auth';
 import {
@@ -68,14 +69,36 @@ const CONFIRM_REQUIRED_STATUSES: readonly QuoteStatus[] = ['APPROVED', 'REJECTED
  * modali acmasi icin haber verir (bkz. QuotesListPage.pendingStatusChange). */
 function QuoteStatusSelect({
   quote,
+  canReopen,
   onRequestConfirm,
+  onRequestReopen,
 }: {
   quote: Quote;
+  /** APPROVE izni varsa kilitli teklifin durumu da dropdown'dan degistirilebilir -
+   * secim dogrudan uygulanmaz, gerekce isteyen ReopenQuoteModal acilir. */
+  canReopen: boolean;
   onRequestConfirm: (quote: Quote, status: QuoteStatus) => void;
+  onRequestReopen: (quote: Quote, status: QuoteStatus) => void;
 }) {
   const toast = useToast();
   const updateMutation = useUpdateQuoteMutation(quote.id);
   const isLocked = quote.status === 'APPROVED' || quote.status === 'REJECTED';
+
+  if (isLocked && canReopen) {
+    return (
+      <InlineSelect
+        value={quote.status}
+        options={STATUS_OPTIONS}
+        selectClassName={clsx('font-semibold', STATUS_TEXT_CLASS[quote.status])}
+        onChange={(value) => {
+          const status = value as QuoteStatus;
+          if (status !== quote.status) {
+            onRequestReopen(quote, status);
+          }
+        }}
+      />
+    );
+  }
 
   if (isLocked) {
     return (
@@ -169,6 +192,9 @@ export function QuotesListContent() {
   // bildirim modali acilir (reason+opsiyonel not) - APPROVED'daki ApproveQuoteModal
   // ile ayni "once onay, sonra form" deseni, REVIZE'de boyle bir ikinci adim yok.
   const [rejectFeedbackOpen, setRejectFeedbackOpen] = useState(false);
+  const [reopening, setReopening] = useState<{ quote: Quote; status: QuoteStatus } | undefined>(
+    undefined,
+  );
   const [sort, setSort] = useState<TableSort | null>(null);
   // Iki tarih filtresi ayni quoteDate alanini hedefler, birbirini sifirlar: aralik
   // girildiyse tek-tarih ("itibaren") gormezden gelinir (bkz. opportunities-list-page.tsx).
@@ -201,6 +227,7 @@ export function QuotesListContent() {
   const deleteMutation = useDeleteQuoteMutation();
   const confirmStatusMutation = useUpdateQuoteMutation(pendingStatusChange?.quote.id ?? '');
   const canImportQuotes = hasPermission(meQuery.data?.permissions, 'quotes', 'IMPORT');
+  const canReopenQuotes = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
   const canCreatePurchaseOrder = hasPermission(
     meQuery.data?.permissions,
     'purchase-orders',
@@ -321,9 +348,11 @@ export function QuotesListContent() {
       render: (q) => (
         <QuoteStatusSelect
           quote={q}
+          canReopen={canReopenQuotes}
           onRequestConfirm={(quote, nextStatus) =>
             setPendingStatusChange({ quote, status: nextStatus })
           }
+          onRequestReopen={(quote, nextStatus) => setReopening({ quote, status: nextStatus })}
         />
       ),
     },
@@ -661,6 +690,14 @@ export function QuotesListContent() {
             setRejectFeedbackOpen(false);
             setPendingStatusChange(undefined);
           }}
+        />
+      )}
+
+      {reopening && (
+        <ReopenQuoteModal
+          quote={reopening.quote}
+          initialStatus={reopening.status}
+          onClose={() => setReopening(undefined)}
         />
       )}
 

@@ -95,7 +95,7 @@ export function StockHistoryContent() {
       header: tr.crm.stock.history.typeColumn,
       className: 'whitespace-nowrap text-app-muted',
       render: (row) =>
-        row.type === 'QUOTE_SALE' && row.quoteId ? (
+        (row.type === 'QUOTE_SALE' || row.type === 'QUOTE_SALE_REVERSAL') && row.quoteId ? (
           <Link
             to={`/teklifler/${row.quoteId}`}
             className="font-semibold text-app-brand hover:underline"

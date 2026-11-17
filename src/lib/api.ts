@@ -3541,6 +3541,23 @@ export function approveQuote(id: string, warehouseId: string): Promise<Quote> {
   });
 }
 
+/** Kilitli (Onaylandi/Reddedildi) bir teklifin durumunu degistirir - APPROVE izni
+ * ve gerekce zorunlu. Onaydan cikarken backend stogu iade eder, satis siparisini
+ * iptal eder (bkz. bi-backend QuotesService.reopen). */
+export interface ReopenQuoteInput {
+  status: QuoteStatus;
+  note: string;
+  warehouseId?: string;
+  rejectionReason?: string;
+}
+
+export function reopenQuote(id: string, input: ReopenQuoteInput): Promise<Quote> {
+  return request(`/quotes/${id}/reopen`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+}
+
 export interface FxRatesResult {
   base: string;
   asOf: string;
@@ -4625,7 +4642,13 @@ export function transferStock(productId: string, input: TransferStockInput): Pro
 }
 
 export type StockMovementType =
-  'INCREASE' | 'DECREASE' | 'QUOTE_SALE' | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'CORRECTION';
+  | 'INCREASE'
+  | 'DECREASE'
+  | 'QUOTE_SALE'
+  | 'QUOTE_SALE_REVERSAL'
+  | 'TRANSFER_OUT'
+  | 'TRANSFER_IN'
+  | 'CORRECTION';
 
 export interface StockMovement {
   id: string;

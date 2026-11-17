@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Send,
   ShoppingCart,
+  LockOpen,
   Trash2,
   X,
 } from 'lucide-react';
@@ -34,6 +35,7 @@ import { Tooltip } from '../components/ui/tooltip';
 import { TruncatedTextCell } from '../components/ui/truncated-text-cell';
 import { useMeQuery } from '../features/auth/use-auth';
 import { hasPermission } from '../features/auth/permissions';
+import { ReopenQuoteModal } from './reopen-quote-modal';
 import {
   useApproveQuoteMutation,
   useDeleteQuoteMutation,
@@ -1379,6 +1381,7 @@ export function QuoteDetailPage() {
   >(undefined);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isReviseConfirmOpen, setIsReviseConfirmOpen] = useState(false);
+  const [isReopenOpen, setIsReopenOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
   // Teklifin muhatabi olan firmanin adi; veri yuklenene kadar bos (= sade "PiLens").
   usePageTitle(quoteQuery.data?.account.name ?? '');
@@ -1592,6 +1595,13 @@ export function QuoteDetailPage() {
               tooltip={tr.crm.quotes.detail.exportPdfButton}
               onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/pdf`)}
             />
+            {(quote.status === 'APPROVED' || quote.status === 'REJECTED') && canApprove && (
+              <CircleIconButton
+                icon={LockOpen}
+                tooltip={tr.crm.quotes.detail.reopenButton}
+                onClick={() => setIsReopenOpen(true)}
+              />
+            )}
             {quote.status === 'PENDING_APPROVAL' && canApprove && (
               <>
                 <CircleIconButton
@@ -1758,6 +1768,10 @@ export function QuoteDetailPage() {
           onConfirm={() => setPendingAction('REJECTED_FEEDBACK')}
           onCancel={() => setPendingAction(undefined)}
         />
+      )}
+
+      {isReopenOpen && quoteQuery.data && (
+        <ReopenQuoteModal quote={quoteQuery.data} onClose={() => setIsReopenOpen(false)} />
       )}
 
       {pendingAction === 'REJECTED_FEEDBACK' && (
