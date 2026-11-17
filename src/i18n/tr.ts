@@ -3498,6 +3498,8 @@ export const tr = {
         moveItemUp: 'Yukarı taşı',
         moveItemDown: 'Aşağı taşı',
         dragItem: 'Sürükleyerek sırala',
+        sheetKeyboardHint:
+          'Tabloda Enter veya ↑/↓ ile alt/üst satıra geçebilir, son satırda Enter ile yeni satır ekleyebilirsiniz.',
         groupItemsByProductCheckboxLabel: 'Ürünleri Gruplayarak Ekle',
         groupPricingCheckboxLabel: 'Gruba fiyat ataması yap',
         groupPriceLabel: 'Grup Fiyatı (KDV Dahil)',

@@ -689,3 +689,119 @@ body {
     animation: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * SheetTable (components/ui/sheet-table.tsx) - muhasebe/Excel benzeri hucre
+ * izgarasi. Hucre icindeki TextField/Select/AsyncAutocomplete bilesenleri
+ * degistirilmeden, burada kenarliksiz ve hucreyi dolduran hale getirilir.
+ * Katmansiz (unlayered) CSS oldugu icin Tailwind utility'lerinin onune gecer.
+ * ------------------------------------------------------------------------- */
+.sheet-table {
+  background: var(--color-surface);
+}
+.sheet-table th,
+.sheet-table td {
+  border: 1px solid var(--color-border);
+}
+.sheet-table tr > :first-child {
+  border-left: 0;
+}
+.sheet-table tr > :last-child {
+  border-right: 0;
+}
+.sheet-table thead th {
+  border-top: 0;
+  background: var(--color-bg-muted);
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  text-transform: uppercase;
+  padding: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.sheet-table tbody td {
+  padding: 0;
+  vertical-align: top;
+  color: var(--color-text);
+}
+.sheet-table tbody tr:hover td {
+  background: var(--color-bg-elevated);
+}
+.sheet-table .sheet-row-header {
+  width: 2.5rem;
+  text-align: center;
+  background: var(--color-bg-muted);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-table tbody .sheet-row-header {
+  vertical-align: middle;
+}
+.sheet-table td .flex-col {
+  gap: 0;
+}
+.sheet-table td input,
+.sheet-table td select {
+  min-height: 2.25rem;
+  padding-top: 0.375rem;
+  padding-bottom: 0.375rem;
+  padding-left: 0.5rem;
+  border-color: transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.sheet-table td input:hover:not(:disabled),
+.sheet-table td select:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+.sheet-table td input:focus,
+.sheet-table td select:focus {
+  border-color: transparent;
+  background: var(--color-surface);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.sheet-table td [aria-invalid='true'] {
+  background: color-mix(in srgb, var(--color-danger) 7%, transparent);
+  outline: 1px solid var(--color-danger);
+  outline-offset: -1px;
+}
+.sheet-table td [aria-invalid='true']:focus {
+  outline-width: 2px;
+  outline-offset: -2px;
+}
+.sheet-table td p.text-app-danger {
+  padding: 0.125rem 0.5rem 0.25rem;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+}
+.sheet-table td.sheet-num input,
+.sheet-table th.sheet-num,
+.sheet-table td.sheet-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-table td.sheet-num input {
+  padding-right: 0.5rem;
+}
+.sheet-table td.sheet-readonly {
+  padding: 0.5rem;
+  background: var(--color-bg-elevated);
+  white-space: nowrap;
+}
+/* BrandSelect'in kompakt "+ Yeni Marka" butonu hucreye yaslansin. */
+.sheet-table td .gap-2 {
+  gap: 0;
+}
+.sheet-table td button.self-stretch {
+  border-radius: 0;
+}

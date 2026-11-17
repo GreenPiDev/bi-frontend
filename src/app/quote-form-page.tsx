@@ -69,6 +69,7 @@ import {
   type QuoteItemImportResult,
   type UpdateQuoteInput,
 } from '../lib/api';
+import { parseDecimalInput } from '../lib/decimal-input';
 import { groupQuoteItemTotals } from '../lib/quote-totals';
 import { tr } from '../i18n/tr';
 import { SETTINGS_TARGETS } from '../lib/settings-targets';
@@ -456,8 +457,8 @@ export function QuoteFormPage() {
   // QuoteExchangeRatesSection'a (kur bilgisi bolumu) aktarilmak icin burada tutulur.
   const summaryTotalsByCurrency = groupQuoteItemTotals(
     (watchedItems ?? []).map((item) => ({
-      quantity: Number(item.quantity) || 0,
-      unitPrice: Number(item.unitPrice) || 0,
+      quantity: parseDecimalInput(item.quantity) || 0,
+      unitPrice: parseDecimalInput(item.unitPrice) || 0,
       discountPct: Number(item.discountPct) || 0,
       vatPct: Number(item.vatPct) || 0,
       currency: item.currency || 'TRY',
@@ -853,6 +854,7 @@ export function QuoteFormPage() {
           />
 
           <QuoteItemLinesCard
+            sheetLayout
             texts={{
               title: tr.crm.quotes.form.summaryTitle,
               emptyState: tr.crm.quotes.form.summaryFormEmpty,

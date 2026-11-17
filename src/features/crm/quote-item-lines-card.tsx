@@ -1,13 +1,20 @@
 import { clsx } from 'clsx';
-import { ArrowDown, ArrowUp, GripVertical, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, GripVertical, Plus, X } from 'lucide-react';
 import { type DragEvent, type ReactNode, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { FormError } from '../../components/ui/form-error';
 import { IconActionButton } from '../../components/ui/icon-action-button';
 import { Select } from '../../components/ui/select';
+import { SheetTable } from '../../components/ui/sheet-table';
 import { Table, type TableColumn } from '../../components/ui/table';
 import { TextField } from '../../components/ui/text-field';
 import { convertCurrencyAmount, getProduct } from '../../lib/api';
+import {
+  formatDecimalInputChange,
+  formatDecimalTyping,
+  parseDecimalInput,
+  skipGroupingSpaceOnDelete,
+} from '../../lib/decimal-input';
 import {
   computeLineTotal,
   formatCurrencyAmount,
@@ -147,6 +154,12 @@ export interface QuoteItemLinesCardProps {
    * SADECE grupsuz modda render edilir - içe aktarılan satırların hangi gruba
    * gideceği belirsiz olurdu (kullanıcı talebi: "sadece grupsuz teklifler için"). */
   headerActions?: ReactNode;
+
+  /** true ise satirlar muhasebe/Excel uygulamalarindaki gibi kenarliksiz hucrelerden
+   * olusan kompakt bir ızgarada (`SheetTable`) gosterilir - sadece teklif formu
+   * (quote-form-page.tsx) acar, satis siparisi formu varsayilan kart-tablo gorunumunde
+   * kalir (2026-11-17 kullanici talebi: "sadece teklif olusturma-duzenleme sayfasi"). */
+  sheetLayout?: boolean;
 }
 
 function sanitizeDecimalInput(value: string): string {
@@ -190,6 +203,7 @@ export function QuoteItemLinesCard({
   onGroupPriceChange,
   quoteCurrency,
   headerActions,
+  sheetLayout = false,
 }: QuoteItemLinesCardProps) {
   const unitOptionsQuery = useUnitOptionsQuery();
 
@@ -220,7 +234,7 @@ export function QuoteItemLinesCard({
     const oldCurrency = items[index]?.currency || 'TRY';
     onItemChange(index, 'currency', newCurrency);
     const currentPrice = items[index]?.unitPrice;
-    const amount = Number(currentPrice);
+    const amount = parseDecimalInput(currentPrice);
     if (oldCurrency === newCurrency || !currentPrice || Number.isNaN(amount) || amount <= 0) {
       return;
     }
@@ -235,10 +249,15 @@ export function QuoteItemLinesCard({
   // sinirlarini anlamsizlastirir - bu yuzden yukari/asagi oklari sadece duz (grupsuz)
   // modda gosterilir (bkz. asagidaki 'actions' kolonu).
   const isGroupedMode = Boolean(groupItemsByProduct && productGroups);
+  // Kolon class'i: varsayilan kart-tablo gorunumunde 'align-top' + genislik, ızgara
+  // (sheetLayout) gorunumunde genislik + hizalama yardimci class'i (index.css .sheet-table).
+  const columnClass = (width: string, defaultExtra: string, sheetExtra = '') =>
+    sheetLayout ? clsx(width, sheetExtra) : clsx(defaultExtra, width);
 
   const summaryRows = items.map((item, index) => {
-    const quantity = Number(item.quantity) || 0;
-    const unitPrice = Number(item.unitPrice) || 0;
+    // Miktar/Birim Fiyat nokta veya virgullu yazilabilir (bkz. lib/decimal-input.ts).
+    const quantity = parseDecimalInput(item.quantity) || 0;
+    const unitPrice = parseDecimalInput(item.unitPrice) || 0;
     const discountPct = Number(item.discountPct) || 0;
     const vatPct = Number(item.vatPct) || 0;
     const currency = item.currency || 'TRY';
@@ -354,11 +373,13 @@ export function QuoteItemLinesCard({
   };
 
   const allItemColumns: TableColumn<ItemRow>[] = [
-    ...(onMoveItem ? [dragHandleColumn] : []),
+    // Izgara gorunumunde surukleme tutamaci ayri bir kolon degil, satir numarasi
+    // hucresinin icinde (bkz. renderSheetRowHeader).
+    ...(onMoveItem && !sheetLayout ? [dragHandleColumn] : []),
     {
       key: 'sku',
       header: tr.crm.quotes.form.skuLabel,
-      className: 'align-top w-[10%]',
+      className: columnClass(sheetLayout ? 'w-[11%]' : 'w-[10%]', 'align-top'),
       // Urun adi hucresiyle ayni secici, SKU ile arar/gosterir - ikisi ayni
       // productId'ye bagli, birinden secim digerini de gunceller.
       render: (row) => (
@@ -393,7 +414,7 @@ export function QuoteItemLinesCard({
     {
       key: 'product',
       header: tr.crm.quotes.form.productLabel,
-      className: 'align-top w-[16%]',
+      className: columnClass(sheetLayout ? 'w-[21%]' : 'w-[16%]', 'align-top'),
       render: (row) => (
         <ProductAutocomplete
           label={tr.crm.quotes.form.productLabel}
@@ -420,7 +441,7 @@ export function QuoteItemLinesCard({
     {
       key: 'quantity',
       header: tr.crm.quotes.form.quantityLabel,
-      className: 'align-top w-[7%]',
+      className: columnClass(sheetLayout ? 'w-[6%]' : 'w-[7%]', 'align-top', 'sheet-num'),
       render: (row) => (
         <TextField
           type="text"
@@ -429,17 +450,20 @@ export function QuoteItemLinesCard({
           label={tr.crm.quotes.form.quantityLabel}
           hideLabel
           error={itemErrors?.[row.index]?.quantity}
-          value={items[row.index]?.quantity ?? ''}
+          // Her 3 basamakta bir gorsel bosluk (bkz. formatDecimalTyping) - urun
+          // seciminden/kayitli tekliften gelen bicimsiz degerler de ayni gorunur.
+          value={formatDecimalTyping(items[row.index]?.quantity ?? '')}
           onChange={(event) =>
-            onItemChange(row.index, 'quantity', sanitizeDecimalInput(event.target.value))
+            onItemChange(row.index, 'quantity', formatDecimalInputChange(event.target))
           }
+          onKeyDown={skipGroupingSpaceOnDelete}
         />
       ),
     },
     {
       key: 'unit',
       header: tr.crm.quotes.form.unitLabel,
-      className: 'align-top w-[7%]',
+      className: columnClass('w-[7%]', 'align-top'),
       render: (row) => {
         const current = items[row.index]?.unit ?? '';
         const labels = (unitOptionsQuery.data ?? []).map((option) => option.label);
@@ -463,7 +487,7 @@ export function QuoteItemLinesCard({
     {
       key: 'unitPrice',
       header: tr.crm.quotes.form.unitPriceLabel('TRY'),
-      className: 'align-top w-[12%]',
+      className: columnClass(sheetLayout ? 'w-[10%]' : 'w-[12%]', 'align-top', 'sheet-num'),
       render: (row) => {
         const currency = items[row.index]?.currency || 'TRY';
         return (
@@ -474,10 +498,13 @@ export function QuoteItemLinesCard({
             label={tr.crm.quotes.form.unitPriceLabel(currency)}
             hideLabel
             error={itemErrors?.[row.index]?.unitPrice}
-            value={items[row.index]?.unitPrice ?? ''}
+            // Her 3 basamakta bir gorsel bosluk (bkz. formatDecimalTyping) - urun
+            // seciminden/kayitli tekliften gelen bicimsiz degerler de ayni gorunur.
+            value={formatDecimalTyping(items[row.index]?.unitPrice ?? '')}
             onChange={(event) =>
-              onItemChange(row.index, 'unitPrice', sanitizeDecimalInput(event.target.value))
+              onItemChange(row.index, 'unitPrice', formatDecimalInputChange(event.target))
             }
+            onKeyDown={skipGroupingSpaceOnDelete}
           />
         );
       },
@@ -485,7 +512,7 @@ export function QuoteItemLinesCard({
     {
       key: 'currency',
       header: tr.crm.quotes.form.currencyLabel,
-      className: 'align-top w-[9%]',
+      className: columnClass(sheetLayout ? 'w-[7%]' : 'w-[9%]', 'align-top'),
       render: (row) => (
         <Select
           label={tr.crm.quotes.form.currencyLabel}
@@ -500,7 +527,7 @@ export function QuoteItemLinesCard({
     {
       key: 'discountPct',
       header: tr.crm.quotes.form.discountPctLabel,
-      className: 'align-top w-[7%]',
+      className: columnClass(sheetLayout ? 'w-[6%]' : 'w-[7%]', 'align-top', 'sheet-num'),
       render: (row) => (
         <TextField
           type="text"
@@ -519,7 +546,7 @@ export function QuoteItemLinesCard({
     {
       key: 'vatPct',
       header: tr.crm.quotes.form.vatPctLabel,
-      className: 'align-top w-[7%]',
+      className: columnClass(sheetLayout ? 'w-[6%]' : 'w-[7%]', 'align-top', 'sheet-num'),
       render: (row) => (
         <TextField
           type="text"
@@ -538,7 +565,7 @@ export function QuoteItemLinesCard({
     {
       key: 'brand',
       header: tr.crm.products.brandColumn,
-      className: 'align-top w-[14%]',
+      className: columnClass(sheetLayout ? 'w-[12%]' : 'w-[14%]', 'align-top'),
       render: (row) => (
         <BrandSelect
           value={items[row.index]?.brand ?? ''}
@@ -553,7 +580,11 @@ export function QuoteItemLinesCard({
     {
       key: 'lineTotal',
       header: tr.crm.quotes.detail.lineTotalColumn,
-      className: 'align-top w-[13%] whitespace-nowrap font-semibold text-app-text',
+      className: columnClass(
+        sheetLayout ? 'w-[11%]' : 'w-[13%]',
+        'align-top whitespace-nowrap font-semibold text-app-text',
+        'sheet-num sheet-readonly font-semibold',
+      ),
       render: (row) => {
         const summaryRow = summaryRows[row.index];
         return summaryRow ? formatCurrencyAmount(summaryRow.lineTotal, summaryRow.currency) : '—';
@@ -562,10 +593,10 @@ export function QuoteItemLinesCard({
     {
       key: 'actions',
       header: '',
-      className: 'align-middle w-[8%]',
+      className: columnClass(sheetLayout ? 'w-10' : 'w-[8%]', 'align-middle', '!align-middle'),
       render: (row) => (
         <div className="flex items-center justify-end gap-0.5">
-          {onMoveItem && !isGroupedMode && (
+          {onMoveItem && !isGroupedMode && !sheetLayout && (
             <>
               <IconActionButton
                 icon={ArrowUp}
@@ -596,6 +627,68 @@ export function QuoteItemLinesCard({
   const itemColumns = hideUnit
     ? allItemColumns.filter((column) => column.key !== 'unit')
     : allItemColumns;
+
+  // Izgara gorunumunun satir numarasi hucresi: normalde sira numarasi, satirin
+  // uzerine gelince (surukleme destekleniyorsa) surukleme tutamaci.
+  function renderSheetRowHeader(row: ItemRow, position: number) {
+    if (!onMoveItem) return position + 1;
+    return (
+      <span
+        draggable
+        role="button"
+        aria-label={tr.crm.quotes.form.dragItem}
+        title={tr.crm.quotes.form.dragItem}
+        className="flex h-9 cursor-grab items-center justify-center active:cursor-grabbing"
+        onDragStart={(event) => handleDragStart(event, row.index)}
+        onDragEnd={resetDrag}
+      >
+        <span className="group-hover/sheet-row:hidden">{position + 1}</span>
+        <GripVertical size={14} className="hidden group-hover/sheet-row:block" />
+      </span>
+    );
+  }
+
+  function renderItemsTable(rows: ItemRow[], groupId?: string, className?: string) {
+    if (sheetLayout) {
+      return (
+        <SheetTable
+          columns={itemColumns}
+          data={rows}
+          keyField={(row) => row.key}
+          renderRowHeader={renderSheetRowHeader}
+          onAppendRow={productListId ? () => onAddItem(groupId) : undefined}
+          rowDropHandlers={dragTableProps.rowDropHandlers}
+          rowClassName={dragTableProps.rowClassName}
+        />
+      );
+    }
+    return (
+      <Table
+        columns={itemColumns}
+        data={rows}
+        keyField={(row) => row.key}
+        fixedLayout
+        {...dragTableProps}
+        className={className}
+      />
+    );
+  }
+
+  // Izgara gorunumunde "Satir Ekle" tablonun altinda, tablo genisliginde kesik
+  // cizgili bir satir gibi durur (muhasebe uygulamalarindaki "yeni satir" alani).
+  function renderSheetAddRowButton(label: string, groupId?: string) {
+    return (
+      <button
+        type="button"
+        disabled={!productListId}
+        onClick={() => onAddItem(groupId)}
+        className="-mt-px flex w-full items-center justify-center gap-1.5 border border-dashed border-app-border py-2 text-sm font-semibold text-app-primary hover:bg-app-bg-elevated disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <Plus size={14} />
+        {label}
+      </button>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-app-border bg-app-surface p-4">
@@ -728,24 +821,27 @@ export function QuoteItemLinesCard({
                   {groupRows.length === 0 ? (
                     <p className="text-sm text-app-muted">{texts.emptyState}</p>
                   ) : (
-                    <Table
-                      columns={itemColumns}
-                      data={groupRows}
-                      keyField={(row) => row.key}
-                      fixedLayout
-                      {...dragTableProps}
-                    />
+                    renderItemsTable(groupRows, group.id)
                   )}
 
-                  <Button
-                    type="button"
-                    disabled={!productListId}
-                    onClick={() => onAddItem(group.id)}
-                  >
-                    {group.name.trim()
-                      ? tr.crm.quotes.form.addLineToGroupButton(group.name.trim())
-                      : tr.crm.quotes.form.addLineButton}
-                  </Button>
+                  {sheetLayout ? (
+                    renderSheetAddRowButton(
+                      group.name.trim()
+                        ? tr.crm.quotes.form.addLineToGroupButton(group.name.trim())
+                        : tr.crm.quotes.form.addLineButton,
+                      group.id,
+                    )
+                  ) : (
+                    <Button
+                      type="button"
+                      disabled={!productListId}
+                      onClick={() => onAddItem(group.id)}
+                    >
+                      {group.name.trim()
+                        ? tr.crm.quotes.form.addLineToGroupButton(group.name.trim())
+                        : tr.crm.quotes.form.addLineButton}
+                    </Button>
+                  )}
                 </div>
               );
             })
@@ -757,34 +853,40 @@ export function QuoteItemLinesCard({
         </p>
       ) : (
         <>
-          <div>
-            <Button
-              type="button"
-              className="w-full"
-              disabled={!productListId}
-              onClick={() => onAddItem()}
-            >
-              {tr.crm.quotes.form.addLineButton}
-            </Button>
-          </div>
-
-          {onProductFreeTextChange && (
-            <p className="text-sm text-app-muted">{tr.crm.quotes.form.freeTextProductHint}</p>
+          {!sheetLayout && (
+            <div>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={!productListId}
+                onClick={() => onAddItem()}
+              >
+                {tr.crm.quotes.form.addLineButton}
+              </Button>
+            </div>
           )}
 
-          {summaryRows.length === 0 ? (
+          {onProductFreeTextChange && (
+            <p className="text-sm text-app-muted">
+              {tr.crm.quotes.form.freeTextProductHint}
+              {sheetLayout && ` ${tr.crm.quotes.form.sheetKeyboardHint}`}
+            </p>
+          )}
+
+          {sheetLayout ? (
+            <div>
+              {summaryRows.length > 0 && renderItemsTable(itemRows)}
+              {renderSheetAddRowButton(tr.crm.quotes.form.addLineButton)}
+              {summaryRows.length === 0 && (
+                <p className="mt-2 text-sm text-app-muted">{texts.emptyState}</p>
+              )}
+            </div>
+          ) : summaryRows.length === 0 ? (
             <p className="text-sm text-app-muted">{texts.emptyState}</p>
           ) : (
-            <Table
-              columns={itemColumns}
-              data={itemRows}
-              keyField={(row) => row.key}
-              fixedLayout
-              {...dragTableProps}
-              // Tablonun varsayilan `mt-6` ust boslugu, ipucu gorunurken ipucunun ustundeki
-              // (buton-ipucu) bosluktan buyuk kalir; ipucu yoksa varsayilan korunur.
-              className={onProductFreeTextChange ? 'mt-0' : undefined}
-            />
+            // Tablonun varsayilan `mt-6` ust boslugu, ipucu gorunurken ipucunun ustundeki
+            // (buton-ipucu) bosluktan buyuk kalir; ipucu yoksa varsayilan korunur.
+            renderItemsTable(itemRows, undefined, onProductFreeTextChange ? 'mt-0' : undefined)
           )}
         </>
       )}

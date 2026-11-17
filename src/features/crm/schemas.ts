@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidDecimalInput, normalizeDecimalString } from '../../lib/decimal-input';
 
 export const accountFormSchema = z
   .object({
@@ -393,6 +394,22 @@ export const productFormSchema = z.object({
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
+/** Teklif/satis siparisi kalem satirlarindaki Miktar ve Birim Fiyat: kullanici
+ * ondalik ayirac olarak nokta ya da virgul yazabilir; form state'inde ham metin
+ * kalir, dogrulanmis cikti "1234.56" bicimine standardize edilir (bkz.
+ * lib/decimal-input.ts) - onSubmit'teki Number(...) donusumleri bu yuzden degismedi. */
+const INVALID_DECIMAL_MESSAGE = 'Geçerli bir sayı girin (örn. 12,5 veya 12.5).';
+const lineQuantitySchema = z
+  .string()
+  .min(1, 'Miktar gerekli.')
+  .refine(isValidDecimalInput, INVALID_DECIMAL_MESSAGE)
+  .transform(normalizeDecimalString);
+const lineUnitPriceSchema = z
+  .string()
+  .refine((value) => !value.trim() || isValidDecimalInput(value), INVALID_DECIMAL_MESSAGE)
+  .transform(normalizeDecimalString)
+  .optional();
+
 export const quoteFormSchema = z
   .object({
     accountId: z.string({ message: 'Firma gerekli.' }).min(1, 'Firma gerekli.'),
@@ -416,9 +433,9 @@ export const quoteFormSchema = z
           /** Hizli urun eklemede SKU hucresine yazilan serbest metin - yeni olusturulan
            * urunun SKU'su olur. productId doluysa dikkate alinmaz. */
           productSku: z.string().optional(),
-          quantity: z.string().min(1, 'Miktar gerekli.'),
+          quantity: lineQuantitySchema,
           unit: z.string().max(50).optional(),
-          unitPrice: z.string().optional(),
+          unitPrice: lineUnitPriceSchema,
           /** Boş bırakılırsa ürünün kendi para birimi kullanılır (unitPrice ile
            * aynı desen) - aynı ürün bir teklifte USD, başka bir teklifte TRY
            * olarak girilebilsin diye. */
@@ -566,9 +583,9 @@ export const salesOrderCreateFormSchema = z
           /** Hizli urun eklemede SKU hucresine yazilan serbest metin - yeni olusturulan
            * urunun SKU'su olur. productId doluysa dikkate alinmaz. */
           productSku: z.string().optional(),
-          quantity: z.string().min(1, 'Miktar gerekli.'),
+          quantity: lineQuantitySchema,
           unit: z.string().max(50).optional(),
-          unitPrice: z.string().optional(),
+          unitPrice: lineUnitPriceSchema,
           currency: z.string().optional(),
           discountPct: z.string().optional(),
           vatPct: z.string().optional(),
