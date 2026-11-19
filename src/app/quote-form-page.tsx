@@ -165,6 +165,7 @@ export function QuoteFormPage() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     reset,
     formState: { errors, dirtyFields, isSubmitting },
   } = useForm<QuoteFormValues>({
@@ -399,17 +400,28 @@ export function QuoteFormPage() {
     setIsNewProductModalOpen(false);
   }
 
-  // "Excel'den İçe Aktar" (sadece yeni + grupsuz teklif, bkz. QuoteItemsExcelImport):
+  // Grupsuz şablondan içe aktarma, grupsuz modda (bkz. handleExcelImported):
   // backend kalemleri ürünlere çözümleyip döner, satırlar forma eklenir. Henüz ürün
   // seçilmemiş boş satırlar (sadece "Satır Ekle"ye basılmış) atılır ki içe aktarma
   // sonrası doğrulama hatası vermesinler. Sistemde olmayan ürünler için yeni bir ürün
   // listesi oluşturulduysa o liste seçilir; aksi halde liste henüz seçilmemişse ilk
   // kalemin listesi seçilir (kalem tablosu liste seçilmeden görünmüyor).
-  function handleItemsImported(result: QuoteItemImportResult) {
+  function removeEmptyItemRows() {
     const emptyRowIndexes = (watchedItems ?? [])
       .map((item, index) => (!item.productId && !item.productName?.trim() ? index : -1))
       .filter((index) => index !== -1);
     if (emptyRowIndexes.length > 0) remove(emptyRowIndexes);
+  }
+  function selectImportedProductList(result: QuoteItemImportResult) {
+    const nextProductListId =
+      result.productList?.id ??
+      (selectedProductListId ? undefined : result.items[0]?.productListId);
+    if (nextProductListId) {
+      setValue('productListId', nextProductListId, { shouldValidate: true });
+    }
+  }
+  function handleItemsImported(result: QuoteItemImportResult) {
+    removeEmptyItemRows();
     append(
       result.items.map((item) => ({
         productId: item.productId,
@@ -422,11 +434,71 @@ export function QuoteFormPage() {
         brand: item.brand ?? '',
       })),
     );
-    const nextProductListId =
-      result.productList?.id ??
-      (selectedProductListId ? undefined : result.items[0]?.productListId);
-    if (nextProductListId) {
-      setValue('productListId', nextProductListId, { shouldValidate: true });
+    selectImportedProductList(result);
+  }
+
+  // Gruplu şablondan içe aktarma (bkz. handleExcelImported, docs/VARSAYIMLAR.md V86):
+  // gruplu mod ve "Gruba fiyat ataması yap" (sadece gruplu şablonda) otomatik açılır, dosyadaki her grup adı
+  // için (formda aynı adlı grup yoksa) yeni bir grup oluşturulur ve satırlar o gruba
+  // bağlanır. Grup fiyatları boş gelir - kullanıcı elle girer. Formda zaten grupsuz
+  // satırlar varsa (grupsuz modda eklenmiş) adı boş bir gruba toplanır, aynı
+  // handleGroupItemsByProductChange davranışı.
+  function handleGroupedItemsImported(result: QuoteItemImportResult) {
+    removeEmptyItemRows();
+    setValue('groupItemsByProduct', true, { shouldDirty: true });
+    // watchedItems boş satırlar silinmeden önceki snapshot - indeksler kaymış
+    // olabileceği için güncel değerler getValues ile okunur.
+    const leftoverUngrouped = (getValues('items') ?? [])
+      .map((item, index) => (item.groupId ? -1 : index))
+      .filter((index) => index !== -1);
+    const newGroups: QuoteProductGroup[] = [];
+    if (leftoverUngrouped.length > 0) {
+      const fallbackGroupId = generateClientId();
+      newGroups.push({ id: fallbackGroupId, name: '' });
+      for (const index of leftoverUngrouped) {
+        setValue(`items.${index}.groupId`, fallbackGroupId, { shouldDirty: true });
+      }
+    }
+    const groupIdByName = new Map(
+      productGroups.filter((group) => group.name.trim()).map((g) => [g.name.trim(), g.id]),
+    );
+    for (const item of result.items) {
+      const name = (item.groupName ?? '').trim();
+      if (!groupIdByName.has(name)) {
+        const id = generateClientId();
+        groupIdByName.set(name, id);
+        newGroups.push({ id, name });
+      }
+    }
+    if (newGroups.length > 0) setProductGroups((prev) => [...prev, ...newGroups]);
+    append(
+      result.items.map((item) => ({
+        productId: item.productId,
+        quantity: String(item.quantity),
+        unit: item.unit,
+        unitPrice: String(item.unitPrice),
+        currency: item.currency,
+        discountPct: String(item.discountPct),
+        vatPct: item.vatPct === null ? defaultVatPct : String(item.vatPct),
+        brand: item.brand ?? '',
+        groupId: groupIdByName.get((item.groupName ?? '').trim()),
+      })),
+    );
+    if (result.format === 'GROUPED') {
+      setValue('groupPricingEnabled', true, { shouldDirty: true });
+    }
+    selectImportedProductList(result);
+  }
+
+  // Tek "Excel'den İçe Aktar" butonu: backend dosya başlıklarından şablonu algılar
+  // (result.format). Gruplu dosya her zaman gruplu akışa gider. Grupsuz dosya, form
+  // gruplu moddaysa satırlar kaybolmasın diye (gruplu görünüm sadece gruba bağlı
+  // satırları listeler) adı boş yeni bir gruba konur - kullanıcı grup adını yazar.
+  function handleExcelImported(result: QuoteItemImportResult) {
+    if (result.format === 'GROUPED' || watch('groupItemsByProduct')) {
+      handleGroupedItemsImported(result);
+    } else {
+      handleItemsImported(result);
     }
   }
 
@@ -912,7 +984,7 @@ export function QuoteFormPage() {
             onGroupPriceChange={handleGroupPriceChange}
             quoteCurrency={quoteCurrency}
             headerActions={
-              isEdit ? undefined : <QuoteItemsExcelImport onImported={handleItemsImported} />
+              isEdit ? undefined : <QuoteItemsExcelImport onImported={handleExcelImported} />
             }
             footer={
               <QuoteExchangeRatesSection

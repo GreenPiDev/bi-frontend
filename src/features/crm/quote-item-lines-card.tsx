@@ -150,9 +150,9 @@ export interface QuoteItemLinesCardProps {
   quoteCurrency?: string;
 
   /** Kart başlığının sağ üstünde, ürün sayısı rozetinin yanında gösterilecek ek
-   * aksiyonlar (örn. teklif formundaki Excel içe aktarma butonları). Kasıtlı olarak
-   * SADECE grupsuz modda render edilir - içe aktarılan satırların hangi gruba
-   * gideceği belirsiz olurdu (kullanıcı talebi: "sadece grupsuz teklifler için"). */
+   * aksiyonlar (örn. teklif formundaki Excel içe aktarma butonları). Her iki modda da
+   * render edilir; hangi butonların moda uygun olduğuna çağıran karar verir (grupsuz
+   * içe aktarma gruplu modda gizlenir, bkz. QuoteItemsExcelImport). */
   headerActions?: ReactNode;
 
   /** true ise satirlar muhasebe/Excel uygulamalarindaki gibi kenarliksiz hucrelerden
@@ -698,7 +698,7 @@ export function QuoteItemLinesCard({
           <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-app-primary">
             {tr.crm.quotes.form.summaryItemCount(summaryRows.length)}
           </span>
-          {!isGroupedMode && headerActions}
+          {headerActions}
         </div>
       </div>
 

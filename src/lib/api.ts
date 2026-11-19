@@ -1761,6 +1761,8 @@ export interface QuoteItemImportLine {
   /** Dosyada boşsa null - form tenant varsayılan KDV'sini uygular. */
   vatPct: number | null;
   brand: string | null;
+  /** Sadece gruplu içe aktarmada dolu - satırın ait olduğu grubun adı. */
+  groupName: string | null;
 }
 
 export interface QuoteItemImportResult {
@@ -1769,6 +1771,8 @@ export interface QuoteItemImportResult {
   productList: { id: string; name: string } | null;
   matchedCount: number;
   createdProductCount: number;
+  /** Backend'in dosya başlıklarından algıladığı şablon (gruplu/grupsuz). */
+  format: 'UNGROUPED' | 'GROUPED';
 }
 
 /** 400 IMPORT_ROWS_INVALID hatasının `details.errors` alanı. */
@@ -1785,6 +1789,10 @@ export function importQuoteItems(file: File): Promise<QuoteItemImportResult> {
 
 export function downloadQuoteItemImportTemplate(): Promise<Blob> {
   return requestBlob('/quote-imports/items/template', 'GET');
+}
+
+export function downloadQuoteGroupedItemImportTemplate(): Promise<Blob> {
+  return requestBlob('/quote-imports/grouped-items/template', 'GET');
 }
 
 // --- Görüşme İçe Aktarma (marka/kaynak-bağımsız, accounts/product-imports ile aynı sihirbaz) --

@@ -230,6 +230,96 @@ function buildQuoteItemPrintRows(items: QuoteItem[]): QuoteItemPrintRow[] {
   return rows;
 }
 
+/** Grup sayisi bu esigi asinca "Gruplar" ozeti iki yan yana kucuk tabloya bolunur -
+ * 17 panoluk gercek bir teklifte tek, tam genislikli tablo PDF'te sayfanin yarisini
+ * bos "No/Isim ... Tutar" boslugu ile dolduruyordu. */
+const GROUP_SUMMARY_SPLIT_THRESHOLD = 6;
+
+function QuoteGroupsSummaryTables({ quote, isPrintMode }: { quote: Quote; isPrintMode: boolean }) {
+  const groups = groupQuoteItemsByGroupName(quote.items).filter(
+    (group): group is { groupName: string; items: QuoteItem[] } => Boolean(group.groupName),
+  );
+  const halves =
+    groups.length > GROUP_SUMMARY_SPLIT_THRESHOLD
+      ? [groups.slice(0, Math.ceil(groups.length / 2)), groups.slice(Math.ceil(groups.length / 2))]
+      : [groups];
+  let offset = 0;
+  return (
+    <div className={clsx('grid gap-4', halves.length > 1 && 'grid-cols-2')}>
+      {halves.map((half) => {
+        const startIndex = offset;
+        offset += half.length;
+        return (
+          <div
+            key={startIndex}
+            className={clsx(
+              'self-start overflow-hidden bg-app-surface',
+              // PDF'te grupsuz tablo gibi cercevesiz (ust sarmalayicidaki [&>div]:border-0
+              // bu tablolara artik ulasmiyor - arada grid div'i var).
+              isPrintMode ? 'border-0' : 'border border-app-border',
+            )}
+          >
+            <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+              <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
+                <tr>
+                  <th className="w-[1%] whitespace-nowrap px-3 py-2 !text-white">
+                    {tr.crm.quotes.detail.groupNoColumn}
+                  </th>
+                  <th className="px-3 py-2 !text-white">{tr.crm.quotes.detail.groupNameColumn}</th>
+                  <th className="w-[1%] whitespace-nowrap px-3 py-2 text-right !text-white">
+                    {tr.crm.quotes.detail.groupAmountColumn}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {half.map((group, i) => {
+                  const index = startIndex + i;
+                  return (
+                    <tr
+                      key={group.groupName}
+                      className={clsx(
+                        'border-b border-app-border last:border-0',
+                        isPrintMode
+                          ? index % 2 === 0
+                            ? '!bg-white'
+                            : '!bg-[#e8f5e9]'
+                          : 'bg-app-surface',
+                      )}
+                    >
+                      <td className="whitespace-nowrap px-3 py-1.5 !text-app-text">{index + 1}</td>
+                      <td className="break-words px-3 py-1.5 !text-app-text">{group.groupName}</td>
+                      <td className="whitespace-nowrap px-3 py-1.5 text-right font-semibold !text-app-text">
+                        {formatGroupAmount(group.items, quote, group.groupName)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Pano malzeme listelerinde urun adi cogunlukla urun koduyla basliyor ("3VA1110-
+ * 4EE36-0AA0 SENTRON SERİSİ ...") - kod zaten ayri kolonda oldugu icin gruplu kalem
+ * tablosunda bu tekrar gosterimde atilir (veri degismez). Ad sadece koddan
+ * ibaretse oldugu gibi birakilir. */
+function stripLeadingSku(name: string, sku: string | null): string {
+  const code = sku?.trim();
+  if (!code) return name;
+  const trimmed = name.trimStart();
+  if (!trimmed.toLocaleUpperCase('tr-TR').startsWith(code.toLocaleUpperCase('tr-TR'))) {
+    return name;
+  }
+  const rest = trimmed.slice(code.length);
+  if (rest && !/^[\s;:,\-–]/.test(rest)) return name;
+  const cleaned = rest.replace(/^[\s;:,\-–]+/, '');
+  return cleaned || name;
+}
+
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
@@ -469,6 +559,25 @@ export function QuoteContentBody({
     },
   ];
 
+  /** PDF (isPrintMode) icin grupsuz kalem kolonlari - 2026-11-19 revizyonu: sabit
+   * genislikli kolonlar (w-24/w-28...) + markadaki !pl-10, auto-layout'ta bosta kalan
+   * genisligi kendilerine cekip "Ürün" kolonunu daraltiyordu; kisacik adlar bile 3
+   * satira boluniyordu. Gruplu tablodaki gibi "Ürün" disindaki her kolon icerigi kadar
+   * daralir (w-[1%] + nowrap), kalan tum genislik urun adina kalir. Web gorunumu
+   * (itemColumns) degismez. */
+  const printItemColumns: TableColumn<QuoteItem>[] = itemColumns.map((column) =>
+    column.key === 'product'
+      ? column
+      : {
+          ...column,
+          className: clsx(
+            'w-[1%] whitespace-nowrap',
+            column.key !== 'lineTotal' && 'text-app-muted',
+            ['quantity', 'unitPrice', 'lineTotal'].includes(column.key) && 'text-right',
+          ),
+        },
+  );
+
   /** Ad-hoc "Ürünleri Gruplayarak Ekle" (bkz. Quote.groupItemsByProduct) - pano
    * ureticileri fiyati PANO (grup) bazinda veriyor, tek tek urun fiyati listede
    * gorunmuyor - bu yuzden gruplu kalem tablosunda fiyatla ilgili kolonlar
@@ -480,15 +589,26 @@ export function QuoteContentBody({
    * yuzden cok orantisiz dagiliyordu (bkz. kullanici ekran goruntusu). Bu
    * yuzden width/whitespace class'lari burada atilip asagidaki tabloya
    * `table-fixed` verilir - esit genislikte 4 kolon. */
+  // 2026-11-19 revizyonu: `table-fixed` + esit genislikli 5 kolon, uzun urun
+  // adlarini (pano malzeme aciklamalari) dar bir kolona sikistirip satir basina
+  // 10+ satira boluyordu. Grupsuz tablodaki auto-layout + "w-[1%] whitespace-nowrap"
+  // hilesine donuldu: kod/marka/miktar/birim icerik kadar daralir, bosta kalan tum
+  // genisligi "Ürün" kolonu kullanir.
   const groupedItemColumns = itemColumns
     .filter((column) => !['unitPrice', 'lineTotal'].includes(column.key))
     .map((column) => ({
       ...column,
-      className: clsx(
-        'break-words',
-        column.key !== 'product' && 'text-app-muted',
-        column.key === 'quantity' && 'text-right',
-      ),
+      className:
+        column.key === 'product'
+          ? 'break-words'
+          : clsx(
+              'w-[1%] whitespace-nowrap text-app-muted',
+              column.key === 'quantity' && 'text-right',
+            ),
+      render:
+        column.key === 'product'
+          ? (item: QuoteItem) => stripLeadingSku(item.product.name, item.product.sku)
+          : column.render,
     }));
 
   /** Yazdirma disindaki (web) gorunumde banka hesaplari tablosu - PDF/yazdirma
@@ -709,48 +829,7 @@ export function QuoteContentBody({
                 '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0',
             )}
           >
-            <div className="border border-app-border bg-app-surface overflow-hidden">
-              <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
-                <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
-                  <tr>
-                    <th className="w-16 px-4 py-3 !text-white">
-                      {tr.crm.quotes.detail.groupNoColumn}
-                    </th>
-                    <th className="px-4 py-3 !text-white">
-                      {tr.crm.quotes.detail.groupNameColumn}
-                    </th>
-                    <th className="w-32 px-4 py-3 text-right !text-white">
-                      {tr.crm.quotes.detail.groupAmountColumn}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groupQuoteItemsByGroupName(quote.items)
-                    .filter((group): group is { groupName: string; items: QuoteItem[] } =>
-                      Boolean(group.groupName),
-                    )
-                    .map((group, index) => (
-                      <tr
-                        key={group.groupName}
-                        className={clsx(
-                          'border-b border-app-border last:border-0',
-                          isPrintMode
-                            ? index % 2 === 0
-                              ? '!bg-white'
-                              : '!bg-[#e8f5e9]'
-                            : 'bg-app-surface',
-                        )}
-                      >
-                        <td className="px-4 py-3 !text-app-text">{index + 1}</td>
-                        <td className="px-4 py-3 !text-app-text">{group.groupName}</td>
-                        <td className="px-4 py-3 text-right font-semibold !text-app-text">
-                          {formatGroupAmount(group.items, quote, group.groupName)}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+            <QuoteGroupsSummaryTables quote={quote} isPrintMode={isPrintMode} />
           </div>
 
           {groupedTotalsSection}
@@ -769,24 +848,27 @@ export function QuoteContentBody({
           // comment'i) - grup baslik satirlari araya girince nth-child sirasi bozulurdu.
           // Fiyatla ilgili kolonlar (birim fiyat/KDV/tutar) bu tabloda yok (bkz.
           // groupedItemColumns doc comment'i) - toplam yukaridaki "Gruplar" ozetinde.
+          // PDF'te (isPrintMode) pano tekliflerinin yuzlerce satirlik malzeme listesi icin
+          // kompakt yazi/padding: 9px + dar hucre boslugu, uzun aciklamalar dikey A4'te
+          // (718px icerik) en fazla ~2 satira sigsin (kullanici talebi, rakip PDF ornegi).
           <div
             className={clsx(
               '[&_tbody_td]:text-xs',
               isPrintMode &&
-                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0',
+                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_tbody_tr]:border-b-0 [&_td]:!px-1.5 [&_td]:!py-0.5 [&_th]:!px-1.5 [&_th]:!py-1 [&_tbody_td]:!text-[9px] [&_tbody_td]:!leading-tight [&_th]:!text-[10px] [&_tr[data-group-row]_td]:!py-1 [&_tr[data-group-row]_td]:!text-[11px]',
             )}
           >
             <div className="border border-app-border bg-app-surface overflow-hidden">
-              <table className="w-full table-fixed text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
+              <table className="w-full text-left text-[clamp(0.8125rem,0.77rem+0.25vw,0.9375rem)]">
                 <thead className="border-b border-app-border bg-app-primary uppercase text-[clamp(0.6875rem,0.65rem+0.2vw,0.8125rem)] text-white">
                   <tr>
-                    <th className="w-12 px-4 py-3 !text-white">
+                    <th className="w-[1%] whitespace-nowrap px-3 py-3 !text-white">
                       {tr.crm.quotes.detail.groupNoColumn}
                     </th>
                     {groupedItemColumns.map((column) => (
                       <th
                         key={column.key}
-                        className={clsx('px-4 py-3 !text-white', column.className)}
+                        className={clsx('px-3 py-3 !text-white', column.className)}
                       >
                         {column.header}
                       </th>
@@ -810,11 +892,12 @@ export function QuoteContentBody({
                       row.kind === 'group' ? (
                         <tr
                           key={row.key}
+                          data-group-row
                           className="border-b border-app-border bg-[#e3f2fd] last:border-0"
                         >
                           <td
                             colSpan={groupedItemColumns.length + 1}
-                            className="px-4 py-2 font-bold"
+                            className="px-3 py-1.5 font-bold"
                           >
                             {row.groupName}
                           </td>
@@ -831,11 +914,13 @@ export function QuoteContentBody({
                               : 'bg-app-surface',
                           )}
                         >
-                          <td className="w-12 px-4 py-3 !text-app-text">{row.zebraIndex + 1}</td>
+                          <td className="w-[1%] whitespace-nowrap px-3 py-2 !text-app-text">
+                            {row.zebraIndex + 1}
+                          </td>
                           {groupedItemColumns.map((column) => (
                             <td
                               key={column.key}
-                              className={clsx('px-4 py-3 !text-app-text', column.className)}
+                              className={clsx('px-3 py-2 !text-app-text', column.className)}
                             >
                               {column.render(row.item)}
                             </td>
@@ -853,11 +938,11 @@ export function QuoteContentBody({
             className={clsx(
               '[&_tbody_td]:text-xs',
               isPrintMode &&
-                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-white [&_tbody_tr:nth-child(even)]:!bg-[#e8f5e9]',
+                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-white [&_tbody_tr:nth-child(even)]:!bg-[#e8f5e9] [&_td]:!px-2 [&_td]:!py-0.5 [&_th]:!px-2 [&_th]:!py-1 [&_tbody_td]:!text-[10px] [&_tbody_td]:!leading-tight [&_th]:!text-[10px]',
             )}
           >
             <Table
-              columns={itemColumns}
+              columns={isPrintMode ? printItemColumns : itemColumns}
               data={quote.items}
               keyField={(item) => item.id}
               emptyMessage={

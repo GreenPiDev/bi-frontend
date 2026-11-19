@@ -3475,14 +3475,20 @@ export const tr = {
         addLineButton: 'Satır Ekle',
         excelImport: {
           importButton: "Excel'den İçe Aktar",
-          templateButton: 'Örnek Excel',
+          templateMenuButton: 'Örnek Excel',
+          templateButton: 'Grupsuz Teklif Şablonu',
           importing: 'İçe aktarılıyor...',
           importTooltip:
-            'Örnek Excel formatındaki dosyanızdaki ürünleri bu teklife satır olarak ekler. Sistemde kayıtlı olmayan ürünler, dosya adı ve yükleme tarihiyle adlandırılan yeni bir ürün listesine kaydedilir.',
+            'Grupsuz ya da gruplu örnek şablondaki ürünleri teklife ekler; dosyanın hangi şablonda olduğu otomatik anlaşılır. Gruplu dosyada gruplar oluşturulur, grup fiyatlarını sonra elle girersiniz. Sistemde kayıtlı olmayan ürünler, dosya adı ve yükleme tarihiyle adlandırılan yeni bir ürün listesine kaydedilir.',
           templateTooltip:
-            'İçe aktarma için kullanılması gereken Excel şablonunu indirir. Başlık satırını değiştirmeden ürünlerinizi bu dosyaya girin.',
+            'Ürün kodu, adı, marka, miktar, birim, birim fiyat, para birimi, iskonto ve KDV sütunları. Başlık satırını değiştirmeden ürünlerinizi girin.',
           templateFileName: 'teklif-urun-listesi-ornek.xlsx',
           templateDownloadFailed: 'Örnek Excel indirilemedi.',
+          groupedTemplateButton: 'Gruplu Teklif Şablonu',
+          groupedTemplateTooltip:
+            'Sadece ürün kodu, malzeme adı, marka, miktar ve birim. Ürünlerin arasındaki tek hücreli (birleştirilmiş) satırlar grup adı olur; fiyatı grup bazında elle girersiniz.',
+          groupedTemplateFileName: 'teklif-gruplu-urun-listesi-ornek.xlsx',
+          groupedSuccessHint: 'Grup fiyatlarını girmeyi unutmayın.',
           success: (count: number) => `${count} ürün satırı teklife eklendi.`,
           successWithNewList: (count: number, created: number, listName: string) =>
             `${count} ürün satırı teklife eklendi. Sistemde bulunmayan ${created} ürün "${listName}" adlı yeni ürün listesine kaydedildi.`,
