@@ -8,6 +8,7 @@ import {
   Pencil,
   RotateCcw,
   Send,
+  Share2,
   ShoppingCart,
   LockOpen,
   Trash2,
@@ -47,6 +48,7 @@ import {
 } from '../features/crm/use-quotes';
 import { useDrawingsQuery } from '../features/crm/use-drawings';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
+import { ShareLinkModal } from '../features/shares/share-link-modal';
 import {
   ApiError,
   API_BASE_URL,
@@ -1467,6 +1469,7 @@ export function QuoteDetailPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isReviseConfirmOpen, setIsReviseConfirmOpen] = useState(false);
   const [isReopenOpen, setIsReopenOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const quoteQuery = useQuoteQuery(id);
   // Teklifin muhatabi olan firmanin adi; veri yuklenene kadar bos (= sade "PiLens").
   usePageTitle(quoteQuery.data?.account.name ?? '');
@@ -1515,6 +1518,7 @@ export function QuoteDetailPage() {
     openUrlInNewTab(`${API_BASE_URL}${path}`);
   }
   const canApprove = hasPermission(meQuery.data?.permissions, 'quotes', 'APPROVE');
+  const canExport = hasPermission(meQuery.data?.permissions, 'quotes', 'EXPORT');
   const canCreatePurchaseOrder = hasPermission(
     meQuery.data?.permissions,
     'purchase-orders',
@@ -1680,6 +1684,13 @@ export function QuoteDetailPage() {
               tooltip={tr.crm.quotes.detail.exportPdfButton}
               onClick={() => exportQuotePdfInNewTab(`/exports/quote/${quote.id}/pdf`)}
             />
+            {canExport && (
+              <CircleIconButton
+                icon={Share2}
+                tooltip={tr.shares.shareButton}
+                onClick={() => setIsShareOpen(true)}
+              />
+            )}
             {(quote.status === 'APPROVED' || quote.status === 'REJECTED') && canApprove && (
               <CircleIconButton
                 icon={LockOpen}
@@ -1852,6 +1863,14 @@ export function QuoteDetailPage() {
           isPending={false}
           onConfirm={() => setPendingAction('REJECTED_FEEDBACK')}
           onCancel={() => setPendingAction(undefined)}
+        />
+      )}
+
+      {isShareOpen && quoteQuery.data && (
+        <ShareLinkModal
+          kind="quotes"
+          resourceId={quoteQuery.data.id}
+          onClose={() => setIsShareOpen(false)}
         />
       )}
 

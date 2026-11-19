@@ -4195,6 +4195,68 @@ export function submitPublicSurveyResponse(
   });
 }
 
+// Merkezi paylasim linki (bkz. docs/VARSAYIMLAR.md V87). Kaynak tipi basina
+// backend'de `/shares/<kaynak>/:id` ucu var; bugun sadece teklif PDF'i.
+export type ShareResourceKind = 'quotes';
+export type ShareExpiryDays = 7 | 30 | 90 | null;
+
+export interface ShareLink {
+  id: string;
+  url: string;
+  title: string;
+  fileName: string;
+  expiresAt: string | null;
+  revokedAt: string | null;
+  isActive: boolean;
+  viewCount: number;
+  lastViewedAt: string | null;
+  createdAt: string;
+  createdByName: string;
+}
+
+export function listShareLinks(kind: ShareResourceKind, resourceId: string): Promise<ShareLink[]> {
+  return request(`/shares/${kind}/${resourceId}`);
+}
+
+export function createShareLink(
+  kind: ShareResourceKind,
+  resourceId: string,
+  expiresInDays: ShareExpiryDays,
+): Promise<ShareLink> {
+  return request(`/shares/${kind}/${resourceId}`, {
+    method: 'POST',
+    body: JSON.stringify({ expiresInDays }),
+  });
+}
+
+export function revokeShareLink(
+  kind: ShareResourceKind,
+  resourceId: string,
+  shareId: string,
+): Promise<ShareLink> {
+  return request(`/shares/${kind}/${resourceId}/${shareId}`, { method: 'DELETE' });
+}
+
+// Public paylasim sayfasi (kimlik dogrulamasiz - /paylasim/:token)
+export interface PublicShareView {
+  title: string;
+  fileName: string;
+  tenantName: string;
+  tenantLogoDataUrl: string | null;
+  sharedByName: string;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+export function getPublicShare(token: string): Promise<PublicShareView> {
+  return request(`/public/shares/${encodeURIComponent(token)}`);
+}
+
+export function publicShareFileUrl(token: string, download: boolean): string {
+  const base = `${API_BASE_URL}/public/shares/${encodeURIComponent(token)}/file`;
+  return download ? `${base}?download=1` : base;
+}
+
 // Siparis / Satin Alma (SP1-SP3) + Stok (ST1) - §2.3.11/§2.3.12
 
 export type PurchaseOrderStatus =

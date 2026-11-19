@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { PublicPageShell } from '../components/public-page-shell';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
 import { TextareaField } from '../components/ui/textarea-field';
@@ -17,10 +18,6 @@ import { tr } from '../i18n/tr';
 
 const LIKERT_SCALE = [1, 2, 3, 4, 5] as const;
 
-/** Musterinin kimlik dogrulamasiz girdigi public yanit sayfasi icin bagimsiz,
- * markasiz bir kabuk - AuthLayout'un login ekranina ait pazarlama gorseli burada
- * uygun degil (bkz. kullanici geri bildirimi). Ust kisimda, veri geldiyse (tenant
- * logo setlediyse) sirket logosu, yoksa "PiLens" yazisi gosterilir. */
 function PublicSurveyShell({
   children,
   logoUrl,
@@ -31,29 +28,13 @@ function PublicSurveyShell({
   tenantName?: string | null;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center bg-app-bg-muted px-4 py-10 sm:py-16">
-      <div className="mb-6 flex items-center justify-center">
-        {logoUrl ? (
-          <img src={logoUrl} alt={tenantName ?? ''} className="h-10 max-w-[220px] object-contain" />
-        ) : (
-          <span className="text-lg font-bold tracking-tight text-app-brand">PiLens</span>
-        )}
-      </div>
-      <div className="w-full max-w-xl rounded-2xl border border-app-border bg-app-surface p-6 shadow-sm sm:p-10">
-        {children}
-      </div>
-      <p className="mt-6 text-center text-xs text-app-muted">
-        {tr.publicSurvey.poweredByFooter}{' '}
-        <a
-          href="https://www.pilens.com.tr"
-          target="_blank"
-          rel="noreferrer"
-          className="underline hover:text-app-brand"
-        >
-          www.pilens.com.tr
-        </a>
-      </p>
-    </div>
+    <PublicPageShell
+      footerText={tr.publicSurvey.poweredByFooter}
+      logoUrl={logoUrl}
+      tenantName={tenantName}
+    >
+      {children}
+    </PublicPageShell>
   );
 }
 

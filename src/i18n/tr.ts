@@ -412,6 +412,56 @@ export const tr = {
     submitButton: 'Gönder',
     poweredByFooter: 'PiLens altyapısı ile gönderilmiştir.',
   },
+  shares: {
+    shareButton: 'Paylaşım Linki Oluştur',
+    modalTitle: 'Paylaşım Linki',
+    modalSubtitle:
+      'Sistemde kullanıcısı olmayan kişilerle bu belgeyi giriş yapmadan görüntülenebilir bir link ile paylaşın.',
+    snapshotNote:
+      "Link, oluşturulduğu andaki PDF'i paylaşır. Belgede sonradan değişiklik yaparsanız güncel hali için yeni bir link oluşturun.",
+    expiryLabel: 'Geçerlilik Süresi',
+    expiryOptions: {
+      '7': '7 gün',
+      '30': '30 gün',
+      '90': '90 gün',
+      never: 'Süresiz',
+    },
+    createButton: 'Link Oluştur',
+    creating: 'PDF hazırlanıyor...',
+    createSuccess: 'Paylaşım linki oluşturuldu ve panoya kopyalandı.',
+    createSuccessNoCopy: 'Paylaşım linki oluşturuldu.',
+    copyButton: 'Linki Kopyala',
+    copied: 'Link panoya kopyalandı.',
+    openButton: 'Linki Aç',
+    revokeButton: 'Linki İptal Et',
+    revokeConfirmTitle: 'Paylaşım linki iptal edilsin mi?',
+    revokeConfirmMessage:
+      'Bu linke sahip olan hiç kimse artık belgeyi görüntüleyemeyecek. Bu işlem geri alınamaz.',
+    revokeSuccess: 'Paylaşım linki iptal edildi.',
+    existingTitle: 'Oluşturulan Linkler',
+    empty: 'Bu belge için henüz paylaşım linki oluşturulmadı.',
+    statusActive: 'Aktif',
+    statusExpired: 'Süresi Doldu',
+    statusRevoked: 'İptal Edildi',
+    createdBy: (name: string, date: string) => `${name} · ${date}`,
+    expiresAt: (date: string) => `Son geçerlilik: ${date}`,
+    noExpiry: 'Süresiz',
+    viewCount: (count: number) => `${count} görüntülenme`,
+  },
+  publicShare: {
+    sharedBy: (tenantName: string, userName: string) =>
+      userName
+        ? `${tenantName} adına ${userName} sizinle bir belge paylaştı.`
+        : `${tenantName} sizinle bir belge paylaştı.`,
+    viewButton: "PDF'i Görüntüle",
+    downloadButton: 'İndir',
+    expiresAt: (date: string) => `Bu link ${date} tarihine kadar geçerlidir.`,
+    notFoundMessage: 'Bu paylaşım linki geçersiz.',
+    revokedMessage: 'Bu paylaşım linki, paylaşan kişi tarafından iptal edilmiş.',
+    expiredMessage:
+      'Bu paylaşım linkinin süresi dolmuş. Güncel bir link için belgeyi paylaşan kişiyle iletişime geçin.',
+    poweredByFooter: 'PiLens altyapısı ile paylaşılmıştır.',
+  },
   postSaleManagement: {
     title: 'Satış Sonrası Destek',
     subtitle: 'Satış sonrası destek kayıtlarını ve anket şablonlarınızı tek ekranda yönetin.',

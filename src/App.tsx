@@ -62,6 +62,7 @@ import { ProjectFormPage } from './app/project-form-page';
 import { ProjectsListPage } from './app/projects-list-page';
 import { ProtectedRoute } from './app/protected-route';
 import { PublicSurveyResponsePage } from './app/public-survey-response-page';
+import { PublicSharePage } from './app/public-share-page';
 import { PostSaleCaseDetailPage } from './app/post-sale-case-detail-page';
 import { PostSaleManagementPage } from './app/post-sale-management-page';
 import { SurveyFormPage } from './app/survey-form-page';
@@ -157,6 +158,7 @@ function App() {
         <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
         <Route path="/sifre-sifirla/:token" element={<ResetPasswordPage />} />
         <Route path="/anket/:token" element={<PublicSurveyResponsePage />} />
+        <Route path="/paylasim/:token" element={<PublicSharePage />} />
         <Route
           path="/platform-admin"
           element={
