@@ -7,6 +7,7 @@ export function useAuditLogsQuery(
     pageSize?: number;
     userId?: string;
     entity?: string;
+    entityId?: string;
     action?: string;
     from?: string;
     to?: string;

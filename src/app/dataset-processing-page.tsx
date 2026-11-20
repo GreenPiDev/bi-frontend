@@ -30,7 +30,11 @@ export function DatasetProcessingPage() {
               <p className="mt-2 text-sm text-app-muted">{statusQuery.data.errorMessage}</p>
             )}
             <div className="mt-6 flex justify-center gap-3">
-              <Button type="button" variant="secondary" onClick={() => navigate('/datasets')}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => navigate('/datasets?tab=datasets')}
+              >
                 {tr.datasets.processing.backToList}
               </Button>
               <Button type="button" onClick={() => navigate('/datasets/upload')}>

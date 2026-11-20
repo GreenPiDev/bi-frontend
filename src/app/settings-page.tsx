@@ -13,7 +13,10 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { AlertsSection } from '../features/alerts/alerts-section';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
+import { SpreadsheetChangeDetail } from '../features/audit/spreadsheet-change-detail';
+import { isSpreadsheetChangeMeta } from '../features/audit/spreadsheet-change-meta';
 import { useAuditLogsQuery } from '../features/audit/use-audit-logs';
+import { useAllSpreadsheetsQuery } from '../features/spreadsheets/use-spreadsheets';
 import type { AuditLogEntry } from '../lib/api';
 import { CrmSettingsSection } from '../features/crm/crm-settings-section';
 import { useIsModuleEnabled } from '../features/crm/use-tenant-modules';
@@ -43,6 +46,10 @@ const actionLabels: Record<string, string> = {
   UPDATE_ROLE: 'Rol Değiştirdi',
   UPDATE_PROFILE: 'Profilini Güncelledi',
   CHANGE_PASSWORD: 'Şifresini Değiştirdi',
+  SPREADSHEET_UPLOADED: 'E-Tablo Yükledi',
+  SPREADSHEET_CELLS_UPDATED: 'E-Tabloda Değişiklik Yaptı',
+  SPREADSHEET_RENAMED: 'E-Tabloyu Yeniden Adlandırdı',
+  SPREADSHEET_DELETED: 'E-Tabloyu Sildi',
 };
 
 const entityLabels: Record<string, string> = {
@@ -81,6 +88,7 @@ const entityLabels: Record<string, string> = {
   TitleOption: 'Unvan Seçeneği',
   DepartmentOption: 'Departman Seçeneği',
   ReminderTypeOption: 'Hatırlatma Türü Seçeneği',
+  spreadsheet: 'E-Tablo',
 };
 
 /** log.meta icindeki bilinen alanlar icin okunabilir etiket - entity'ye gore degil,
@@ -115,6 +123,9 @@ const META_KEY_LABELS: Record<string, string> = {
   operator: 'Operatör',
   threshold: 'Eşik',
   action: 'Alt İşlem',
+  spreadsheetName: 'Tablo',
+  previousName: 'Önceki Ad',
+  sheetCount: 'Sayfa Sayısı',
 };
 
 function formatMetaValue(value: unknown): string {
@@ -125,6 +136,7 @@ function formatMetaValue(value: unknown): string {
 }
 
 function AuditLogMetaDetail({ meta }: { meta: unknown }) {
+  if (isSpreadsheetChangeMeta(meta)) return <SpreadsheetChangeDetail meta={meta} />;
   const entries =
     meta && typeof meta === 'object' && !Array.isArray(meta)
       ? Object.entries(meta as Record<string, unknown>)
@@ -163,6 +175,7 @@ function AuditLogTab() {
   const [page, setPage] = useState(1);
   const [userId, setUserId] = useState('');
   const [entity, setEntity] = useState('');
+  const [entityId, setEntityId] = useState('');
   const [action, setAction] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -170,11 +183,13 @@ function AuditLogTab() {
   const hasActiveFilter =
     Boolean(userId) || Boolean(entity) || Boolean(action) || Boolean(from) || Boolean(to);
   const usersQuery = useUsersQuery();
+  const spreadsheetsQuery = useAllSpreadsheetsQuery(drawerOpen && entity === 'spreadsheet');
   const auditLogsQuery = useAuditLogsQuery({
     page,
     pageSize: AUDIT_LOG_PAGE_SIZE,
     userId: userId || undefined,
     entity: entity || undefined,
+    entityId: (entity === 'spreadsheet' && entityId) || undefined,
     action: action || undefined,
     from: from || undefined,
     to: to || undefined,
@@ -190,6 +205,7 @@ function AuditLogTab() {
     setPage(1);
     setUserId('');
     setEntity('');
+    setEntityId('');
     setAction('');
     setFrom('');
     setTo('');
@@ -242,7 +258,13 @@ function AuditLogTab() {
       key: 'entity',
       header: tr.settings.audit.entityColumn,
       className: 'whitespace-nowrap',
-      render: (log) => entityLabels[log.entity] ?? log.entity,
+      render: (log) => {
+        const label = entityLabels[log.entity] ?? log.entity;
+        const meta = log.meta as { spreadsheetName?: unknown } | null;
+        return log.entity === 'spreadsheet' && typeof meta?.spreadsheetName === 'string'
+          ? `${label} · ${meta.spreadsheetName}`
+          : label;
+      },
     },
     {
       key: 'createdAt',
@@ -313,6 +335,7 @@ function AuditLogTab() {
               onChange={(event) => {
                 setPage(1);
                 setEntity(event.target.value);
+                setEntityId('');
               }}
               options={Object.entries(entityLabels).map(([value, label]) => ({ value, label }))}
               placeholder={tr.settings.audit.filterDrawer.entityPlaceholder}
@@ -320,8 +343,29 @@ function AuditLogTab() {
               onClear={() => {
                 setPage(1);
                 setEntity('');
+                setEntityId('');
               }}
             />
+            {entity === 'spreadsheet' && (
+              <Select
+                label={tr.settings.audit.filterDrawer.spreadsheetLabel}
+                value={entityId}
+                onChange={(event) => {
+                  setPage(1);
+                  setEntityId(event.target.value);
+                }}
+                options={(spreadsheetsQuery.data?.data ?? []).map((s) => ({
+                  value: s.id,
+                  label: s.name,
+                }))}
+                placeholder={tr.settings.audit.filterDrawer.spreadsheetPlaceholder}
+                clearable
+                onClear={() => {
+                  setPage(1);
+                  setEntityId('');
+                }}
+              />
+            )}
             <Select
               label={tr.settings.audit.filterDrawer.actionLabel}
               value={action}

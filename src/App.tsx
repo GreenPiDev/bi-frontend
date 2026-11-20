@@ -17,7 +17,8 @@ import { DashboardsListPage } from './app/dashboards-list-page';
 import { DatasetDetailPage } from './app/dataset-detail-page';
 import { DatasetProcessingPage } from './app/dataset-processing-page';
 import { DatasetUploadPage } from './app/dataset-upload-page';
-import { DatasetsListPage } from './app/datasets-list-page';
+import { DatasetsManagementPage } from './app/datasets-management-page';
+import { SpreadsheetDetailPage } from './app/spreadsheet-detail-page';
 import { DrawingCreatePage } from './app/drawing-create-page';
 import { DrawingEditorPage } from './app/drawing-editor-page';
 import { DrawingImportPage } from './app/drawing-import-page';
@@ -243,8 +244,16 @@ function App() {
         <Route
           path="/datasets"
           element={
-            <TenantPageRoute pageKey="datasets">
-              <DatasetsListPage />
+            <ProtectedRoute>
+              <DatasetsManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/datasets/e-tablolar/:id"
+          element={
+            <TenantPageRoute pageKey="spreadsheets">
+              <SpreadsheetDetailPage />
             </TenantPageRoute>
           }
         />

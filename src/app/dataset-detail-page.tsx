@@ -172,7 +172,7 @@ export function DatasetDetailPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/datasets'} label={tr.datasets.detail.backToList} />
+      <BackLink to={'/datasets?tab=datasets'} label={tr.datasets.detail.backToList} />
 
       {datasetQuery.data && (
         <div className="mt-4 flex items-center gap-2">

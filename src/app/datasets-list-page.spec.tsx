@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatasetsListPage } from './datasets-list-page';
+import { DatasetsListContent } from './datasets-list-page';
 import { ToastProvider } from '../components/ui/toast';
 import * as api from '../lib/api';
 
@@ -14,7 +14,7 @@ function renderDatasetsListPage() {
       <ToastProvider>
         <MemoryRouter initialEntries={['/datasets']}>
           <Routes>
-            <Route path="/datasets" element={<DatasetsListPage />} />
+            <Route path="/datasets" element={<DatasetsListContent />} />
             <Route path="/datasets/upload" element={<div>upload-page</div>} />
             <Route path="/datasets/:id" element={<div>detail-page</div>} />
           </Routes>
@@ -24,7 +24,7 @@ function renderDatasetsListPage() {
   );
 }
 
-describe('DatasetsListPage', () => {
+describe('DatasetsListContent', () => {
   beforeEach(() => {
     vi.spyOn(api, 'me').mockRejectedValue(new api.ApiError('UNAUTHORIZED', 'Yetkisiz.', 401));
   });

@@ -304,7 +304,7 @@ export function AppShell({
     ...(canAccessPage('drawing-library') || canAccessPage('drawing-templates')
       ? [{ label: tr.shell.nav.drawingSettings, icon: PenTool, path: '/cizim-ayarlari' }]
       : []),
-    ...(canAccessPage('datasets')
+    ...(canAccessPage('datasets') || canAccessPage('spreadsheets')
       ? [{ label: tr.shell.nav.datasets, icon: Table2, path: '/datasets' }]
       : []),
     ...(canAccessPage('dashboards')

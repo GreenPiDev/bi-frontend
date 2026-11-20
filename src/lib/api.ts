@@ -760,6 +760,7 @@ export function listAuditLogs(
     pageSize?: number;
     userId?: string;
     entity?: string;
+    entityId?: string;
     action?: string;
     from?: string;
     to?: string;
@@ -770,6 +771,7 @@ export function listAuditLogs(
   if (params.pageSize) query.set('pageSize', String(params.pageSize));
   if (params.userId) query.set('userId', params.userId);
   if (params.entity) query.set('entity', params.entity);
+  if (params.entityId) query.set('entityId', params.entityId);
   if (params.action) query.set('action', params.action);
   if (params.from) query.set('from', params.from);
   if (params.to) query.set('to', params.to);
@@ -5106,5 +5108,127 @@ export function addPlatformSupportTicketMessage(
   return request(`/platform-admin/support-tickets/${id}/messages`, {
     method: 'POST',
     body: JSON.stringify({ body }),
+  });
+}
+
+// --- E-Tablolar (ortak duzenlenebilir Excel, bkz. docs/VARSAYIMLAR.md V88) ---
+
+export interface SpreadsheetSheet {
+  id: string;
+  name: string;
+  ordinal: number;
+  rowCount: number;
+  colCount: number;
+}
+
+export interface SpreadsheetSummary {
+  id: string;
+  name: string;
+  originalFileName: string;
+  sheetCount: number;
+  createdByName: string;
+  updatedByName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SpreadsheetDetail extends SpreadsheetSummary {
+  sheets: SpreadsheetSheet[];
+}
+
+/** [row, col, value, bgColor, fontColor, version] - backend'deki CompactCell ile ayni. */
+export type SpreadsheetCompactCell = [
+  number,
+  number,
+  string | null,
+  string | null,
+  string | null,
+  number,
+];
+
+export interface SpreadsheetCellChange {
+  row: number;
+  col: number;
+  value: string | null;
+  bgColor: string | null;
+  fontColor: string | null;
+  baseVersion: number;
+}
+
+export interface SpreadsheetConflict {
+  row: number;
+  col: number;
+  cell: string;
+  value: string | null;
+  bgColor: string | null;
+  fontColor: string | null;
+  version: number;
+  updatedByName: string;
+}
+
+export interface SaveSpreadsheetChangesResult {
+  savedCount: number;
+  cells: SpreadsheetCompactCell[];
+}
+
+export interface SpreadsheetCellsUpdatedEvent {
+  spreadsheetId: string;
+  sheetId: string;
+  cells: SpreadsheetCompactCell[];
+  updatedById: string;
+  updatedByName: string;
+}
+
+export function listSpreadsheets(
+  params: { page?: number; pageSize?: number; q?: string } = {},
+): Promise<PagedResult<SpreadsheetSummary>> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.pageSize) query.set('pageSize', String(params.pageSize));
+  if (params.q) query.set('q', params.q);
+  const qs = query.toString();
+  return request(`/spreadsheets${qs ? `?${qs}` : ''}`);
+}
+
+export function getSpreadsheet(id: string): Promise<SpreadsheetDetail> {
+  return request(`/spreadsheets/${id}`);
+}
+
+export function getSpreadsheetCells(
+  id: string,
+  sheetId: string,
+): Promise<SpreadsheetCompactCell[]> {
+  return request(`/spreadsheets/${id}/sheets/${sheetId}/cells`);
+}
+
+export function uploadSpreadsheet(input: {
+  file: File;
+  name?: string;
+}): Promise<SpreadsheetDetail> {
+  const formData = new FormData();
+  formData.append('file', input.file);
+  if (input.name) formData.append('name', input.name);
+  return request('/spreadsheets', { method: 'POST', body: formData });
+}
+
+export function renameSpreadsheet(id: string, name: string): Promise<SpreadsheetDetail> {
+  return request(`/spreadsheets/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function deleteSpreadsheet(id: string): Promise<void> {
+  return request(`/spreadsheets/${id}`, { method: 'DELETE' });
+}
+
+export function saveSpreadsheetChanges(
+  id: string,
+  sheetId: string,
+  input: { changes: SpreadsheetCellChange[]; force?: boolean },
+): Promise<SaveSpreadsheetChangesResult> {
+  return request(`/spreadsheets/${id}/sheets/${sheetId}/changes`, {
+    method: 'POST',
+    body: JSON.stringify(input),
   });
 }

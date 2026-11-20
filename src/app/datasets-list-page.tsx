@@ -1,23 +1,21 @@
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppShell } from './app-shell';
 import { Button } from '../components/ui/button';
 import { ConfirmModal } from '../components/ui/confirm-modal';
 import { IconActionButton } from '../components/ui/icon-action-button';
-import { PageHelp } from '../components/ui/page-help';
 import { Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { useDatasetsQuery, useDeleteDatasetMutation } from '../features/datasets/use-datasets';
 import { ApiError, type DatasetSummary } from '../lib/api';
-import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
 const dateFormatter = new Intl.DateTimeFormat('tr-TR');
 const numberFormatter = new Intl.NumberFormat('tr-TR');
 
-export function DatasetsListPage() {
-  usePageTitle(tr.datasets.title);
+/** /datasets?tab=datasets sekmesinin icerigi - sayfa basligi/AppShell
+ * DatasetsManagementPage'te. */
+export function DatasetsListContent() {
   const navigate = useNavigate();
   const toast = useToast();
   const datasetsQuery = useDatasetsQuery();
@@ -79,15 +77,8 @@ export function DatasetsListPage() {
   ];
 
   return (
-    <AppShell>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-app-text">{tr.datasets.title}</h1>
-            <PageHelp text={tr.help.datasets} />
-          </div>
-          <p className="mt-1 text-sm text-app-muted">{tr.datasets.subtitle}</p>
-        </div>
+    <>
+      <div className="mb-4 flex justify-end">
         <Button type="button" onClick={() => navigate('/datasets/upload')}>
           {tr.datasets.uploadButton}
         </Button>
@@ -114,6 +105,6 @@ export function DatasetsListPage() {
           onCancel={() => setDeletingDataset(undefined)}
         />
       )}
-    </AppShell>
+    </>
   );
 }

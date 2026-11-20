@@ -78,7 +78,7 @@ export function DatasetUploadPage() {
 
   return (
     <AppShell>
-      <BackLink to={'/datasets'} label={tr.datasets.upload.back} />
+      <BackLink to={'/datasets?tab=datasets'} label={tr.datasets.upload.back} />
 
       <div className="mx-auto mt-6 max-w-xl p-8">
         <h1 className="text-lg font-bold text-app-text">{tr.datasets.upload.title}</h1>
