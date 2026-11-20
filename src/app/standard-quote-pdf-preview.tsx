@@ -207,16 +207,30 @@ export function StandardQuotePdfPreview({
         </div>
 
         <div
-          className="flex flex-col items-center justify-center gap-1 text-xs leading-tight"
+          className="flex shrink-0 flex-col items-center gap-1 overflow-hidden text-xs leading-tight"
           style={{
             background: theme.footerBgColor,
             color: theme.footerTextColor,
-            padding: `8px ${PAGE_MARGIN_PX}px`,
+            // Backend ile ayni: atif satiri alttan sabit 3mm'de durur.
+            padding: `8px ${PAGE_MARGIN_PX}px 3mm`,
             fontFamily: 'Arial, Helvetica, sans-serif',
+            boxSizing: 'border-box',
+            // Backend ile ayni birim: sabit yukseklik mm cinsinden (96dpi).
+            height: theme.footerHeightMm !== null ? `${theme.footerHeightMm}mm` : undefined,
           }}
         >
+          <div className="flex min-h-0 w-full flex-auto flex-col items-center justify-center gap-1 overflow-hidden">
+            {theme.footerShowLogo && logoUrl && (
+              <img
+                src={logoUrl}
+                alt=""
+                className="block w-auto object-contain"
+                style={{ height: `${theme.footerLogoHeightMm}mm` }}
+              />
+            )}
+          </div>
           {footerCells.length > 0 && (
-            <div className="flex w-full items-center justify-center gap-6">
+            <div className="flex w-full shrink-0 items-center justify-center gap-6">
               {company.address && (
                 <div className="line-clamp-3 max-w-[45%] overflow-hidden">{company.address}</div>
               )}
@@ -224,7 +238,7 @@ export function StandardQuotePdfPreview({
               {company.email && <div className="whitespace-nowrap">{company.email}</div>}
             </div>
           )}
-          <div style={{ color: '#2196f3' }}>
+          <div className="shrink-0" style={{ color: '#2196f3' }}>
             {tr.crm.quoteTemplates.standard.preview.footerNotice}
           </div>
         </div>

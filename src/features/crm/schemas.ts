@@ -386,6 +386,21 @@ export const standardQuoteTemplateFormSchema = z.object({
   groupRowBgColor: hexColorField,
   footerBgColor: hexColorField,
   footerTextColor: hexColorField,
+  footerShowAddress: z.boolean(),
+  footerShowPhone: z.boolean(),
+  footerShowEmail: z.boolean(),
+  footerHeightMm: z
+    .number()
+    .int()
+    .min(10, 'Yükseklik en az 10 mm olmalı.')
+    .max(60, 'Yükseklik en fazla 60 mm olabilir.')
+    .nullable(),
+  footerShowLogo: z.boolean(),
+  footerLogoHeightMm: z
+    .number()
+    .int()
+    .min(4, 'Logo boyutu en az 4 mm olmalı.')
+    .max(30, 'Logo boyutu en fazla 30 mm olabilir.'),
   address: z.string().max(500),
   phone: z.string().max(50),
   email: z.union([z.literal(''), z.string().email('Geçerli bir e-posta girin.').max(200)]),

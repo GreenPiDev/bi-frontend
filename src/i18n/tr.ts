@@ -13,6 +13,10 @@ export const tr = {
     dismiss: 'Sonra',
   },
   common: {
+    colorPicker: {
+      hexLabel: 'Hex kodu',
+      moreColors: 'Daha fazla renk…',
+    },
     copyFailed: 'Panoya kopyalanamadı. Lütfen metni elle seçip kopyalayın.',
     appName: 'PiLens',
     loading: 'Yükleniyor...',
@@ -3231,6 +3235,17 @@ export const tr = {
         noSettingsPermission:
           'Logo ve şirket bilgilerini değiştirmek için Ayarlar düzenleme yetkisi gerekir.',
         footerSection: 'Alt Bilgi (Footer)',
+        footerVisibilityHint: 'İşareti kaldırılan bilgi PDF alt bilgisinde gösterilmez.',
+        showInFooter: 'Alt bilgide göster',
+        footerLayoutTitle: 'Alt bilgi görünümü',
+        footerShowLogo: 'Şirket logosunu alt bilginin ortasında göster',
+        footerShowLogoNoLogo: 'Önce bir şirket logosu yükleyin.',
+        footerHeightAuto: 'Otomatik yükseklik (içerik kadar)',
+        footerHeightLabel: 'Arka plan yüksekliği',
+        footerHeightUnit: 'mm',
+        footerLogoHeightLabel: 'Alt bilgideki logo boyutu (yükseklik)',
+        footerHeightHint:
+          'Çok düşük bir değerde alt bilgideki yazılar ya da logo kırpılabilir; önizlemeden kontrol edin.',
         addressLabel: 'Adres',
         phoneLabel: 'Telefon',
         emailLabel: 'E-posta',
@@ -3263,6 +3278,8 @@ export const tr = {
           title: 'Önizleme',
           ungrouped: 'Grupsuz teklif',
           grouped: 'Gruplu teklif',
+          previous: 'Önceki örnek',
+          next: 'Sonraki örnek',
           hint: 'Örnek verilerle gösterilir; kaydetmeden önce değişiklikleri burada görebilirsiniz.',
           footerNotice:
             'Bu teklif, Pilens CRM platformu üzerinden hazırlanmıştır. www.pilens.com.tr',

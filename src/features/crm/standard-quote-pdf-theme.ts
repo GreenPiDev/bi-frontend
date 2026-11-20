@@ -19,7 +19,22 @@ export const DEFAULT_STANDARD_QUOTE_PDF_THEME: StandardQuotePdfTheme = {
   groupRowBgColor: '#e3f2fd',
   footerBgColor: '#e8f5e9',
   footerTextColor: '#16202e',
+  footerShowAddress: true,
+  footerShowPhone: true,
+  footerShowEmail: true,
+  footerHeightMm: null,
+  footerShowLogo: false,
+  footerLogoHeightMm: 7,
 };
+
+/** Backend FOOTER_HEIGHT_MIN_MM/MAX_MM'in kasitli kopyasi. */
+export const FOOTER_HEIGHT_MIN_MM = 10;
+export const FOOTER_HEIGHT_MAX_MM = 60;
+/** "Otomatik"ten sabit yukseklige gecilince baslangic degeri. */
+export const FOOTER_HEIGHT_INITIAL_MM = 20;
+/** Backend FOOTER_LOGO_HEIGHT_MIN_MM/MAX_MM'in kasitli kopyasi. */
+export const FOOTER_LOGO_HEIGHT_MIN_MM = 4;
+export const FOOTER_LOGO_HEIGHT_MAX_MM = 30;
 
 export const STANDARD_QUOTE_TEMPLATE_ID = 'standart';
 

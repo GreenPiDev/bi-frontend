@@ -3851,6 +3851,14 @@ export interface StandardQuotePdfTheme {
   groupRowBgColor: string;
   footerBgColor: string;
   footerTextColor: string;
+  footerShowAddress: boolean;
+  footerShowPhone: boolean;
+  footerShowEmail: boolean;
+  /** Sabit alt bilgi yuksekligi (mm), null = otomatik. */
+  footerHeightMm: number | null;
+  footerShowLogo: boolean;
+  /** Alt bilgideki logonun yuksekligi (mm). */
+  footerLogoHeightMm: number;
 }
 
 export function getStandardQuoteTemplateTheme(): Promise<StandardQuotePdfTheme> {

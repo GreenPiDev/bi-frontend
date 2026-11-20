@@ -673,7 +673,7 @@ export function QuoteContentBody({
       style={standardQuotePdfThemeStyle(theme)}
       className={clsx(
         isPrintMode &&
-          '[&_.text-app-muted]:!text-[color:var(--qp-text)] [&_.text-app-text]:!text-[color:var(--qp-text)] [&_.text-app-danger]:!text-[color:var(--qp-text)] [&_.border-app-border]:!border-[color:var(--qp-accent)]',
+          '[&_.text-app-muted]:!text-[color:var(--qp-text)] [&_.text-app-text]:!text-[color:var(--qp-text)] [&_td]:!text-[color:var(--qp-text)] [&_.text-app-danger]:!text-[color:var(--qp-text)] [&_.border-app-border]:!border-[color:var(--qp-accent)]',
       )}
     >
       {isPrintMode && (
