@@ -21,6 +21,7 @@ import { useUnsavedChangesGuard } from '../features/spreadsheets/use-unsaved-cha
 import {
   useRenameSpreadsheetMutation,
   useSpreadsheetColumnsRealtimeSync,
+  useSpreadsheetReplacedRealtimeSync,
   useSpreadsheetQuery,
 } from '../features/spreadsheets/use-spreadsheets';
 import { ApiError, type SpreadsheetDetail } from '../lib/api';
@@ -95,6 +96,9 @@ export function SpreadsheetDetailPage() {
   const toast = useToast();
   const spreadsheetQuery = useSpreadsheetQuery(id);
   useSpreadsheetColumnsRealtimeSync(id);
+  useSpreadsheetReplacedRealtimeSync(id, (by) =>
+    toast.info(tr.spreadsheets.replace.remoteReplaced(by)),
+  );
   const permissions = useMeQuery().data?.permissions;
   const canEdit = hasPermission(permissions, 'spreadsheets', 'UPDATE');
   const spreadsheet = spreadsheetQuery.data;

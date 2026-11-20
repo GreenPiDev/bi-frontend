@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppShell } from './app-shell';
 import { QuoteTemplatePreviewLightbox } from './quote-template-preview-lightbox';
+import { StandardQuoteTemplateEditPage } from './standard-quote-template-edit-page';
 import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { FormError } from '../components/ui/form-error';
@@ -19,6 +20,7 @@ import {
   useUploadQuoteTemplateImageMutation,
 } from '../features/crm/use-quote-templates';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
+import { STANDARD_QUOTE_TEMPLATE_ID } from '../features/crm/standard-quote-pdf-theme';
 import { quoteTemplateFormSchema, type QuoteTemplateFormValues } from '../features/crm/schemas';
 import { ApiError, type QuoteTemplateInput } from '../lib/api';
 import { tr } from '../i18n/tr';
@@ -32,7 +34,15 @@ function emptyToOptional(value: string, isEdit: boolean): string | null | undefi
   return isEdit ? null : undefined;
 }
 
+/** /teklif-sablonlari/duzenle/:id - `standart` id'si DB'deki bir QuoteTemplate
+ * degil, sablonsuz teklif PDF'inin kendisidir (bkz. docs/VARSAYIMLAR.md V89). */
 export function QuoteTemplateFormPage() {
+  const { id } = useParams();
+  if (id === STANDARD_QUOTE_TEMPLATE_ID) return <StandardQuoteTemplateEditPage />;
+  return <CustomQuoteTemplateFormPage />;
+}
+
+function CustomQuoteTemplateFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();

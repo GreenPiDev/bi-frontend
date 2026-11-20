@@ -3,6 +3,8 @@ import {
   createQuoteTemplate,
   deleteQuoteTemplate,
   getQuoteTemplate,
+  getStandardQuoteTemplateTheme,
+  updateStandardQuoteTemplateTheme,
   listQuoteTemplates,
   removeQuoteTemplateImage,
   setDefaultQuoteTemplate,
@@ -10,6 +12,7 @@ import {
   uploadQuoteTemplateImage,
   type QuoteTemplateImageSlot,
   type QuoteTemplateInput,
+  type StandardQuotePdfTheme,
 } from '../../lib/api';
 
 export const QUOTE_TEMPLATES_QUERY_KEY = ['quote-templates'];
@@ -91,6 +94,28 @@ export function useRemoveQuoteTemplateImageMutation(id: string) {
     onSuccess: (template) => {
       queryClient.setQueryData(['quote-templates', id], template);
       void queryClient.invalidateQueries({ queryKey: QUOTE_TEMPLATES_QUERY_KEY });
+    },
+  });
+}
+
+const STANDARD_THEME_QUERY_KEY = ['quote-templates', 'standard-theme'];
+
+/** Standart (sablonsuz) PDF'in renk temasi - bkz. docs/VARSAYIMLAR.md V89. */
+export function useStandardQuoteTemplateThemeQuery() {
+  return useQuery({
+    queryKey: STANDARD_THEME_QUERY_KEY,
+    queryFn: () => getStandardQuoteTemplateTheme(),
+  });
+}
+
+export function useUpdateStandardQuoteTemplateThemeMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (theme: StandardQuotePdfTheme) => updateStandardQuoteTemplateTheme(theme),
+    onSuccess: (theme) => {
+      queryClient.setQueryData(STANDARD_THEME_QUERY_KEY, theme);
+      // Acik teklif yazdirma verisi eski temayi tutmasin.
+      void queryClient.invalidateQueries({ queryKey: ['quotes'] });
     },
   });
 }

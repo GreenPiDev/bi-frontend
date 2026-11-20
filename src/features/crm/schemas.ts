@@ -370,6 +370,29 @@ export const quoteTemplateFormSchema = z.object({
 
 export type QuoteTemplateFormValues = z.infer<typeof quoteTemplateFormSchema>;
 
+const hexColorField = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Renk #RRGGBB formatında olmalı.');
+
+/** Standart (sablonsuz) teklif PDF'i duzenleme formu - renkler + sirket
+ * footer bilgisi (adres/telefon/e-posta, Tenant'ta tutulur). */
+export const standardQuoteTemplateFormSchema = z.object({
+  titleColor: hexColorField,
+  headingColor: hexColorField,
+  textColor: hexColorField,
+  accentColor: hexColorField,
+  tableHeaderBgColor: hexColorField,
+  tableHeaderTextColor: hexColorField,
+  rowOddBgColor: hexColorField,
+  rowEvenBgColor: hexColorField,
+  groupRowBgColor: hexColorField,
+  footerBgColor: hexColorField,
+  footerTextColor: hexColorField,
+  address: z.string().max(500),
+  phone: z.string().max(50),
+  email: z.union([z.literal(''), z.string().email('Geçerli bir e-posta girin.').max(200)]),
+});
+
+export type StandardQuoteTemplateFormValues = z.infer<typeof standardQuoteTemplateFormSchema>;
+
 export const productFormSchema = z.object({
   productListId: z.string({ message: 'Ürün listesi gerekli.' }).min(1, 'Ürün listesi gerekli.'),
   name: z.string().min(2, 'Ürün adı en az 2 karakter olmalı.').max(200),

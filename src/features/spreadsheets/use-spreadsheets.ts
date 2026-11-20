@@ -11,11 +11,13 @@ import {
   getSpreadsheetCells,
   listSpreadsheets,
   renameSpreadsheet,
+  replaceSpreadsheetFile,
   saveSpreadsheetChanges,
   updateSpreadsheetColumnWidths,
   uploadSpreadsheet,
   type SpreadsheetCellChange,
   type SpreadsheetColumnsUpdatedEvent,
+  type SpreadsheetReplacedEvent,
   type SpreadsheetDetail,
 } from '../../lib/api';
 import { useRealtimeEvent } from '../../lib/realtime';
@@ -67,6 +69,14 @@ export function useUploadSpreadsheetMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: uploadSpreadsheet,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: SPREADSHEETS_QUERY_KEY }),
+  });
+}
+
+export function useReplaceSpreadsheetMutation(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => replaceSpreadsheetFile(id, file),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SPREADSHEETS_QUERY_KEY }),
   });
 }
@@ -143,5 +153,19 @@ export function useSpreadsheetColumnsRealtimeSync(id: string) {
   useRealtimeEvent<SpreadsheetColumnsUpdatedEvent>(COLUMNS_UPDATED_EVENT, (event) => {
     if (event.spreadsheetId !== id) return;
     setSheetColWidths(queryClient, id, event.sheetId, () => event.colWidths);
+  });
+}
+
+const REPLACED_EVENT = 'spreadsheets.replaced';
+
+/** Baska bir kullanici dosyayi degistirince acik tablonun sayfa/hucre onbellegi yenilenir
+ * (sayfa kimlikleri degistigi icin eski hucre verisi gecersizdir). */
+export function useSpreadsheetReplacedRealtimeSync(id: string, onReplaced: (by: string) => void) {
+  const queryClient = useQueryClient();
+  useRealtimeEvent<SpreadsheetReplacedEvent>(REPLACED_EVENT, (event) => {
+    if (event.spreadsheetId !== id) return;
+    queryClient.removeQueries({ queryKey: [...SPREADSHEETS_QUERY_KEY, id, 'sheets'] });
+    void queryClient.invalidateQueries({ queryKey: [...SPREADSHEETS_QUERY_KEY, id] });
+    onReplaced(event.updatedByName);
   });
 }

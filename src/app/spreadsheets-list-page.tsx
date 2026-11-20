@@ -1,4 +1,4 @@
-import { Search, Trash2 } from 'lucide-react';
+import { Download, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -8,12 +8,14 @@ import { Pagination, Table, type TableColumn } from '../components/ui/table';
 import { useToast } from '../components/ui/toast-context';
 import { hasPermission } from '../features/auth/permissions';
 import { useMeQuery } from '../features/auth/use-auth';
+import { SpreadsheetReplaceModal } from '../features/spreadsheets/spreadsheet-replace-modal';
 import { SpreadsheetUploadModal } from '../features/spreadsheets/spreadsheet-upload-modal';
 import {
   useDeleteSpreadsheetMutation,
   useSpreadsheetsQuery,
 } from '../features/spreadsheets/use-spreadsheets';
-import { ApiError, type SpreadsheetSummary } from '../lib/api';
+import { ApiError, exportSpreadsheet, type SpreadsheetSummary } from '../lib/api';
+import { downloadBlob } from '../lib/download';
 import { useDebouncedValue } from '../lib/use-debounced-value';
 import { tr } from '../i18n/tr';
 
@@ -30,6 +32,7 @@ export function SpreadsheetsListContent() {
   const toast = useToast();
   const permissions = useMeQuery().data?.permissions;
   const canCreate = hasPermission(permissions, 'spreadsheets', 'CREATE');
+  const canUpdate = hasPermission(permissions, 'spreadsheets', 'UPDATE');
   const canDelete = hasPermission(permissions, 'spreadsheets', 'DELETE');
   const [page, setPage] = useState(1);
   const [qInput, setQInput] = useState('');
@@ -41,7 +44,17 @@ export function SpreadsheetsListContent() {
   });
   const deleteMutation = useDeleteSpreadsheetMutation();
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [replacing, setReplacing] = useState<SpreadsheetSummary | undefined>(undefined);
   const [deleting, setDeleting] = useState<SpreadsheetSummary | undefined>(undefined);
+
+  async function handleDownload(s: SpreadsheetSummary) {
+    try {
+      const blob = await exportSpreadsheet(s.id);
+      downloadBlob(blob, `${s.name.replace(/[\\/:*?"<>|]/g, '_')}.xlsx`);
+    } catch (error) {
+      toast.error(error instanceof ApiError ? error.message : tr.spreadsheets.downloadError);
+    }
+  }
 
   function handleConfirmDelete() {
     if (!deleting) return;
@@ -90,24 +103,36 @@ export function SpreadsheetsListContent() {
         </>
       ),
     },
-    ...(canDelete
-      ? [
-          {
-            key: 'actions',
-            header: tr.spreadsheets.actionsColumn,
-            className: 'w-px',
-            required: true,
-            render: (s: SpreadsheetSummary) => (
-              <IconActionButton
-                icon={Trash2}
-                variant="danger"
-                tooltip={tr.spreadsheets.deleteTooltip}
-                onClick={() => setDeleting(s)}
-              />
-            ),
-          },
-        ]
-      : []),
+    {
+      key: 'actions',
+      header: tr.spreadsheets.actionsColumn,
+      className: 'w-px',
+      required: true,
+      render: (s: SpreadsheetSummary) => (
+        <div className="flex items-center gap-1">
+          <IconActionButton
+            icon={Download}
+            tooltip={tr.spreadsheets.downloadTooltip}
+            onClick={() => void handleDownload(s)}
+          />
+          {canUpdate && (
+            <IconActionButton
+              icon={RefreshCw}
+              tooltip={tr.spreadsheets.replaceTooltip}
+              onClick={() => setReplacing(s)}
+            />
+          )}
+          {canDelete && (
+            <IconActionButton
+              icon={Trash2}
+              variant="danger"
+              tooltip={tr.spreadsheets.deleteTooltip}
+              onClick={() => setDeleting(s)}
+            />
+          )}
+        </div>
+      ),
+    },
   ];
 
   const data = spreadsheetsQuery.data;
@@ -164,6 +189,14 @@ export function SpreadsheetsListContent() {
         <SpreadsheetUploadModal
           onClose={() => setUploadOpen(false)}
           onUploaded={(spreadsheet) => navigate(`/datasets/e-tablolar/${spreadsheet.id}`)}
+        />
+      )}
+
+      {replacing && (
+        <SpreadsheetReplaceModal
+          spreadsheetId={replacing.id}
+          spreadsheetName={replacing.name}
+          onClose={() => setReplacing(undefined)}
         />
       )}
 

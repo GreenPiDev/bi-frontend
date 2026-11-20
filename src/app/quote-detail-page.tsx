@@ -48,6 +48,7 @@ import {
 } from '../features/crm/use-quotes';
 import { useDrawingsQuery } from '../features/crm/use-drawings';
 import { useTenantProfileQuery } from '../features/crm/use-tenant-logo';
+import { standardQuotePdfThemeStyle } from '../features/crm/standard-quote-pdf-theme';
 import { ShareLinkModal } from '../features/shares/share-link-modal';
 import {
   ApiError,
@@ -62,6 +63,7 @@ import {
   type QuoteStatus,
   type QuoteStatusHistoryEntry,
   type QuoteStockCheckRow,
+  type StandardQuotePdfTheme,
 } from '../lib/api';
 import { openUrlInNewTab } from '../lib/download';
 import { formatIbanInput } from '../lib/iban-validation';
@@ -283,8 +285,8 @@ function QuoteGroupsSummaryTables({ quote, isPrintMode }: { quote: Quote; isPrin
                         'border-b border-app-border last:border-0',
                         isPrintMode
                           ? index % 2 === 0
-                            ? '!bg-white'
-                            : '!bg-[#e8f5e9]'
+                            ? '!bg-[color:var(--qp-row-odd)]'
+                            : '!bg-[color:var(--qp-row-even)]'
                           : 'bg-app-surface',
                       )}
                     >
@@ -348,9 +350,13 @@ export function QuoteContentBody({
   onOpportunityClick,
   onProjectClick,
   sender,
+  theme,
 }: {
   quote: Quote;
   isPrintMode?: boolean;
+  /** Standart PDF renk temasi (bkz. docs/VARSAYIMLAR.md V89) - verilmezse eski
+   * sabit renkler (DEFAULT_STANDARD_QUOTE_PDF_THEME) kullanilir. */
+  theme?: StandardQuotePdfTheme;
   onOpportunityClick: (opportunityId: string) => void;
   onProjectClick?: (projectNumber: string) => void;
   /** Sadece yazdirma gorunumunde (isPrintMode) dolu gelir - bkz.
@@ -664,15 +670,16 @@ export function QuoteContentBody({
 
   return (
     <div
+      style={standardQuotePdfThemeStyle(theme)}
       className={clsx(
         isPrintMode &&
-          '[&_.text-app-muted]:!text-black [&_.text-app-danger]:!text-black [&_.border-app-border]:!border-[#8bc34a]',
+          '[&_.text-app-muted]:!text-[color:var(--qp-text)] [&_.text-app-text]:!text-[color:var(--qp-text)] [&_.text-app-danger]:!text-[color:var(--qp-text)] [&_.border-app-border]:!border-[color:var(--qp-accent)]',
       )}
     >
       {isPrintMode && (
         <div className="grid grid-cols-2 gap-x-8 pt-1 text-sm">
           <div>
-            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
               {tr.crm.quoteTemplatePrint.accountInfoTitle}
             </h3>
             <p className="mt-1.5 text-sm font-bold text-app-text">{quote.account.name}</p>
@@ -686,7 +693,7 @@ export function QuoteContentBody({
             )}
           </div>
           <div className="text-right">
-            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
               {tr.crm.quoteTemplatePrint.senderInfoTitle}
             </h3>
             {sender && <p className="mt-1.5 text-sm font-bold text-app-text">{sender.name}</p>}
@@ -704,7 +711,7 @@ export function QuoteContentBody({
               </p>
             )}
           </div>
-          <div className="col-span-2 mt-1 h-0.5" style={{ backgroundColor: '#8bc34a' }} />
+          <div className="col-span-2 mt-1 h-0.5" style={{ backgroundColor: 'var(--qp-accent)' }} />
         </div>
       )}
       <div
@@ -714,7 +721,7 @@ export function QuoteContentBody({
           isPrintMode ? 'border-b-2 py-4' : 'rounded-xl border border-app-border bg-white p-5',
           isPrintMode ? 'sm:grid-cols-2' : quote.project ? 'sm:grid-cols-6' : 'sm:grid-cols-5',
         )}
-        style={isPrintMode ? { borderColor: '#8bc34a' } : undefined}
+        style={isPrintMode ? { borderColor: 'var(--qp-accent)' } : undefined}
       >
         {!isPrintMode && (
           <MetaCell label={tr.crm.quotes.detail.quoteDateLabel}>
@@ -724,19 +731,19 @@ export function QuoteContentBody({
         {isPrintMode ? (
           <div className="col-span-2 flex justify-between gap-4">
             <p className="flex flex-col text-sm font-medium text-app-text">
-              <span className="font-bold" style={{ color: '#2196f3' }}>
+              <span className="font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.validityPeriodLabel}:
               </span>
               {quote.validityPeriod ?? tr.crm.quotes.detail.validityPeriodEmpty}
             </p>
             <p className="flex flex-col text-sm font-medium text-app-text">
-              <span className="font-bold" style={{ color: '#2196f3' }}>
+              <span className="font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.paymentMethodLabel}:
               </span>
               {quote.paymentMethod ?? tr.crm.quotes.detail.paymentMethodEmpty}
             </p>
             <p className="flex flex-col text-sm font-medium text-app-text">
-              <span className="font-bold" style={{ color: '#2196f3' }}>
+              <span className="font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.leadTimeLabel}:
               </span>
               {quote.leadTime ?? tr.crm.quotes.detail.leadTimeEmpty}
@@ -828,7 +835,7 @@ export function QuoteContentBody({
             className={clsx(
               '[&_tbody_td]:text-xs',
               isPrintMode &&
-                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0',
+                '[&>div]:border-0 [&_thead]:bg-[color:var(--qp-th-bg)] [&_thead]:normal-case [&_th]:!text-[color:var(--qp-th-text)] [&_th.text-app-muted]:!text-[color:var(--qp-th-text)] [&_td]:!py-1 [&_th]:!py-1 [&_tbody_tr]:border-b-0',
             )}
           >
             <QuoteGroupsSummaryTables quote={quote} isPrintMode={isPrintMode} />
@@ -857,7 +864,7 @@ export function QuoteContentBody({
             className={clsx(
               '[&_tbody_td]:text-xs',
               isPrintMode &&
-                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_tbody_tr]:border-b-0 [&_td]:!px-1.5 [&_td]:!py-0.5 [&_th]:!px-1.5 [&_th]:!py-1 [&_tbody_td]:!text-[9px] [&_tbody_td]:!leading-tight [&_th]:!text-[10px] [&_tr[data-group-row]_td]:!py-1 [&_tr[data-group-row]_td]:!text-[11px]',
+                '[&>div]:border-0 [&_thead]:bg-[color:var(--qp-th-bg)] [&_thead]:normal-case [&_th]:!text-[color:var(--qp-th-text)] [&_th.text-app-muted]:!text-[color:var(--qp-th-text)] [&_tbody_tr]:border-b-0 [&_td]:!px-1.5 [&_td]:!py-0.5 [&_th]:!px-1.5 [&_th]:!py-1 [&_tbody_td]:!text-[9px] [&_tbody_td]:!leading-tight [&_th]:!text-[10px] [&_tr[data-group-row]_td]:!py-1 [&_tr[data-group-row]_td]:!text-[11px]',
             )}
           >
             <div className="border border-app-border bg-app-surface overflow-hidden">
@@ -895,7 +902,7 @@ export function QuoteContentBody({
                         <tr
                           key={row.key}
                           data-group-row
-                          className="border-b border-app-border bg-[#e3f2fd] last:border-0"
+                          className="border-b border-app-border bg-[color:var(--qp-group-row)] last:border-0"
                         >
                           <td
                             colSpan={groupedItemColumns.length + 1}
@@ -911,8 +918,8 @@ export function QuoteContentBody({
                             'border-b border-app-border last:border-0',
                             isPrintMode
                               ? row.zebraIndex % 2 === 0
-                                ? '!bg-white'
-                                : '!bg-[#e8f5e9]'
+                                ? '!bg-[color:var(--qp-row-odd)]'
+                                : '!bg-[color:var(--qp-row-even)]'
                               : 'bg-app-surface',
                           )}
                         >
@@ -940,7 +947,7 @@ export function QuoteContentBody({
             className={clsx(
               '[&_tbody_td]:text-xs',
               isPrintMode &&
-                '[&>div]:border-0 [&_thead]:bg-white [&_thead]:normal-case [&_th]:!text-[#2196f3] [&_th.text-app-muted]:!text-[#2196f3] [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-white [&_tbody_tr:nth-child(even)]:!bg-[#e8f5e9] [&_td]:!px-2 [&_td]:!py-0.5 [&_th]:!px-2 [&_th]:!py-1 [&_tbody_td]:!text-[10px] [&_tbody_td]:!leading-tight [&_th]:!text-[10px]',
+                '[&>div]:border-0 [&_thead]:bg-[color:var(--qp-th-bg)] [&_thead]:normal-case [&_th]:!text-[color:var(--qp-th-text)] [&_th.text-app-muted]:!text-[color:var(--qp-th-text)] [&_tbody_tr]:border-b-0 [&_tbody_tr:nth-child(odd)]:!bg-[color:var(--qp-row-odd)] [&_tbody_tr:nth-child(even)]:!bg-[color:var(--qp-row-even)] [&_td]:!px-2 [&_td]:!py-0.5 [&_th]:!px-2 [&_th]:!py-1 [&_tbody_td]:!text-[10px] [&_tbody_td]:!leading-tight [&_th]:!text-[10px]',
             )}
           >
             <Table
@@ -995,23 +1002,23 @@ export function QuoteContentBody({
 
       {quote.ibanAccounts && quote.ibanAccounts.length > 0 && isPrintMode && (
         <div className="mt-8">
-          <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+          <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
             {tr.crm.quotes.detail.bankDetailsTitle}
           </h3>
           <table className="mt-2 w-auto text-xs">
             <thead className="border-b border-app-border">
               <tr>
                 {hasAnyBankLogo && <th className="p-0" />}
-                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                <th className="px-4 py-1.5 text-left font-bold text-[color:var(--qp-heading)]">
                   {tr.crm.quotes.detail.bankNameLabel}
                 </th>
-                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                <th className="px-4 py-1.5 text-left font-bold text-[color:var(--qp-heading)]">
                   {tr.crm.quotes.detail.accountHolderNameLabel}
                 </th>
-                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                <th className="px-4 py-1.5 text-left font-bold text-[color:var(--qp-heading)]">
                   {tr.crm.quotes.detail.accountNumberLabel}
                 </th>
-                <th className="px-4 py-1.5 text-left font-bold text-[#2196f3]">
+                <th className="px-4 py-1.5 text-left font-bold text-[color:var(--qp-heading)]">
                   {tr.crm.quotes.detail.ibanLabel}
                 </th>
               </tr>
@@ -1022,7 +1029,11 @@ export function QuoteContentBody({
                 return (
                   <tr
                     key={`${account.iban}-${index}`}
-                    className={index % 2 === 0 ? 'bg-white' : 'bg-[#e8f5e9]'}
+                    className={
+                      index % 2 === 0
+                        ? 'bg-[color:var(--qp-row-odd)]'
+                        : 'bg-[color:var(--qp-row-even)]'
+                    }
                   >
                     {hasAnyBankLogo && span && (
                       <td className="p-0 align-middle" rowSpan={span.rowSpan}>
@@ -1035,14 +1046,16 @@ export function QuoteContentBody({
                         )}
                       </td>
                     )}
-                    <td className="px-4 py-1.5 whitespace-nowrap text-black">{account.bankName}</td>
-                    <td className="px-4 py-1.5 whitespace-nowrap text-black">
+                    <td className="px-4 py-1.5 whitespace-nowrap text-[color:var(--qp-text)]">
+                      {account.bankName}
+                    </td>
+                    <td className="px-4 py-1.5 whitespace-nowrap text-[color:var(--qp-text)]">
                       {account.accountHolderName}
                     </td>
-                    <td className="px-4 py-1.5 whitespace-nowrap text-black">
+                    <td className="px-4 py-1.5 whitespace-nowrap text-[color:var(--qp-text)]">
                       {account.accountNumber ?? '—'}
                     </td>
-                    <td className="px-4 py-1.5 whitespace-nowrap text-black">
+                    <td className="px-4 py-1.5 whitespace-nowrap text-[color:var(--qp-text)]">
                       {formatIbanInput(account.iban)} - {account.currency}
                     </td>
                   </tr>
@@ -1057,40 +1070,40 @@ export function QuoteContentBody({
         <div className="mt-8 flex flex-col gap-4">
           {quote.paymentTerms && (
             <div>
-              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.paymentTermsTitle}
               </h3>
-              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-[color:var(--qp-text)]">
                 {quote.paymentTerms}
               </p>
             </div>
           )}
           {quote.salesTerms && (
             <div>
-              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.salesTermsTitle}
               </h3>
-              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-[color:var(--qp-text)]">
                 {quote.salesTerms}
               </p>
             </div>
           )}
           {quote.deliveryTerms && (
             <div>
-              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.deliveryTermsTitle}
               </h3>
-              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-[color:var(--qp-text)]">
                 {quote.deliveryTerms}
               </p>
             </div>
           )}
           {quote.generalTerms && (
             <div>
-              <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+              <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
                 {tr.crm.quotes.detail.generalTermsTitle}
               </h3>
-              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-black">
+              <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-wrap text-[color:var(--qp-text)]">
                 {quote.generalTerms}
               </p>
             </div>
@@ -1113,7 +1126,7 @@ export function QuoteContentBody({
       {isPrintMode && (
         <div className="mt-12 grid grid-cols-2 gap-x-8 text-sm">
           <div>
-            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
               {tr.crm.quotes.detail.representativeTitle}
             </h3>
             {sender && <p className="mt-1.5 text-sm font-bold text-app-text">{sender.name}</p>}
@@ -1132,7 +1145,7 @@ export function QuoteContentBody({
             )}
           </div>
           <div>
-            <h3 className="text-sm font-bold" style={{ color: '#2196f3' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--qp-heading)' }}>
               {tr.crm.quotes.detail.approvalTitle}
             </h3>
             {quote.contact && (
@@ -1757,6 +1770,7 @@ export function QuoteDetailPage() {
               onOpportunityClick={(opportunityId) => navigate(`/firsatlar/${opportunityId}`)}
               onProjectClick={(projectNumber) => navigate(`/projeler/${projectNumber}`)}
               sender={printDataQuery.data?.sender}
+              theme={printDataQuery.data?.standardTheme}
             />
           )}
         </div>

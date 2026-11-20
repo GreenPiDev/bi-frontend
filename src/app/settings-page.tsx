@@ -49,6 +49,7 @@ const actionLabels: Record<string, string> = {
   SPREADSHEET_UPLOADED: 'E-Tablo Yükledi',
   SPREADSHEET_CELLS_UPDATED: 'E-Tabloda Değişiklik Yaptı',
   SPREADSHEET_RENAMED: 'E-Tabloyu Yeniden Adlandırdı',
+  SPREADSHEET_REPLACED: 'E-Tablonun Dosyasını Değiştirdi',
   SPREADSHEET_DELETED: 'E-Tabloyu Sildi',
 };
 

@@ -1,4 +1,4 @@
-import { Star, Trash2 } from 'lucide-react';
+import { Pencil, Star, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppShell } from './app-shell';
@@ -15,6 +15,7 @@ import {
   useQuoteTemplatesQuery,
   useSetDefaultQuoteTemplateMutation,
 } from '../features/crm/use-quote-templates';
+import { STANDARD_QUOTE_TEMPLATE_ID } from '../features/crm/standard-quote-pdf-theme';
 import { ApiError, type QuoteTemplate } from '../lib/api';
 import { tr } from '../i18n/tr';
 
@@ -53,6 +54,8 @@ export function QuoteTemplateListContent() {
     });
   }
 
+  const isStandard = (template: QuoteTemplate) => template.id === STANDARD_QUOTE_TEMPLATE_ID;
+
   const columns: TableColumn<QuoteTemplate>[] = [
     {
       key: 'name',
@@ -61,6 +64,14 @@ export function QuoteTemplateListContent() {
       render: (template) => (
         <span className="flex items-center gap-2 font-semibold text-app-text">
           {template.name}
+          {isStandard(template) && (
+            <>
+              <Badge variant="neutral">{tr.crm.quoteTemplates.standard.rowBadge}</Badge>
+              <span className="text-xs font-normal text-app-muted">
+                {tr.crm.quoteTemplates.standard.rowHint}
+              </span>
+            </>
+          )}
           {template.isDefault && <Badge variant="info">{tr.crm.quoteTemplates.defaultBadge}</Badge>}
         </span>
       ),
@@ -70,24 +81,61 @@ export function QuoteTemplateListContent() {
       header: tr.crm.quoteTemplates.actionsColumn,
       className: 'w-px',
       required: true,
-      render: (template) => (
-        <div className="flex items-center gap-1">
-          {!template.isDefault && (
+      render: (template) =>
+        isStandard(template) ? (
+          <div className="flex items-center gap-1">
             <IconActionButton
-              icon={Star}
-              tooltip={tr.crm.quoteTemplates.setDefaultTooltip}
-              onClick={() => handleSetDefault(template)}
+              icon={Pencil}
+              tooltip={tr.crm.quoteTemplates.standard.title}
+              onClick={() =>
+                navigate(`/teklif-sablonlari/duzenle/${STANDARD_QUOTE_TEMPLATE_ID}`, {
+                  state: backState,
+                })
+              }
             />
-          )}
-          <IconActionButton
-            icon={Trash2}
-            tooltip={tr.crm.quoteTemplates.deleteTooltip}
-            variant="danger"
-            onClick={() => setDeletingTemplate(template)}
-          />
-        </div>
-      ),
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            {!template.isDefault && (
+              <IconActionButton
+                icon={Star}
+                tooltip={tr.crm.quoteTemplates.setDefaultTooltip}
+                onClick={() => handleSetDefault(template)}
+              />
+            )}
+            <IconActionButton
+              icon={Trash2}
+              tooltip={tr.crm.quoteTemplates.deleteTooltip}
+              variant="danger"
+              onClick={() => setDeletingTemplate(template)}
+            />
+          </div>
+        ),
     },
+  ];
+
+  // Standart (sablonsuz) PDF tasarimi DB'de bir QuoteTemplate degil - listenin
+  // ilk sayfasinin basina sabit, silinemez bir satir olarak eklenir (bkz.
+  // docs/VARSAYIMLAR.md V89).
+  const standardRow: QuoteTemplate = {
+    id: STANDARD_QUOTE_TEMPLATE_ID,
+    name: tr.crm.quoteTemplates.standard.rowName,
+    isDefault: false,
+    logoKey: null,
+    coverImageKey: null,
+    closingImageKey: null,
+    logoUrl: null,
+    coverImageUrl: null,
+    closingImageUrl: null,
+    companyDisplayName: '',
+    companyTagline: null,
+    createdById: '',
+    createdAt: '',
+    updatedAt: '',
+  };
+  const rows = [
+    ...(page === 1 && !templatesQuery.isPending ? [standardRow] : []),
+    ...(templatesQuery.data?.data ?? []),
   ];
 
   return (
@@ -110,7 +158,7 @@ export function QuoteTemplateListContent() {
 
       <Table
         columns={columns}
-        data={templatesQuery.data?.data ?? []}
+        data={rows}
         keyField={(template) => template.id}
         onRowClick={(template) =>
           navigate(`/teklif-sablonlari/duzenle/${template.id}`, { state: backState })
@@ -121,7 +169,7 @@ export function QuoteTemplateListContent() {
         emptyMessage={tr.crm.quoteTemplates.empty}
       />
 
-      {templatesQuery.data && templatesQuery.data.data.length > 0 && (
+      {templatesQuery.data && templatesQuery.data.meta.totalPages > 1 && (
         <Pagination
           page={templatesQuery.data.meta.page}
           totalPages={templatesQuery.data.meta.totalPages}

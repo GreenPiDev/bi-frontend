@@ -3836,6 +3836,33 @@ export function listQuoteTemplates(
   return request(`/quote-templates${qs ? `?${qs}` : ''}`);
 }
 
+/** Standart (sablonsuz) teklif PDF'inin duzenlenebilir renk temasi - backend
+ * tenant-settings.constants.ts::StandardQuotePdfThemeSchema'nin kopyasi
+ * (bkz. CLAUDE.md SS3, packages/shared yok). */
+export interface StandardQuotePdfTheme {
+  titleColor: string;
+  headingColor: string;
+  textColor: string;
+  accentColor: string;
+  tableHeaderBgColor: string;
+  tableHeaderTextColor: string;
+  rowOddBgColor: string;
+  rowEvenBgColor: string;
+  groupRowBgColor: string;
+  footerBgColor: string;
+  footerTextColor: string;
+}
+
+export function getStandardQuoteTemplateTheme(): Promise<StandardQuotePdfTheme> {
+  return request('/quote-templates/standard');
+}
+
+export function updateStandardQuoteTemplateTheme(
+  theme: StandardQuotePdfTheme,
+): Promise<StandardQuotePdfTheme> {
+  return request('/quote-templates/standard', { method: 'PATCH', body: JSON.stringify(theme) });
+}
+
 export function getQuoteTemplate(id: string): Promise<QuoteTemplate> {
   return request(`/quote-templates/${id}`);
 }
@@ -3910,6 +3937,8 @@ export type QuotePrintData = Omit<Quote, 'template'> & {
   > | null;
   company: QuotePrintCompanyData;
   sender: QuotePrintSenderData | null;
+  /** Standart (sablonsuz) PDF'in renk temasi - bkz. docs/VARSAYIMLAR.md V89. */
+  standardTheme: StandardQuotePdfTheme;
 };
 
 export function getQuotePrintData(quoteId: string): Promise<QuotePrintData> {
@@ -5225,6 +5254,22 @@ export function renameSpreadsheet(id: string, name: string): Promise<Spreadsheet
     method: 'PATCH',
     body: JSON.stringify({ name }),
   });
+}
+
+export function replaceSpreadsheetFile(id: string, file: File): Promise<SpreadsheetDetail> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request(`/spreadsheets/${id}/file`, { method: 'PUT', body: formData });
+}
+
+export interface SpreadsheetReplacedEvent {
+  spreadsheetId: string;
+  updatedById: string;
+  updatedByName: string;
+}
+
+export function exportSpreadsheet(id: string): Promise<Blob> {
+  return requestBlob(`/spreadsheets/${id}/export`, 'GET');
 }
 
 export function deleteSpreadsheet(id: string): Promise<void> {
