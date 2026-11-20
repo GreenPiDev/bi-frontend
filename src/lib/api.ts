@@ -3849,6 +3849,7 @@ export interface StandardQuotePdfTheme {
   rowOddBgColor: string;
   rowEvenBgColor: string;
   groupRowBgColor: string;
+  headerBgColor: string;
   footerBgColor: string;
   footerTextColor: string;
   footerShowAddress: boolean;

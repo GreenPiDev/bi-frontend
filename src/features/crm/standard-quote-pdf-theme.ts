@@ -17,6 +17,7 @@ export const DEFAULT_STANDARD_QUOTE_PDF_THEME: StandardQuotePdfTheme = {
   rowOddBgColor: '#ffffff',
   rowEvenBgColor: '#e8f5e9',
   groupRowBgColor: '#e3f2fd',
+  headerBgColor: '#ffffff',
   footerBgColor: '#e8f5e9',
   footerTextColor: '#16202e',
   footerShowAddress: true,

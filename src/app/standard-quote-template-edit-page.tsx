@@ -67,6 +67,7 @@ const COLOR_GROUPS: { title: string; keys: ColorKey[] }[] = [
       'groupRowBgColor',
     ],
   },
+  { title: strings.groups.header, keys: ['headerBgColor'] },
   { title: strings.groups.footer, keys: ['footerBgColor', 'footerTextColor'] },
 ];
 
@@ -499,7 +500,7 @@ export function StandardQuoteTemplateEditPage() {
             </div>
             {COLOR_GROUPS.map((group) => (
               <div key={group.title} className="flex flex-col gap-2">
-                <h3 className="text-xs font-bold tracking-wide text-app-muted uppercase">
+                <h3 className="border-b border-app-border pb-1 text-xs font-bold tracking-wide text-app-text uppercase">
                   {group.title}
                 </h3>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

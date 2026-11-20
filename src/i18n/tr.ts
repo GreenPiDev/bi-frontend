@@ -3253,6 +3253,7 @@ export const tr = {
         groups: {
           texts: 'Başlık ve Yazılar',
           table: 'Ürün Listesi Tablosu',
+          header: 'Üst Bilgi',
           footer: 'Alt Bilgi',
         },
         colors: {
@@ -3265,6 +3266,7 @@ export const tr = {
           rowOddBgColor: 'Tek satırlar arka planı',
           rowEvenBgColor: 'Çift satırlar arka planı',
           groupRowBgColor: 'Grup başlığı satırı (gruplu teklif)',
+          headerBgColor: 'Üst bilgi arka planı (logo / başlık / tarih bandı)',
           footerBgColor: 'Alt bilgi arka planı',
           footerTextColor: 'Alt bilgi yazısı',
         },

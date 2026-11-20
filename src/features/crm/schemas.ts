@@ -384,6 +384,7 @@ export const standardQuoteTemplateFormSchema = z.object({
   rowOddBgColor: hexColorField,
   rowEvenBgColor: hexColorField,
   groupRowBgColor: hexColorField,
+  headerBgColor: hexColorField,
   footerBgColor: hexColorField,
   footerTextColor: hexColorField,
   footerShowAddress: z.boolean(),

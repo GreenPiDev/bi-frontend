@@ -167,10 +167,13 @@ export function StandardQuotePdfPreview({
         style={{ width: A4_WIDTH_PX, minHeight: A4_HEIGHT_PX, zoom }}
       >
         <div
-          className="flex items-center justify-between"
+          className="flex shrink-0 items-center justify-between"
           style={{
+            // Backend ile ayni: sayfa ust kenarina bitisik 22mm'lik renkli band.
+            height: '22mm',
+            boxSizing: 'border-box',
+            background: theme.headerBgColor,
             padding: `8px ${PAGE_MARGIN_PX}px`,
-            marginTop: 12,
             fontFamily: 'Arial, Helvetica, sans-serif',
           }}
         >
