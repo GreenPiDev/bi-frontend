@@ -3,7 +3,6 @@ import { tr } from '../../i18n/tr';
 import type { CellConflictInfo } from './use-spreadsheet-editor';
 
 export const ROW_HEIGHT = 28;
-export const COL_WIDTH = 120;
 export const HEADER_HEIGHT = 28;
 export const ROW_HEADER_WIDTH = 56;
 
@@ -14,6 +13,8 @@ const CONFLICT_COLOR = '#DC2626';
 interface SpreadsheetGridCellProps {
   row: number;
   col: number;
+  left: number;
+  width: number;
   value: string | null;
   bgColor: string | null;
   fontColor: string | null;
@@ -28,6 +29,8 @@ interface SpreadsheetGridCellProps {
 export const SpreadsheetGridCell = memo(function SpreadsheetGridCell({
   row,
   col,
+  left,
+  width,
   value: rawValue,
   bgColor,
   fontColor,
@@ -61,8 +64,8 @@ export const SpreadsheetGridCell = memo(function SpreadsheetGridCell({
       className="absolute truncate border-r border-b border-app-border/70 px-1.5 text-sm leading-[27px] select-none"
       style={{
         top: row * ROW_HEIGHT,
-        left: col * COL_WIDTH,
-        width: COL_WIDTH,
+        left,
+        width,
         height: ROW_HEIGHT,
         backgroundColor: bgColor ?? undefined,
         color: fontColor ?? undefined,

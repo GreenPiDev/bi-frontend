@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
 import {
   deleteSpreadsheet,
   getSpreadsheet,
@@ -6,9 +12,13 @@ import {
   listSpreadsheets,
   renameSpreadsheet,
   saveSpreadsheetChanges,
+  updateSpreadsheetColumnWidths,
   uploadSpreadsheet,
   type SpreadsheetCellChange,
+  type SpreadsheetColumnsUpdatedEvent,
+  type SpreadsheetDetail,
 } from '../../lib/api';
+import { useRealtimeEvent } from '../../lib/realtime';
 
 export const SPREADSHEETS_QUERY_KEY = ['spreadsheets'] as const;
 
@@ -81,5 +91,57 @@ export function useSaveSpreadsheetChangesMutation(id: string, sheetId: string) {
   return useMutation({
     mutationFn: (input: { changes: SpreadsheetCellChange[]; force?: boolean }) =>
       saveSpreadsheetChanges(id, sheetId, input),
+  });
+}
+
+type ColWidths = Record<string, number>;
+
+function setSheetColWidths(
+  queryClient: QueryClient,
+  id: string,
+  sheetId: string,
+  update: (old: ColWidths) => ColWidths,
+) {
+  queryClient.setQueryData<SpreadsheetDetail>([...SPREADSHEETS_QUERY_KEY, id], (old) =>
+    old
+      ? {
+          ...old,
+          sheets: old.sheets.map((sheet) =>
+            sheet.id === sheetId ? { ...sheet, colWidths: update(sheet.colWidths ?? {}) } : sheet,
+          ),
+        }
+      : old,
+  );
+}
+
+/** Sutun genisligi aninda kaydedilir; ekran beklemeden (iyimser) guncellenir, hata
+ * olursa tablo sunucudan yeniden cekilir. */
+export function useUpdateColumnWidthsMutation(id: string, sheetId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (widths: { col: number; width: number | null }[]) =>
+      updateSpreadsheetColumnWidths(id, sheetId, widths),
+    onMutate: (widths) =>
+      setSheetColWidths(queryClient, id, sheetId, (old) => {
+        const next = { ...old };
+        for (const { col, width } of widths) {
+          if (width === null) delete next[String(col)];
+          else next[String(col)] = width;
+        }
+        return next;
+      }),
+    onSuccess: (result) => setSheetColWidths(queryClient, id, sheetId, () => result.colWidths),
+    onError: () => queryClient.invalidateQueries({ queryKey: [...SPREADSHEETS_QUERY_KEY, id] }),
+  });
+}
+
+const COLUMNS_UPDATED_EVENT = 'spreadsheets.columns.updated';
+
+/** Baska bir kullanici sutun genisligini degistirince tabloyu acik olan herkese yansir. */
+export function useSpreadsheetColumnsRealtimeSync(id: string) {
+  const queryClient = useQueryClient();
+  useRealtimeEvent<SpreadsheetColumnsUpdatedEvent>(COLUMNS_UPDATED_EVENT, (event) => {
+    if (event.spreadsheetId !== id) return;
+    setSheetColWidths(queryClient, id, event.sheetId, () => event.colWidths);
   });
 }

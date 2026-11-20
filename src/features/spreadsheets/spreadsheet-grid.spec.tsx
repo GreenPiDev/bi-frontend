@@ -86,3 +86,41 @@ describe('SpreadsheetGrid', () => {
     expect(screen.getByRole('textbox', { name: 'A1' })).toHaveValue('k');
   });
 });
+
+describe('SpreadsheetGrid column resize', () => {
+  function handle(col: number): HTMLElement {
+    const element = document.querySelector<HTMLElement>(`[data-col-resize="${col}"]`);
+    if (!element) throw new Error(`resize handle ${col} not rendered`);
+    return element;
+  }
+
+  it('applies shared column widths to cells', () => {
+    renderGrid({ colWidths: { '0': 250 } });
+    expect(cell(0, 0).style.width).toBe('250px');
+    expect(cell(0, 1).style.left).toBe('250px');
+  });
+
+  it('drag on the header border saves the new width', () => {
+    const onColumnResize = vi.fn();
+    renderGrid({ onColumnResize, onColumnAutoFit: vi.fn() });
+    fireEvent.mouseDown(handle(0), { button: 0, clientX: 100 });
+    fireEvent.mouseMove(document, { clientX: 160 });
+    expect(cell(0, 0).style.width).toBe('180px');
+    fireEvent.mouseUp(document);
+    expect(onColumnResize).toHaveBeenCalledWith(0, 180);
+  });
+
+  it('double click on the header border auto-fits the column', () => {
+    const onColumnAutoFit = vi.fn();
+    const onColumnResize = vi.fn();
+    renderGrid({ onColumnResize, onColumnAutoFit });
+    fireEvent.doubleClick(handle(2));
+    expect(onColumnAutoFit).toHaveBeenCalledWith(2);
+    expect(onColumnResize).not.toHaveBeenCalled();
+  });
+
+  it('read-only users get no resize handles', () => {
+    renderGrid({ canEdit: false, onColumnResize: vi.fn() });
+    expect(document.querySelector('[data-col-resize]')).toBeNull();
+  });
+});

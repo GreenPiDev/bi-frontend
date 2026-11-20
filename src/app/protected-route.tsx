@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useMeQuery } from '../features/auth/use-auth';
 import { useBrandOptionsRealtimeSync } from '../features/crm/use-brand-options-realtime-sync';
 import { useCalendarEventsRealtimeSync } from '../features/crm/use-calendar-events-realtime-sync';
@@ -35,6 +35,7 @@ export function ProtectedRoute({
   allowPlatformAdmin?: boolean;
 }) {
   const meQuery = useMeQuery();
+  const location = useLocation();
   const isAuthenticated = !!meQuery.data;
 
   useRealtimeConnection(isAuthenticated);
@@ -68,7 +69,11 @@ export function ProtectedRoute({
   }
 
   if (!meQuery.data) {
-    return <Navigate to="/login" replace />;
+    // Paylasilan bir link (or. /datasets/e-tablolar/:id) giris yapilmadan acilirsa,
+    // giristen sonra ayni sayfaya donulur.
+    const target = `${location.pathname}${location.search}`;
+    const to = target === '/' ? '/login' : `/login?redirect=${encodeURIComponent(target)}`;
+    return <Navigate to={to} replace />;
   }
 
   if (meQuery.data.isPlatformAdmin && !allowPlatformAdmin) {

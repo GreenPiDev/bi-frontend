@@ -2,19 +2,22 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
 } from 'react';
 import { createGridKeyDownHandler, type GridSelection } from './grid-keyboard';
+import { buildColumnLayout, columnAt } from './spreadsheet-columns';
 import {
-  COL_WIDTH,
   HEADER_HEIGHT,
   ROW_HEADER_WIDTH,
   ROW_HEIGHT,
   SpreadsheetGridCell,
 } from './spreadsheet-grid-cell';
-import { cellKey, columnLetter, normalizeRange, type CellContent } from './spreadsheet-model';
+import { ColumnHeaders, RowHeaders } from './spreadsheet-grid-headers';
+import { SpreadsheetCellInput } from './spreadsheet-cell-input';
+import { cellKey, normalizeRange, type CellContent } from './spreadsheet-model';
 import type { CellConflictInfo } from './use-spreadsheet-editor';
 
 const OVERSCAN = 4;
@@ -37,11 +40,23 @@ interface SpreadsheetGridProps {
   onSelectionChange: (selection: GridSelection) => void;
   onCommitValue: (row: number, col: number, value: string) => void;
   onClearSelection: () => void;
+  /** { "<col>": px } - tum kullanicilar icin ortak sutun genislikleri. */
+  colWidths?: Record<string, number>;
+  onColumnResize?: (col: number, width: number) => void;
+  onColumnAutoFit?: (col: number) => void;
 }
 
-function visibleRange(offset: number, size: number, itemSize: number, count: number) {
-  const first = Math.max(0, Math.floor(offset / itemSize) - OVERSCAN);
-  const last = Math.min(count - 1, Math.ceil((offset + size) / itemSize) + OVERSCAN);
+const NO_WIDTHS: Record<string, number> = {};
+
+function visibleRowRange(offset: number, size: number, count: number) {
+  const first = Math.max(0, Math.floor(offset / ROW_HEIGHT) - OVERSCAN);
+  const last = Math.min(count - 1, Math.ceil((offset + size) / ROW_HEIGHT) + OVERSCAN);
+  return { first, last };
+}
+
+function visibleColRange(offsets: number[], offset: number, size: number, count: number) {
+  const first = Math.max(0, columnAt(offsets, offset) - OVERSCAN);
+  const last = Math.min(count - 1, columnAt(offsets, offset + size) + OVERSCAN);
   return { first, last };
 }
 
@@ -53,6 +68,17 @@ function visibleRange(offset: number, size: number, itemSize: number, count: num
 export function SpreadsheetGrid(props: SpreadsheetGridProps) {
   const { rows, cols, canEdit, selection, getCell, isDraft, conflicts } = props;
   const { onSelectionChange, onCommitValue } = props;
+  const colWidths = props.colWidths ?? NO_WIDTHS;
+  // Surukleme sirasinda canli onizleme; birakinca kaydedilir (onColumnResize).
+  const [resizePreview, setResizePreview] = useState<{ col: number; width: number } | null>(null);
+  const layout = useMemo(
+    () =>
+      buildColumnLayout(
+        cols,
+        resizePreview ? { ...colWidths, [resizePreview.col]: resizePreview.width } : colWidths,
+      ),
+    [cols, colWidths, resizePreview],
+  );
   const bodyRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const [scroll, setScroll] = useState({ top: 0, left: 0 });
@@ -90,13 +116,16 @@ export function SpreadsheetGrid(props: SpreadsheetGridProps) {
     if (!body) return;
     const { row, col } = selection.focus;
     const top = row * ROW_HEIGHT;
-    const left = col * COL_WIDTH;
+    const left = layout.offsets[col] ?? 0;
+    const width = layout.widths[col] ?? 0;
     if (top < body.scrollTop) body.scrollTop = top;
     else if (top + ROW_HEIGHT > body.scrollTop + body.clientHeight)
       body.scrollTop = top + ROW_HEIGHT - body.clientHeight;
     if (left < body.scrollLeft) body.scrollLeft = left;
-    else if (left + COL_WIDTH > body.scrollLeft + body.clientWidth)
-      body.scrollLeft = left + COL_WIDTH - body.clientWidth;
+    else if (left + width > body.scrollLeft + body.clientWidth)
+      body.scrollLeft = left + width - body.clientWidth;
+    // Yalnizca secim degisince kaydir - baskasi sutun genisligini degistirince degil.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection.focus]);
 
   const handleMouseDown = useCallback(
@@ -165,8 +194,8 @@ export function SpreadsheetGrid(props: SpreadsheetGridProps) {
     })(event);
   }
 
-  const rowRange = visibleRange(scroll.top, viewport.height, ROW_HEIGHT, rows);
-  const colRange = visibleRange(scroll.left, viewport.width, COL_WIDTH, cols);
+  const rowRange = visibleRowRange(scroll.top, viewport.height, rows);
+  const colRange = visibleColRange(layout.offsets, scroll.left, viewport.width, cols);
   const range = normalizeRange(selection.anchor, selection.focus);
 
   const cells = [];
@@ -178,6 +207,8 @@ export function SpreadsheetGrid(props: SpreadsheetGridProps) {
           key={cellKey(row, col)}
           row={row}
           col={col}
+          left={layout.offsets[col]}
+          width={layout.widths[col]}
           value={content.value}
           bgColor={content.bgColor}
           fontColor={content.fontColor}
@@ -191,56 +222,31 @@ export function SpreadsheetGrid(props: SpreadsheetGridProps) {
     }
   }
 
-  const colHeaders = [];
-  for (let col = colRange.first; col <= colRange.last; col++) {
-    const active = col >= range.left && col <= range.right;
-    colHeaders.push(
-      <div
-        key={col}
-        className={`absolute top-0 border-r border-app-border text-center text-xs leading-[28px] font-semibold ${active ? 'bg-app-brand/15 text-app-brand' : 'text-app-muted'}`}
-        style={{ left: col * COL_WIDTH, width: COL_WIDTH, height: HEADER_HEIGHT }}
-      >
-        {columnLetter(col)}
-      </div>,
-    );
-  }
-
-  const rowHeaders = [];
-  for (let row = rowRange.first; row <= rowRange.last; row++) {
-    const active = row >= range.top && row <= range.bottom;
-    rowHeaders.push(
-      <div
-        key={row}
-        className={`absolute left-0 border-b border-app-border text-center text-xs leading-[28px] font-semibold ${active ? 'bg-app-brand/15 text-app-brand' : 'text-app-muted'}`}
-        style={{ top: row * ROW_HEIGHT, width: ROW_HEADER_WIDTH, height: ROW_HEIGHT }}
-      >
-        {row + 1}
-      </div>,
-    );
-  }
-
   return (
     <div className="relative h-[calc(100vh-330px)] min-h-[360px] overflow-hidden rounded-lg border border-app-border bg-white">
       <div
         className="absolute top-0 left-0 z-20 border-r border-b border-app-border bg-app-bg"
         style={{ width: ROW_HEADER_WIDTH, height: HEADER_HEIGHT }}
       />
-      <div
-        className="absolute top-0 right-0 z-10 overflow-hidden border-b border-app-border bg-app-bg"
-        style={{ left: ROW_HEADER_WIDTH, height: HEADER_HEIGHT }}
-      >
-        <div className="relative" style={{ transform: `translateX(${-scroll.left}px)` }}>
-          {colHeaders}
-        </div>
-      </div>
-      <div
-        className="absolute bottom-0 left-0 z-10 overflow-hidden border-r border-app-border bg-app-bg"
-        style={{ top: HEADER_HEIGHT, width: ROW_HEADER_WIDTH }}
-      >
-        <div className="relative" style={{ transform: `translateY(${-scroll.top}px)` }}>
-          {rowHeaders}
-        </div>
-      </div>
+      <ColumnHeaders
+        first={colRange.first}
+        last={colRange.last}
+        layout={layout}
+        activeLeft={range.left}
+        activeRight={range.right}
+        scrollLeft={scroll.left}
+        canResize={canEdit && Boolean(props.onColumnResize)}
+        onResizePreview={(col, width) => setResizePreview(width === null ? null : { col, width })}
+        onResizeCommit={(col, width) => props.onColumnResize?.(col, width)}
+        onAutoFit={(col) => props.onColumnAutoFit?.(col)}
+      />
+      <RowHeaders
+        first={rowRange.first}
+        last={rowRange.last}
+        activeTop={range.top}
+        activeBottom={range.bottom}
+        scrollTop={scroll.top}
+      />
       <div
         ref={bodyRef}
         role="grid"
@@ -254,44 +260,30 @@ export function SpreadsheetGrid(props: SpreadsheetGridProps) {
         className="absolute right-0 bottom-0 overflow-auto outline-none"
         style={{ top: HEADER_HEIGHT, left: ROW_HEADER_WIDTH }}
       >
-        <div className="relative" style={{ width: cols * COL_WIDTH, height: rows * ROW_HEIGHT }}>
+        <div
+          className="relative"
+          style={{ width: layout.offsets[cols], height: rows * ROW_HEIGHT }}
+        >
           {cells}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute border-2 border-app-brand bg-app-brand/10"
             style={{
               top: range.top * ROW_HEIGHT - 1,
-              left: range.left * COL_WIDTH - 1,
-              width: (range.right - range.left + 1) * COL_WIDTH + 1,
+              left: layout.offsets[range.left] - 1,
+              width: layout.offsets[range.right + 1] - layout.offsets[range.left] + 1,
               height: (range.bottom - range.top + 1) * ROW_HEIGHT + 1,
             }}
           />
           {editing && (
-            <input
-              autoFocus
-              aria-label={`${columnLetter(editing.col)}${editing.row + 1}`}
-              value={editing.text}
-              onChange={(event) => updateEditing({ ...editing, text: event.target.value })}
-              onBlur={() => finishEdit(true)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  finishEdit(true, [1, 0]);
-                } else if (event.key === 'Tab') {
-                  event.preventDefault();
-                  finishEdit(true, [0, event.shiftKey ? -1 : 1]);
-                } else if (event.key === 'Escape') {
-                  event.preventDefault();
-                  finishEdit(false);
-                }
-              }}
-              className="absolute z-10 border-2 border-app-brand bg-white px-1.5 text-sm text-app-text shadow-lg outline-none"
-              style={{
-                top: editing.row * ROW_HEIGHT - 1,
-                left: editing.col * COL_WIDTH - 1,
-                minWidth: COL_WIDTH + 1,
-                height: ROW_HEIGHT + 1,
-              }}
+            <SpreadsheetCellInput
+              row={editing.row}
+              col={editing.col}
+              text={editing.text}
+              left={layout.offsets[editing.col]}
+              width={layout.widths[editing.col]}
+              onChange={(text) => updateEditing({ ...editing, text })}
+              onFinish={finishEdit}
             />
           )}
         </div>

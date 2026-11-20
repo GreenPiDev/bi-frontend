@@ -5119,6 +5119,8 @@ export interface SpreadsheetSheet {
   ordinal: number;
   rowCount: number;
   colCount: number;
+  /** { "<col>": px } - tum kullanicilar icin ortak; tanimsiz sutun varsayilan genislikte. */
+  colWidths: Record<string, number>;
 }
 
 export interface SpreadsheetSummary {
@@ -5179,6 +5181,13 @@ export interface SpreadsheetCellsUpdatedEvent {
   updatedByName: string;
 }
 
+export interface SpreadsheetColumnsUpdatedEvent {
+  spreadsheetId: string;
+  sheetId: string;
+  colWidths: Record<string, number>;
+  updatedById: string;
+}
+
 export function listSpreadsheets(
   params: { page?: number; pageSize?: number; q?: string } = {},
 ): Promise<PagedResult<SpreadsheetSummary>> {
@@ -5230,5 +5239,17 @@ export function saveSpreadsheetChanges(
   return request(`/spreadsheets/${id}/sheets/${sheetId}/changes`, {
     method: 'POST',
     body: JSON.stringify(input),
+  });
+}
+
+/** width null -> sutun varsayilan genislige doner. Aninda kaydedilir (taslak degil). */
+export function updateSpreadsheetColumnWidths(
+  id: string,
+  sheetId: string,
+  widths: { col: number; width: number | null }[],
+): Promise<{ colWidths: Record<string, number> }> {
+  return request(`/spreadsheets/${id}/sheets/${sheetId}/column-widths`, {
+    method: 'PATCH',
+    body: JSON.stringify({ widths }),
   });
 }

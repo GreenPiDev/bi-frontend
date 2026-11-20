@@ -12,6 +12,13 @@ import { loginFormSchema, type LoginFormValues } from '../features/auth/schemas'
 import { ApiError } from '../lib/api';
 import { tr } from '../i18n/tr';
 
+/** Yalnizca uygulama ici yollar kabul edilir (acik yonlendirme engeli). */
+function safeRedirectPath(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\'))
+    return '/';
+  return value;
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -31,7 +38,7 @@ export function LoginPage() {
     loginMutation.mutate(values, {
       onSuccess: () => {
         toast.success(tr.auth.loginSuccessToast);
-        navigate('/', { replace: true });
+        navigate(safeRedirectPath(searchParams.get('redirect')), { replace: true });
       },
       onError: (error) => {
         toast.error(error instanceof ApiError ? error.message : tr.auth.loginErrorToast);

@@ -4,6 +4,7 @@ import { useToast } from '../../components/ui/toast-context';
 import type { SpreadsheetSheet } from '../../lib/api';
 import { tr } from '../../i18n/tr';
 import type { GridSelection } from './grid-keyboard';
+import { autoFitWidth } from './spreadsheet-columns';
 import { SpreadsheetConflictModal } from './spreadsheet-conflict-modal';
 import { SpreadsheetGrid } from './spreadsheet-grid';
 import {
@@ -15,6 +16,7 @@ import {
 } from './spreadsheet-model';
 import { SpreadsheetToolbar } from './spreadsheet-toolbar';
 import { useSpreadsheetEditor, type CellUpdate } from './use-spreadsheet-editor';
+import { useUpdateColumnWidthsMutation } from './use-spreadsheets';
 
 /** Backend'in tek kayitta kabul ettigi ust sinirla ayni (MAX_CHANGES_PER_SAVE). */
 const MAX_RANGE_CELLS = 5000;
@@ -45,6 +47,8 @@ export function SpreadsheetSheetEditor({
     focus: { row: 0, col: 0 },
   });
   const [discardOpen, setDiscardOpen] = useState(false);
+  const columnWidthsMutation = useUpdateColumnWidthsMutation(spreadsheetId, sheet.id);
+  const { mutate: saveColumnWidths } = columnWidthsMutation;
   const { pendingCount } = editor;
 
   useEffect(() => onDirtyChange(pendingCount > 0), [pendingCount, onDirtyChange]);
@@ -89,6 +93,30 @@ export function SpreadsheetSheetEditor({
     },
     [updateCells],
   );
+  const handleColumnResize = useCallback(
+    (col: number, width: number) =>
+      saveColumnWidths([{ col, width }], {
+        onError: () => toast.error(tr.spreadsheets.grid.resizeError),
+      }),
+    [saveColumnWidths, toast],
+  );
+
+  // Excel'deki gibi: sutundaki en uzun degere (kayitli + taslak) gore sigdir.
+  const handleColumnAutoFit = useCallback(
+    (col: number) => {
+      const values: string[] = [];
+      const suffix = `:${col}`;
+      for (const [key, cell] of serverCells) {
+        if (key.endsWith(suffix) && !drafts.has(key) && cell.value) values.push(cell.value);
+      }
+      for (const [key, draft] of drafts) {
+        if (key.endsWith(suffix) && draft.content.value) values.push(draft.content.value);
+      }
+      handleColumnResize(col, autoFitWidth(values));
+    },
+    [serverCells, drafts, handleColumnResize],
+  );
+
   const isDraft = useCallback(
     (row: number, col: number) => drafts.has(cellKey(row, col)),
     [drafts],
@@ -126,6 +154,9 @@ export function SpreadsheetSheetEditor({
           onSelectionChange={setSelection}
           onCommitValue={handleCommitValue}
           onClearSelection={() => updateSelection({ value: null })}
+          colWidths={sheet.colWidths}
+          onColumnResize={handleColumnResize}
+          onColumnAutoFit={handleColumnAutoFit}
         />
       )}
 

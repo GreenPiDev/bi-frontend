@@ -773,6 +773,12 @@ export const tr = {
       success: 'E-tablo yüklendi.',
       error: 'Dosya yüklenemedi.',
     },
+    grid: {
+      resizeColumn: (column: string) => `${column} sütununun genişliğini ayarla`,
+      resizeHint:
+        'Sürükleyerek genişliği ayarlayın, çift tıklayarak en uzun değere sığdırın. Değişiklik herkes için geçerlidir.',
+      resizeError: 'Sütun genişliği kaydedilemedi.',
+    },
     detail: {
       back: 'E-tablolara dön',
       loading: 'Tablo yükleniyor...',
@@ -781,6 +787,9 @@ export const tr = {
       meta: (fileName: string, createdBy: string) => `${fileName} · ${createdBy} yükledi`,
       readOnly: 'Bu tabloyu yalnızca görüntüleyebilirsiniz.',
       renameTooltip: 'Yeniden adlandır',
+      copyLinkTooltip: 'Bağlantıyı kopyala (yalnızca giriş yapmış ekip üyeleri açabilir)',
+      linkCopied: 'Bağlantı kopyalandı.',
+      linkCopyFailed: 'Bağlantı kopyalanamadı.',
       renameTitle: 'Tabloyu yeniden adlandır',
       renameLabel: 'Tablo adı',
       renameRequired: 'Tablo adı zorunludur.',

@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { clsx } from 'clsx';
-import { Pencil } from 'lucide-react';
+import { Link2, Pencil } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
@@ -20,9 +20,11 @@ import { SpreadsheetSheetEditor } from '../features/spreadsheets/spreadsheet-she
 import { useUnsavedChangesGuard } from '../features/spreadsheets/use-unsaved-changes-guard';
 import {
   useRenameSpreadsheetMutation,
+  useSpreadsheetColumnsRealtimeSync,
   useSpreadsheetQuery,
 } from '../features/spreadsheets/use-spreadsheets';
 import { ApiError, type SpreadsheetDetail } from '../lib/api';
+import { copyToClipboard } from '../lib/copy-to-clipboard';
 import { usePageTitle } from '../lib/document-title';
 import { tr } from '../i18n/tr';
 
@@ -90,7 +92,9 @@ function RenameSpreadsheetModal({
 
 export function SpreadsheetDetailPage() {
   const { id = '' } = useParams<{ id: string }>();
+  const toast = useToast();
   const spreadsheetQuery = useSpreadsheetQuery(id);
+  useSpreadsheetColumnsRealtimeSync(id);
   const permissions = useMeQuery().data?.permissions;
   const canEdit = hasPermission(permissions, 'spreadsheets', 'UPDATE');
   const spreadsheet = spreadsheetQuery.data;
@@ -105,6 +109,12 @@ export function SpreadsheetDetailPage() {
 
   const sheets = spreadsheet?.sheets ?? [];
   const activeSheet = sheets.find((s) => s.id === activeSheetId) ?? sheets[0];
+
+  async function copyLink() {
+    const url = `${window.location.origin}/datasets/e-tablolar/${id}`;
+    if (await copyToClipboard(url)) toast.success(tr.spreadsheets.detail.linkCopied);
+    else toast.error(tr.spreadsheets.detail.linkCopyFailed);
+  }
 
   function selectSheet(sheetId: string) {
     if (sheetId === activeSheet?.id) return;
@@ -141,6 +151,11 @@ export function SpreadsheetDetailPage() {
                 onClick={() => setRenameOpen(true)}
               />
             )}
+            <IconActionButton
+              icon={Link2}
+              tooltip={tr.spreadsheets.detail.copyLinkTooltip}
+              onClick={() => void copyLink()}
+            />
             <PageHelp text={tr.help.spreadsheetDetail} />
           </div>
           <p className="mb-4 text-sm text-app-muted">
